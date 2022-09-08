@@ -1,0 +1,31 @@
+{
+  "configurations": [
+    {
+      "name": "STM32",
+      "includePath": [
+        "Core/Inc",
+        "Drivers/BSP/Components/Common",
+        "Drivers/BSP/Components/cbtl08gp053",
+        "Drivers/BSP/Components/hx8347d",
+        "Drivers/BSP/Components/ina230",
+        "Drivers/BSP/Components/sn65dp141",
+        "Drivers/BSP/Components/ssd1315",
+        "Drivers/BSP/Components/st7735",
+        "Drivers/BSP/Components/stlm75",
+        "Drivers/BSP/Components/tusb546",
+        "Drivers/BSP/STM32G0C1E-EV",
+        "Drivers/CMSIS/Device/ST/STM32G0xx/Include",
+        "Drivers/CMSIS/Include",
+        "Drivers/STM32G0xx_HAL_Driver/Inc",
+        "Drivers/STM32G0xx_HAL_Driver/Inc/Legacy",
+        "Utilities/Fonts"
+      ],
+      "defines": [
+        "STM32G0C1xx",
+        "USE_HAL_DRIVER"
+      ],
+      "compilerPath": "C:\\DEV\\BIN\\ARM-NONE-EABI-GCC.EXE"
+    }
+  ],
+  "version": 4
+}

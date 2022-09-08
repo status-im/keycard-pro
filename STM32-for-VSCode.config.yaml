@@ -1,0 +1,147 @@
+# Configuration file for the STM32 for VSCode extension
+# Arrays can be inputted in two ways. One is: [entry_1, entry_2, ..., entry_final]
+# or by adding an indented list below the variable name e.g.:
+# VARIABLE:
+# - entry_1
+# - entry_2
+
+# The project name
+target: keycard-pro
+# Can be C or C++
+language: C
+
+optimization: Og
+
+# MCU settings
+targetMCU: stm32g0x
+cpu: cortex-m0plus # type of cpu e.g. cortex-m4
+fpu:  # Defines how floating points are defined. Can be left empty.
+floatAbi: 
+ldscript: STM32G0C1VETx_FLASH.ld # linker script
+
+# Compiler definitions. The -D prefix for the compiler will be automatically added.
+cDefinitions: 
+  - USE_HAL_DRIVER
+  - STM32G0C1xx
+
+cxxDefinitions: 
+  - USE_HAL_DRIVER
+  - STM32G0C1xx
+
+asDefinitions: []
+
+# Compiler definition files. you can add a single files or an array of files for different definitions.
+# The file is expected to have a definition each new line.
+# This allows to include for example a .definition file which can be ignored in git and can contain
+# This can be convenient for passing along secrets at compile time, or generating a file for per device setup.
+cDefinitionsFile:
+cxxDefinitionsFile:
+asDefinitionsFile:
+
+# Compiler flags
+cFlags: []
+cxxFlags: []
+assemblyFlags: []
+linkerFlags: 
+  - -specs=nano.specs
+
+
+# libraries to be included. The -l prefix to the library will be automatically added.
+libraries: 
+  - c
+  - m
+  - nosys
+
+# Library directories. Folders can be added here that contain custom libraries.
+libraryDirectories: []
+
+# Files or folders that will be excluded from compilation.
+# Glob patterns (https://www.wikiwand.com/en/Glob_(programming)) can be used.
+# Do mind that double stars are reserved in yaml
+# these should be escaped with a: \ or the name should be in double quotes e.g. "**.test.**"
+excludes: 
+  - "**/Examples/**"
+  - "**/examples/**"
+  - "**/Example/**"
+  - "**/example/**"
+  - "**_template.*"
+
+
+# Include directories (directories containing .h or .hpp files)
+# If a CubeMX makefile is present it will automatically include the include directories from that makefile.
+includeDirectories: 
+  - Core/Inc
+  - Drivers/STM32G0xx_HAL_Driver/Inc
+  - Drivers/STM32G0xx_HAL_Driver/Inc/Legacy
+  - Drivers/CMSIS/Device/ST/STM32G0xx/Include
+  - Drivers/CMSIS/Include
+  - Drivers/BSP/Components/**
+  - Inc/**
+  - Core/Inc/**
+  - Core/Lib/**
+  - Src/**
+  - Core/Src/**
+  - Core/Lib/**
+  - Utilities/**
+
+
+# Files that should be included in the compilation.
+# If a CubeMX makefile is present it will automatically include the  c and cpp/cxx files from that makefile.
+# Glob patterns (https://www.wikiwand.com/en/Glob_(programming)) can be used.
+# Do mind that double stars are reserved in yaml
+# these should be escaped with a: \ or the name should be in double quotes e.g. "HARDWARE_DRIVER*.c"
+sourceFiles:  
+  - startup_stm32g0c1xx.s
+  - Core/Src/main.c
+  - Core/Src/stm32g0xx_it.c
+  - Core/Src/stm32g0xx_hal_msp.c
+  - Drivers/BSP/STM32G0C1E-EV/stm32g0c1e_eval.c
+  - Drivers/BSP/STM32G0C1E-EV/stm32g0c1e_eval_lcd.c
+  - Drivers/BSP/Components/hx8347d/hx8347d.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_adc.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_adc_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_adc.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_rcc.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_rcc_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_rcc.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_flash.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_flash_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_gpio.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_dma.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_dma_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_dma.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pwr.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pwr_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_cortex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_exti.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_dac.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_dac_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_fdcan.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_i2c.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_i2c_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_tim.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_tim_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_uart.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_uart_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pcd.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pcd_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usb.c
+  - Core/Src/system_stm32g0xx.c
+  - Src/**
+  - Core/Src/**
+  - Core/Lib/**
+
+
+# When no makefile is present it will show a warning pop-up.
+# However when compilation without the CubeMX Makefile is desired, this can be turned of.
+suppressMakefileWarning: false
+
+# Custom makefile rules
+# Here custom makefile rules can be added to the STM32Make.make file
+# an example of how this can be used is commented out below.
+customMakefileRules:
+# - command: sayhello
+#   rule: echo "hello"
+#   dependsOn: $(BUILD_DIR)/$(TARGET).elf # can be left out    
+    
