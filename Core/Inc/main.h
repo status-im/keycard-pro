@@ -94,21 +94,12 @@ void Error_Handler(void);
 #define SC_RST_GPIO_Port GPIOA
 #define JOY_LEFT_Pin GPIO_PIN_8
 #define JOY_LEFT_GPIO_Port GPIOC
-#define SDcard_detect_Pin GPIO_PIN_9
-#define SDcard_detect_GPIO_Port GPIOC
-#define SDcard_detect_EXTI_IRQn EXTI4_15_IRQn
-#define MicroSD_CS_OD_Pin GPIO_PIN_1
-#define MicroSD_CS_OD_GPIO_Port GPIOD
 #define SC_CK_Pin GPIO_PIN_4
 #define SC_CK_GPIO_Port GPIOD
 #define LED1_Pin GPIO_PIN_5
 #define LED1_GPIO_Port GPIOD
 #define LED2_Pin GPIO_PIN_6
 #define LED2_GPIO_Port GPIOD
-#define FDCAN1_STBY_Pin GPIO_PIN_0
-#define FDCAN1_STBY_GPIO_Port GPIOE
-#define FDCAN2_STBY_Pin GPIO_PIN_1
-#define FDCAN2_STBY_GPIO_Port GPIOE
 #define LCD_CS_OD_Pin GPIO_PIN_8
 #define LCD_CS_OD_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
