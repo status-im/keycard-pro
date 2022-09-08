@@ -41,6 +41,7 @@ Core/Src/stm32g0xx_hal_msp.c \
 Core/Src/stm32g0xx_it.c \
 Core/Src/system_stm32g0xx.c \
 Drivers/BSP/Components/hx8347d/hx8347d.c \
+Drivers/BSP/STM32G0C1E-EV/stm32g0c1e_eval.c \
 Drivers/BSP/STM32G0C1E-EV/stm32g0c1e_eval_lcd.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_adc.c \
@@ -70,6 +71,8 @@ Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_rtc.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_rtc_ex.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_smartcard.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_smartcard_ex.c \
+Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi.c \
+Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi_ex.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_tim.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_tim_ex.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_uart.c \
@@ -77,6 +80,7 @@ Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_uart_ex.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_adc.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_dma.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_rcc.c \
+Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_spi.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usb.c
 
 
@@ -159,6 +163,7 @@ C_INCLUDES =  \
 -IDrivers/BSP/Components/st7735 \
 -IDrivers/BSP/Components/stlm75 \
 -IDrivers/BSP/Components/tusb546 \
+-IDrivers/BSP/STM32G0C1E-EV \
 -IDrivers/CMSIS/Device/ST/STM32G0xx/Include \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32G0xx_HAL_Driver/Inc \

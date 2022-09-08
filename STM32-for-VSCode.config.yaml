@@ -76,6 +76,7 @@ includeDirectories:
   - Drivers/CMSIS/Device/ST/STM32G0xx/Include
   - Drivers/CMSIS/Include
   - Drivers/BSP/Components/**
+  - Drivers/BSP/STM32G0C1E-EV
   - Inc/**
   - Core/Inc/**
   - Core/Lib/**
@@ -127,6 +128,9 @@ sourceFiles:
   - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pcd.c
   - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_pcd_ex.c
   - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usb.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_spi.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi.c  
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi_ex.c
   - Core/Src/system_stm32g0xx.c
   - Src/**
   - Core/Src/**
