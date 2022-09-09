@@ -131,6 +131,8 @@ sourceFiles:
   - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_spi.c
   - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi.c  
   - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_spi_ex.c
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_smartcard.c  
+  - Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_hal_smartcard_ex.c
   - Core/Src/system_stm32g0xx.c
   - Src/**
   - Core/Src/**

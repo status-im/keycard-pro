@@ -53,7 +53,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void SC_HW_Init(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -103,7 +103,7 @@ void Error_Handler(void);
 #define LCD_CS_OD_Pin GPIO_PIN_8
 #define LCD_CS_OD_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-
+#define __HAL_SMARTCARD_GET_DRREGISTER(__HANDLE__) (__HANDLE__)->Instance->RDR
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

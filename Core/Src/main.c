@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "stm32g0c1e_eval_lcd.h"
+#include "keycard.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -130,6 +131,7 @@ int main(void)
   BSP_LCD_SetTextColor(LCD_COLOR_ST_YELLOW);
   BSP_LCD_SetFont(&Font24);
   BSP_LCD_DisplayStringAtLine(2, (uint8_t*) "TEST");
+  Keycard_Run(&hsmartcard2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -166,7 +168,13 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.LSIState = RCC_LSI_ON;
-  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_NONE;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = RCC_PLLM_DIV1;
+  RCC_OscInitStruct.PLL.PLLN = 8;
+  RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV2;
+  RCC_OscInitStruct.PLL.PLLQ = RCC_PLLQ_DIV2;
+  RCC_OscInitStruct.PLL.PLLR = RCC_PLLR_DIV2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -176,11 +184,11 @@ void SystemClock_Config(void)
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1;
-  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_HSI;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
 
-  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_0) != HAL_OK)
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
@@ -465,22 +473,23 @@ static void MX_USART2_SMARTCARD_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   hsmartcard2.Instance = USART2;
-  hsmartcard2.Init.BaudRate = 115200;
+  hsmartcard2.Init.BaudRate = HAL_RCC_GetPCLK1Freq()/3720;
   hsmartcard2.Init.WordLength = SMARTCARD_WORDLENGTH_9B;
   hsmartcard2.Init.StopBits = SMARTCARD_STOPBITS_1_5;
   hsmartcard2.Init.Mode = SMARTCARD_MODE_TX_RX;
   hsmartcard2.Init.CLKPolarity = SMARTCARD_POLARITY_LOW;
   hsmartcard2.Init.CLKPhase = SMARTCARD_PHASE_1EDGE;
-  hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_DISABLE;
+  hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_ENABLE;
   hsmartcard2.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_DISABLE;
-  hsmartcard2.Init.Prescaler = 10;
-  hsmartcard2.Init.GuardTime = 0;
-  hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_DISABLE;
+  hsmartcard2.Init.Prescaler = 5;
+  hsmartcard2.Init.GuardTime = 16;
+  hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
   hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
   hsmartcard2.Init.BlockLength = 0;
   hsmartcard2.Init.AutoRetryCount = 0;
   hsmartcard2.Init.ClockPrescaler = SMARTCARD_PRESCALER_DIV1;
-  hsmartcard2.AdvancedInit.AdvFeatureInit = SMARTCARD_ADVFEATURE_NO_INIT;
+  hsmartcard2.AdvancedInit.AdvFeatureInit = SMARTCARD_ADVFEATURE_RXOVERRUNDISABLE_INIT;
+  hsmartcard2.AdvancedInit.OverrunDisable = SMARTCARD_ADVFEATURE_OVERRUN_DISABLE;
   if (HAL_SMARTCARD_Init(&hsmartcard2) != HAL_OK)
   {
     Error_Handler();
@@ -609,13 +618,19 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(EX_RESET_OD_GPIO_Port, EX_RESET_OD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, SC_1V8_Pin|SC_RST_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SC_1V8_GPIO_Port, SC_1V8_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, SC_NCMDVCC_Pin|SC_5V3V_Pin|LCD_CS_OD_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, SC_NCMDVCC_Pin|SC_5V3V_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOD, LED3_Pin|LED4_Pin|LED1_Pin|LED2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LCD_CS_OD_GPIO_Port, LCD_CS_OD_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pins : PB9 PB1 PB10 PB11
                            PB13 PB14 PB4 PB5
@@ -682,18 +697,18 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : SC_1V8_Pin SC_RST_Pin */
-  GPIO_InitStruct.Pin = SC_1V8_Pin|SC_RST_Pin;
+  /*Configure GPIO pin : SC_1V8_Pin */
+  GPIO_InitStruct.Pin = SC_1V8_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  HAL_GPIO_Init(SC_1V8_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : SC_NCMDVCC_Pin SC_5V3V_Pin */
   GPIO_InitStruct.Pin = SC_NCMDVCC_Pin|SC_5V3V_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : SC_NOFF_Pin */
@@ -719,6 +734,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : SC_RST_Pin */
+  GPIO_InitStruct.Pin = SC_RST_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(SC_RST_GPIO_Port, &GPIO_InitStruct);
+
   /*Configure GPIO pin : LCD_CS_OD_Pin */
   GPIO_InitStruct.Pin = LCD_CS_OD_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
@@ -733,7 +755,35 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+/**
+  * @brief  EXTI line detection callback.
+  * @param  GPIO_Pin Specifies the port pin connected to corresponding EXTI line.
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == SC_NOFF_Pin) {
+    BSP_LCD_DisplayStringAtLine(2, (uint8_t*) "Card IN");
+    Keycard_Card_In();
+  }
+}
 
+/**
+  * @brief  EXTI line detection callback.
+  * @param  GPIO_Pin Specifies the port pin connected to corresponding EXTI line.
+  * @retval None
+  */
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
+{
+  if (GPIO_Pin == SC_NOFF_Pin) {
+    BSP_LCD_DisplayStringAtLine(2, (uint8_t*) "Card OUT");
+    Keycard_Card_Out();
+  }
+}
+
+void SC_HW_Init(void) {
+  MX_USART2_SMARTCARD_Init();
+}
 /* USER CODE END 4 */
 
 /**
@@ -745,8 +795,12 @@ void Error_Handler(void)
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
+  HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
+
   while (1)
   {
+      BSP_LCD_DisplayStringAtLine(4, (uint8_t*)"Error!");
   }
   /* USER CODE END Error_Handler_Debug */
 }
