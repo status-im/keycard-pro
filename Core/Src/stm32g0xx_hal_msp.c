@@ -516,9 +516,6 @@ void HAL_SMARTCARD_MspInit(SMARTCARD_HandleTypeDef* hsmartcard)
     GPIO_InitStruct.Alternate = GPIO_AF0_USART2;
     HAL_GPIO_Init(SC_CK_GPIO_Port, &GPIO_InitStruct);
 
-    /* USART2 interrupt Init */
-    HAL_NVIC_SetPriority(USART2_LPUART2_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(USART2_LPUART2_IRQn);
   /* USER CODE BEGIN USART2_MspInit 1 */
 
   /* USER CODE END USART2_MspInit 1 */
@@ -597,8 +594,6 @@ void HAL_SMARTCARD_MspDeInit(SMARTCARD_HandleTypeDef* hsmartcard)
 
     HAL_GPIO_DeInit(SC_CK_GPIO_Port, SC_CK_Pin);
 
-    /* USART2 interrupt DeInit */
-    HAL_NVIC_DisableIRQ(USART2_LPUART2_IRQn);
   /* USER CODE BEGIN USART2_MspDeInit 1 */
 
   /* USER CODE END USART2_MspDeInit 1 */

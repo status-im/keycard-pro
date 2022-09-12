@@ -55,7 +55,7 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern SMARTCARD_HandleTypeDef hsmartcard2;
+
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -152,20 +152,6 @@ void EXTI4_15_IRQHandler(void)
   /* USER CODE BEGIN EXTI4_15_IRQn 1 */
 
   /* USER CODE END EXTI4_15_IRQn 1 */
-}
-
-/**
-  * @brief This function handles USART2 + LPUART2 Interrupt.
-  */
-void USART2_LPUART2_IRQHandler(void)
-{
-  /* USER CODE BEGIN USART2_LPUART2_IRQn 0 */
-  HAL_NVIC_ClearPendingIRQ(USART2_LPUART2_IRQn);
-  HAL_SMARTCARD_IRQHandler(&hsmartcard2);
-  /* USER CODE END USART2_LPUART2_IRQn 0 */
-  /* USER CODE BEGIN USART2_LPUART2_IRQn 1 */
-
-  /* USER CODE END USART2_LPUART2_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

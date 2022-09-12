@@ -59,10 +59,6 @@ static void SC_Configure_etu_baudrate(SMARTCARD_HandleTypeDef *hsc, uint32_t F, 
   uint32_t temp_baudrate = temp_baudrate = (atr_d_table[D] * frequency) / atr_f_table[F];
 
   hsc->Init.BaudRate = temp_baudrate;
-  hsc->Init.WordLength = SMARTCARD_WORDLENGTH_9B;
-  hsc->Init.StopBits = SMARTCARD_STOPBITS_1_5;
-  hsc->Init.Parity = SMARTCARD_PARITY_EVEN;
-  hsc->Init.Mode = SMARTCARD_MODE_TX_RX | SMARTCARD_MODE_TX;
   HAL_SMARTCARD_Init(hsc);
 }
 

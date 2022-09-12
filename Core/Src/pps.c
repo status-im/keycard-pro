@@ -74,9 +74,9 @@ int32_t PPS_Exchange(SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_lengt
   request[len_request - 1] = PPS_GetPCK(request, len_request - 1);
 
   /* ---PPS: Sending request: request, len_request--- */
-  HAL_SMARTCARD_Transmit(p_ptc->pdevice, request, len_request, SC_CWT_TIMEOUT);
-
-  response[0] = __HAL_SMARTCARD_GET_DRREGISTER(p_ptc->pdevice);
+  if (HAL_SMARTCARD_Transmit(p_ptc->pdevice, request, len_request, SC_CWT_TIMEOUT) != HAL_OK) {
+    Error_Handler();
+  }
 
   /* cleaning RDR */
   response[0] = __HAL_SMARTCARD_GET_DRREGISTER(p_ptc->pdevice);
@@ -96,7 +96,7 @@ int32_t PPS_Exchange(SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_lengt
       /* checking for presence of PPSx parameters */
       len_response = 1 + ((response[1] & (uint8_t)0x10) >> 4) + (response[1] & (uint8_t)0x20 >> 5) + (response[1] & (uint8_t)0x40 >> 6);
 
-      if ((HAL_SMARTCARD_Receive(p_ptc->pdevice, &response[2], len_response, SC_RECEIVE_TIMEOUT)) == HAL_OK)
+      if ((HAL_SMARTCARD_Receive(p_ptc->pdevice, &response[2], (len_response - 2), SC_RECEIVE_TIMEOUT)) == HAL_OK)
       {
         if (response[len_response + 1] != PPS_GetPCK(response, len_response + 1))
         {
