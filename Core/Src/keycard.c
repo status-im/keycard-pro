@@ -213,7 +213,7 @@ static HAL_StatusTypeDef TEST_T1( void )
   uint32_t apdu_index;   /* Index of the APDU buffer */
   int32_t resp_status = 0; /* Communication Response status */
 
-  BSP_LCD_DisplayStringAtLine(4, "Testing T1");
+  BSP_LCD_DisplayStringAtLine(4, (uint8_t *)"Testing T1");
   /*------- Send IFSD request --------------------------------------------------*/
 
   /* Negotiate IFSD: we indicate to the card a new IFSD that the reader can support */
@@ -412,8 +412,7 @@ int Keycard_Run(SMARTCARD_HandleTypeDef* SmartCardHandle) {
   uint8_t  atr_buff[40];
   uint8_t convention;
   ATR_TypeDef atr;        /* Answer To Reset structure */
-  uint32_t card_clk = 0;  /* The Smartcard clock frequency in Hz */
-  uint32_t etu_usec = 0;  /* Elementary Time Unit in microsecond */
+  uint32_t card_clk = 4000000;  /* The Smartcard clock frequency in Hz */
   int8_t protocol = -1;   /* Default protocol (initialized to -1) */
 
 
@@ -481,16 +480,13 @@ int Keycard_Run(SMARTCARD_HandleTypeDef* SmartCardHandle) {
     {
       T1_Protocol_Init(&SCInterface, card_clk);
       SCInterface.state = SC_ACTIVE_ON_T1;
-      /* Set F and D parameters and get the new etu value in micro-seconds */
-      etu_usec = Set_F_D_parameters(&SCInterface, &atr, card_clk);
+      /* Set F and D parameters */
+      Set_F_D_parameters(&SCInterface, &atr, card_clk);
     }
     else if ( protocol == ATR_PROTOCOL_TYPE_T0 )
     {
       SCInterface.state = SC_ACTIVE_ON_T0;
     }
-
-    /* Set the etu to be used by the protocol */
-    SCInterface.etu_us = etu_usec;
 
     /* Set the convention of the protocol */
     SCInterface.convention = atr.TS;

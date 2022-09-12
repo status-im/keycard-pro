@@ -196,7 +196,7 @@ HAL_StatusTypeDef ATR_Read(SCProtocol_t *protocol, uint8_t *buffer, uint16_t *bu
   HAL_Delay(20);
 
   /* if card not inserted */
-  if ( HAL_GPIO_ReadPin(SC_NOFF_GPIO_Port, SC_NOFF_Pin) != GPIO_PIN_SET )
+  if (HAL_GPIO_ReadPin(SC_NOFF_GPIO_Port, SC_NOFF_Pin) != GPIO_PIN_SET)
   {
     /* power off smartcard */
     HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_RESET);
@@ -211,7 +211,7 @@ HAL_StatusTypeDef ATR_Read(SCProtocol_t *protocol, uint8_t *buffer, uint16_t *bu
     SC_POWER(GPIO_PIN_RESET);
   }
 
-  //SC_HW_Init();
+  SC_HW_Init();
 
   /* clear UART data + reset delay*/
   HAL_SMARTCARD_Receive(hsc, buffer, 2, SC_T1_BWT_TIMEOUT);

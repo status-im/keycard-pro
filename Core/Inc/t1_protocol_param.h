@@ -38,7 +38,7 @@
 /* Exported types ------------------------------------------------------------*/
 /* Exported macro ------------------------------------------------------------*/
 /* Exported functions ------------------------------------------------------- */
-uint32_t Set_F_D_parameters(SCProtocol_t * p_t1, ATR_TypeDef* p_atr, uint32_t SC_clk);
+void Set_F_D_parameters(SCProtocol_t * p_t1, ATR_TypeDef* p_atr, uint32_t SC_clk);
 void Set_IFSC(SCProtocol_t* p_t1, ATR_TypeDef* p_atr);
 void Set_CWT_BWT(SCProtocol_t* p_t1, ATR_TypeDef* p_atr);
 void Set_EGT(SMARTCARD_HandleTypeDef *hsc, ATR_TypeDef* p_atr);

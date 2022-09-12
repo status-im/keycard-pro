@@ -171,14 +171,6 @@ void * Buffer_head(buffer_TypeDef *bp)
   return (bp->base + bp->head);
 }
 
-uint8_t ReverseBits(uint8_t v)
-{
-  return v;
-}
-
-void Buffer_reverse(uint8_t* buffer, uint32_t size)
-{
-}
 /**
   * @}
   */

@@ -52,7 +52,7 @@
 #define PPS_HAS_PPS3(pps_buffer)   ((pps_buffer[1] & 0x40) == 0x40)
 
 /* Exported functions ------------------------------------------------------- */
-int32_t PPS_Exchange (SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_length, uint8_t* pps1, uint32_t etu);
+int32_t PPS_Exchange (SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_length, uint8_t* pps1);
 
 #endif /* _PPS_H */
 

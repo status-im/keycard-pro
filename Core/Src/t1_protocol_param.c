@@ -44,7 +44,7 @@
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 /* Private function prototypes -----------------------------------------------*/
-static uint32_t SC_Configure_etu_baudrate(SMARTCARD_HandleTypeDef *hsc, uint32_t F, uint32_t D, uint32_t frequency);
+static void SC_Configure_etu_baudrate(SMARTCARD_HandleTypeDef *hsc, uint32_t F, uint32_t D, uint32_t frequency);
 /* Private functions --------------------------------------------------------*/
 
 /**
@@ -53,16 +53,10 @@ static uint32_t SC_Configure_etu_baudrate(SMARTCARD_HandleTypeDef *hsc, uint32_t
   * @param  F: transmission factor F.
   * @param  D: transmission factor D.
   * @param  frequency: smartcard clock frequency.
-  * @retval uint32_t ETU value in us.
   */
-static uint32_t SC_Configure_etu_baudrate(SMARTCARD_HandleTypeDef *hsc, uint32_t F, uint32_t D, uint32_t frequency)
+static void SC_Configure_etu_baudrate(SMARTCARD_HandleTypeDef *hsc, uint32_t F, uint32_t D, uint32_t frequency)
 {
-  uint32_t temp_etu;
-  uint32_t temp_baudrate;
-
-  temp_baudrate = (atr_d_table[D] * frequency) / atr_f_table[F];
-
-  temp_etu = 1000000 / temp_baudrate;
+  uint32_t temp_baudrate = temp_baudrate = (atr_d_table[D] * frequency) / atr_f_table[F];
 
   hsc->Init.BaudRate = temp_baudrate;
   hsc->Init.WordLength = SMARTCARD_WORDLENGTH_9B;
@@ -70,8 +64,6 @@ static uint32_t SC_Configure_etu_baudrate(SMARTCARD_HandleTypeDef *hsc, uint32_t
   hsc->Init.Parity = SMARTCARD_PARITY_EVEN;
   hsc->Init.Mode = SMARTCARD_MODE_TX_RX | SMARTCARD_MODE_TX;
   HAL_SMARTCARD_Init(hsc);
-
-  return temp_etu + 1;
 }
 
 /* Exported functions --------------------------------------------------------*/
@@ -82,18 +74,14 @@ static uint32_t SC_Configure_etu_baudrate(SMARTCARD_HandleTypeDef *hsc, uint32_t
   * @param  p_t1: the HAL handle
   * @param  p_atr: a pointer to the ATR structure.
   * @param  SC_clk: the smartcard clock frequency in Hz.
-  * @retval The etu value in us.
   */
-uint32_t Set_F_D_parameters(SCProtocol_t * p_t1, ATR_TypeDef* p_atr, uint32_t SC_clk)
+void Set_F_D_parameters(SCProtocol_t * p_t1, ATR_TypeDef* p_atr, uint32_t SC_clk)
 {
   uint8_t PPS_Response_length = 0, pps1 = 0;
-  uint8_t PPS_buffer[4] = {0xFF, 0x10, 0x45, 0xAA};
+  uint8_t PPS_buffer[4] = {0xFF, 0x11, 0x45, 0xAA};
   uint16_t F = ATR_DEFAULT_F;
   uint16_t D = ATR_DEFAULT_D;
   uint8_t TA2 = 0;
-
-  /* ((Fd/Dd)/SC_clk) * 1000000 (in us) (+1 to get the ceiling of the value)*/
-  uint32_t etu = (372000000 / SC_clk) + 1;
 
   /* TA2 is present ? */
   if (p_atr->ib[1][ATR_INTERFACE_BYTE_TA].present)
@@ -109,7 +97,7 @@ uint32_t Set_F_D_parameters(SCProtocol_t * p_t1, ATR_TypeDef* p_atr, uint32_t SC
       (void)ATR_GetParameter(p_atr, ATR_PARAMETER_F, &F);
 
       /* Configure the USART with the new baudrate */
-      etu = SC_Configure_etu_baudrate(p_t1->pdevice, F, D, SC_clk);
+      SC_Configure_etu_baudrate(p_t1->pdevice, F, D, SC_clk);
     }
   }
   else
@@ -126,13 +114,13 @@ uint32_t Set_F_D_parameters(SCProtocol_t * p_t1, ATR_TypeDef* p_atr, uint32_t SC
         PPS_buffer[PPS1] = p_atr->ib[0][ATR_INTERFACE_BYTE_TA].value;
 
         /* Apply PPS (Protocol Parameters Selection) */
-        (void)PPS_Exchange(p_t1, PPS_buffer, &PPS_Response_length, &pps1, etu);
+        (void)PPS_Exchange(p_t1, PPS_buffer, &PPS_Response_length, &pps1);
 
         D = pps1 & 0xF;
         F = pps1 >> 4;
 
         /* Configure the usart with the new baudrate */
-        etu = SC_Configure_etu_baudrate(p_t1->pdevice, F, D, SC_clk);
+        SC_Configure_etu_baudrate(p_t1->pdevice, F, D, SC_clk);
 
         /* ---TA1 is present with value: SC_atr->ib[0][ATR_INTERFACE_BYTE_TA].value--- */
         /* ---New SmartCard baudrate: baud--- */
@@ -144,8 +132,6 @@ uint32_t Set_F_D_parameters(SCProtocol_t * p_t1, ATR_TypeDef* p_atr, uint32_t SC
       }
     }
   }
-
-  return etu;
 }
 
 
@@ -226,6 +212,10 @@ void Set_EGT(SMARTCARD_HandleTypeDef *hsc, ATR_TypeDef* p_atr)
     if (n > 1) /* There is 1.5 extra guard time added by the USART */
     {
       /* USART Guard Time set to 16 Bit */
+      if (n == 255) {
+        n = 11;
+      }
+
       MODIFY_REG(hsc->Instance->GTPR, (((uint8_t)n - 1) << USART_GTPR_GT_Pos), USART_GTPR_GT);
     }
     else

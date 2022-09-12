@@ -85,7 +85,7 @@
 #define INS_WRITE_FILE     ((uint8_t)0xD6) /* Write file instruction */
 #define TRAILER_LENGTH     ((uint8_t)2   ) /* Trailer lenght (SW1 and SW2: 2 bytes) */
 
-#define SC_T1_BWT_TIMEOUT       ((uint32_t)1)
+#define SC_T1_BWT_TIMEOUT    ((uint32_t)1)
 #define SC_CWT_TIMEOUT       ((uint32_t)25)   /* = ~10ms @4MHz + margin */
 
 /* SC Tree Structure -----------------------------------------------------------
@@ -166,7 +166,6 @@ typedef enum
 typedef struct
 {
   SMARTCARD_HandleTypeDef *pdevice; /* The HAL used in transmission */
-  uint32_t   etu_us;    /* Logical Unit Number: see ifdhandler.c file line 150 for more details */
   uint32_t   frequency; /* Smart card frequency */
   uint32_t   cwi;       /* Character waiting time */
   uint32_t   bwi;       /* Block waiting time */
@@ -264,7 +263,6 @@ int32_t T1_Negotiate_IFSD(SCProtocol_t *p_t1, uint8_t nad, uint8_t ifsd);
 int32_t T1_APDU(SCProtocol_t *p_t1, uint8_t nad, SC_APDU_t *p_apdu_c, SC_APDU_t *p_apdu_r);
 void T0_APDU_Prep( SC_APDU_t *p_apdu_c, uint8_t *p_data);
 HAL_StatusTypeDef T0_APDU(SCProtocol_t *p_t0, SC_APDU_t *p_apdu_c, SC_APDU_t *p_apdu_r);
-uint8_t ReverseBits(uint8_t v);
 #endif /* __SMARTCARD_H */
 
 /************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

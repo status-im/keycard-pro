@@ -186,7 +186,7 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
@@ -473,7 +473,7 @@ static void MX_USART2_SMARTCARD_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   hsmartcard2.Instance = USART2;
-  hsmartcard2.Init.BaudRate = HAL_RCC_GetPCLK1Freq()/3720;
+  hsmartcard2.Init.BaudRate = 10752;
   hsmartcard2.Init.WordLength = SMARTCARD_WORDLENGTH_9B;
   hsmartcard2.Init.StopBits = SMARTCARD_STOPBITS_1_5;
   hsmartcard2.Init.Mode = SMARTCARD_MODE_TX_RX;
@@ -481,12 +481,12 @@ static void MX_USART2_SMARTCARD_Init(void)
   hsmartcard2.Init.CLKPhase = SMARTCARD_PHASE_1EDGE;
   hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_ENABLE;
   hsmartcard2.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_DISABLE;
-  hsmartcard2.Init.Prescaler = 5;
+  hsmartcard2.Init.Prescaler = 2;
   hsmartcard2.Init.GuardTime = 16;
   hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
   hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
   hsmartcard2.Init.BlockLength = 0;
-  hsmartcard2.Init.AutoRetryCount = 0;
+  hsmartcard2.Init.AutoRetryCount = 3;
   hsmartcard2.Init.ClockPrescaler = SMARTCARD_PRESCALER_DIV1;
   hsmartcard2.AdvancedInit.AdvFeatureInit = SMARTCARD_ADVFEATURE_RXOVERRUNDISABLE_INIT;
   hsmartcard2.AdvancedInit.OverrunDisable = SMARTCARD_ADVFEATURE_OVERRUN_DISABLE;

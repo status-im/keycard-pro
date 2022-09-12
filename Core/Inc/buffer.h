@@ -51,8 +51,6 @@ int32_t  Buffer_put(buffer_TypeDef *bp, const void *buffer, uint32_t len);
 int32_t  Buffer_putc(buffer_TypeDef *bp, uint8_t byte);
 uint32_t Buffer_avail(buffer_TypeDef *bp);
 void * Buffer_head(buffer_TypeDef *bp);
-uint8_t ReverseBits(uint8_t v);
-void Buffer_reverse(uint8_t* buffer, uint32_t size);
 
 #endif /* __BUFFER_H */
 

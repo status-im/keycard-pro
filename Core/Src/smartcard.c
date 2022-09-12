@@ -84,11 +84,6 @@ int32_t T1_TxRxBlock(SCProtocol_t * p_t1, uint8_t *p_buffer, uint32_t tx_length)
   int32_t retvalue;
   SMARTCARD_HandleTypeDef *hsc = p_t1->pdevice;
 
-  if ( p_t1->convention == INDIRECT )
-  {
-    Buffer_reverse( p_buffer, tx_length );
-  }
-
   /* Send a block to the card */
   HAL_SMARTCARD_Transmit( hsc, p_buffer, tx_length, SC_CWT_TIMEOUT );
 
@@ -102,10 +97,6 @@ int32_t T1_TxRxBlock(SCProtocol_t * p_t1, uint8_t *p_buffer, uint32_t tx_length)
 
   if (rx_status == HAL_OK)
   {
-    if ( p_t1->convention == INDIRECT )
-    {
-      Buffer_reverse( p_buffer, rx_len );
-    }
     /* 3: the length of Prologue field */
     rx_len = p_buffer[2] + p_t1->rc_bytes;
 
@@ -114,11 +105,6 @@ int32_t T1_TxRxBlock(SCProtocol_t * p_t1, uint8_t *p_buffer, uint32_t tx_length)
 
     if (rx_status == HAL_OK)
     {
-      if ( p_t1->convention == INDIRECT )
-      {
-        Buffer_reverse( &p_buffer[3], rx_len );
-      }
-
       retvalue = rx_len + 3;
     }
   }
@@ -162,9 +148,6 @@ void T1_Protocol_Init(SCProtocol_t * p_t1, uint32_t sc_freq)
 
   /* Reset "more" parameter */
   p_t1->more = 0;
-
-  /* Set the etu value in us */
-  p_t1->etu_us = 372000000 / sc_freq;
 
   /* Set the smartcard frequency to be used by the protocol */
   p_t1->frequency = sc_freq;
@@ -225,11 +208,6 @@ HAL_StatusTypeDef T0_APDU(SCProtocol_t *p_t0, SC_APDU_t *p_apdu_c, SC_APDU_t *p_
   __HAL_SMARTCARD_CLEAR_OREFLAG(hsc);
 
   /* Send header -------------------------------------------------------------*/
-  if ( p_t0->convention == INDIRECT )
-  {
-    Buffer_reverse( p_apdu_c->buffer, 4 );
-  }
-
   retval = HAL_SMARTCARD_Transmit(hsc, p_apdu_c->buffer, 4, SC_CWT_TIMEOUT);
   if ( retval == HAL_OK)
   {
@@ -241,11 +219,6 @@ HAL_StatusTypeDef T0_APDU(SCProtocol_t *p_t0, SC_APDU_t *p_apdu_c, SC_APDU_t *p_
     else if (p_apdu_c->APDU_S.Body.LE)
     {
       sc_data = p_apdu_c->APDU_S.Body.LE;
-    }
-
-    if ( p_t0->convention == INDIRECT )
-    {
-      sc_data = ReverseBits( sc_data );
     }
 
     retval = HAL_SMARTCARD_Transmit(hsc, &sc_data, 1, SC_CWT_TIMEOUT);
@@ -266,25 +239,11 @@ HAL_StatusTypeDef T0_APDU(SCProtocol_t *p_t0, SC_APDU_t *p_apdu_c, SC_APDU_t *p_
         if (((locData & (uint8_t)0xF0) == 0x60) || ((locData & (uint8_t)0xF0) == 0x90))
         {
           /* SW1 received */
-          if ( p_t0->convention == INDIRECT )
-          {
-            p_apdu_r->APDU_R.SW1 = ReverseBits(locData);
-          }
-          else
-          {
-            p_apdu_r->APDU_R.SW1 = locData;
-          }
+          p_apdu_r->APDU_R.SW1 = locData;
 
           if ((HAL_SMARTCARD_Receive(hsc, &locData, 1, SC_RECEIVE_TIMEOUT)) == HAL_OK)
           {
-            if ( p_t0->convention == INDIRECT )
-            {
-              p_apdu_r->APDU_R.SW2 = ReverseBits(locData);
-            }
-            else
-            {
-              p_apdu_r->APDU_R.SW2 = locData;
-            }
+            p_apdu_r->APDU_R.SW2 = locData;
           }
         }
         else if (((locData & (uint8_t)0xFE) == (((uint8_t)~(p_apdu_c->APDU_S.Header.INS)) & (uint8_t)0xFE)) || \
@@ -300,10 +259,6 @@ HAL_StatusTypeDef T0_APDU(SCProtocol_t *p_t0, SC_APDU_t *p_apdu_c, SC_APDU_t *p_
         /* Send body data to SC--------------------------------------------------*/
         if (p_apdu_c->APDU_S.Body.LC)
         {
-          if ( p_t0->convention == INDIRECT )
-          {
-            Buffer_reverse(  p_apdu_c->APDU_S.Body.Data, p_apdu_c->APDU_S.Body.LC );
-          }
           retval = HAL_SMARTCARD_Transmit(hsc, p_apdu_c->APDU_S.Body.Data, p_apdu_c->APDU_S.Body.LC, SC_T1_BWT_TIMEOUT);
           
           /* Flush the SC_USART RDR */
@@ -314,13 +269,7 @@ HAL_StatusTypeDef T0_APDU(SCProtocol_t *p_t0, SC_APDU_t *p_apdu_c, SC_APDU_t *p_
         /* Or receive body data from SC ------------------------------------------*/
         else if (p_apdu_c->APDU_S.Body.LE)
         {
-          if ((HAL_SMARTCARD_Receive(hsc, p_apdu_r->APDU_R.Data, p_apdu_c->APDU_S.Body.LE, SC_RECEIVE_TIMEOUT)) == HAL_OK)
-          {        
-            if ( p_t0->convention == INDIRECT )
-            {
-              Buffer_reverse( p_apdu_r->APDU_R.Data, p_apdu_c->APDU_S.Body.LE);
-            }
-          }
+          HAL_SMARTCARD_Receive(hsc, p_apdu_r->APDU_R.Data, p_apdu_c->APDU_S.Body.LE, SC_RECEIVE_TIMEOUT);
         }
 
         /* Wait SW1 --------------------------------------------------------------*/
@@ -329,15 +278,7 @@ HAL_StatusTypeDef T0_APDU(SCProtocol_t *p_t0, SC_APDU_t *p_apdu_c, SC_APDU_t *p_
         {
           if ((HAL_SMARTCARD_Receive(hsc, &locData, 1, SC_RECEIVE_TIMEOUT)) == HAL_OK)
           {
-            if ( p_t0->convention == INDIRECT )
-            {
-              p_apdu_r->APDU_R.SW1 = ReverseBits(locData);
-            }
-            else
-            {
-              p_apdu_r->APDU_R.SW1 = locData;
-            }
-
+            p_apdu_r->APDU_R.SW1 = locData;
             i = 11;
           }
           else
@@ -351,14 +292,7 @@ HAL_StatusTypeDef T0_APDU(SCProtocol_t *p_t0, SC_APDU_t *p_apdu_c, SC_APDU_t *p_
         {
           if ((HAL_SMARTCARD_Receive(hsc, &locData, 1, SC_RECEIVE_TIMEOUT)) == HAL_OK)
           {
-            if ( p_t0->convention == INDIRECT )
-            {
-              p_apdu_r->APDU_R.SW2 = ReverseBits(locData);
-            }
-            else
-            {
-              p_apdu_r->APDU_R.SW2 = locData;
-            }
+            p_apdu_r->APDU_R.SW2 = locData;
             i = 11;
           }
           else

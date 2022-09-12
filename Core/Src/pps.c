@@ -56,14 +56,13 @@ static uint8_t PPS_GetPCK (uint8_t* pps_buffer, uint8_t length);
   * @param  resp_length: a pointer to a variable that will contain the PPS
   *         response length.
   * @param  pps1: pointer to a PPS1 value.
-  * @param  etu: elementary time unit in us.
   * @retval int32_t The status of the PPS exchange. The returned value can
   *   be one of the following:
   *     - PPS_OK: PPS response matched with the PPS request.
   *     - PPS_HANDSAKE_ERROR: PPS response not matched with the PPS request.
   *     - PPS_COMMUNICATION_ERROR: communication failed.
   */
-int32_t PPS_Exchange(SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_length, uint8_t* pps1, uint32_t etu)
+int32_t PPS_Exchange(SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_length, uint8_t* pps1)
 {
   uint8_t response[PPS_MAX_LENGTH];
   uint8_t len_request, len_response = 0;
@@ -74,10 +73,6 @@ int32_t PPS_Exchange(SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_lengt
   /* Compute the check Character (PCK) */
   request[len_request - 1] = PPS_GetPCK(request, len_request - 1);
 
-  if ( p_ptc->convention == INDIRECT )
-  {
-    Buffer_reverse( request, len_request );
-  }
   /* ---PPS: Sending request: request, len_request--- */
   HAL_SMARTCARD_Transmit(p_ptc->pdevice, request, len_request, SC_CWT_TIMEOUT);
 
@@ -91,11 +86,6 @@ int32_t PPS_Exchange(SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_lengt
   /* and PPS0 response */
   if ((HAL_SMARTCARD_Receive(p_ptc->pdevice, response, 2, SC_RECEIVE_TIMEOUT)) == HAL_OK)
   {
-    if ( p_ptc->convention == INDIRECT )
-    {
-      Buffer_reverse( response, 2 );
-    }
-
     if (response[0] != 0xFF)
     {
       /*PPS exchange unsuccessful */
@@ -103,17 +93,11 @@ int32_t PPS_Exchange(SCProtocol_t * p_ptc, uint8_t* request, uint8_t* resp_lengt
     }
     else
     {
-
       /* checking for presence of PPSx parameters */
       len_response = 1 + ((response[1] & (uint8_t)0x10) >> 4) + (response[1] & (uint8_t)0x20 >> 5) + (response[1] & (uint8_t)0x40 >> 6);
 
       if ((HAL_SMARTCARD_Receive(p_ptc->pdevice, &response[2], len_response, SC_RECEIVE_TIMEOUT)) == HAL_OK)
       {
-        if ( p_ptc->convention == INDIRECT )
-        {
-          Buffer_reverse( &response[2], len_response );
-        }
-
         if (response[len_response + 1] != PPS_GetPCK(response, len_response + 1))
         {
           /*PCK exchange unsuccessful */
