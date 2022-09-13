@@ -21,8 +21,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#include "stm32g0c1e_eval_lcd.h"
 #include "keycard.h"
+#include "iso7816/smartcard.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -61,7 +61,7 @@ UART_HandleTypeDef huart3;
 PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
 /* USER CODE BEGIN PV */
-
+SmartCard sc;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -123,21 +123,15 @@ int main(void)
   MX_USART3_UART_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
-  BSP_LCD_Init();
-  BSP_LCD_DisplayOn();
-  BSP_LCD_Clear(LCD_COLOR_ST_PINK);
-  BSP_LCD_DisplayOn();
-  BSP_LCD_SetBackColor(LCD_COLOR_ST_PINK);
-  BSP_LCD_SetTextColor(LCD_COLOR_ST_YELLOW);
-  BSP_LCD_SetFont(&Font24);
-  BSP_LCD_DisplayStringAtLine(2, (uint8_t*) "TEST");
-  Keycard_Run(&hsmartcard2);
+  Keycard_Init();
+  SmartCard_Init(&sc, &hsmartcard2);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    Keycard_Run(&sc); 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -484,7 +478,8 @@ static void MX_USART2_SMARTCARD_Init(void)
   hsmartcard2.Init.Prescaler = 2;
   hsmartcard2.Init.GuardTime = 16;
   hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
-  hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
+  hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_ENABLE;
+  hsmartcard2.Init.TimeOutValue = 4000;
   hsmartcard2.Init.BlockLength = 0;
   hsmartcard2.Init.AutoRetryCount = 3;
   hsmartcard2.Init.ClockPrescaler = SMARTCARD_PRESCALER_DIV1;
@@ -763,8 +758,9 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == SC_NOFF_Pin) {
-    BSP_LCD_DisplayStringAtLine(2, (uint8_t*) "Card IN");
-    Keycard_Card_In();
+    BSP_LCD_ClearStringLine(4);
+    BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card IN");
+    SmartCard_In(&sc);
   }
 }
 
@@ -776,14 +772,12 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == SC_NOFF_Pin) {
-    BSP_LCD_DisplayStringAtLine(2, (uint8_t*) "Card OUT");
-    Keycard_Card_Out();
+    BSP_LCD_ClearStringLine(4);
+    BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card OUT");
+    SmartCard_Out(&sc);
   }
 }
 
-void SC_HW_Init(void) {
-  MX_USART2_SMARTCARD_Init();
-}
 /* USER CODE END 4 */
 
 /**
@@ -800,6 +794,7 @@ void Error_Handler(void)
 
   while (1)
   {
+      BSP_LCD_ClearStringLine(4);
       BSP_LCD_DisplayStringAtLine(4, (uint8_t*)"Error!");
   }
   /* USER CODE END Error_Handler_Debug */

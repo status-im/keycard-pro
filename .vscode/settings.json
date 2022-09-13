@@ -2,7 +2,9 @@
     "cortex-debug.armToolchainPath": "C:\\DEV\\BIN",
     "cortex-debug.openocdPath": "C:\\PROGRAMDATA\\CHOCOLATEY\\BIN\\OPENOCD.EXE",
     "files.associations": {
-        "keycard.h": "c"
+        "keycard.h": "c",
+        "main.h": "c",
+        "smartcard.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }

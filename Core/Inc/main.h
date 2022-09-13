@@ -31,7 +31,7 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "stm32g0c1e_eval_lcd.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -53,7 +53,6 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void SC_HW_Init(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
@@ -103,7 +102,6 @@ void SC_HW_Init(void);
 #define LCD_CS_OD_Pin GPIO_PIN_8
 #define LCD_CS_OD_GPIO_Port GPIOB
 /* USER CODE BEGIN Private defines */
-#define __HAL_SMARTCARD_GET_DRREGISTER(__HANDLE__) (__HANDLE__)->Instance->RDR
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

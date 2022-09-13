@@ -4,6 +4,7 @@
       "name": "STM32",
       "includePath": [
         "Core/Inc",
+        "Core/Inc/iso7816",
         "Drivers/BSP/Components/Common",
         "Drivers/BSP/Components/cbtl08gp053",
         "Drivers/BSP/Components/hx8347d",
