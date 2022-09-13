@@ -10,8 +10,8 @@
 #define ATR_CLASS_B_3V 0x2
 #define ATR_CLASS_C_1V8 0x4
 
-#define ATR_PROTOCOL_T0 0x1
-#define ATR_PROTOCOL_T1 0x2
+#define ATR_PROTOCOLS_T0 0x1
+#define ATR_PROTOCOLS_T1 0x2
 
 typedef enum {
     ATR_T1_LRC,
@@ -40,6 +40,7 @@ typedef struct {
     uint8_t classes;
     uint8_t clockstop;
     uint8_t protocols;
+    uint8_t default_protocol;
     uint8_t hist[ATR_HIST_BYTE_MAX];
 } ATR;
 

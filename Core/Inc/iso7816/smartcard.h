@@ -10,6 +10,11 @@ typedef enum {
     SC_READY
 } SmartCardState;
 
+typedef enum {
+    SC_T0,
+    SC_T1
+} SmartCardProtocol;
+
 typedef struct {
     SMARTCARD_HandleTypeDef* dev;
     SmartCardState state;
