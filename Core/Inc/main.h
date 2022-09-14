@@ -41,7 +41,7 @@ extern "C" {
 
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
-
+#define USART_CLOCK 64000000
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

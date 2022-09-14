@@ -37,6 +37,7 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 Core/Src/iso7816/atr.c \
+Core/Src/iso7816/pps.c \
 Core/Src/iso7816/smartcard.c \
 Core/Src/keycard.c \
 Core/Src/main.c \

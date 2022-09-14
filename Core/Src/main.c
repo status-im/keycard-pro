@@ -180,7 +180,7 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
@@ -475,8 +475,8 @@ static void MX_USART2_SMARTCARD_Init(void)
   hsmartcard2.Init.CLKPhase = SMARTCARD_PHASE_1EDGE;
   hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_ENABLE;
   hsmartcard2.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_DISABLE;
-  hsmartcard2.Init.Prescaler = 2;
-  hsmartcard2.Init.GuardTime = 16;
+  hsmartcard2.Init.Prescaler = 8;
+  hsmartcard2.Init.GuardTime = 0;
   hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
   hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_ENABLE;
   hsmartcard2.Init.TimeOutValue = 4000;
