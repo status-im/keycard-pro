@@ -42,6 +42,8 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 #define USART_CLOCK 64000000
+#define SC_DEFAULT_PSC 8
+#define SC_DEFAULT_BAUD_RATE 10752
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

@@ -27,7 +27,21 @@ void SmartCard_Activate(SmartCard* sc) {
     return;
   }
 
+  HAL_Delay(400);
   BSP_LED_On(LED2);
+
+  if (sc->atr.default_protocol == SC_T1) {
+    if (!T1_Negotiate_Params(sc)) {
+      sc->state = SC_OFF;
+      return;
+    }
+  } else {
+    //T0 not yet supported!
+    sc->state = SC_OFF;
+    return;
+  }
+
+  BSP_LED_On(LED3);
 
   sc->state = SC_READY;
 }
@@ -41,7 +55,13 @@ void SmartCard_Deactivate(SmartCard* sc) {
   HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(SC_5V3V_GPIO_Port, SC_5V3V_Pin, GPIO_PIN_SET);
-  sc->dev->Init.BaudRate = 10752;
+  
+  sc->dev->Init.BaudRate = SC_DEFAULT_BAUD_RATE;
+  sc->dev->Init.Prescaler = SC_DEFAULT_PSC;
+  sc->dev->Init.GuardTime = 0;
+  sc->dev->Init.NACKEnable = SMARTCARD_NACK_ENABLE;
+  sc->dev->Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
+
   HAL_SMARTCARD_DeInit(sc->dev);
   HAL_SMARTCARD_Init(sc->dev);
   sc->state = SC_OFF;

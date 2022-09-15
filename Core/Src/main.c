@@ -478,8 +478,7 @@ static void MX_USART2_SMARTCARD_Init(void)
   hsmartcard2.Init.Prescaler = 8;
   hsmartcard2.Init.GuardTime = 0;
   hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
-  hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_ENABLE;
-  hsmartcard2.Init.TimeOutValue = 4000;
+  hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
   hsmartcard2.Init.BlockLength = 0;
   hsmartcard2.Init.AutoRetryCount = 3;
   hsmartcard2.Init.ClockPrescaler = SMARTCARD_PRESCALER_DIV1;
