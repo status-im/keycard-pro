@@ -1,30 +1,19 @@
 #include "atr.h"
 
-#define ATR_TIMEOUT 25
+#define ATR_TIMEOUT 110
 #define ATR_SIZE 2
 #define ATR_DIRECT_CONVENTION 0x3b
-
-#define ATR_DEFAULT_FIDI 0x11
-#define ATR_DEFAULT_N 0
-#define ATR_DEFAULT_T0_WI 10
-
-#define ATR_DEFAULT_T1_IFSC 32
-#define ATR_DEFAULT_T1_CWI 13
-#define ATR_DEFAULT_T1_BWI 4
-#define ATR_DEFAULT_T1_RC 0
-
-#define ATR_DEFAULT_CLOCKSTOP 0
-#define ATR_DEFAULT_CLASSES 0
-
 
 #define ATR_READ_BYTE(v, mask, td, def) ((mask & td) ? v : def)
 
 uint8_t ATR_Read_Bytes(SmartCard* sc, uint8_t* buf, uint8_t td, uint8_t *ck) {
   for (int i = 0; i < 4; i++) {
     if (td & 0x10) {
-      if (HAL_SMARTCARD_Receive(sc->dev, &buf[i], 1, ATR_TIMEOUT) != HAL_OK) {
+      if (HAL_SMARTCARD_Receive_IT(sc->dev, &buf[i], 1) != HAL_OK) {
         return 0;
       }
+
+      while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
 
       *ck ^= buf[i];
     } else {
@@ -87,15 +76,14 @@ uint8_t ATR_Read(SmartCard* sc) {
 
   uint8_t buf[4];
 
-  HAL_StatusTypeDef status = HAL_SMARTCARD_Receive(sc->dev, buf, 2, 1);
-
-  HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
-
-  if (status != HAL_OK) {
-    if (HAL_SMARTCARD_Receive(sc->dev, buf, 2, ATR_TIMEOUT) != HAL_OK) {
-      return 0;
-    }
+  __HAL_SMARTCARD_FLUSH_DRREGISTER(sc->dev);
+  HAL_SMARTCARDEx_TimeOut_Config(sc->dev, ATR_TIMEOUT);
+  if (HAL_SMARTCARD_Receive_IT(sc->dev, buf, 2) != HAL_OK) {
+    return 0;
   }
+  
+  while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
+  HAL_SMARTCARDEx_TimeOut_Config(sc->dev, sc->dev->Init.TimeOutValue);
 
   if (buf[0] != ATR_DIRECT_CONVENTION) {
     return 0;
@@ -117,18 +105,22 @@ uint8_t ATR_Read(SmartCard* sc) {
     td = buf[3];
   }
 
-  if(HAL_SMARTCARD_Receive(sc->dev, sc->atr.hist, sc->atr.hist_len, ATR_TIMEOUT) != HAL_OK) {
+  if (HAL_SMARTCARD_Receive_IT(sc->dev, sc->atr.hist, sc->atr.hist_len) != HAL_OK) {
     return 0;
   }
+  
+  while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
 
   for (int i = 0; i < sc->atr.hist_len; i++) {
     ck ^= sc->atr.hist[i];
   }
 
   if ((sc->atr.protocols & ATR_PROTOCOLS_T1) || sc->atr.t15_present) {
-    if(HAL_SMARTCARD_Receive(sc->dev, &buf[0], 1, ATR_TIMEOUT) != HAL_OK) {
+    if (HAL_SMARTCARD_Receive_IT(sc->dev, buf, 1) != HAL_OK) {
       return 0;
     }
+    
+    while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
 
     sc->atr.valid = (buf[0] ^ ck) == 0;
   } else {

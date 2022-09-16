@@ -1,6 +1,7 @@
 #include "iso7816/smartcard.h"
 #include "iso7816/atr.h"
 #include "iso7816/pps.h"
+#include "iso7816/t1.h"
 
 void SmartCard_Init(SmartCard* sc, SMARTCARD_HandleTypeDef* dev) {
   sc->dev = dev;
@@ -12,9 +13,17 @@ void SmartCard_Init(SmartCard* sc, SMARTCARD_HandleTypeDef* dev) {
 }
 
 void SmartCard_Activate(SmartCard* sc) {
-  HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_RESET);
-  
+
+  HAL_Delay(100);
+
+  HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_RESET);
+
+  HAL_Delay(100);
+
+  HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
+
   if (!ATR_Read(sc)) {
     sc->state = SC_OFF;
     return;
@@ -27,7 +36,6 @@ void SmartCard_Activate(SmartCard* sc) {
     return;
   }
 
-  HAL_Delay(400);
   BSP_LED_On(LED2);
 
   if (sc->atr.default_protocol == SC_T1) {
@@ -37,8 +45,8 @@ void SmartCard_Activate(SmartCard* sc) {
     }
   } else {
     //T0 not yet supported!
-    sc->state = SC_OFF;
-    return;
+    //sc->state = SC_OFF;
+    //return;
   }
 
   BSP_LED_On(LED3);
@@ -60,7 +68,6 @@ void SmartCard_Deactivate(SmartCard* sc) {
   sc->dev->Init.Prescaler = SC_DEFAULT_PSC;
   sc->dev->Init.GuardTime = 0;
   sc->dev->Init.NACKEnable = SMARTCARD_NACK_ENABLE;
-  sc->dev->Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
 
   HAL_SMARTCARD_DeInit(sc->dev);
   HAL_SMARTCARD_Init(sc->dev);
@@ -77,20 +84,27 @@ void SmartCard_Out(SmartCard* sc) {
 }
 
 void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {
-  if(HAL_SMARTCARD_GetError(hsc) & HAL_SMARTCARD_ERROR_FE) {
+  BSP_LED_On(LED4);
+  uint32_t error = HAL_SMARTCARD_GetError(hsc);
+
+  if(error & HAL_SMARTCARD_ERROR_FE) {
     __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
   }
 
-  if(HAL_SMARTCARD_GetError(hsc) & HAL_SMARTCARD_ERROR_PE) {
+  if(error & HAL_SMARTCARD_ERROR_PE) {
     __HAL_SMARTCARD_ENABLE_IT(hsc, SMARTCARD_IT_RXNE);
     __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
   }
 
-  if(HAL_SMARTCARD_GetError(hsc) & HAL_SMARTCARD_ERROR_NE) {
+  if(error & HAL_SMARTCARD_ERROR_NE) {
     __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
   }
 
-  if(HAL_SMARTCARD_GetError(hsc) & HAL_SMARTCARD_ERROR_ORE) {
+  if(error & HAL_SMARTCARD_ERROR_ORE) {
+    __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
+  }
+
+  if(error & HAL_SMARTCARD_ERROR_RTO) {
     __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
   }
 }
@@ -100,5 +114,5 @@ void HAL_SMARTCARD_TxCpltCallback(SMARTCARD_HandleTypeDef *hsc) {
 }
 
 void HAL_SMARTCARD_RxCpltCallback(SMARTCARD_HandleTypeDef *hsc) {
-
+  //BSP_LED_On(LED4);
 }

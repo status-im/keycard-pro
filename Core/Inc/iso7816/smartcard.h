@@ -19,6 +19,7 @@ typedef struct {
   SMARTCARD_HandleTypeDef* dev;
   SmartCardState state;
   ATR atr;
+  uint32_t etu;
 } SmartCard;
 
 void SmartCard_Init(SmartCard* sc, SMARTCARD_HandleTypeDef* dev);

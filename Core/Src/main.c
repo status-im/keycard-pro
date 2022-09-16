@@ -54,6 +54,8 @@ RTC_HandleTypeDef hrtc;
 
 SPI_HandleTypeDef hspi1;
 
+TIM_HandleTypeDef htim6;
+
 UART_HandleTypeDef huart1;
 SMARTCARD_HandleTypeDef hsmartcard2;
 UART_HandleTypeDef huart3;
@@ -76,6 +78,7 @@ static void MX_USART2_SMARTCARD_Init(void);
 static void MX_RTC_Init(void);
 static void MX_USART3_UART_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_TIM6_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -122,6 +125,7 @@ int main(void)
   MX_RTC_Init();
   MX_USART3_UART_Init();
   MX_SPI1_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   Keycard_Init();
   SmartCard_Init(&sc, &hsmartcard2);
@@ -404,6 +408,44 @@ static void MX_SPI1_Init(void)
 }
 
 /**
+  * @brief TIM6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = (HAL_RCC_GetHCLKFreq() / 1000000);
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 65535;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+  HAL_TIM_Base_Start(&htim6);
+  /* USER CODE END TIM6_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -478,7 +520,8 @@ static void MX_USART2_SMARTCARD_Init(void)
   hsmartcard2.Init.Prescaler = 8;
   hsmartcard2.Init.GuardTime = 0;
   hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
-  hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
+  hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_ENABLE;
+  hsmartcard2.Init.TimeOutValue = 9600;
   hsmartcard2.Init.BlockLength = 0;
   hsmartcard2.Init.AutoRetryCount = 3;
   hsmartcard2.Init.ClockPrescaler = SMARTCARD_PRESCALER_DIV1;
