@@ -22,10 +22,14 @@ typedef struct {
   uint32_t etu;
 } SmartCard;
 
+#define SC_TRANSMIT_TO 25
+
 void SmartCard_Init(SmartCard* sc, SMARTCARD_HandleTypeDef* dev);
 void SmartCard_Activate(SmartCard* sc);
 void SmartCard_Deactivate(SmartCard* sc);
 void SmartCard_In(SmartCard* sc);
 void SmartCard_Out(SmartCard* sc);
+uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len);
+uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len);
 
 #endif

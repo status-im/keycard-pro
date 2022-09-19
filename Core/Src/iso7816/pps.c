@@ -11,18 +11,18 @@ const static uint32_t F_freq_Table[] = {4000000, 4533333, 5333333, 8000000, 1066
 #endif
 
 uint8_t PPS_Negotiate(SmartCard* sc) {
-  if (sc->atr.fi_di == ATR_DEFAULT_FIDI) {
+  if (sc->atr.fi_di != ATR_DEFAULT_FIDI) {
     uint8_t pps[4] = {0xff, 0x10, 0x00, 0x00};
     uint8_t ppsr[4];
     pps[1] |= sc->atr.default_protocol;
     pps[2] = sc->atr.fi_di;
     pps[3] = pps[0] ^ pps[1] ^ pps[2];
 
-    if (HAL_SMARTCARD_Transmit(sc->dev, pps, 4, PPS_TIMEOUT) != HAL_OK) {
+    if (HAL_SMARTCARD_Transmit(sc->dev, pps, 4, SC_TRANSMIT_TO) != HAL_OK) {
       return 0;
     }
 
-    if (HAL_SMARTCARD_Receive(sc->dev, ppsr, 4, PPS_TIMEOUT) != HAL_OK) {
+    if (!SmartCard_Receive_Sync(sc, ppsr, 4)) {
       return 0;
     }
 
@@ -45,7 +45,7 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
     sc->dev->Init.NACKEnable = SMARTCARD_NACK_DISABLE;
   }
 
-  sc->dev->Init.TimeOutValue = 200;
+  sc->dev->Init.TimeOutValue = 9600;
   sc->dev->Init.GuardTime = (sc->atr.n == 0 || sc->atr.n == 255) ? 0 : ((F/D) * sc->atr.n);
 
   if (HAL_SMARTCARD_Init(sc->dev) != HAL_OK) {

@@ -9,11 +9,9 @@
 uint8_t ATR_Read_Bytes(SmartCard* sc, uint8_t* buf, uint8_t td, uint8_t *ck) {
   for (int i = 0; i < 4; i++) {
     if (td & 0x10) {
-      if (HAL_SMARTCARD_Receive_IT(sc->dev, &buf[i], 1) != HAL_OK) {
+      if (!SmartCard_Receive_Sync(sc, &buf[i], 1)) {
         return 0;
       }
-
-      while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
 
       *ck ^= buf[i];
     } else {
@@ -78,11 +76,10 @@ uint8_t ATR_Read(SmartCard* sc) {
 
   __HAL_SMARTCARD_FLUSH_DRREGISTER(sc->dev);
   HAL_SMARTCARDEx_TimeOut_Config(sc->dev, ATR_TIMEOUT);
-  if (HAL_SMARTCARD_Receive_IT(sc->dev, buf, 2) != HAL_OK) {
+  if (!SmartCard_Receive_Sync(sc, buf, 2)) {
     return 0;
   }
   
-  while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
   HAL_SMARTCARDEx_TimeOut_Config(sc->dev, sc->dev->Init.TimeOutValue);
 
   if (buf[0] != ATR_DIRECT_CONVENTION) {
@@ -105,23 +102,19 @@ uint8_t ATR_Read(SmartCard* sc) {
     td = buf[3];
   }
 
-  if (HAL_SMARTCARD_Receive_IT(sc->dev, sc->atr.hist, sc->atr.hist_len) != HAL_OK) {
+  if (!SmartCard_Receive_Sync(sc, sc->atr.hist, sc->atr.hist_len)) {
     return 0;
   }
   
-  while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
-
   for (int i = 0; i < sc->atr.hist_len; i++) {
     ck ^= sc->atr.hist[i];
   }
 
   if ((sc->atr.protocols & ATR_PROTOCOLS_T1) || sc->atr.t15_present) {
-    if (HAL_SMARTCARD_Receive_IT(sc->dev, buf, 1) != HAL_OK) {
+    if (!SmartCard_Receive_Sync(sc, buf, 1)) {
       return 0;
     }
     
-    while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
-
     sc->atr.valid = (buf[0] ^ ck) == 0;
   } else {
     sc->atr.valid = 1;

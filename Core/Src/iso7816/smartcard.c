@@ -44,9 +44,9 @@ void SmartCard_Activate(SmartCard* sc) {
       return;
     }
   } else {
-    //T0 not yet supported!
-    //sc->state = SC_OFF;
-    //return;
+    // T0 not implemented yet
+    sc->state = SC_OFF;
+    return;
   }
 
   BSP_LED_On(LED3);
@@ -83,6 +83,26 @@ void SmartCard_Out(SmartCard* sc) {
   sc->state = SC_NOT_PRESENT;
 }
 
+uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len) {
+  __HAL_SMARTCARD_ENABLE_IT(sc->dev, SMARTCARD_IT_RTO);
+
+  if (HAL_SMARTCARD_Receive_IT(sc->dev, buf, len) != HAL_OK) {
+    return 0;
+  }
+
+  return 1;
+}
+
+uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
+  if (!SmartCard_Receive(sc, buf, len)) {
+    return 0;
+  }
+
+  // handle error states
+  while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
+  return 1;
+}
+
 void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {
   BSP_LED_On(LED4);
   uint32_t error = HAL_SMARTCARD_GetError(hsc);
@@ -107,6 +127,8 @@ void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {
   if(error & HAL_SMARTCARD_ERROR_RTO) {
     __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
   }
+
+  __HAL_SMARTCARD_DISABLE_IT(hsc, SMARTCARD_IT_RTO);
 }
 
 void HAL_SMARTCARD_TxCpltCallback(SMARTCARD_HandleTypeDef *hsc) {
@@ -114,5 +136,5 @@ void HAL_SMARTCARD_TxCpltCallback(SMARTCARD_HandleTypeDef *hsc) {
 }
 
 void HAL_SMARTCARD_RxCpltCallback(SMARTCARD_HandleTypeDef *hsc) {
-  //BSP_LED_On(LED4);
+  __HAL_SMARTCARD_DISABLE_IT(hsc, SMARTCARD_IT_RTO);
 }
