@@ -4,7 +4,7 @@
 #include "main.h"
 #include "smartcard.h"
 
-#define T1_NAD 0x00
+#define T1_NAD 0x12
 #define T1_IFSD 254
 
 #define T1_I_BLOCK 0x00

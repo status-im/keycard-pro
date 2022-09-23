@@ -506,7 +506,7 @@ static void MX_USART2_SMARTCARD_Init(void)
   /* USER CODE END USART2_Init 0 */
 
   /* USER CODE BEGIN USART2_Init 1 */
-
+  hsmartcard2.Init.Parity = SMARTCARD_PARITY_EVEN;
   /* USER CODE END USART2_Init 1 */
   hsmartcard2.Instance = USART2;
   hsmartcard2.Init.BaudRate = 10752;

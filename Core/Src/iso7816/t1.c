@@ -166,12 +166,8 @@ uint8_t T1_Handle_Resp(SmartCard* sc, APDU* apdu) {
     err = T1_Handle_I(sc, header[1], &more);
   } else if ((header[1] & T1_S_BLOCK) == T1_S_BLOCK) {
     err = T1_Handle_S(sc, header[1], s, &more);    
-    BSP_LED_On(LED4);
   } else {
     err = T1_Handle_R(sc, header[1]);
-    if (header[1] == 0x81) {
-      BSP_LED_Off(LED2);
-    }
   }
 
   return more ? T1_Handle_Resp(sc, apdu) : err;
