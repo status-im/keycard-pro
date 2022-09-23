@@ -28,36 +28,27 @@ void SmartCard_Activate(SmartCard* sc) {
   HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
 
   if (!ATR_Read(sc)) {
-    sc->state = SC_OFF;
+    SmartCard_Deactivate(sc);
     return;
   }
 
   BSP_LED_On(LED1);
 
   if (!PPS_Negotiate(sc)) {
-    sc->state = SC_OFF;
+    SmartCard_Deactivate(sc);
     return;
   }
 
   BSP_LED_On(LED2);
 
   if (sc->atr.default_protocol == SC_T1) {
-    // Test code to remove
-    HAL_Delay(100);
-    APDU _apdu;
-    APDU* apdu = &_apdu;
-    APDU_RESET(apdu);
-    APDU_CLA(apdu) = 0;
-    APDU_INS(apdu) = 0xa4;
-    APDU_P1(apdu) = 4;
-    APDU_P2(apdu) = 0;
-    if (!T1_Transmit(sc, apdu)) {
-      sc->state = SC_OFF;
+    if (!T1_Negotiate_IFSD(sc)) {
+      SmartCard_Deactivate(sc);
       return;
     }
   } else {
     //T0 not implemented yet
-    sc->state = SC_OFF;
+    SmartCard_Deactivate(sc);
     return;
   }
 
@@ -67,25 +58,21 @@ void SmartCard_Activate(SmartCard* sc) {
 }
 
 void SmartCard_Deactivate(SmartCard* sc) {
-  BSP_LED_Off(LED1);
-  BSP_LED_Off(LED2);
-  BSP_LED_Off(LED3);
-  BSP_LED_Off(LED4);
-
   HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(SC_5V3V_GPIO_Port, SC_5V3V_Pin, GPIO_PIN_SET);
   
+  sc->dev->Init.StopBits = SMARTCARD_STOPBITS_1_5;
   sc->dev->Init.BaudRate = SC_DEFAULT_BAUD_RATE;
   sc->dev->Init.Prescaler = SC_DEFAULT_PSC;
   sc->dev->Init.GuardTime = 0;
   sc->dev->Init.NACKEnable = SMARTCARD_NACK_ENABLE;
+  sc->dev->Init.AutoRetryCount = 3;
   sc->send_seq = 0;
   sc->recv_seq = 0;
 
-  HAL_SMARTCARD_DeInit(sc->dev);
   HAL_SMARTCARD_Init(sc->dev);
-  sc->state = SC_OFF;
+  sc->state = SC_DEACTIVATED;
 }
 
 void SmartCard_In(SmartCard* sc) {
@@ -130,6 +117,7 @@ void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {
 
   if(error & HAL_SMARTCARD_ERROR_FE) {
     __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
+    BSP_LED_Off(LED1);
   }
 
   if(error & HAL_SMARTCARD_ERROR_PE) {

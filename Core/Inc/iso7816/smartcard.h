@@ -22,6 +22,7 @@
 typedef enum {
   SC_NOT_PRESENT,
   SC_OFF,
+  SC_DEACTIVATED,
   SC_READY
 } SmartCardState;
 

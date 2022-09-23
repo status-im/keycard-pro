@@ -7,7 +7,7 @@ const static uint32_t F_Table[] = {372, 372, 558, 744, 1116, 1488, 1860, 0, 0, 5
 const static uint32_t D_Table[] = {0, 1, 2, 4, 8, 16, 32, 0, 12, 20, 0, 0, 0, 0, 0, 0};
 
 #if(USART_CLOCK == 64000000)
-const static uint32_t F_freq_Table[] = {4000000, 4533333, 5333333, 8000000, 10666666, 16000000, 16000000, 0, 0, 4533333, 6400000, 8000000, 10666666, 16000000, 0, 0};
+const static uint32_t F_freq_Table[] = {4000000, 4000000, 5333333, 8000000, 10666666, 16000000, 16000000, 0, 0, 4533333, 6400000, 8000000, 10666666, 16000000, 0, 0};
 #endif
 
 uint8_t PPS_Negotiate(SmartCard* sc) {
@@ -42,12 +42,13 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
   sc->dev->Init.Prescaler = (USART_CLOCK / freq / 2);
 
   if (sc->atr.default_protocol == SC_T1) {
-    sc->dev->Init.StopBits = USART_CR2_STOP_1;
+    sc->dev->Init.StopBits = UART_STOPBITS_1;
     sc->dev->Init.NACKEnable = SMARTCARD_NACK_DISABLE;
     sc->t1_cwt = (1 << sc->atr.t1_cwi);
     sc->t1_bwt = (((1 << sc->atr.t1_bwi) * 960 * 372 * D) / F);
     sc->t1_bwt_factor = 1;
     sc->dev->Init.BlockLength = 255;
+    sc->dev->Init.AutoRetryCount = 0;
   } else {
     sc->dev->Init.TimeOutValue = sc->atr.t0_wi * D * 960;
   }

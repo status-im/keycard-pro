@@ -6,7 +6,7 @@
 #define T1_RETRY 1
 #define T1_OK 2
 
-static uint8_t T1_Wait_BGT() {
+static void T1_Wait_BGT() {
   // TODO: implement properly
   HAL_Delay(2);
 }
@@ -31,15 +31,15 @@ static uint8_t T1_Transmit_R(SmartCard* sc, uint8_t err) {
   return SmartCard_Transmit_Sync(sc, block, 4);
 }
 
-static uint8_t T1_Transmit_S(SmartCard* sc, uint8_t type, uint8_t has_s, uint8_t s) {
+static uint8_t T1_Transmit_S(SmartCard* sc, uint8_t type, uint8_t has_data, uint8_t data) {
   uint8_t block[5];
   block[0] = T1_NAD;
   block[1] = T1_S_BLOCK | type;
-  block[2] = has_s;
-  block[3] = s;
-  block[3+has_s] = T1_LRC(block, &block[4], has_s);
+  block[2] = has_data;
+  block[3] = data;
+  block[3+has_data] = T1_LRC(block, &block[3], has_data);
   
-  return SmartCard_Transmit_Sync(sc, block, 4+has_s);
+  return SmartCard_Transmit_Sync(sc, block, 4+has_data);
 }
 
 static uint8_t T1_Handle_I(SmartCard* sc, uint8_t pcb, uint8_t* more) {
@@ -64,14 +64,12 @@ static uint8_t T1_Handle_I(SmartCard* sc, uint8_t pcb, uint8_t* more) {
 }
 
 static uint8_t T1_Handle_S(SmartCard* sc, uint8_t pcb, uint8_t data, uint8_t* more) {
-  if ((pcb & T1_S_RES) == T1_S_RES) {
-    return T1_FAIL;
-  }
+  uint8_t is_resp = (pcb & T1_S_RES) == T1_S_RES;
 
   uint8_t res = T1_S_RES;
   uint8_t len;
   uint8_t err = T1_OK;
-  *more = 1;
+  *more = !is_resp;
 
   if ((pcb & T1_S_WTX) == T1_S_WTX) {
     sc->t1_bwt_factor = data;
@@ -83,20 +81,25 @@ static uint8_t T1_Handle_S(SmartCard* sc, uint8_t pcb, uint8_t data, uint8_t* mo
     err = T1_FAIL;
     *more = 0;
   } else if ((pcb & T1_S_IFS) == T1_S_IFS) {
-    sc->atr.t1_ifsc = data;
+    if (!is_resp) {
+      sc->atr.t1_ifsc = data;
+    }
     len = 1;
     res |= T1_S_IFS;
   } else {
-    //TODO: correctly handle
     len = 0;
     res |= T1_S_RESYNCH;
+    sc->recv_seq = 0;
+    sc->send_seq = 0;
   }
 
-  if (!T1_Transmit_S(sc, res, len, data)) {
-    *more = 0;
-    return T1_FAIL;
-  } 
-
+  if (!is_resp) {
+    if (!T1_Transmit_S(sc, res, len, data)) {
+      *more = 0;
+      return T1_FAIL;
+    }
+  }
+ 
   return err;
 }
 
@@ -132,9 +135,10 @@ uint8_t T1_Handle_Resp(SmartCard* sc, APDU* apdu) {
     data = &s;
   } else {
     data = NULL;
+    blen = 0;
   }
 
-  if (data) {
+  if (blen) {
     if (!SmartCard_Receive_Sync(sc, data, blen)) {
       return T1_FAIL;
     }    
@@ -162,8 +166,12 @@ uint8_t T1_Handle_Resp(SmartCard* sc, APDU* apdu) {
     err = T1_Handle_I(sc, header[1], &more);
   } else if ((header[1] & T1_S_BLOCK) == T1_S_BLOCK) {
     err = T1_Handle_S(sc, header[1], s, &more);    
+    BSP_LED_On(LED4);
   } else {
     err = T1_Handle_R(sc, header[1]);
+    if (header[1] == 0x81) {
+      BSP_LED_Off(LED2);
+    }
   }
 
   return more ? T1_Handle_Resp(sc, apdu) : err;
@@ -215,4 +223,26 @@ uint8_t T1_Transmit(SmartCard* sc, APDU* apdu) {
   }
 
   return to_send == 0;
+}
+
+uint8_t T1_Negotiate_IFSD(SmartCard* sc) {
+  if (!T1_Transmit_S(sc, T1_S_IFS, 1, T1_IFSD)) {
+    return 0;
+  }
+
+  if (T1_Handle_Resp(sc, NULL) == T1_OK) {
+    return 1;
+  }
+
+  if (!T1_Transmit_S(sc, T1_S_RESYNCH, 0, 0)) {
+    return 0;
+  }
+
+  if (T1_Handle_Resp(sc, NULL) != T1_OK) {
+    return 0;
+  }
+
+  BSP_LED_Toggle(LED1);
+  HAL_Delay(50);
+  return T1_Negotiate_IFSD(sc);
 }

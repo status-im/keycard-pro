@@ -1,6 +1,10 @@
 #include "keycard.h"
 
 void Keycard_Activate(SmartCard* sc) {
+  BSP_LED_Off(LED1);
+  BSP_LED_Off(LED2);
+  BSP_LED_Off(LED3);
+  BSP_LED_Off(LED4);
   SmartCard_Activate(sc);
 }
 
@@ -28,7 +32,23 @@ void Keycard_Run(SmartCard* sc) {
     case SC_OFF:
       Keycard_Activate(sc);
       break;
+    case SC_DEACTIVATED:
+      break;
     case SC_READY:
+      /*// Test code to remove
+      HAL_Delay(100);
+      APDU _apdu;
+      APDU* apdu = &_apdu;
+      APDU_RESET(apdu);
+      APDU_CLA(apdu) = 0;
+      APDU_INS(apdu) = 0xa4;
+      APDU_P1(apdu) = 4;
+      APDU_P2(apdu) = 0;
+      APDU_SET_LE(apdu, 0);
+      if (!T1_Transmit(sc, apdu)) {
+        SmartCard_Deactivate(sc);
+        return;
+      }*/
       break; // process commands
   }
 }

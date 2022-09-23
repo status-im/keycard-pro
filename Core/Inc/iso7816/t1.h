@@ -5,6 +5,7 @@
 #include "smartcard.h"
 
 #define T1_NAD 0x00
+#define T1_IFSD 254
 
 #define T1_I_BLOCK 0x00
 #define T1_R_BLOCK 0x80
@@ -32,5 +33,6 @@
 
 
 uint8_t T1_Transmit(SmartCard* sc, APDU* apdu);
+uint8_t T1_Negotiate_IFSD(SmartCard* sc);
 
 #endif

@@ -67,6 +67,7 @@ void ATR_Reset(SmartCard* sc) {
   sc->atr.t1_bwi = ATR_DEFAULT_T1_BWI;
   sc->atr.clockstop = ATR_DEFAULT_CLOCKSTOP;
   sc->atr.classes = ATR_DEFAULT_CLASSES;
+  sc->atr.hist_len = 0;
 }
 
 uint8_t ATR_Read(SmartCard* sc) {
