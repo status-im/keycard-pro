@@ -33,6 +33,6 @@
 
 
 uint8_t T1_Transmit(SmartCard* sc, APDU* apdu);
-uint8_t T1_Negotiate_IFSD(SmartCard* sc);
+uint8_t T1_Negotiate_IFSD(SmartCard* sc, int retry);
 
 #endif

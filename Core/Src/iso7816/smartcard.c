@@ -42,7 +42,7 @@ void SmartCard_Activate(SmartCard* sc) {
   BSP_LED_On(LED2);
 
   if (sc->atr.default_protocol == SC_T1) {
-    if (!T1_Negotiate_IFSD(sc)) {
+    if (!T1_Negotiate_IFSD(sc, 3)) {
       SmartCard_Deactivate(sc);
       return;
     }
@@ -84,25 +84,7 @@ void SmartCard_Out(SmartCard* sc) {
   sc->state = SC_NOT_PRESENT;
 }
 
-uint8_t SmartCard_Transmit_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
-  return HAL_SMARTCARD_Transmit(sc->dev, buf, len, SC_TRANSMIT_TO) == HAL_OK; 
-}
-
-uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len) {
-  __HAL_SMARTCARD_ENABLE_IT(sc->dev, SMARTCARD_IT_RTO);
-
-  if (HAL_SMARTCARD_Receive_IT(sc->dev, buf, len) != HAL_OK) {
-    return 0;
-  }
-
-  return 1;
-}
-
-uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
-  if (!SmartCard_Receive(sc, buf, len)) {
-    return 0;
-  }
-
+static inline uint8_t SmartCard_Wait(SmartCard* sc) {
   while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
 
   if (HAL_SMARTCARD_GetError(sc->dev) != HAL_SMARTCARD_ERROR_NONE) {
@@ -110,6 +92,31 @@ uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
   }
 
   return 1;
+}
+
+uint8_t SmartCard_Transmit(SmartCard* sc, uint8_t* buf, uint32_t len) {
+  return HAL_SMARTCARD_Transmit_IT(sc->dev, buf, len) == HAL_OK;
+}
+
+uint8_t SmartCard_Transmit_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
+  if (!SmartCard_Transmit(sc, buf, len)) {
+    return 0;
+  }
+
+  return SmartCard_Wait(sc);
+}
+
+uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len) {
+  __HAL_SMARTCARD_ENABLE_IT(sc->dev, SMARTCARD_IT_RTO);
+  return HAL_SMARTCARD_Receive_IT(sc->dev, buf, len) == HAL_OK;
+}
+
+uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
+  if (!SmartCard_Receive(sc, buf, len)) {
+    return 0;
+  }
+
+  return SmartCard_Wait(sc);
 }
 
 void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {

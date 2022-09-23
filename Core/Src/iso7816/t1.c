@@ -225,7 +225,7 @@ uint8_t T1_Transmit(SmartCard* sc, APDU* apdu) {
   return to_send == 0;
 }
 
-uint8_t T1_Negotiate_IFSD(SmartCard* sc) {
+uint8_t T1_Negotiate_IFSD(SmartCard* sc, int retry) {
   if (!T1_Transmit_S(sc, T1_S_IFS, 1, T1_IFSD)) {
     return 0;
   }
@@ -234,7 +234,7 @@ uint8_t T1_Negotiate_IFSD(SmartCard* sc) {
     return 1;
   }
 
-  if (!T1_Transmit_S(sc, T1_S_RESYNCH, 0, 0)) {
+  if (!retry || !T1_Transmit_S(sc, T1_S_RESYNCH, 0, 0)) {
     return 0;
   }
 
@@ -242,7 +242,5 @@ uint8_t T1_Negotiate_IFSD(SmartCard* sc) {
     return 0;
   }
 
-  BSP_LED_Toggle(LED1);
-  HAL_Delay(50);
-  return T1_Negotiate_IFSD(sc);
+  return T1_Negotiate_IFSD(sc, retry - 1);
 }
