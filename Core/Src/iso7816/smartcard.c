@@ -4,7 +4,10 @@
 #include "iso7816/t1.h"
 
 void SmartCard_Init(SmartCard* sc, SMARTCARD_HandleTypeDef* dev) {
+  sc->send_seq = 0;
+  sc->recv_seq = 0;
   sc->dev = dev;
+
   if (HAL_GPIO_ReadPin(SC_NOFF_GPIO_Port, SC_NOFF_Pin)) {
     sc->state = SC_OFF;
   } else {
@@ -39,12 +42,21 @@ void SmartCard_Activate(SmartCard* sc) {
   BSP_LED_On(LED2);
 
   if (sc->atr.default_protocol == SC_T1) {
-    if (!T1_Negotiate_Params(sc)) {
+    // Test code to remove
+    HAL_Delay(100);
+    APDU _apdu;
+    APDU* apdu = &_apdu;
+    APDU_RESET(apdu);
+    APDU_CLA(apdu) = 0;
+    APDU_INS(apdu) = 0xa4;
+    APDU_P1(apdu) = 4;
+    APDU_P2(apdu) = 0;
+    if (!T1_Transmit(sc, apdu)) {
       sc->state = SC_OFF;
       return;
     }
   } else {
-    // T0 not implemented yet
+    //T0 not implemented yet
     sc->state = SC_OFF;
     return;
   }
@@ -68,6 +80,8 @@ void SmartCard_Deactivate(SmartCard* sc) {
   sc->dev->Init.Prescaler = SC_DEFAULT_PSC;
   sc->dev->Init.GuardTime = 0;
   sc->dev->Init.NACKEnable = SMARTCARD_NACK_ENABLE;
+  sc->send_seq = 0;
+  sc->recv_seq = 0;
 
   HAL_SMARTCARD_DeInit(sc->dev);
   HAL_SMARTCARD_Init(sc->dev);
@@ -81,6 +95,10 @@ void SmartCard_In(SmartCard* sc) {
 void SmartCard_Out(SmartCard* sc) {
   SmartCard_Deactivate(sc);
   sc->state = SC_NOT_PRESENT;
+}
+
+uint8_t SmartCard_Transmit_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
+  return HAL_SMARTCARD_Transmit(sc->dev, buf, len, SC_TRANSMIT_TO) == HAL_OK; 
 }
 
 uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len) {
@@ -98,13 +116,16 @@ uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
     return 0;
   }
 
-  // handle error states
   while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
+
+  if (HAL_SMARTCARD_GetError(sc->dev) != HAL_SMARTCARD_ERROR_NONE) {
+    return 0;
+  }
+
   return 1;
 }
 
 void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {
-  BSP_LED_On(LED4);
   uint32_t error = HAL_SMARTCARD_GetError(hsc);
 
   if(error & HAL_SMARTCARD_ERROR_FE) {
@@ -125,10 +146,11 @@ void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {
   }
 
   if(error & HAL_SMARTCARD_ERROR_RTO) {
+    BSP_LED_On(LED4);
     __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
+    __HAL_SMARTCARD_DISABLE_IT(hsc, SMARTCARD_IT_RTO);
   }
 
-  __HAL_SMARTCARD_DISABLE_IT(hsc, SMARTCARD_IT_RTO);
 }
 
 void HAL_SMARTCARD_TxCpltCallback(SMARTCARD_HandleTypeDef *hsc) {

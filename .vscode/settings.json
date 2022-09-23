@@ -5,7 +5,8 @@
         "keycard.h": "c",
         "main.h": "c",
         "smartcard.h": "c",
-        "pps.h": "c"
+        "pps.h": "c",
+        "math.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }

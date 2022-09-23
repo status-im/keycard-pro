@@ -18,7 +18,7 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
     pps[2] = sc->atr.fi_di;
     pps[3] = pps[0] ^ pps[1] ^ pps[2];
 
-    if (HAL_SMARTCARD_Transmit(sc->dev, pps, 4, SC_TRANSMIT_TO) != HAL_OK) {
+    if (!SmartCard_Transmit_Sync(sc, pps, 4)) {
       return 0;
     }
 
@@ -38,14 +38,20 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
   uint32_t D = D_Table[di];
   uint32_t freq = F_freq_Table[fi];
 
-  sc->dev->Init.BaudRate = (freq * D) / F;
+  sc->dev->Init.BaudRate = ((freq * D) / F);
   sc->dev->Init.Prescaler = (USART_CLOCK / freq / 2);
 
   if (sc->atr.default_protocol == SC_T1) {
+    sc->dev->Init.StopBits = USART_CR2_STOP_1;
     sc->dev->Init.NACKEnable = SMARTCARD_NACK_DISABLE;
+    sc->t1_cwt = (1 << sc->atr.t1_cwi);
+    sc->t1_bwt = (((1 << sc->atr.t1_bwi) * 960 * 372 * D) / F);
+    sc->t1_bwt_factor = 1;
+    sc->dev->Init.BlockLength = 255;
+  } else {
+    sc->dev->Init.TimeOutValue = sc->atr.t0_wi * D * 960;
   }
 
-  sc->dev->Init.TimeOutValue = 9600;
   sc->dev->Init.GuardTime = (sc->atr.n == 0 || sc->atr.n == 255) ? 0 : ((F/D) * sc->atr.n);
 
   if (HAL_SMARTCARD_Init(sc->dev) != HAL_OK) {
