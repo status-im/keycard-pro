@@ -36,8 +36,8 @@ typedef struct {
   ATR atr;
   uint8_t send_seq;
   uint8_t recv_seq;
-  uint8_t t1_bwt;
-  uint8_t t1_cwt;
+  uint32_t t1_bwt;
+  uint32_t t1_cwt;
   uint8_t t1_bwt_factor;
 } SmartCard;
 
