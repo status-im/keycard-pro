@@ -36,6 +36,7 @@ BUILD_DIR = build
 ######################################
 # C sources
 C_SOURCES =  \
+Core/Src/application_info.c \
 Core/Src/iso7816/atr.c \
 Core/Src/iso7816/pps.c \
 Core/Src/iso7816/smartcard.c \
@@ -45,6 +46,7 @@ Core/Src/main.c \
 Core/Src/stm32g0xx_hal_msp.c \
 Core/Src/stm32g0xx_it.c \
 Core/Src/system_stm32g0xx.c \
+Core/Src/tlv.c \
 Drivers/BSP/Components/hx8347d/hx8347d.c \
 Drivers/BSP/STM32G0C1E-EV/stm32g0c1e_eval.c \
 Drivers/BSP/STM32G0C1E-EV/stm32g0c1e_eval_lcd.c \

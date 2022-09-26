@@ -9,6 +9,8 @@
 #define APDU_P1(__APDU__) ((__APDU__)->data[2])
 #define APDU_P2(__APDU__) ((__APDU__)->data[3])
 #define APDU_LC(__APDU__) ((__APDU__)->has_lc ? (__APDU__)->data[4] : -1)
+#define APDU_DATA(__APDU__)(&((__APDU__)->data[5]))
+#define APDU_RESP(__APDU__)((__APDU__)->data)
 #define APDU_LE(__APDU__) ((__APDU__)->has_le ? (__APDU__)->data[(__APDU__)->has_lc ? 5 : 4] : -1)
 #define APDU_SET_LC(__APDU__, __val__) {(__APDU__)->data[4] = __val__; (__APDU__)->has_lc = 1;}
 #define APDU_SET_LE(__APDU__, __val__) {(__APDU__)->data[5 + APDU_LC(__APDU__)] = __val__; (__APDU__)->has_le = 1;}

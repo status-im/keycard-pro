@@ -60,10 +60,6 @@ void SmartCard_Activate(SmartCard* sc) {
       SmartCard_Deactivate(sc);
       return;
     }
-  } else {
-    //T0 not implemented yet
-    SmartCard_Deactivate(sc);
-    return;
   }
 
   sc->state = SC_READY;
@@ -134,9 +130,10 @@ uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
 uint8_t SmartCard_Send_APDU(SmartCard* sc, APDU* apdu) {
   if (sc->atr.default_protocol == SC_T1) {
     return T1_Transmit(sc, apdu);
+  } else {
+    // T0 not implemented
+    return 0;
   }
-
-  return 0;
 }
 
 void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {
