@@ -128,7 +128,7 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   Keycard_Init();
-  SmartCard_Init(&sc, &hsmartcard2);
+  SmartCard_Init(&sc, &hsmartcard2, &htim6);
   /* USER CODE END 2 */
 
   /* Infinite loop */

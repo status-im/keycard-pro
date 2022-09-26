@@ -6,10 +6,7 @@
 #define T1_RETRY 1
 #define T1_OK 2
 
-static void T1_Wait_BGT() {
-  // TODO: implement properly
-  HAL_Delay(2);
-}
+#define T1_BGT 22
 
 static inline uint8_t T1_LRC(uint8_t* header, uint8_t* data, uint32_t len) {
   uint8_t lrc = header[0] ^ header[1] ^ header[2];
@@ -149,7 +146,7 @@ uint8_t T1_Handle_Resp(SmartCard* sc, APDU* apdu) {
     return T1_FAIL;
   }
 
-  T1_Wait_BGT();
+  SmartCard_Delay(sc, T1_BGT);
 
   if (T1_LRC(header, data, blen) != lrc) {
     if (!T1_Transmit_R(sc, T1_R_PARITY)) {
@@ -178,7 +175,6 @@ uint8_t T1_Transmit(SmartCard* sc, APDU* apdu) {
   uint8_t to_send = APDU_LEN(apdu);
   uint8_t resend = 0;
 
-  //TODO: implement resync
   while(to_send > 0 && (resend < 2)) {
     uint8_t header[3];
     uint8_t blen = MIN(to_send, sc->atr.t1_ifsc);
@@ -222,6 +218,8 @@ uint8_t T1_Transmit(SmartCard* sc, APDU* apdu) {
 }
 
 uint8_t T1_Negotiate_IFSD(SmartCard* sc, int retry) {
+  SmartCard_Delay(sc, T1_BGT);
+  
   if (!T1_Transmit_S(sc, T1_S_IFS, 1, T1_IFSD)) {
     return 0;
   }
