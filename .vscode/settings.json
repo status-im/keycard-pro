@@ -6,7 +6,11 @@
         "main.h": "c",
         "smartcard.h": "c",
         "pps.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "wc_port.h": "c",
+        "random.h": "c",
+        "settings.h": "c",
+        "stdbool.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }

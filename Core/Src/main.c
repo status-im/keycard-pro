@@ -23,6 +23,7 @@
 /* USER CODE BEGIN Includes */
 #include "keycard.h"
 #include "iso7816/smartcard.h"
+#include "wolfssl/wolfcrypt/wc_port.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -119,14 +120,13 @@ int main(void)
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_USB_DRD_FS_PCD_Init();
-  MX_AES_Init();
-  MX_RNG_Init();
   MX_USART2_SMARTCARD_Init();
   MX_RTC_Init();
   MX_USART3_UART_Init();
   MX_SPI1_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
+  wolfCrypt_Init();
   Keycard_Init();
   SmartCard_Init(&sc, &hsmartcard2, &htim6);
   /* USER CODE END 2 */

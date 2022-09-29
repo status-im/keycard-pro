@@ -2,11 +2,28 @@
 
 #include "keycard.h"
 #include "application_info.h"
+#include "pairing.h"
+#include "wolfssl/wolfcrypt/pwdbased.h"
+#include "wolfssl/wolfcrypt/random.h"
+#include "wolfssl/wolfcrypt/sha256.h"
 
 const uint8_t keycard_aid[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t keycard_aid_len = 9;
 
 static int tested = 0;
+
+static WC_RNG rng;
+
+static inline int Constant_Compare(const byte* a, const byte* b, int length) {
+  int i;
+  int compareSum = 0;
+
+  for (i = 0; i < length; i++) {
+      compareSum |= a[i] ^ b[i];
+  }
+
+  return compareSum;
+}
 
 void Keycard_Activate(SmartCard* sc) {
   SmartCard_Activate(sc);
@@ -27,6 +44,7 @@ void Keycard_Init() {
   BSP_LCD_SetFont(&Font24);
   BSP_LCD_DisplayStringAtLine(2, (uint8_t*) "Keycard Pro");  
   BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Waiting for card...");
+  wc_InitRng(&rng);
 }
 
 uint8_t Keycard_CMD_Select(SmartCard* sc, APDU* apdu) {
@@ -40,6 +58,62 @@ uint8_t Keycard_CMD_Select(SmartCard* sc, APDU* apdu) {
   APDU_SET_LE(apdu, 0);
 
   return SmartCard_Send_APDU(sc, apdu);
+}
+
+uint8_t Keycard_CMD_Pair(SmartCard* sc, APDU* apdu, uint8_t step, uint8_t* data) {
+  APDU_RESET(apdu);
+  APDU_CLA(apdu) = 0x80;
+  APDU_INS(apdu) = 0x12;
+  APDU_P1(apdu) = step;
+  APDU_P2(apdu) = 0;
+  memcpy(APDU_DATA(apdu), data, 32);  
+  APDU_SET_LC(apdu, 32);
+  APDU_SET_LE(apdu, 0);  
+
+  return SmartCard_Send_APDU(sc, apdu);
+}
+
+uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, uint8_t* psk, Pairing* pairing) {
+  uint8_t buf[WC_SHA256_DIGEST_SIZE];
+  wc_RNG_GenerateBlock(&rng, buf, WC_SHA256_DIGEST_SIZE);
+
+  if (!Keycard_CMD_Pair(sc, apdu, 0, buf)) {
+    return KEYCARD_ERR_TXRX;
+  }
+
+  APDU_ASSERT_OK(apdu);
+
+  uint8_t* card_cryptogram = APDU_RESP(apdu);
+  uint8_t* card_challenge = &card_cryptogram[WC_SHA256_DIGEST_SIZE];
+
+  Sha256 sha256;
+  wc_InitSha256(&sha256);
+  wc_Sha256Update(&sha256, psk, WC_SHA256_DIGEST_SIZE);
+  wc_Sha256Update(&sha256, buf, WC_SHA256_DIGEST_SIZE);
+  wc_Sha256Final(&sha256, buf);
+
+  if (!Constant_Compare(card_cryptogram, buf, WC_SHA256_DIGEST_SIZE)) {
+    return KEYCARD_ERR_CRYPTO;
+  }
+
+  wc_Sha256Update(&sha256, psk, WC_SHA256_DIGEST_SIZE);
+  wc_Sha256Update(&sha256, card_challenge, WC_SHA256_DIGEST_SIZE);
+  wc_Sha256Final(&sha256, buf);
+
+  if (!Keycard_CMD_Pair(sc, apdu, 1, buf)) {
+    return KEYCARD_ERR_TXRX;
+  }
+
+  APDU_ASSERT_OK(apdu);
+
+  pairing->idx = APDU_RESP(apdu)[0];
+  uint8_t *salt = APDU_RESP(apdu) + 1;
+
+  wc_Sha256Update(&sha256, psk, WC_SHA256_DIGEST_SIZE);
+  wc_Sha256Update(&sha256, salt, WC_SHA256_DIGEST_SIZE);
+  wc_Sha256Final(&sha256, pairing->key);
+
+  return KEYCARD_ERR_OK;
 }
 
 void Keycard_Test(SmartCard* sc) {
@@ -60,13 +134,26 @@ void Keycard_Test(SmartCard* sc) {
     switch (info.status) {
       case NOT_INITIALIZED:
         BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Not initialized!");
-        break;
+        return;
       case INIT_NO_KEYS:
         BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card has no keys!");
         break;
       case INIT_WITH_KEYS:
         BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Ready for signing!");
         break;
+    }
+
+    Pairing pairing;
+    memcpy(pairing.instance_uid, info.instance_uid, APP_INFO_INSTANCE_UID_LEN);
+    if (!Pairing_Read(&pairing)) {
+      if (Keycard_CMD_AutoPair(sc, &apdu, NULL, &pairing) == KEYCARD_ERR_OK) {
+        if (!Pairing_Write(&pairing));
+        BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing succesful!");
+      } else {
+        BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing failed");
+      }
+    } else {
+      BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Already paired!");
     }
   } else {
     BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Not a Keycard!");

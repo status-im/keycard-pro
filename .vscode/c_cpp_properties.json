@@ -19,7 +19,9 @@
         "Drivers/CMSIS/Include",
         "Drivers/STM32G0xx_HAL_Driver/Inc",
         "Drivers/STM32G0xx_HAL_Driver/Inc/Legacy",
-        "Utilities/Fonts"
+        "Middlewares/Third_Party/wolfSSL_wolfSSL_wolfSSL/wolfssl/",
+        "Utilities/Fonts",
+        "wolfSSL"
       ],
       "defines": [
         "STM32G0C1xx",
