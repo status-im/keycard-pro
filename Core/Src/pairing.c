@@ -1,5 +1,4 @@
 #include "pairing.h"
-#include "main.h"
 
 #define PAIRING_PG_COUNT 1
 #define PAIRING_PG_END (FLASH_SIZE/FLASH_PAGE_SIZE)

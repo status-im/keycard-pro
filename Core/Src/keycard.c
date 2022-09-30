@@ -3,6 +3,7 @@
 #include "keycard.h"
 #include "application_info.h"
 #include "pairing.h"
+#include "error.h"
 #include "wolfssl/wolfcrypt/pwdbased.h"
 #include "wolfssl/wolfcrypt/random.h"
 #include "wolfssl/wolfcrypt/sha256.h"
@@ -80,7 +81,7 @@ uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, const uint8_t* psk, Pai
   wc_RNG_GenerateBlock(&rng, buf, WC_SHA256_DIGEST_SIZE);
 
   if (!Keycard_CMD_Pair(sc, apdu, 0, buf)) {
-    return KEYCARD_ERR_TXRX;
+    return ERR_TXRX;
   }
 
   APDU_ASSERT_OK(apdu);
@@ -95,7 +96,7 @@ uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, const uint8_t* psk, Pai
   wc_Sha256Final(&sha256, buf);
 
   if (Constant_Compare(card_cryptogram, buf, WC_SHA256_DIGEST_SIZE) != 0) {
-    return KEYCARD_ERR_CRYPTO;
+    return ERR_CRYPTO;
   }
 
   wc_Sha256Update(&sha256, psk, WC_SHA256_DIGEST_SIZE);
@@ -103,7 +104,7 @@ uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, const uint8_t* psk, Pai
   wc_Sha256Final(&sha256, buf);
 
   if (!Keycard_CMD_Pair(sc, apdu, 1, buf)) {
-    return KEYCARD_ERR_TXRX;
+    return ERR_TXRX;
   }
 
   APDU_ASSERT_OK(apdu);
@@ -115,7 +116,7 @@ uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, const uint8_t* psk, Pai
   wc_Sha256Update(&sha256, salt, WC_SHA256_DIGEST_SIZE);
   wc_Sha256Final(&sha256, pairing->key);
 
-  return KEYCARD_ERR_OK;
+  return ERR_OK;
 }
 
 void Keycard_Test(SmartCard* sc) {
@@ -148,14 +149,15 @@ void Keycard_Test(SmartCard* sc) {
     Pairing pairing;
     memcpy(pairing.instance_uid, info.instance_uid, APP_INFO_INSTANCE_UID_LEN);
     if (!Pairing_Read(&pairing)) {
-      if (Keycard_CMD_AutoPair(sc, &apdu, keycard_default_psk, &pairing) == KEYCARD_ERR_OK) {
+      if (Keycard_CMD_AutoPair(sc, &apdu, keycard_default_psk, &pairing) == ERR_OK) {
         if (!Pairing_Write(&pairing)) {
           BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Write error!");
         } else {
-          BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing succesfull!");
+          BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing succesful!");
         }
       } else {
         BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing failed");
+        return;
       }
     } else {
       BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Already paired!");

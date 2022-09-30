@@ -44,6 +44,7 @@ Core/Src/iso7816/t1.c \
 Core/Src/keycard.c \
 Core/Src/main.c \
 Core/Src/pairing.c \
+Core/Src/secure_channel.c \
 Core/Src/stm32g0xx_hal_msp.c \
 Core/Src/stm32g0xx_it.c \
 Core/Src/system_stm32g0xx.c \

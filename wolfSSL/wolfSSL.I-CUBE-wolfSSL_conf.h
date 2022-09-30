@@ -608,6 +608,7 @@
 #define HAVE_ECC_KOBLITZ
 #define NO_ECC_SECP
 #define WOLFSSL_HASH_FLAGS
+#define WOLFSSL_CMAC
 
 /* In-lining of misc.c functions */
 /* If defined, must include wolfcrypt/src/misc.c in build */
