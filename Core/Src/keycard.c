@@ -10,6 +10,8 @@
 const uint8_t keycard_aid[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t keycard_aid_len = 9;
 
+const uint8_t keycard_default_psk[] = {0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72, 0x4b, 0x4a, 0x36, 0xca, 0xad, 0x0e, 0x28, 0x08, 0x26, 0x15, 0x9e, 0x89, 0x88, 0x6f, 0x70, 0x82, 0x53, 0x5d, 0x43, 0x1e, 0x92, 0x48, 0x48, 0xbc, 0xf1};
+
 static int tested = 0;
 
 static WC_RNG rng;
@@ -73,7 +75,7 @@ uint8_t Keycard_CMD_Pair(SmartCard* sc, APDU* apdu, uint8_t step, uint8_t* data)
   return SmartCard_Send_APDU(sc, apdu);
 }
 
-uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, uint8_t* psk, Pairing* pairing) {
+uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, const uint8_t* psk, Pairing* pairing) {
   uint8_t buf[WC_SHA256_DIGEST_SIZE];
   wc_RNG_GenerateBlock(&rng, buf, WC_SHA256_DIGEST_SIZE);
 
@@ -92,7 +94,7 @@ uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, uint8_t* psk, Pairing* 
   wc_Sha256Update(&sha256, buf, WC_SHA256_DIGEST_SIZE);
   wc_Sha256Final(&sha256, buf);
 
-  if (!Constant_Compare(card_cryptogram, buf, WC_SHA256_DIGEST_SIZE)) {
+  if (Constant_Compare(card_cryptogram, buf, WC_SHA256_DIGEST_SIZE) != 0) {
     return KEYCARD_ERR_CRYPTO;
   }
 
@@ -146,9 +148,12 @@ void Keycard_Test(SmartCard* sc) {
     Pairing pairing;
     memcpy(pairing.instance_uid, info.instance_uid, APP_INFO_INSTANCE_UID_LEN);
     if (!Pairing_Read(&pairing)) {
-      if (Keycard_CMD_AutoPair(sc, &apdu, NULL, &pairing) == KEYCARD_ERR_OK) {
-        if (!Pairing_Write(&pairing));
-        BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing succesful!");
+      if (Keycard_CMD_AutoPair(sc, &apdu, keycard_default_psk, &pairing) == KEYCARD_ERR_OK) {
+        if (!Pairing_Write(&pairing)) {
+          BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Write error!");
+        } else {
+          BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing succesfull!");
+        }
       } else {
         BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing failed");
       }

@@ -5,13 +5,14 @@
 #include "wolfssl/wolfcrypt/sha256.h"
 #include "application_info.h"
 
-typedef struct {
+typedef struct __attribute__ ((aligned (4))) {
   uint8_t instance_uid[APP_INFO_INSTANCE_UID_LEN];
-  uint8_t idx;
   uint8_t key[WC_SHA256_DIGEST_SIZE];
+  uint8_t idx;
 } Pairing;
 
 uint8_t Pairing_Read(Pairing* out);
 uint8_t Pairing_Write(Pairing* in);
+uint8_t Pairing_Erase(Pairing* in);
 
 #endif

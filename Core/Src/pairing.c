@@ -1,45 +1,151 @@
 #include "pairing.h"
+#include "main.h"
 
-#define PAIRING_STORAGE_START_ADDR 0x0807f800
-#define PAIRING_STORAGE_END_ADDR 0x0807ffff
+#define PAIRING_PG_COUNT 1
+#define PAIRING_PG_END (FLASH_SIZE/FLASH_PAGE_SIZE)
+#define PAIRING_PG_START (PAIRING_PG_END - PAIRING_PG_COUNT)
+
+#define PAIRING_START_ADDR ((uint64_t*)(FLASH_BASE + (PAIRING_PG_START * FLASH_PAGE_SIZE)))
+#define PAIRING_END_ADDR ((uint64_t*)(PAIRING_START_ADDR + (PAIRING_PG_COUNT * FLASH_PAGE_SIZE)))
 #define PAIRING_WORD_SIZE 7
 
-uint8_t Pairing_Read(Pairing* out) {
-  uint64_t* read = (uint64_t*)PAIRING_STORAGE_START_ADDR;
-  out->idx = 0xff;
+uint64_t* Pairing_Find(Pairing *p) {
+  uint64_t* read = PAIRING_START_ADDR;
+  p->idx = 0xff;
 
   uint64_t dw;
-  while((((dw = read[0]) & 0xff00) != 0xff00) && (read < (uint64_t*)PAIRING_STORAGE_END_ADDR)) {
+  while((((dw = *read) & 0xff) != 0xff) && (read < PAIRING_END_ADDR)) {
     if (dw == 0) {
       read += PAIRING_WORD_SIZE;
       continue;
     }
 
-    out->idx = (dw & 0xff);
+    p->idx = (dw & 0xff);
     read++;
 
-    //TODO: fix
-    for (int i = 0; i < APP_INFO_INSTANCE_UID_LEN; i++) {
-      if (read[i] != out->instance_uid[i]) {
-        out->idx = 0xff;
+    for (int i = 0; i < 9; i += 8) {
+      dw = read[i >> 3];
+      for (int j = 0; j < (APP_INFO_INSTANCE_UID_LEN/2); j++) {
+        if (((uint8_t*)&dw)[j] != p->instance_uid[i+j]) {
+          p->idx = 0xff;
+          break;
+        }
+      }
+
+      if(p->idx == 0xff) {
         break;
       }
     }
 
-    if (out->idx == 0xff) {
+    if (p->idx == 0xff) {
       read += (PAIRING_WORD_SIZE - 1);
       continue;
     }
 
-    read += 2;
-
-    memcpy(out->key, read, WC_SHA256_DIGEST_SIZE);
+    read += (APP_INFO_INSTANCE_UID_LEN/8);
+    return read;
   }
 
-  return out->idx != 0xff;
+  return NULL;
+}
+
+uint8_t Pairing_Read(Pairing* out) {
+  uint64_t* read = Pairing_Find(out);
+  if (!read) {
+    return 0;
+  }
+
+  for (int i = 0; i < (WC_SHA256_DIGEST_SIZE/8); i++) {
+    ((uint64_t*) out->key)[i] = *(read++);
+  }
+
+  return 1;
+}
+
+uint8_t Pairing_Compact(uint32_t page) {
+  /*FLASH_EraseInitTypeDef erase;
+  erase.TypeErase = FLASH_TYPEERASE_PAGES;
+  erase.Page = PAIRING_PG_START;
+  erase.NbPages = PAIRING_PG_COUNT;
+  erase.Banks = FLASH_BANK_2; // if single bank device is used this value is ignored
+  uint32_t err;
+  if (HAL_FLASHEx_Erase(&erase, &err) != HAL_OK) {
+    return 0;
+  }*/
+
+  return 0;
 }
 
 uint8_t Pairing_Write(Pairing* in) {
-  uint8_t* write = (uint8_t*)PAIRING_STORAGE_START_ADDR;
+  uint64_t* write = PAIRING_START_ADDR;
+  uint64_t* first_invalid = NULL;
+
+  while(write < PAIRING_END_ADDR) {
+    if ((*write & 0xff) == 0xff) {
+      if (HAL_FLASH_Unlock() != HAL_OK) {
+        return 0;
+      }
+
+      if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)write++, (0xa500 | in->idx)) != HAL_OK) {
+        return 0;
+      }
+
+      for (int i = 0; i < (APP_INFO_INSTANCE_UID_LEN/8); i++) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&write[i], ((uint64_t*) in->instance_uid)[i]) != HAL_OK) {
+          HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)write, 0);
+          return 0;
+        }
+      }
+
+      write += (APP_INFO_INSTANCE_UID_LEN/8);
+
+      for (int i = 0; i < (WC_SHA256_DIGEST_SIZE/8); i++) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&write[i], ((uint64_t*) in->key)[i]) != HAL_OK) {
+          HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)(write - (APP_INFO_INSTANCE_UID_LEN/8)), 0);
+          return 0;
+        }
+      }      
+
+      if (HAL_FLASH_Lock()) {
+        return 0;
+      } 
+
+      return 1;     
+    } else if (!first_invalid && !*write) {
+      first_invalid = write;
+    }
+
+    write += PAIRING_WORD_SIZE;
+  }
+
+  if (first_invalid) {
+    if (!Pairing_Compact(((uint32_t)first_invalid) - FLASH_BASE)/FLASH_PAGE_SIZE) {
+      return 0;
+    }
+
+    return Pairing_Write(in);
+  }
+
   return 0;
+}
+
+uint8_t Pairing_Erase(Pairing* in) {
+  uint64_t* erase = Pairing_Find(in);
+  if (!erase) {
+    return 0;
+  }
+  
+  if (HAL_FLASH_Unlock() != HAL_OK) {
+    return 0;
+  }
+
+  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)erase, 0) != HAL_OK) {
+    return 0;
+  }
+
+  if (HAL_FLASH_Lock()) {
+    return 0;
+  }
+
+  return 1;
 }
