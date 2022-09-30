@@ -63,15 +63,42 @@ uint8_t Pairing_Read(Pairing* out) {
 }
 
 uint8_t Pairing_Compact(uint32_t page) {
-  /*FLASH_EraseInitTypeDef erase;
+  uint64_t data[FLASH_PAGE_SIZE/8];
+  uint32_t page_size = 0;
+  uint64_t* p = (uint64_t*)(FLASH_BASE + (page * FLASH_PAGE_SIZE));
+
+  for (int i = 0; i < (FLASH_PAGE_SIZE/8); i += PAIRING_WORD_SIZE) {
+    if (p[i] == 0) {
+      continue;
+    }
+
+    for (int j = 0; j < PAIRING_WORD_SIZE; j++) {
+      data[page_size++] = p[i+j];
+    }
+  }
+
+  FLASH_EraseInitTypeDef erase;
   erase.TypeErase = FLASH_TYPEERASE_PAGES;
-  erase.Page = PAIRING_PG_START;
-  erase.NbPages = PAIRING_PG_COUNT;
-  erase.Banks = FLASH_BANK_2; // if single bank device is used this value is ignored
+  erase.NbPages = 1;
+
+  if (FLASH_PAGE_NB < page) {
+    erase.Page = page + (256 - FLASH_PAGE_NB);
+    erase.Banks = FLASH_BANK_2;  
+  } else {
+    erase.Page = page;
+    erase.Banks = FLASH_BANK_1;
+  }
+
   uint32_t err;
   if (HAL_FLASHEx_Erase(&erase, &err) != HAL_OK) {
     return 0;
-  }*/
+  }
+
+  for (int i = 0; i < page_size; i++) {
+    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&p[i], data[i]) != HAL_OK) {
+      return 0;
+    }
+  }
 
   return 0;
 }
