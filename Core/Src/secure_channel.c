@@ -34,6 +34,7 @@ uint16_t SecureChannel_Open(SecureChannel* sc, WC_RNG* rng, SmartCard* card, APD
   ecc_key priv;
   wc_ecc_init(&priv);
   wc_ecc_make_key_ex(rng, 32, &priv, ECC_SECP256K1);
+  wc_ecc_set_rng(&priv, rng);
 
   APDU_RESET(apdu);
   APDU_CLA(apdu) = 0x80;

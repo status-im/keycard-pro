@@ -3,6 +3,7 @@
 #include "keycard.h"
 #include "application_info.h"
 #include "pairing.h"
+#include "secure_channel.h"
 #include "error.h"
 #include "wolfssl/wolfcrypt/pwdbased.h"
 #include "wolfssl/wolfcrypt/random.h"
@@ -161,6 +162,13 @@ void Keycard_Test(SmartCard* sc) {
       }
     } else {
       BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Already paired!");
+    }
+
+    SecureChannel ch;
+    if (SecureChannel_Open(&ch, &rng, sc, &apdu, &pairing, info.sc_key) == ERR_OK) {
+      BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "SecureChannel opened");
+    } else {
+      BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Failure opening SC");
     }
   } else {
     BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Not a Keycard!");
