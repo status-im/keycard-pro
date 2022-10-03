@@ -820,6 +820,13 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
   }
 }
 
+uint32_t random32(void) {
+  uint32_t rnd;
+  while (HAL_RNG_GenerateRandomNumber(&hrng, &rnd) != HAL_OK) {}
+  
+  return rnd;
+}
+
 /* USER CODE END 4 */
 
 /**

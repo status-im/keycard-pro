@@ -6,7 +6,10 @@
         "main.h": "c",
         "smartcard.h": "c",
         "pps.h": "c",
-        "math.h": "c"
+        "math.h": "c",
+        "pairing.h": "c",
+        "rand.h": "c",
+        "sha2.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }

@@ -21,6 +21,9 @@
 #define APDU_SW(__APDU__) ((APDU_SW1(__APDU__) << 8) | APDU_SW2(__APDU__))
 #define APDU_BUF_LEN 255 + 6
 
+#define APDU_ASSERT_SW(__APDU__, __SW__) if (APDU_SW(__APDU__) != __SW__) return APDU_SW(__APDU__);
+#define APDU_ASSERT_OK(__APDU__) APDU_ASSERT_SW(__APDU__, 0x9000)
+
 typedef enum {
   SC_NOT_PRESENT,
   SC_OFF,
