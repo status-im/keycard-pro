@@ -38,7 +38,7 @@ uint8_t aes_cmac(const uint8_t* key, const uint8_t* data, uint32_t len, uint8_t*
     return 0;
   }
 
-  memcpy(out, &cmac_tmp[(len-AES_IV_SIZE)-1], AES_IV_SIZE);
+  memcpy(out, &cmac_tmp[len-AES_IV_SIZE], AES_IV_SIZE);
 
   return 1;
 }

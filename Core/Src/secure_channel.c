@@ -49,7 +49,7 @@ uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pair
     return ERR_CRYPTO;
   }
   APDU_SET_LC(apdu, SECP256K1_PUBLEN);
-  APDU_SET_LE(apdu, 48);
+  APDU_SET_LE(apdu, 0);
   
   if (!SmartCard_Send_APDU(card, apdu)) {
     return ERR_TXRX;
@@ -63,14 +63,17 @@ uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pair
     return ERR_CRYPTO;
   }
 
+  uint8_t* apduData = APDU_RESP(apdu);
+
   SHA512_CTX sha512 = {0};
   sha512_Init(&sha512);
-  sha512_Update(&sha512, APDU_RESP(apdu), SHA256_DIGEST_LENGTH);
-  sha512_Update(&sha512, pairing->key, SHA256_DIGEST_LENGTH);
   sha512_Update(&sha512, &secret[1], SHA256_DIGEST_LENGTH);
+  sha512_Update(&sha512, pairing->key, SHA256_DIGEST_LENGTH);
+  sha512_Update(&sha512, apduData, SHA256_DIGEST_LENGTH);
   sha512_Final(&sha512, sc->encKey);
+  rev32_all((uint32_t*)sc->encKey, (uint32_t*)sc->encKey, (AES_256_KEY_SIZE << 1));
   
-  memcpy(sc->iv, &APDU_RESP(apdu)[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
+  rev32_all((uint32_t*)sc->iv, (uint32_t*)&apduData[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
   sc->open = 1;
 
   return SecureChannel_Mutual_Authenticate(sc, card, apdu);
@@ -95,8 +98,11 @@ uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data
   apduData[3] = APDU_P2(apdu);
   apduData[4] = len;
 
-  aes_cmac(sc->macKey, apduData, len, sc->iv);
-  memcpy(apduData, sc->iv, AES_IV_SIZE);
+  if (!aes_cmac(sc->macKey, apduData, len, apduData)) {
+    return ERR_CRYPTO;
+  }
+
+  rev32_all((uint32_t*)sc->iv, (uint32_t*)apduData, AES_IV_SIZE);
   return ERR_OK;
 }
 
@@ -116,13 +122,15 @@ uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
 
   aes_cmac(sc->macKey, data, apdu->lr, new_iv);
 
-  if (memcmp_ct(sc->iv, cmac, AES_IV_SIZE) != 0) {
+  if (memcmp_ct(new_iv, cmac, AES_IV_SIZE) != 0) {
     sc->open = 0;
     return ERR_CRYPTO;
   }
 
   aes_decrypt(sc->macKey, sc->iv, &data[AES_IV_SIZE], (apdu->lr - AES_IV_SIZE), data);
   apdu->lr = unpad_iso9797_m1(data, (apdu->lr - AES_IV_SIZE));
+
+  rev32_all((uint32_t*)sc->iv, (uint32_t*)new_iv, AES_IV_SIZE);
 
   return ERR_OK;
 }
