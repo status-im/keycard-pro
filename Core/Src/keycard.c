@@ -7,6 +7,7 @@
 #include "error.h"
 #include "crypto/rand.h"
 #include "crypto/sha2.h"
+#include "crypto/util.h"
 
 const uint8_t keycard_aid[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t keycard_aid_len = 9;
@@ -14,17 +15,6 @@ const uint8_t keycard_aid_len = 9;
 const uint8_t keycard_default_psk[] = {0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72, 0x4b, 0x4a, 0x36, 0xca, 0xad, 0x0e, 0x28, 0x08, 0x26, 0x15, 0x9e, 0x89, 0x88, 0x6f, 0x70, 0x82, 0x53, 0x5d, 0x43, 0x1e, 0x92, 0x48, 0x48, 0xbc, 0xf1};
 
 static int tested = 0;
-
-static inline int Constant_Compare(const uint8_t* a, const uint8_t* b, int length) {
-  int i;
-  int compareSum = 0;
-
-  for (i = 0; i < length; i++) {
-      compareSum |= a[i] ^ b[i];
-  }
-
-  return compareSum;
-}
 
 void Keycard_Activate(SmartCard* sc) {
   SmartCard_Activate(sc);
@@ -92,7 +82,7 @@ uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, const uint8_t* psk, Pai
   sha256_Update(&sha256, buf, SHA256_DIGEST_LENGTH);
   sha256_Final(&sha256, buf);
 
-  if (Constant_Compare(card_cryptogram, buf, SHA256_DIGEST_LENGTH) != 0) {
+  if (memcmp_ct(card_cryptogram, buf, SHA256_DIGEST_LENGTH) != 0) {
     return ERR_CRYPTO;
   }
 

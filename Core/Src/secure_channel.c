@@ -5,13 +5,14 @@
 #include "crypto/sha2.h"
 #include "crypto/rand.h"
 #include "crypto/secp256k1.h"
+#include "crypto/util.h"
 #include "error.h"
 
 #define SECP256K1_KEYLEN 32
 #define SECP256K1_PUBLEN 65
 
 uint16_t SecureChannel_Mutual_Authenticate(SecureChannel* sc, SmartCard* card, APDU* apdu) {
-  uint8_t data[32];
+  SC_BUF(data, 32);
   random_buffer(data, 32);
   APDU_RESET(apdu);
   APDU_CLA(apdu) = 0x80;
@@ -69,20 +70,65 @@ uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pair
   sha512_Update(&sha512, &secret[1], SHA256_DIGEST_LENGTH);
   sha512_Final(&sha512, sc->encKey);
   
-  memcpy(sc->iv, &APDU_RESP(apdu)[32], AES_IV_SIZE);
+  memcpy(sc->iv, &APDU_RESP(apdu)[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
   sc->open = 1;
 
   return SecureChannel_Mutual_Authenticate(sc, card, apdu);
 }
 
 uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len) {
-  return 0;
+  len = pad_iso9797_m1(data, SC_PAD, len);
+  uint8_t* apduData = APDU_DATA(apdu);
+
+  if (!aes_encrypt(sc->encKey, sc->iv, data, len, &apduData[AES_IV_SIZE])) {
+    return ERR_CRYPTO;
+  }
+
+  len += 16;
+  APDU_SET_LC(apdu, len);
+  APDU_SET_LE(apdu, 0);
+
+  memset(apduData, 0, AES_IV_SIZE);
+  apduData[0] = APDU_CLA(apdu);
+  apduData[1] = APDU_INS(apdu);
+  apduData[2] = APDU_P1(apdu);
+  apduData[3] = APDU_P2(apdu);
+  apduData[4] = len;
+
+  aes_cmac(sc->macKey, apduData, len, sc->iv);
+  memcpy(apduData, sc->iv, AES_IV_SIZE);
+  return ERR_OK;
 }
 
 uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
-  return 0;
+  if (APDU_SW(apdu) == 0x6982) {
+    sc->open = 0;
+    return ERR_CRYPTO;
+  }
+
+  SC_BUF(cmac, AES_IV_SIZE);
+  SC_BUF(new_iv, AES_IV_SIZE);
+  uint8_t* data = APDU_RESP(apdu);
+
+  memcpy(cmac, data, AES_IV_SIZE);
+  memset(data, 0, AES_IV_SIZE);
+  data[0] = apdu->lr;
+
+  aes_cmac(sc->macKey, data, apdu->lr, new_iv);
+
+  if (memcmp_ct(sc->iv, cmac, AES_IV_SIZE) != 0) {
+    sc->open = 0;
+    return ERR_CRYPTO;
+  }
+
+  aes_decrypt(sc->macKey, sc->iv, &data[AES_IV_SIZE], (apdu->lr - AES_IV_SIZE), data);
+  apdu->lr = unpad_iso9797_m1(data, (apdu->lr - AES_IV_SIZE));
+
+  return ERR_OK;
 }
 
 void SecureChannel_Close(SecureChannel* sc) {
+  memset(sc->encKey, 0, AES_256_KEY_SIZE);
+  memset(sc->iv, 0, AES_IV_SIZE);
   sc->open = 0;
 }

@@ -22,6 +22,7 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "keycard.h"
+#include "crypto/aes.h"
 #include "iso7816/smartcard.h"
 /* USER CODE END Includes */
 
@@ -43,8 +44,8 @@
 ADC_HandleTypeDef hadc1;
 
 CRYP_HandleTypeDef hcryp;
-__ALIGN_BEGIN static const uint32_t pKeyAES[4] __ALIGN_END = {
-                            0x00000000,0x00000000,0x00000000,0x00000000};
+__ALIGN_BEGIN static const uint32_t pKeyAES[8] __ALIGN_END = {
+                            0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000,0x00000000};
 __ALIGN_BEGIN static const uint32_t pInitVectAES[4] __ALIGN_END = {
                             0x00000000,0x00000000,0x00000000,0x00000000};
 
@@ -127,6 +128,7 @@ int main(void)
   MX_SPI1_Init();
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
+  aes_init(&hcryp);
   Keycard_Init();
   SmartCard_Init(&sc, &hsmartcard2, &htim6);
   /* USER CODE END 2 */
@@ -268,7 +270,7 @@ static void MX_AES_Init(void)
   /* USER CODE END AES_Init 1 */
   hcryp.Instance = AES;
   hcryp.Init.DataType = CRYP_DATATYPE_32B;
-  hcryp.Init.KeySize = CRYP_KEYSIZE_128B;
+  hcryp.Init.KeySize = CRYP_KEYSIZE_256B;
   hcryp.Init.pKey = (uint32_t *)pKeyAES;
   hcryp.Init.pInitVect = (uint32_t *)pInitVectAES;
   hcryp.Init.Algorithm = CRYP_AES_CBC;

@@ -3,11 +3,13 @@
 
 #include "pairing.h"
 #include "smartcard.h"
+#include "crypto/aes.h"
 
-#define AES_256_KEY_SIZE 32
-#define AES_IV_SIZE 16
+#define SC_PAD AES_IV_SIZE
 
-typedef struct __attribute__((packed)) {
+#define SC_BUF(__NAME__, __LEN__) uint8_t __NAME__[__LEN__+SC_PAD] __attribute__((aligned(4)))
+
+typedef struct __attribute__((packed, aligned(4))) {
   uint8_t encKey[AES_256_KEY_SIZE];
   uint8_t macKey[AES_256_KEY_SIZE];
   uint8_t iv[AES_IV_SIZE];

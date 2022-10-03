@@ -38,10 +38,7 @@ BUILD_DIR = build
 C_SOURCES =  \
 Core/Src/application_info.c \
 Core/Src/crypto/address.c \
-Core/Src/crypto/aes/aes_modes.c \
-Core/Src/crypto/aes/aescrypt.c \
-Core/Src/crypto/aes/aeskey.c \
-Core/Src/crypto/aes/aestab.c \
+Core/Src/crypto/aes.c \
 Core/Src/crypto/base32.c \
 Core/Src/crypto/base58.c \
 Core/Src/crypto/bignum.c \
@@ -89,6 +86,7 @@ Core/Src/crypto/sha2.c \
 Core/Src/crypto/sha3.c \
 Core/Src/crypto/shamir.c \
 Core/Src/crypto/slip39.c \
+Core/Src/crypto/util.c \
 Core/Src/iso7816/atr.c \
 Core/Src/iso7816/pps.c \
 Core/Src/iso7816/smartcard.c \
@@ -216,7 +214,6 @@ AS_INCLUDES = \
 C_INCLUDES =  \
 -ICore/Inc \
 -ICore/Inc/crypto \
--ICore/Inc/crypto/aes \
 -ICore/Inc/crypto/chacha20poly1305 \
 -ICore/Inc/crypto/ed25519-donna \
 -ICore/Inc/iso7816 \

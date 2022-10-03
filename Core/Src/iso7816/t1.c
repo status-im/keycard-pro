@@ -126,7 +126,7 @@ uint8_t T1_Handle_Resp(SmartCard* sc, APDU* apdu) {
   uint8_t s;
 
   if ((header[1] & T1_R_BLOCK) == 0) {
-    data = &apdu->data[apdu->lr];
+    data = &apdu->data[(apdu->lr+1)];
     apdu->lr += blen;
   } else if ((header[1] & T1_S_BLOCK) == T1_S_BLOCK) {
     data = &s;
