@@ -112,22 +112,33 @@ uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
     return ERR_CRYPTO;
   }
 
-  SC_BUF(cmac, AES_IV_SIZE);
-  SC_BUF(new_iv, AES_IV_SIZE);
+  APDU_ASSERT_OK(apdu);
+
+  apdu->lr -= 2;
+
+  uint8_t cmac[AES_IV_SIZE] __attribute__((aligned(4)));
+  uint8_t new_iv[AES_IV_SIZE]  __attribute__((aligned(4)));
   uint8_t* data = APDU_RESP(apdu);
 
   memcpy(cmac, data, AES_IV_SIZE);
   memset(data, 0, AES_IV_SIZE);
   data[0] = apdu->lr;
 
-  aes_cmac(sc->macKey, data, apdu->lr, new_iv);
+  if (!aes_cmac(sc->macKey, data, apdu->lr, new_iv)) {
+    sc->open = 0;
+    return ERR_CRYPTO;    
+  }
 
   if (memcmp_ct(new_iv, cmac, AES_IV_SIZE) != 0) {
     sc->open = 0;
     return ERR_CRYPTO;
   }
 
-  aes_decrypt(sc->macKey, sc->iv, &data[AES_IV_SIZE], (apdu->lr - AES_IV_SIZE), data);
+  if (!aes_decrypt(sc->encKey, sc->iv, &data[AES_IV_SIZE], (apdu->lr - AES_IV_SIZE), data)) {
+    sc->open = 0;
+    return ERR_CRYPTO;
+  }
+
   apdu->lr = unpad_iso9797_m1(data, (apdu->lr - AES_IV_SIZE));
 
   rev32_all((uint32_t*)sc->iv, (uint32_t*)new_iv, AES_IV_SIZE);
