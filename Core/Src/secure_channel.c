@@ -71,9 +71,9 @@ uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pair
   sha512_Update(&sha512, pairing->key, SHA256_DIGEST_LENGTH);
   sha512_Update(&sha512, apduData, SHA256_DIGEST_LENGTH);
   sha512_Final(&sha512, sc->encKey);
-  rev32_all((uint32_t*)sc->encKey, (uint32_t*)sc->encKey, (AES_256_KEY_SIZE << 1));
+  aes_import_param((uint32_t*)sc->encKey, (uint32_t*)sc->encKey, (AES_256_KEY_SIZE << 1));
   
-  rev32_all((uint32_t*)sc->iv, (uint32_t*)&apduData[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
+  aes_import_param((uint32_t*)sc->iv, (uint32_t*)&apduData[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
   sc->open = 1;
 
   return SecureChannel_Mutual_Authenticate(sc, card, apdu);
@@ -84,8 +84,11 @@ uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data
   uint8_t* apduData = APDU_DATA(apdu);
 
   if (!aes_encrypt(sc->encKey, sc->iv, data, len, &apduData[AES_IV_SIZE])) {
+    memset(data, 0, len);
     return ERR_CRYPTO;
   }
+  
+  memset(data, 0, len);
 
   len += 16;
   APDU_SET_LC(apdu, len);
@@ -102,7 +105,7 @@ uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data
     return ERR_CRYPTO;
   }
 
-  rev32_all((uint32_t*)sc->iv, (uint32_t*)apduData, AES_IV_SIZE);
+  aes_import_param((uint32_t*)sc->iv, (uint32_t*)apduData, AES_IV_SIZE);
   return ERR_OK;
 }
 
@@ -141,13 +144,14 @@ uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
 
   apdu->lr = unpad_iso9797_m1(data, (apdu->lr - AES_IV_SIZE));
 
-  rev32_all((uint32_t*)sc->iv, (uint32_t*)new_iv, AES_IV_SIZE);
+  aes_import_param((uint32_t*)sc->iv, (uint32_t*)new_iv, AES_IV_SIZE);
 
   return ERR_OK;
 }
 
 void SecureChannel_Close(SecureChannel* sc) {
   memset(sc->encKey, 0, AES_256_KEY_SIZE);
+  memset(sc->macKey, 0, AES_256_KEY_SIZE);
   memset(sc->iv, 0, AES_IV_SIZE);
   sc->open = 0;
 }

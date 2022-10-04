@@ -13,4 +13,6 @@ uint8_t aes_encrypt(const uint8_t* key, const uint8_t* iv, const uint8_t* data, 
 uint8_t aes_decrypt(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out);
 uint8_t aes_cmac(const uint8_t* key, const uint8_t* data, uint32_t len, uint8_t* out);
 
+#define aes_import_param(__OUT__, __IN__, __LEN__) rev32_all(__OUT__, __IN__, __LEN__)
+
 #endif

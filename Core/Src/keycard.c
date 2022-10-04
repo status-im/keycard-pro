@@ -9,6 +9,9 @@
 #include "crypto/sha2.h"
 #include "crypto/util.h"
 
+#define KEYCARD_PIN_LEN 6
+#define KEYCARD_PUK_LEN 12
+
 const uint8_t keycard_aid[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t keycard_aid_len = 9;
 
@@ -33,8 +36,8 @@ void Keycard_Init() {
   BSP_LCD_SetBackColor(LCD_COLOR_ST_BLUE_DARK);
   BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGRAY);
   BSP_LCD_SetFont(&Font24);
-  BSP_LCD_DisplayStringAtLine(2, (uint8_t*) "Keycard Pro");  
-  BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Waiting for card...");
+  BSP_LCD_DisplayStringAtLine(1, (uint8_t*) "Keycard Pro");  
+  BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Waiting for card...");
 }
 
 uint8_t Keycard_CMD_Select(SmartCard* sc, APDU* apdu) {
@@ -108,6 +111,28 @@ uint16_t Keycard_CMD_AutoPair(SmartCard* sc, APDU* apdu, const uint8_t* psk, Pai
   return ERR_OK;
 }
 
+uint8_t Keycard_CMD_VerifyPIN(SmartCard* sc, SecureChannel* ch, APDU* apdu, uint8_t* pin) {
+  APDU_RESET(apdu);
+  APDU_CLA(apdu) = 0x80;
+  APDU_INS(apdu) = 0x20;
+  APDU_P1(apdu) = 0;
+  APDU_P2(apdu) = 0;
+  
+  if (SecureChannel_Protect_APDU(ch, apdu, pin, KEYCARD_PIN_LEN) != ERR_OK) {
+    return 0;
+  }
+
+  if (!SmartCard_Send_APDU(sc, apdu)) {
+    return 0;
+  }
+
+  if (SecureChannel_Decrypt_APDU(ch, apdu) != ERR_OK) {
+    return 0;
+  }
+
+  return 1;
+}
+
 void Keycard_Test(SmartCard* sc) {
   APDU apdu;
   if (!Keycard_CMD_Select(sc, &apdu)) {
@@ -115,7 +140,11 @@ void Keycard_Test(SmartCard* sc) {
     return;
   }
 
+  BSP_LCD_ClearStringLine(3);
   BSP_LCD_ClearStringLine(4);
+  BSP_LCD_ClearStringLine(5);
+  BSP_LCD_ClearStringLine(6);
+  BSP_LCD_ClearStringLine(7);
 
   if (APDU_SW(&apdu) == 0x9000) {
     ApplicationInfo info;
@@ -125,13 +154,13 @@ void Keycard_Test(SmartCard* sc) {
 
     switch (info.status) {
       case NOT_INITIALIZED:
-        BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Not initialized!");
+        BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Not initialized!");
         return;
       case INIT_NO_KEYS:
-        BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card has no keys!");
+        BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Card has no keys!");
         break;
       case INIT_WITH_KEYS:
-        BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Ready for signing!");
+        BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Ready for signing!");
         break;
     }
 
@@ -140,26 +169,45 @@ void Keycard_Test(SmartCard* sc) {
     if (!Pairing_Read(&pairing)) {
       if (Keycard_CMD_AutoPair(sc, &apdu, keycard_default_psk, &pairing) == ERR_OK) {
         if (!Pairing_Write(&pairing)) {
-          BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Write error!");
+          BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Write error!");
+          return;
         } else {
-          BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing succesful!");
+          BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Pairing succesful!");
         }
       } else {
-        BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Pairing failed");
+        BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Pairing failed");
         return;
       }
     } else {
-      BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Already paired!");
+      BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Already paired!");
     }
 
     SecureChannel ch;
-    if (SecureChannel_Open(&ch, sc, &apdu, &pairing, info.sc_key) == ERR_OK) {
-      BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "SecureChannel opened");
-    } else {
-      BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Failure opening SC");
+    if (SecureChannel_Open(&ch, sc, &apdu, &pairing, info.sc_key) != ERR_OK) {
+      Pairing_Erase(&pairing);
+      BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Failure opening SC");
+      return;
     }
+
+    BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "SecureChannel opened");
+
+    SC_BUF(pin, KEYCARD_PIN_LEN);
+    pin[0] = '1';
+    pin[1] = '2';
+    pin[2] = '3';
+    pin[3] = '4';
+    pin[4] = '5';
+    pin[5] = '6';
+
+    if (!Keycard_CMD_VerifyPIN(sc, &ch, &apdu, pin) || (APDU_SW(&apdu) != 0x9000)) {
+      BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Wrong PIN");
+      return;
+    }
+
+    BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Authenticated");
+
   } else {
-    BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Not a Keycard!");
+    BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Not a Keycard!");
   }
 }
 
