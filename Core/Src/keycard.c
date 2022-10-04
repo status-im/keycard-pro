@@ -133,6 +133,22 @@ uint8_t Keycard_CMD_VerifyPIN(SmartCard* sc, SecureChannel* ch, APDU* apdu, uint
   return 1;
 }
 
+uint16_t Keycard_CMD_Init(SmartCard* sc, APDU* apdu, uint8_t* sc_pub, uint8_t* pin, uint8_t* puk, uint8_t* psk) {
+  SC_BUF(data, (KEYCARD_PIN_LEN + KEYCARD_PUK_LEN + SHA256_DIGEST_LENGTH));
+  memcpy(data, pin, KEYCARD_PIN_LEN);
+  memcpy(&data[KEYCARD_PIN_LEN], puk, KEYCARD_PUK_LEN);
+  memcpy(&data[KEYCARD_PIN_LEN+KEYCARD_PUK_LEN], psk, SHA256_DIGEST_LENGTH);
+
+  memset(pin, 0, KEYCARD_PIN_LEN);
+  memset(puk, 0, KEYCARD_PUK_LEN);
+
+  if (psk != keycard_default_psk) {
+    memset(psk, 0, SHA256_DIGEST_LENGTH);
+  }
+
+  return SecureChannel_Init(sc, apdu, sc_pub, data, KEYCARD_PIN_LEN+KEYCARD_PUK_LEN+SHA256_DIGEST_LENGTH);
+}
+
 void Keycard_Test(SmartCard* sc) {
   APDU apdu;
   if (!Keycard_CMD_Select(sc, &apdu)) {
@@ -155,6 +171,13 @@ void Keycard_Test(SmartCard* sc) {
     switch (info.status) {
       case NOT_INITIALIZED:
         BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Not initialized!");
+        uint8_t pin[6] = {'1', '2', '3', '4', '5', '6'};
+        uint8_t puk[12]  = {'1', '2', '3', '4', '5', '6', '1', '2', '3', '4', '5', '6'};
+        if (Keycard_CMD_Init(sc, &apdu, info.sc_key, pin, puk, (uint8_t*)keycard_default_psk) != ERR_OK) {
+          BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Initialization failed!");
+          return;
+        }
+        Keycard_Test(sc);
         return;
       case INIT_NO_KEYS:
         BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Card has no keys!");
