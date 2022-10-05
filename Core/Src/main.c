@@ -21,6 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "ui.h"
 #include "keycard.h"
 #include "crypto/aes.h"
 #include "iso7816/smartcard.h"
@@ -131,6 +132,7 @@ int main(void)
   aes_init(&hcryp);
   Keycard_Init();
   SmartCard_Init(&sc, &hsmartcard2, &htim6);
+  UI_Init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -802,8 +804,7 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == SC_NOFF_Pin) {
-    BSP_LCD_ClearStringLine(4);
-    BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card IN");
+    UI_Card_Inserted();
     SmartCard_In(&sc);
   }
 }
@@ -816,8 +817,7 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == SC_NOFF_Pin) {
-    BSP_LCD_ClearStringLine(4);
-    BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card OUT");
+    UI_Card_Removed();
     SmartCard_Out(&sc);
   }
 }
@@ -845,8 +845,7 @@ void Error_Handler(void)
 
   while (1)
   {
-      BSP_LCD_ClearStringLine(4);
-      BSP_LCD_DisplayStringAtLine(4, (uint8_t*)"Error!");
+    UI_Fatal();
   }
   /* USER CODE END Error_Handler_Debug */
 }

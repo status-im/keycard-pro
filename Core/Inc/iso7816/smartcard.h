@@ -4,6 +4,8 @@
 #include "main.h"
 #include "atr_types.h"
 
+#define SW_OK 0x9000
+
 #define APDU_CLA(__APDU__) ((__APDU__)->data[0])
 #define APDU_INS(__APDU__) ((__APDU__)->data[1])
 #define APDU_P1(__APDU__) ((__APDU__)->data[2])
@@ -22,7 +24,7 @@
 #define APDU_BUF_LEN 255 + 6
 
 #define APDU_ASSERT_SW(__APDU__, __SW__) if (APDU_SW(__APDU__) != __SW__) return APDU_SW(__APDU__);
-#define APDU_ASSERT_OK(__APDU__) APDU_ASSERT_SW(__APDU__, 0x9000)
+#define APDU_ASSERT_OK(__APDU__) APDU_ASSERT_SW(__APDU__, SW_OK)
 
 typedef enum {
   SC_NOT_PRESENT,

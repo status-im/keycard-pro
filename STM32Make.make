@@ -99,6 +99,7 @@ Core/Src/stm32g0xx_hal_msp.c \
 Core/Src/stm32g0xx_it.c \
 Core/Src/system_stm32g0xx.c \
 Core/Src/tlv.c \
+Core/Src/ui.c \
 Drivers/BSP/Components/hx8347d/hx8347d.c \
 Drivers/BSP/STM32G0C1E-EV/stm32g0c1e_eval.c \
 Drivers/BSP/STM32G0C1E-EV/stm32g0c1e_eval_lcd.c \
