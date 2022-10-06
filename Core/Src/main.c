@@ -24,7 +24,6 @@
 #include "ui.h"
 #include "keycard.h"
 #include "crypto/aes.h"
-#include "iso7816/smartcard.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,7 +64,7 @@ UART_HandleTypeDef huart3;
 PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
 /* USER CODE BEGIN PV */
-SmartCard sc;
+Keycard kc;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -130,8 +129,7 @@ int main(void)
   MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
   aes_init(&hcryp);
-  Keycard_Init();
-  SmartCard_Init(&sc, &hsmartcard2, &htim6);
+  Keycard_Init(&kc, &hsmartcard2, &htim6);
   UI_Init();
   /* USER CODE END 2 */
 
@@ -139,7 +137,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    Keycard_Run(&sc); 
+    Keycard_Run(&kc); 
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -804,8 +802,7 @@ static void MX_GPIO_Init(void)
 void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == SC_NOFF_Pin) {
-    UI_Card_Inserted();
-    SmartCard_In(&sc);
+    Keycard_In(&kc);
   }
 }
 
@@ -817,8 +814,7 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t GPIO_Pin)
 void HAL_GPIO_EXTI_Falling_Callback(uint16_t GPIO_Pin)
 {
   if (GPIO_Pin == SC_NOFF_Pin) {
-    UI_Card_Removed();
-    SmartCard_Out(&sc);
+    Keycard_Out(&kc);
   }
 }
 
