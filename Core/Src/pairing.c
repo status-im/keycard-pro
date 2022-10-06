@@ -41,7 +41,6 @@ uint64_t* Pairing_Find(Pairing *p) {
       continue;
     }
 
-    read += (APP_INFO_INSTANCE_UID_LEN/8);
     return read;
   }
 
@@ -53,6 +52,8 @@ uint8_t Pairing_Read(Pairing* out) {
   if (!read) {
     return 0;
   }
+
+  read += (APP_INFO_INSTANCE_UID_LEN/8);
 
   for (int i = 0; i < (SHA256_DIGEST_LENGTH/8); i++) {
     ((uint64_t*) out->key)[i] = *(read++);
@@ -160,6 +161,8 @@ uint8_t Pairing_Erase(Pairing* in) {
   if (!erase) {
     return 0;
   }
+
+  erase--;
   
   if (HAL_FLASH_Unlock() != HAL_OK) {
     return 0;

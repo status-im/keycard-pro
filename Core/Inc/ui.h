@@ -24,7 +24,8 @@ void UI_Keycard_Secure_Channel_OK();
 void UI_Keycard_Wrong_PIN();
 void UI_Keycard_PIN_OK();
 
-uint8_t UI_Read_PIN(uint8_t* out);
-uint8_t UI_Read_PUK(uint8_t* out);
+uint8_t UI_Read_PIN(uint8_t* out, int8_t retries);
+uint8_t UI_Read_PUK(uint8_t* out, int8_t retries);
+uint8_t UI_Read_Pairing(uint8_t* pairing, uint32_t *len);
 
 #endif

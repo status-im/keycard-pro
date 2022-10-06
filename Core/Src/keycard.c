@@ -9,6 +9,7 @@
 #include "crypto/rand.h"
 #include "crypto/sha2.h"
 #include "crypto/util.h"
+#include "crypto/pbkdf2.h"
 
 #define KEYCARD_PIN_LEN 6
 #define KEYCARD_PUK_LEN 12
@@ -131,92 +132,146 @@ uint16_t Keycard_CMD_Init(SmartCard* sc, APDU* apdu, uint8_t* sc_pub, uint8_t* p
   return SecureChannel_Init(sc, apdu, sc_pub, data, KEYCARD_PIN_LEN+KEYCARD_PUK_LEN+SHA256_DIGEST_LENGTH);
 }
 
-void Keycard_Setup(SmartCard* sc) {
-  if (!Keycard_CMD_Select(sc, &apdu)) {
-    SmartCard_Deactivate(sc);
-    return;
-  }  
+uint16_t Keycard_Init_Card(SmartCard* sc, uint8_t* sc_key) {
+  uint8_t pin[6];
+  uint8_t puk[12];
+  if (!UI_Read_PIN(pin, -1)) {
+    return ERR_CANCEL;
+  }
 
-  UI_Clear();
+  if (!UI_Read_PUK(puk, -1)) {
+    return ERR_CANCEL;
+  }
 
-  if (APDU_SW(&apdu) == SW_OK) {
-    ApplicationInfo info;
-    if (!ApplicationInfo_Parse(APDU_RESP(&apdu), &info)) {
-      return;
-    }
+  if (Keycard_CMD_Init(sc, &apdu, sc_key, pin, puk, (uint8_t*)keycard_default_psk) != ERR_OK) {
+    UI_Keycard_Init_Failed();
+    return ERR_CRYPTO;
+  }
 
-    switch (info.status) {
-      case NOT_INITIALIZED:
-        UI_Keycard_Not_Initalized();
-        uint8_t pin[6];
-        uint8_t puk[12];
-        if (!UI_Read_PIN(pin)) {
-          SmartCard_Deactivate(sc);
-          return;
-        }
+  return ERR_OK;
+}
 
-        if (!UI_Read_PUK(puk)) {
-          SmartCard_Deactivate(sc);
-          return;
-        }
+uint16_t Keycard_Pair(SmartCard* sc, Pairing* pairing, uint8_t* instance_uid) {
+  memcpy(pairing->instance_uid, instance_uid, APP_INFO_INSTANCE_UID_LEN);
+  
+  if (Pairing_Read(pairing)) {
+    UI_Keycard_Already_Paired();
+    return ERR_OK;
+  }
 
-        if (Keycard_CMD_Init(sc, &apdu, info.sc_key, pin, puk, (uint8_t*)keycard_default_psk) != ERR_OK) {
-          UI_Keycard_Init_Failed();
-          return;
-        }
-        Keycard_Setup(sc);
-        return;
-      case INIT_NO_KEYS:
-        UI_Keycard_No_Keys();
-        break;
-      case INIT_WITH_KEYS:
-        UI_Keycard_Ready();
-        break;
-    }
-
-    Pairing pairing;
-    memcpy(pairing.instance_uid, info.instance_uid, APP_INFO_INSTANCE_UID_LEN);
-    if (!Pairing_Read(&pairing)) {
-      if (Keycard_CMD_AutoPair(sc, &apdu, keycard_default_psk, &pairing) == ERR_OK) {
-        if (!Pairing_Write(&pairing)) {
-          UI_Keycard_Flash_Error();
-          return;
-        } else {
-          UI_Keycard_Paired();
-        }
-      } else {
-        UI_Keycard_Wrong_Pairing();
-        return;
+  uint8_t* psk = (uint8_t*) keycard_default_psk;
+  
+  while(1) {
+    if (Keycard_CMD_AutoPair(sc, &apdu, psk, pairing) == ERR_OK) {
+      if (!Pairing_Write(pairing)) {
+        UI_Keycard_Flash_Error();
+        return ERR_DATA;
       }
-    } else {
-      UI_Keycard_Already_Paired();
+
+      UI_Keycard_Paired();
+      return ERR_OK;
     }
 
-    SecureChannel ch;
-    if (SecureChannel_Open(&ch, sc, &apdu, &pairing, info.sc_key) != ERR_OK) {
-      Pairing_Erase(&pairing);
-      UI_Keycard_Secure_Channel_Failed();
-      Keycard_Setup(sc);
-      return;
+    uint8_t password[16];
+    uint8_t pairing[32];
+    uint32_t len = 16;
+    psk = pairing;
+
+    UI_Keycard_Wrong_Pairing();
+
+    if (!UI_Read_Pairing(pairing, &len)) {
+      return ERR_CANCEL;
     }
 
-    UI_Keycard_Secure_Channel_OK();
+    pbkdf2_hmac_sha256(password, len, (uint8_t*)"Keycard Pairing Password Salt", 30, 50000, pairing, 32);
+  }
+}
 
-    SC_BUF(pin, KEYCARD_PIN_LEN);
-    if (!UI_Read_PIN(pin)) {
-      SmartCard_Deactivate(sc);
-      return;
-    }
+uint16_t Keycard_Authenticate(SmartCard* sc, SecureChannel* ch) {
+  //TODO: handle retries, unblock, factory reset(?)
+  SC_BUF(pin, KEYCARD_PIN_LEN);
+  if (!UI_Read_PIN(pin, -1)) {
+    return ERR_CANCEL;
+  }
 
-    if (!Keycard_CMD_VerifyPIN(sc, &ch, &apdu, pin) || (APDU_SW(&apdu) != SW_OK)) {
-      UI_Keycard_Wrong_PIN();
-      return;
-    }
+  if (!Keycard_CMD_VerifyPIN(sc, ch, &apdu, pin) || (APDU_SW(&apdu) != SW_OK)) {
+    UI_Keycard_Wrong_PIN();
+    return ERR_CRYPTO;
+  }
 
-    UI_Keycard_PIN_OK();
-  } else {
-    UI_Keycard_Wrong_Card();
+  UI_Keycard_PIN_OK();  
+
+  return ERR_OK;  
+}
+
+uint16_t Keycard_Init_Keys(SmartCard* sc, SecureChannel* ch) {
+  return ERR_OK;
+}
+
+uint16_t Keycard_Setup(SmartCard* sc) {
+  if (!Keycard_CMD_Select(sc, &apdu)) {
+    return ERR_TXRX;
   }  
+
+  if (APDU_SW(&apdu) != SW_OK) {
+    UI_Keycard_Wrong_Card();
+    return APDU_SW(&apdu);
+  }
+
+  ApplicationInfo info;
+  if (!ApplicationInfo_Parse(APDU_RESP(&apdu), &info)) {
+    UI_Keycard_Wrong_Card();
+    return ERR_DATA;
+  }
+
+  uint8_t initKeys;
+  uint16_t err;
+
+  switch (info.status) {
+    case NOT_INITIALIZED:
+      UI_Keycard_Not_Initalized();
+      err = Keycard_Init_Card(sc, info.sc_key);
+      if (err != ERR_OK) {
+        return err;
+      }
+      return ERR_RETRY;
+    case INIT_NO_KEYS:
+      initKeys = 1;
+      UI_Keycard_No_Keys();
+      break;
+    case INIT_WITH_KEYS:
+      initKeys = 0;
+      UI_Keycard_Ready();
+      break;
+    default:
+      return ERR_DATA;
+  }
+
+  Pairing pairing;
+  err = Keycard_Pair(sc, &pairing, info.instance_uid);
+  if (err != ERR_OK) {
+    return err;
+  }
+
+  SecureChannel ch;
+  if (SecureChannel_Open(&ch, sc, &apdu, &pairing, info.sc_key) != ERR_OK) {
+    Pairing_Erase(&pairing);
+    UI_Keycard_Secure_Channel_Failed();
+    return ERR_RETRY;
+  }
+
+  UI_Keycard_Secure_Channel_OK();
+
+  err = Keycard_Authenticate(sc, &ch);
+  if (err != ERR_OK) {
+    return err;
+  }
+
+  if (initKeys) {
+    return Keycard_Init_Keys(sc, &ch);
+  } else {
+    return ERR_OK;
+  }
 }
 
 void Keycard_Activate(SmartCard* sc) {
@@ -228,7 +283,16 @@ void Keycard_Activate(SmartCard* sc) {
     return;
   }
 
-  Keycard_Setup(sc);
+  UI_Clear();
+
+  uint16_t res;
+  do {
+    res = Keycard_Setup(sc);
+  } while(res == ERR_RETRY);
+
+  if (res != ERR_OK) {
+    SmartCard_Deactivate(sc);
+  }
 }
 
 void Keycard_Run(SmartCard* sc) {

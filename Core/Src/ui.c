@@ -102,7 +102,7 @@ void UI_Keycard_PIN_OK() {
   BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Authenticated");
 }
 
-uint8_t UI_Read_PIN(uint8_t* out) {
+uint8_t UI_Read_PIN(uint8_t* out, int8_t retries) {
   out[0] = '1';
   out[1] = '2';
   out[2] = '3';
@@ -113,7 +113,7 @@ uint8_t UI_Read_PIN(uint8_t* out) {
   return 1;
 }
 
-uint8_t UI_Read_PUK(uint8_t* out) {
+uint8_t UI_Read_PUK(uint8_t* out, int8_t retries) {
   out[0] = '1';
   out[1] = '2';
   out[2] = '3';
@@ -128,4 +128,8 @@ uint8_t UI_Read_PUK(uint8_t* out) {
   out[11] = '6';
 
   return 1;
+}
+
+uint8_t UI_Read_Pairing(uint8_t* pairing, uint32_t *len) {
+  return 0;
 }
