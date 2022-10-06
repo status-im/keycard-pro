@@ -4,9 +4,11 @@
 #include "tlv.h"
 
 #define TLV_APPLICATION_INFO_TEMPLATE 0xa4
+#define TLV_APPLICATION_STATUS_TEMPLATE 0xa3
 #define TLV_PUB_KEY 0x80
 #define TLV_UID 0x8f
 #define TLV_KEY_UID 0x8e
+#define TLV_BOOL 0x01
 #define TLV_INT 0x02
 
 uint8_t ApplicationInfo_Parse(uint8_t* buf, ApplicationInfo* info) {
@@ -58,6 +60,35 @@ uint8_t ApplicationInfo_Parse(uint8_t* buf, ApplicationInfo* info) {
   } else {
     return 0;
   }
+
+  return 1;
+}
+
+uint8_t ApplicationStatus_Parse(uint8_t* buf, ApplicationStatus* status) {
+  uint16_t tag;
+  uint16_t off = tlv_read_tag(buf, &tag);
+
+  if (tag != TLV_APPLICATION_STATUS_TEMPLATE) {
+    return 0;
+  }
+
+  uint16_t len;
+  off += tlv_read_length(&buf[off], &len);
+
+  if ((len = tlv_read_fixed_primitive(TLV_INT, sizeof(uint8_t), &buf[off], &status->pin_retries)) == TLV_INVALID) {
+    return 0;
+  }
+  off += len;
+
+  if ((len = tlv_read_fixed_primitive(TLV_INT, sizeof(uint8_t), &buf[off], &status->puk_retries)) == TLV_INVALID) {
+    return 0;
+  }
+  off += len;
+
+  if ((len = tlv_read_fixed_primitive(TLV_BOOL, sizeof(uint8_t), &buf[off], &status->has_key)) == TLV_INVALID) {
+    return 0;
+  }
+  off += len;  
 
   return 1;
 }

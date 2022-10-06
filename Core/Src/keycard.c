@@ -101,19 +101,33 @@ uint8_t Keycard_CMD_VerifyPIN(SmartCard* sc, SecureChannel* ch, APDU* apdu, uint
   APDU_P1(apdu) = 0;
   APDU_P2(apdu) = 0;
   
-  if (SecureChannel_Protect_APDU(ch, apdu, pin, KEYCARD_PIN_LEN) != ERR_OK) {
-    return 0;
-  }
+  return SecureChannel_Send_APDU(sc, ch, apdu, pin, KEYCARD_PIN_LEN) == ERR_OK;
+}
 
-  if (!SmartCard_Send_APDU(sc, apdu)) {
-    return 0;
-  }
+uint8_t Keycard_CMD_UnblockPIN(SmartCard* sc, SecureChannel* ch, APDU* apdu, uint8_t* pin, uint8_t* puk) {
+  APDU_RESET(apdu);
+  APDU_CLA(apdu) = 0x80;
+  APDU_INS(apdu) = 0x22;
+  APDU_P1(apdu) = 0;
+  APDU_P2(apdu) = 0;
 
-  if (SecureChannel_Decrypt_APDU(ch, apdu) != ERR_OK) {
-    return 0;
-  }
+  SC_BUF(data, (KEYCARD_PUK_LEN + KEYCARD_PIN_LEN));
+  memcpy(data, puk, KEYCARD_PUK_LEN);
+  memcpy(&data[KEYCARD_PUK_LEN], pin, KEYCARD_PIN_LEN);
+  
+  return SecureChannel_Send_APDU(sc, ch, apdu, data, (KEYCARD_PUK_LEN + KEYCARD_PIN_LEN)) == ERR_OK;
+}
 
-  return 1;
+uint8_t Keycard_CMD_GetStatus(SmartCard* sc, SecureChannel* ch, APDU* apdu) {
+  APDU_RESET(apdu);
+  APDU_CLA(apdu) = 0x80;
+  APDU_INS(apdu) = 0xf2;
+  APDU_P1(apdu) = 0;
+  APDU_P2(apdu) = 0;
+
+  SC_BUF(data, 0);
+  
+  return SecureChannel_Send_APDU(sc, ch, apdu, data, 0) == ERR_OK;
 }
 
 uint16_t Keycard_CMD_Init(SmartCard* sc, APDU* apdu, uint8_t* sc_pub, uint8_t* pin, uint8_t* puk, uint8_t* psk) {
@@ -187,21 +201,81 @@ uint16_t Keycard_Pair(SmartCard* sc, Pairing* pairing, uint8_t* instance_uid) {
   }
 }
 
+uint16_t Keycard_FactoryReset(SmartCard* sc) {
+  //TODO: implement global platform
+  return ERR_CANCEL;
+}
+
+uint16_t Keycard_Unblock(SmartCard* sc, SecureChannel* ch, uint8_t pukRetries) {
+  uint8_t pin[KEYCARD_PIN_LEN];
+
+  if (pukRetries) {
+    if (!UI_Prompt_Try_PUK()) {
+      pukRetries = 0;
+    } else if (!UI_Read_PIN(pin, -1)) {
+      return ERR_CANCEL;
+    }
+  }
+
+  while(pukRetries) {
+    uint8_t puk[KEYCARD_PUK_LEN];
+    if (!UI_Read_PUK(puk, pukRetries)) {
+      return ERR_CANCEL;
+    }
+
+    if (!Keycard_CMD_UnblockPIN(sc, ch, &apdu, pin, puk)) {
+      return ERR_TXRX;
+    }
+
+    uint16_t sw = APDU_SW(&apdu);
+
+    if (sw == SW_OK) {
+      UI_Keycard_PUK_OK();
+      return ERR_OK;
+    } else if ((sw & 0x63c0) == 0x63c0) {
+      UI_Keycard_Wrong_PUK();
+      pukRetries = (sw & 0xf);
+    } else {
+      return sw;
+    }    
+  }
+
+  return Keycard_FactoryReset(sc);
+}
+
 uint16_t Keycard_Authenticate(SmartCard* sc, SecureChannel* ch) {
-  //TODO: handle retries, unblock, factory reset(?)
-  SC_BUF(pin, KEYCARD_PIN_LEN);
-  if (!UI_Read_PIN(pin, -1)) {
-    return ERR_CANCEL;
+  if (!Keycard_CMD_GetStatus(sc, ch, &apdu)) {
+    return ERR_TXRX;
   }
 
-  if (!Keycard_CMD_VerifyPIN(sc, ch, &apdu, pin) || (APDU_SW(&apdu) != SW_OK)) {
-    UI_Keycard_Wrong_PIN();
-    return ERR_CRYPTO;
-  }
+  APDU_ASSERT_OK(&apdu);
+  ApplicationStatus pinStatus;
+  ApplicationStatus_Parse(APDU_RESP(&apdu), &pinStatus);
 
-  UI_Keycard_PIN_OK();  
+  while(pinStatus.pin_retries) {
+    SC_BUF(pin, KEYCARD_PIN_LEN);
+    if (!UI_Read_PIN(pin, pinStatus.pin_retries)) {
+      return ERR_CANCEL;
+    }
 
-  return ERR_OK;  
+    if (!Keycard_CMD_VerifyPIN(sc, ch, &apdu, pin)) {
+      return ERR_TXRX;
+    }
+
+    uint16_t sw = APDU_SW(&apdu);
+
+    if (sw == SW_OK) {
+      UI_Keycard_PIN_OK();
+      return ERR_OK;
+    } else if ((sw & 0x63c0) == 0x63c0) {
+      UI_Keycard_Wrong_PIN();
+      pinStatus.pin_retries = (sw & 0xf);
+    } else {
+      return sw;
+    }
+  } 
+
+  return Keycard_Unblock(sc, ch, pinStatus.puk_retries);
 }
 
 uint16_t Keycard_Init_Keys(SmartCard* sc, SecureChannel* ch) {

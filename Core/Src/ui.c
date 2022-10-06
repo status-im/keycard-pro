@@ -102,6 +102,18 @@ void UI_Keycard_PIN_OK() {
   BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Authenticated");
 }
 
+void UI_Keycard_PUK_OK() {
+  BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "PIN changed");
+}
+
+void UI_Keycard_Wrong_PUK() {
+  BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Wrong PUK");
+}
+
+uint8_t UI_Prompt_Try_PUK() {
+  return 1;
+}
+
 uint8_t UI_Read_PIN(uint8_t* out, int8_t retries) {
   out[0] = '1';
   out[1] = '2';

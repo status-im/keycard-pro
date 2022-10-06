@@ -207,6 +207,19 @@ uint16_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_
   return ERR_OK;
 }
 
+uint16_t SecureChannel_Send_APDU(SmartCard* card, SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len) {
+  uint16_t err;
+  if ((err = SecureChannel_Protect_APDU(sc, apdu, data, len)) != ERR_OK) {
+    return err;
+  }
+
+  if (!SmartCard_Send_APDU(card, apdu)) {
+    return ERR_TXRX;
+  }
+
+  return SecureChannel_Decrypt_APDU(sc, apdu);
+}
+
 void SecureChannel_Close(SecureChannel* sc) {
   memset(sc->encKey, 0, AES_256_KEY_SIZE);
   memset(sc->macKey, 0, AES_256_KEY_SIZE);

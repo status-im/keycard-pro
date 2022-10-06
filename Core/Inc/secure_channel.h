@@ -20,6 +20,7 @@ uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pair
 uint16_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_t* data, uint32_t len);
 uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len);
 uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu);
+uint16_t SecureChannel_Send_APDU(SmartCard* card, SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len);
 void SecureChannel_Close(SecureChannel* sc);
 
 #endif
