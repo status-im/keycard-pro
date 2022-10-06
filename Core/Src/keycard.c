@@ -10,6 +10,7 @@
 #include "crypto/sha2.h"
 #include "crypto/util.h"
 #include "crypto/pbkdf2.h"
+#include "crypto/bip39.h"
 
 const uint8_t keycard_aid[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t keycard_aid_len = 9;
@@ -154,6 +155,48 @@ uint16_t Keycard_Authenticate(Keycard* kc) {
 }
 
 uint16_t Keycard_Init_Keys(Keycard* kc) {
+  uint16_t indexes[24];
+  uint32_t len;
+
+  uint16_t err = UI_ReadMnemonic(indexes, &len);
+
+  if (err == ERR_CANCEL) {
+    return err;
+  } else if (err == ERR_DATA) {
+    if (!Keycard_CMD_GenerateMnemonic(kc, len)) {
+      return ERR_TXRX;
+    }
+
+    APDU_ASSERT_OK(&kc->apdu);
+    uint8_t* data = APDU_RESP(&kc->apdu);
+
+    for (int i = 0; i < (len << 1); i += 2) {
+      indexes[(i >> 1)] = ((data[i] << 8) | data[i+1]);
+    }
+
+    memset(data, 0, (len << 1));
+  }
+
+  const char* mnemonic = mnemonic_from_indexes(indexes, len);
+
+  if (err == ERR_DATA) {
+    if (!UI_Backup_Mnemonic(mnemonic)) {
+      mnemonic_clear();
+      return ERR_CANCEL;
+    }
+  }
+
+  SC_BUF(seed, 64);
+  mnemonic_to_seed(mnemonic, "\0", seed, NULL);
+  mnemonic_clear();
+
+  if(!Keycard_CMD_LoadSeed(kc, seed)) {
+    return ERR_TXRX;
+  }
+
+  APDU_ASSERT_OK(&kc->apdu);
+
+  UI_Seed_Loaded();
   return ERR_OK;
 }
 

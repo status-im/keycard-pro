@@ -1,4 +1,5 @@
 #include "ui.h"
+#include "error.h"
 
 void UI_Init() {
   BSP_LED_Off(LED1);
@@ -144,4 +145,18 @@ uint8_t UI_Read_PUK(uint8_t* out, int8_t retries) {
 
 uint8_t UI_Read_Pairing(uint8_t* pairing, uint32_t *len) {
   return 0;
+}
+
+void UI_Seed_Loaded() {
+  BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Seed loaded");
+}
+
+uint8_t UI_Backup_Mnemonic(const char* mnemonic) {
+  BSP_LCD_DisplayStringAtLine(7, (uint8_t*) mnemonic);
+  return 1;
+}
+
+uint16_t UI_ReadMnemonic(uint16_t* indexes, uint32_t* len) {
+  *len = 12;
+  return ERR_DATA;
 }

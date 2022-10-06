@@ -40,6 +40,7 @@ extern const char *const BIP39_WORDLIST_ENGLISH[BIP39_WORD_COUNT];
 
 const char *mnemonic_generate(int strength);  // strength in bits
 const char *mnemonic_from_data(const uint8_t *data, int len);
+const char *mnemonic_from_indexes(const uint16_t *indexes, int len);
 void mnemonic_clear(void);
 
 int mnemonic_check(const char *mnemonic);

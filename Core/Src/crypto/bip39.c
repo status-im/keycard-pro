@@ -96,6 +96,20 @@ const char *mnemonic_from_data(const uint8_t *data, int len) {
   return mnemo;
 }
 
+const char *mnemonic_from_indexes(const uint16_t *indexes, int len) {
+  char *p = mnemo;
+  for (int i = 0; i < len; i++) {
+    uint16_t idx = indexes[i];
+    strcpy(p, BIP39_WORDLIST_ENGLISH[idx]);
+    p += strlen(BIP39_WORDLIST_ENGLISH[idx]);
+    *(p++) = ' ';
+  }
+
+  *(--p) = '\0';
+
+  return mnemo;
+}
+
 void mnemonic_clear(void) { memzero(mnemo, sizeof(mnemo)); }
 
 int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {

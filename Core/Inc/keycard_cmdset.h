@@ -10,5 +10,7 @@ uint8_t Keycard_CMD_VerifyPIN(Keycard* kc, uint8_t* pin);
 uint8_t Keycard_CMD_UnblockPIN(Keycard* kc, uint8_t* pin, uint8_t* puk);
 uint8_t Keycard_CMD_GetStatus(Keycard* kc);
 uint16_t Keycard_CMD_Init(Keycard* kc, uint8_t* sc_pub, uint8_t* pin, uint8_t* puk, uint8_t* psk);
+uint8_t Keycard_CMD_GenerateMnemonic(Keycard* kc, uint8_t len);
+uint8_t Keycard_CMD_LoadSeed(Keycard* kc, uint8_t* seed);
 
 #endif

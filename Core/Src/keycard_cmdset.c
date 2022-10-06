@@ -99,6 +99,9 @@ uint8_t Keycard_CMD_UnblockPIN(Keycard* kc, uint8_t* pin, uint8_t* puk) {
   SC_BUF(data, (KEYCARD_PUK_LEN + KEYCARD_PIN_LEN));
   memcpy(data, puk, KEYCARD_PUK_LEN);
   memcpy(&data[KEYCARD_PUK_LEN], pin, KEYCARD_PIN_LEN);
+
+  memset(puk, 0, KEYCARD_PUK_LEN);
+  memset(pin, 0, KEYCARD_PIN_LEN);
   
   return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, data, (KEYCARD_PUK_LEN + KEYCARD_PIN_LEN)) == ERR_OK;
 }
@@ -129,4 +132,26 @@ uint16_t Keycard_CMD_Init(Keycard* kc, uint8_t* sc_pub, uint8_t* pin, uint8_t* p
   }
 
   return SecureChannel_Init(&kc->sc, &kc->apdu, sc_pub, data, KEYCARD_PIN_LEN+KEYCARD_PUK_LEN+SHA256_DIGEST_LENGTH);
+}
+
+uint8_t Keycard_CMD_GenerateMnemonic(Keycard* kc, uint8_t len) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0xd2;
+  APDU_P1(&kc->apdu) = (len / 3);
+  APDU_P2(&kc->apdu) = 0;
+
+  SC_BUF(data, 0);
+  
+  return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, data, 0) == ERR_OK;
+}
+
+uint8_t Keycard_CMD_LoadSeed(Keycard* kc, uint8_t* seed) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0xd0;
+  APDU_P1(&kc->apdu) = 3;
+  APDU_P2(&kc->apdu) = 0;
+  
+  return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, seed, 64) == ERR_OK;  
 }
