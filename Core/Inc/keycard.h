@@ -5,6 +5,9 @@
 #include "secure_channel.h"
 #include "iso7816/smartcard.h"
 
+#define KEYCARD_PIN_LEN 6
+#define KEYCARD_PUK_LEN 12
+
 typedef struct {
   SmartCard sc;
   SecureChannel ch;

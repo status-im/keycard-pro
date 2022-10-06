@@ -92,6 +92,7 @@ Core/Src/iso7816/pps.c \
 Core/Src/iso7816/smartcard.c \
 Core/Src/iso7816/t1.c \
 Core/Src/keycard.c \
+Core/Src/keycard_cmdset.c \
 Core/Src/main.c \
 Core/Src/pairing.c \
 Core/Src/secure_channel.c \
