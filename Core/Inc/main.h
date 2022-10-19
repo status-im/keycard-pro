@@ -58,10 +58,6 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define VCP_TX_Pin GPIO_PIN_10
-#define VCP_TX_GPIO_Port GPIOC
-#define VCP_RX_Pin GPIO_PIN_11
-#define VCP_RX_GPIO_Port GPIOC
 #define Tamper_key_Pin GPIO_PIN_13
 #define Tamper_key_GPIO_Port GPIOC
 #define EX_RESET_OD_Pin GPIO_PIN_0
@@ -78,8 +74,6 @@ void Error_Handler(void);
 #define SC_1V8_GPIO_Port GPIOA
 #define SC_NCMDVCC_Pin GPIO_PIN_0
 #define SC_NCMDVCC_GPIO_Port GPIOB
-#define Potentiometer_Pin GPIO_PIN_2
-#define Potentiometer_GPIO_Port GPIOB
 #define SC_NOFF_Pin GPIO_PIN_12
 #define SC_NOFF_GPIO_Port GPIOB
 #define SC_NOFF_EXTI_IRQn EXTI4_15_IRQn

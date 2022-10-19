@@ -3,6 +3,8 @@
 
 #define PPS_TIMEOUT 20
 
+#define SMARTCARD_STOPBITS_1 0x00000000U
+
 const static uint32_t F_Table[] = {372, 372, 558, 744, 1116, 1488, 1860, 0, 0, 512, 768, 1024, 1536, 2048, 0, 0};
 const static uint32_t D_Table[] = {0, 1, 2, 4, 8, 16, 32, 0, 12, 20, 0, 0, 0, 0, 0, 0};
 
@@ -45,7 +47,7 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
   sc->etu_10ns = (100000000/freq) * fd;
 
   if (sc->atr.default_protocol == SC_T1) {
-    sc->dev->Init.StopBits = UART_STOPBITS_1;
+    sc->dev->Init.StopBits = SMARTCARD_STOPBITS_1;
     sc->dev->Init.NACKEnable = SMARTCARD_NACK_DISABLE;
     sc->t1_cwt = (1 << sc->atr.t1_cwi);
     sc->t1_bwt = (((1 << sc->atr.t1_bwi) * 960 * 372 * D) / F);

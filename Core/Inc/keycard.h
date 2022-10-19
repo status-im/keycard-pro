@@ -3,6 +3,7 @@
 
 #include "main.h"
 #include "secure_channel.h"
+#include "command.h"
 #include "iso7816/smartcard.h"
 
 #define KEYCARD_PIN_LEN 6
@@ -15,7 +16,7 @@ typedef struct {
 } Keycard;
 
 void Keycard_Init(Keycard* kc, SMARTCARD_HandleTypeDef* dev, TIM_HandleTypeDef* usec_timer);
-void Keycard_Run(Keycard* kc);
+void Keycard_Run(Keycard* kc, Command* cmd);
 void Keycard_In(Keycard* kc);
 void Keycard_Out(Keycard* kc);
 

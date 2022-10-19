@@ -22,6 +22,10 @@
         "Drivers/CMSIS/Include",
         "Drivers/STM32G0xx_HAL_Driver/Inc",
         "Drivers/STM32G0xx_HAL_Driver/Inc/Legacy",
+        "Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Inc",
+        "Middlewares/ST/STM32_USB_Device_Library/Core/Inc",
+        "USB_Device/App",
+        "USB_Device/Target",
         "Utilities/Fonts"
       ],
       "defines": [

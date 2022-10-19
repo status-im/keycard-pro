@@ -37,6 +37,7 @@ BUILD_DIR = build
 # C sources
 C_SOURCES =  \
 Core/Src/application_info.c \
+Core/Src/command.c \
 Core/Src/crypto/address.c \
 Core/Src/crypto/aes.c \
 Core/Src/crypto/base32.c \
@@ -142,7 +143,15 @@ Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_adc.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_dma.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_rcc.c \
 Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_spi.c \
-Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usb.c
+Drivers/STM32G0xx_HAL_Driver/Src/stm32g0xx_ll_usb.c \
+Middlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Src/usbd_customhid.c \
+Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_core.c \
+Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ctlreq.c \
+Middlewares/ST/STM32_USB_Device_Library/Core/Src/usbd_ioreq.c \
+USB_Device/App/usb_device.c \
+USB_Device/App/usbd_custom_hid_if.c \
+USB_Device/App/usbd_desc.c \
+USB_Device/Target/usbd_conf.c
 
 
 CPP_SOURCES = \
@@ -233,6 +242,10 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Include \
 -IDrivers/STM32G0xx_HAL_Driver/Inc \
 -IDrivers/STM32G0xx_HAL_Driver/Inc/Legacy \
+-IMiddlewares/ST/STM32_USB_Device_Library/Class/CustomHID/Inc \
+-IMiddlewares/ST/STM32_USB_Device_Library/Core/Inc \
+-IUSB_Device/App \
+-IUSB_Device/Target \
 -IUtilities/Fonts
 
 

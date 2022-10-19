@@ -12,6 +12,20 @@
 #include "crypto/pbkdf2.h"
 #include "crypto/bip39.h"
 
+#define INS_GET_ETH_ADDR 0x02
+#define INS_SIGN_ETH_TX 0x04
+#define INS_GET_APP_CONF 0x06
+#define INS_SIGN_ETH_MSG 0x08
+#define INS_SIGN_ETH_MSG 0x08
+#define INS_PROVIDE_ERC20 0x0A
+#define INS_SIGN_EIP_712 0x0C
+#define INS_SIGN_ETH_MSG 0x08
+#define INS_PROVIDE_NFT 0x14
+
+#define APP_MAJOR 1
+#define APP_MINOR 9
+#define APP_PATCH 17
+
 const uint8_t keycard_aid[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t keycard_aid_len = 9;
 
@@ -288,7 +302,38 @@ void Keycard_Activate(Keycard* kc) {
   }
 }
 
-void Keycard_Run(Keycard* kc) {
+void Keycard_Get_App_Config(APDU* cmd) {
+  uint8_t* data = APDU_RESP(cmd);
+  data[0] = 0x03;
+  data[1] = APP_MAJOR;
+  data[2] = APP_MINOR;
+  data[3] = APP_PATCH;
+  data[4] = 0x90;
+  data[5] = 0x00;
+  cmd->lr = 6;
+}
+
+void Keycard_Invalid_INS(APDU* cmd) {
+  uint8_t* data = APDU_RESP(cmd);
+  data[0] = 0x6d;
+  data[1] = 0x00;
+  cmd->lr = 2;
+}
+
+void Keycard_Command(Keycard* kc, Command* cmd) {
+  switch(APDU_INS(&cmd->apdu)) {
+    case INS_GET_APP_CONF:
+      Keycard_Get_App_Config(&cmd->apdu);
+      break;
+    default:
+      Keycard_Invalid_INS(&cmd->apdu);
+      break;
+  }
+
+  cmd->status = COMMAND_OUTBOUND;
+}
+
+void Keycard_Run(Keycard* kc, Command* cmd) {
   switch (kc->sc.state) {
     case SC_NOT_PRESENT:
     case SC_DEACTIVATED:
@@ -297,6 +342,9 @@ void Keycard_Run(Keycard* kc) {
       Keycard_Activate(kc);
       break;
     case SC_READY:
+      if(cmd->status == COMMAND_COMPLETE) {
+        Keycard_Command(kc, cmd);
+      }
       break; // process commands
   }
 }
