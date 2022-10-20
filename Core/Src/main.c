@@ -120,7 +120,7 @@ int main(void)
   MX_USB_Device_Init();
   /* USER CODE BEGIN 2 */
   aes_init(&hcryp);
-  USB_Set_Command(&cmd);
+  CUSTOM_HID_Set_Command(&cmd);
   Keycard_Init(&kc, &hsmartcard2, &htim6);
   UI_Init();
   /* USER CODE END 2 */
@@ -130,6 +130,7 @@ int main(void)
   while (1)
   {
     Keycard_Run(&kc, &cmd);
+    CUSTOM_HID_Send_Response();
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

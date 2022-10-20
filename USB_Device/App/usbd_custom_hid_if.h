@@ -104,7 +104,8 @@ extern USBD_CUSTOM_HID_ItfTypeDef USBD_CustomHID_fops_FS;
   */
 
 /* USER CODE BEGIN EXPORTED_FUNCTIONS */
-void USB_Set_Command(Command* cmd);
+void CUSTOM_HID_Set_Command(Command* cmd);
+void CUSTOM_HID_Send_Response();
 /* USER CODE END EXPORTED_FUNCTIONS */
 
 /**

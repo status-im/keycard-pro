@@ -330,7 +330,7 @@ void Keycard_Command(Keycard* kc, Command* cmd) {
       break;
   }
 
-  cmd->status = COMMAND_OUTBOUND;
+  Command_Init_Send(cmd);
 }
 
 void Keycard_Run(Keycard* kc, Command* cmd) {

@@ -219,7 +219,7 @@ static int8_t CUSTOM_HID_OutEvent_FS(uint8_t* packet)
     recv_off += 2;
   }
 
-  Command_Receive(usb_cmd, &packet[recv_off], (64 - recv_off));
+  Command_Receive(usb_cmd, &packet[recv_off], (USB_MAX_EP0_SIZE - recv_off));
 
 usb_next:
   /* Start next USB packet transfer once data processing is completed */
@@ -294,8 +294,35 @@ static uint8_t *CUSTOM_HID_GetReport_FS(uint16_t *ReportLength)
 #endif /* USBD_CUSTOMHID_CTRL_REQ_GET_REPORT_ENABLED */
 
 /* USER CODE BEGIN PRIVATE_FUNCTIONS_IMPLEMENTATION */
-void USB_Set_Command(Command* cmd) {
+void CUSTOM_HID_Set_Command(Command* cmd) {
   usb_cmd = cmd;
+}
+
+void CUSTOM_HID_Send_Response() {
+  if (usb_cmd->channel != USBHID || usb_cmd->status != COMMAND_OUTBOUND) {
+    return;
+  }
+
+  uint8_t packet[USB_MAX_EP0_SIZE];
+
+  packet[0] = 0x1;
+  packet[1] = 0x1;
+  packet[2] = USB_APDU;
+  packet[3] = (usb_cmd->segment_count >> 8);
+  packet[4] = (usb_cmd->segment_count & 0xff);
+
+  uint16_t send_off = 5;
+  if (!usb_cmd->segment_count) {
+    packet[5] = 0;
+    packet[6] = usb_cmd->apdu.lr;
+    send_off += 2;
+  }
+
+  uint8_t len = Command_Send(usb_cmd, &packet[send_off], (USB_MAX_EP0_SIZE - send_off));
+
+  if (USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, packet, (len + send_off)) == (uint8_t) USBD_OK) {
+    Command_Send_ACK(usb_cmd, len);
+  }
 }
 /* USER CODE END PRIVATE_FUNCTIONS_IMPLEMENTATION */
 /**
