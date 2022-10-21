@@ -35,6 +35,7 @@
 #define USB_APDU 0x05
 
 static Command* usb_cmd;
+static uint8_t channel[2];
 /* USER CODE END PV */
 
 /** @addtogroup STM32_USB_OTG_DEVICE_LIBRARY
@@ -204,12 +205,15 @@ static int8_t CUSTOM_HID_OutEvent_FS(uint8_t* packet)
 {
   /* USER CODE BEGIN 6 */
   int8_t err = USBD_OK;
+  channel[0] = packet[0];
+  channel[1] = packet[1];
 
   if (packet[2] == USB_PING) {
-    if (USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, packet, 5) != (uint8_t)USBD_OK) {
+    if (USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, packet, USB_MAX_EP0_SIZE) != (uint8_t)USBD_OK) {
       err = -1;
-      goto usb_next;
     }
+    
+    goto usb_next;
   } else if (packet[2] != USB_APDU) {
     err = -1;
     goto usb_next;  
@@ -316,8 +320,8 @@ void CUSTOM_HID_Send_Response() {
 
   uint8_t packet[USB_MAX_EP0_SIZE];
 
-  packet[0] = 0x1;
-  packet[1] = 0x1;
+  packet[0] = channel[0];
+  packet[1] = channel[1];
   packet[2] = USB_APDU;
   packet[3] = (usb_cmd->segment_count >> 8);
   packet[4] = (usb_cmd->segment_count & 0xff);
@@ -331,7 +335,7 @@ void CUSTOM_HID_Send_Response() {
 
   uint8_t len = Command_Send(usb_cmd, &packet[send_off], (USB_MAX_EP0_SIZE - send_off));
 
-  if (USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, packet, (len + send_off)) == (uint8_t) USBD_OK) {
+  if (USBD_CUSTOM_HID_SendReport(&hUsbDeviceFS, packet, USB_MAX_EP0_SIZE) == (uint8_t) USBD_OK) {
     Command_Send_ACK(usb_cmd, len);
   }
 }
