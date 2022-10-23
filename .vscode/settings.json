@@ -11,7 +11,10 @@
         "rand.h": "c",
         "sha2.h": "c",
         "usb_device.h": "c",
-        "command.h": "c"
+        "command.h": "c",
+        "tlv.h": "c",
+        "error.h": "c",
+        "application_info.h": "c"
     },
     "cortex-debug.variableUseNaturalFormat": false
 }

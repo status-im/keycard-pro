@@ -6,6 +6,8 @@
 #include "pairing.h"
 #include "error.h"
 #include "ui.h"
+#include "tlv.h"
+#include "crypto/address.h"
 #include "crypto/rand.h"
 #include "crypto/sha2.h"
 #include "crypto/util.h"
@@ -302,6 +304,13 @@ void Keycard_Activate(Keycard* kc) {
   }
 }
 
+void Keycard_Error_SW(APDU* cmd, uint8_t sw1, uint8_t sw2) {
+  uint8_t* data = APDU_RESP(cmd);
+  data[0] = sw1;
+  data[1] = sw2;
+  cmd->lr = 2;
+}
+
 void Keycard_Get_App_Config(APDU* cmd) {
   uint8_t* data = APDU_RESP(cmd);
   data[0] = 0x03;
@@ -313,21 +322,80 @@ void Keycard_Get_App_Config(APDU* cmd) {
   cmd->lr = 6;
 }
 
-void Keycard_Invalid_INS(APDU* cmd) {
-  uint8_t* data = APDU_RESP(cmd);
-  data[0] = 0x6d;
-  data[1] = 0x00;
-  cmd->lr = 2;
+void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
+  if (APDU_P2(cmd) != 0) {
+    Keycard_Error_SW(cmd, 0x6a, 0x86);
+    return;
+  }
+
+  uint8_t* data = APDU_DATA(cmd);
+  uint16_t len = data[0] * 4;
+  if (len > 40) {
+    Keycard_Error_SW(cmd, 0x6a, 0x80);
+    return;    
+  }
+
+  SC_BUF(path, 40);
+  memcpy(path, &data[1], len);
+
+  Keycard_CMD_ExportKey(kc, 1, path, len);
+
+  if (APDU_SW(&kc->apdu) != 0x9000) {
+    Keycard_Error_SW(cmd, 0x69, 0x82);
+    return;
+  }
+
+  data = APDU_RESP(&kc->apdu);
+  uint8_t* out = APDU_RESP(cmd);
+
+  uint16_t tag;
+  uint16_t off = tlv_read_tag(data, &tag);
+  if (tag != 0xa1) {
+    Keycard_Error_SW(cmd, 0x6f, 0x00);
+    return;    
+  }
+  off += tlv_read_length(&data[off], &len);
+  len = tlv_read_fixed_primitive(0x80, 65, &data[off], &out[1]);
+  if (len == TLV_INVALID) {
+    Keycard_Error_SW(cmd, 0x6f, 0x00);
+    return;    
+  }
+  out[0] = 65;
+  out[66] = 40;
+
+  ethereum_address(&out[1], path);
+  ethereum_address_checksum(path, (char *)&out[67]);
+  
+  if (APDU_P1(cmd) == 1) {
+    if (!UI_Confirm_EthAddress((char *)&out[67])) {
+      Keycard_Error_SW(cmd, 0x69, 0x82);
+      return;
+    }
+  }
+
+  out[107] = 0x90;
+  out[108] = 0x00;
+
+  cmd->lr = 109;
 }
 
 void Keycard_Command(Keycard* kc, Command* cmd) {
-  switch(APDU_INS(&cmd->apdu)) {
-    case INS_GET_APP_CONF:
-      Keycard_Get_App_Config(&cmd->apdu);
-      break;
-    default:
-      Keycard_Invalid_INS(&cmd->apdu);
-      break;
+  APDU* apdu = &cmd->apdu;
+
+  if (APDU_CLA(apdu) == 0xe0) {
+    switch(APDU_INS(apdu)) {
+      case INS_GET_ETH_ADDR:
+        Keycard_Get_Address(kc, apdu);
+        break;
+      case INS_GET_APP_CONF:
+        Keycard_Get_App_Config(apdu);
+        break;
+      default:
+        Keycard_Error_SW(apdu, 0x6d, 0x00);
+        break;
+    }
+  } else {
+    Keycard_Error_SW(apdu, 0x6e, 0x00);
   }
 
   Command_Init_Send(cmd);

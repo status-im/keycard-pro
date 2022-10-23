@@ -155,3 +155,13 @@ uint8_t Keycard_CMD_LoadSeed(Keycard* kc, uint8_t* seed) {
   
   return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, seed, 64) == ERR_OK;  
 }
+
+uint8_t Keycard_CMD_ExportKey(Keycard* kc, uint8_t pub_only, uint8_t* path, uint8_t len) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0xc2;
+  APDU_P1(&kc->apdu) = len == 0 ? 2 : 1; // master key is correctly exported only if set as current
+  APDU_P2(&kc->apdu) = pub_only;
+
+  return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, path, len);
+}

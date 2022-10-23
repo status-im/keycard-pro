@@ -66,6 +66,7 @@ uint8_t Command_Send(Command* cmd, uint8_t* buf, uint8_t len) {
 void Command_Send_ACK(Command* cmd, uint8_t len) {
   cmd->apdu.lr -= len;
   cmd->to_rxtx += len;
+  cmd->segment_count++;
 
   if (cmd->apdu.lr == 0) {
     cmd->status = COMMAND_IDLE;

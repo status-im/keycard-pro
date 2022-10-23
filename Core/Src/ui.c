@@ -160,3 +160,7 @@ uint16_t UI_ReadMnemonic(uint16_t* indexes, uint32_t* len) {
   *len = 12;
   return ERR_DATA;
 }
+
+uint8_t UI_Confirm_EthAddress(const char* address) {
+  return 1;
+}
