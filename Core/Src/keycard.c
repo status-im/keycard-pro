@@ -10,9 +10,12 @@
 #include "crypto/address.h"
 #include "crypto/rand.h"
 #include "crypto/sha2.h"
+#include "crypto/sha3.h"
 #include "crypto/util.h"
 #include "crypto/pbkdf2.h"
 #include "crypto/bip39.h"
+#include "crypto/ecdsa.h"
+#include "crypto/secp256k1.h"
 
 #define INS_GET_ETH_ADDR 0x02
 #define INS_SIGN_ETH_TX 0x04
@@ -28,10 +31,25 @@
 #define APP_MINOR 9
 #define APP_PATCH 17
 
-const uint8_t keycard_aid[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
-const uint8_t keycard_aid_len = 9;
+#define BIP44_MAX_PATH_LEN 40
+#define KEYCARD_AID_LEN 9
+#define ETH_MSG_MAGIC_LEN 26
+#define ETH_EIP712_MAGIC_LEN 2
 
-const uint8_t keycard_default_psk[] = {0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72, 0x4b, 0x4a, 0x36, 0xca, 0xad, 0x0e, 0x28, 0x08, 0x26, 0x15, 0x9e, 0x89, 0x88, 0x6f, 0x70, 0x82, 0x53, 0x5d, 0x43, 0x1e, 0x92, 0x48, 0x48, 0xbc, 0xf1};
+typedef struct {
+  uint8_t digest[SHA3_256_DIGEST_LENGTH];
+  uint8_t bip44_path[BIP44_MAX_PATH_LEN];
+  uint8_t bip44_path_len;
+  SHA3_CTX hash_ctx;
+} Keycard_Sign_Ctx;
+
+const uint8_t KEYCARD_AID[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
+const uint8_t KEYCARD_DEFAULT_PSK[] = {0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72, 0x4b, 0x4a, 0x36, 0xca, 0xad, 0x0e, 0x28, 0x08, 0x26, 0x15, 0x9e, 0x89, 0x88, 0x6f, 0x70, 0x82, 0x53, 0x5d, 0x43, 0x1e, 0x92, 0x48, 0x48, 0xbc, 0xf1};
+
+const uint8_t* ETH_MSG_MAGIC = (uint8_t *) "\x19""Ethereum Signed Message:\n";
+const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
+
+Keycard_Sign_Ctx signing_ctx;
 
 void Keycard_Init(Keycard* kc, SMARTCARD_HandleTypeDef* dev, TIM_HandleTypeDef* usec_timer) {
   SmartCard_Init(&kc->sc, dev, usec_timer);
@@ -49,7 +67,7 @@ uint16_t Keycard_Init_Card(Keycard* kc, uint8_t* sc_key) {
     return ERR_CANCEL;
   }
 
-  if (Keycard_CMD_Init(kc, sc_key, pin, puk, (uint8_t*)keycard_default_psk) != ERR_OK) {
+  if (Keycard_CMD_Init(kc, sc_key, pin, puk, (uint8_t*)KEYCARD_DEFAULT_PSK) != ERR_OK) {
     UI_Keycard_Init_Failed();
     return ERR_CRYPTO;
   }
@@ -65,7 +83,7 @@ uint16_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
     return ERR_OK;
   }
 
-  uint8_t* psk = (uint8_t*) keycard_default_psk;
+  uint8_t* psk = (uint8_t*) KEYCARD_DEFAULT_PSK;
   
   while(1) {
     if (Keycard_CMD_AutoPair(kc, psk, pairing) == ERR_OK) {
@@ -217,7 +235,7 @@ uint16_t Keycard_Init_Keys(Keycard* kc) {
 }
 
 uint16_t Keycard_Setup(Keycard* kc) {
-  if (!Keycard_CMD_Select(kc, keycard_aid, keycard_aid_len)) {
+  if (!Keycard_CMD_Select(kc, KEYCARD_AID, KEYCARD_AID_LEN)) {
     return ERR_TXRX;
   }  
 
@@ -323,24 +341,17 @@ void Keycard_Get_App_Config(APDU* cmd) {
 }
 
 void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
-  if (APDU_P2(cmd) != 0) {
-    Keycard_Error_SW(cmd, 0x6a, 0x86);
-    return;
-  }
-
   uint8_t* data = APDU_DATA(cmd);
   uint16_t len = data[0] * 4;
-  if (len > 40) {
+  if (len > BIP44_MAX_PATH_LEN) {
     Keycard_Error_SW(cmd, 0x6a, 0x80);
     return;    
   }
 
-  SC_BUF(path, 40);
+  SC_BUF(path, BIP44_MAX_PATH_LEN);
   memcpy(path, &data[1], len);
 
-  Keycard_CMD_ExportKey(kc, 1, path, len);
-
-  if (APDU_SW(&kc->apdu) != 0x9000) {
+  if (!Keycard_CMD_ExportKey(kc, 1, path, len) || (APDU_SW(&kc->apdu) != 0x9000)) {
     Keycard_Error_SW(cmd, 0x69, 0x82);
     return;
   }
@@ -365,6 +376,14 @@ void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
 
   ethereum_address(&out[1], path);
   ethereum_address_checksum(path, (char *)&out[67]);
+
+  len = 107;
+
+  //TODO: change this by having the card actually return the chain code
+  if (APDU_P2(cmd) != 0) {
+    random_buffer(&out[len], 32);
+    len += 32;
+  }
   
   if (APDU_P1(cmd) == 1) {
     if (!UI_Confirm_EthAddress((char *)&out[67])) {
@@ -373,10 +392,88 @@ void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
     }
   }
 
-  out[107] = 0x90;
-  out[108] = 0x00;
+  out[len++] = 0x90;
+  out[len++] = 0x00;
 
-  cmd->lr = 109;
+  cmd->lr = len;
+}
+
+void Keycard_Sign(Keycard* kc, APDU* cmd) {
+  uint8_t* out = APDU_RESP(cmd);
+  keccak_Final(&signing_ctx.hash_ctx, signing_ctx.digest);
+  
+  if (!Keycard_CMD_Sign(kc, signing_ctx.bip44_path, signing_ctx.bip44_path_len, signing_ctx.digest) || (APDU_SW(&kc->apdu) != 0x9000)) {
+    Keycard_Error_SW(cmd, 0x69, 0x82);
+    return;    
+  }
+
+  uint8_t* data = APDU_RESP(&kc->apdu);
+  uint16_t tag;
+  uint16_t len;
+  uint16_t off = tlv_read_tag(data, &tag);
+  if (tag != 0xa0) {
+    Keycard_Error_SW(cmd, 0x6f, 0x00);
+    return;    
+  }
+  off += tlv_read_length(&data[off], &len);
+  
+  off += tlv_read_tag(&data[off], &tag);
+  if (tag != 0x80) {
+    Keycard_Error_SW(cmd, 0x6f, 0x00);
+    return;    
+  }
+  off += tlv_read_length(&data[off], &len);
+
+  uint8_t* pub = &data[off];
+
+  uint8_t* sig = &out[1];
+  if (ecdsa_sig_from_der(&pub[len], 72, sig)) {
+    Keycard_Error_SW(cmd, 0x6f, 0x00);
+    return;    
+  }
+
+  uint8_t* pub_tmp = &pub[len];
+
+  for (int v = 0; v < 4; v++) {
+    if (!ecdsa_recover_pub_from_sig(&secp256k1, pub_tmp, sig, signing_ctx.digest, v)) {
+      if (!memcmp(pub_tmp, pub, 65)) {
+        out[0] = 27 + v;
+        out[65] = 0x90;
+        out[66] = 0x00;
+        cmd->lr = 67;
+        return;
+      }
+    }
+  }
+
+  Keycard_Error_SW(cmd, 0x6f, 0x00);
+}
+
+void Keycard_SignTX(Keycard* kc, APDU* cmd) {
+  Keycard_Error_SW(cmd, 0x6d, 0x00);
+}
+
+void Keycard_SignMessage(Keycard* kc, APDU* cmd) {
+  Keycard_Error_SW(cmd, 0x6d, 0x00);
+}
+
+void Keycard_SignEIP712(Keycard* kc, APDU* cmd) {
+  uint8_t* data = APDU_DATA(cmd);
+  signing_ctx.bip44_path_len = data[0] * 4;
+
+  if (signing_ctx.bip44_path_len > BIP44_MAX_PATH_LEN) {
+    signing_ctx.bip44_path_len = 0;
+    Keycard_Error_SW(cmd, 0x6a, 0x80);
+    return;    
+  }
+
+  memcpy(signing_ctx.bip44_path, &data[1], signing_ctx.bip44_path_len);
+
+  keccak_256_Init(&signing_ctx.hash_ctx);
+  keccak_Update(&signing_ctx.hash_ctx, ETH_EIP712_MAGIC, ETH_EIP712_MAGIC_LEN);
+  keccak_Update(&signing_ctx.hash_ctx, &data[1+signing_ctx.bip44_path_len], (SHA3_256_DIGEST_LENGTH * 2));
+
+  Keycard_Sign(kc, cmd);
 }
 
 void Keycard_Command(Keycard* kc, Command* cmd) {
@@ -387,8 +484,17 @@ void Keycard_Command(Keycard* kc, Command* cmd) {
       case INS_GET_ETH_ADDR:
         Keycard_Get_Address(kc, apdu);
         break;
+      case INS_SIGN_ETH_TX:
+        Keycard_SignTX(kc, apdu);
+        break;
+      case INS_SIGN_ETH_MSG:
+        Keycard_SignMessage(kc, apdu);
+        break;        
       case INS_GET_APP_CONF:
         Keycard_Get_App_Config(apdu);
+        break;
+      case INS_SIGN_EIP_712:
+        Keycard_SignEIP712(kc, apdu);
         break;
       default:
         Keycard_Error_SW(apdu, 0x6d, 0x00);

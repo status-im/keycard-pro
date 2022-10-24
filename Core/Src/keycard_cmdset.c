@@ -6,7 +6,7 @@
 #include "crypto/sha2.h"
 #include "crypto/util.h"
 
-const extern uint8_t keycard_default_psk[];
+const extern uint8_t KEYCARD_DEFAULT_PSK[];
 
 uint8_t Keycard_CMD_Select(Keycard* kc, const uint8_t* aid, uint32_t len) {
   APDU_RESET(&kc->apdu);
@@ -127,7 +127,7 @@ uint16_t Keycard_CMD_Init(Keycard* kc, uint8_t* sc_pub, uint8_t* pin, uint8_t* p
   memset(pin, 0, KEYCARD_PIN_LEN);
   memset(puk, 0, KEYCARD_PUK_LEN);
 
-  if (psk != keycard_default_psk) {
+  if (psk != KEYCARD_DEFAULT_PSK) {
     memset(psk, 0, SHA256_DIGEST_LENGTH);
   }
 
@@ -163,5 +163,20 @@ uint8_t Keycard_CMD_ExportKey(Keycard* kc, uint8_t pub_only, uint8_t* path, uint
   APDU_P1(&kc->apdu) = len == 0 ? 2 : 1; // master key is correctly exported only if set as current
   APDU_P2(&kc->apdu) = pub_only;
 
-  return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, path, len);
+  return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, path, len) == ERR_OK;
+}
+
+uint8_t Keycard_CMD_Sign(Keycard* kc, uint8_t* path, uint8_t path_len, uint8_t* hash) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0xc0;
+  APDU_P1(&kc->apdu) = 1;
+  APDU_P2(&kc->apdu) = 0;
+
+  SC_BUF(data, 72);
+
+  memcpy(data, hash, 32);
+  memcpy(&data[32], path, path_len);
+
+  return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, data, (32 + path_len)) == ERR_OK;
 }

@@ -1207,9 +1207,11 @@ int ecdsa_sig_from_der(const uint8_t *der, size_t der_len, uint8_t sig[64]) {
   memzero(sig, 64);
 
   // Check sequence header.
-  if (der_len < 2 || der_len > 72 || der[0] != 0x30 || der[1] != der_len - 2) {
+  if (der_len < 2 || der[1] > 70 || der[0] != 0x30 || der[1] > der_len) {
     return 1;
   }
+
+  der_len = der[1] + 2;
 
   // Read two DER-encoded integers.
   size_t pos = 2;
