@@ -40,13 +40,14 @@ typedef struct {
   uint8_t digest[SHA3_256_DIGEST_LENGTH];
   uint8_t bip44_path[BIP44_MAX_PATH_LEN];
   uint8_t bip44_path_len;
+  uint32_t remaining;
   SHA3_CTX hash_ctx;
 } Keycard_Sign_Ctx;
 
 const uint8_t KEYCARD_AID[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t KEYCARD_DEFAULT_PSK[] = {0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72, 0x4b, 0x4a, 0x36, 0xca, 0xad, 0x0e, 0x28, 0x08, 0x26, 0x15, 0x9e, 0x89, 0x88, 0x6f, 0x70, 0x82, 0x53, 0x5d, 0x43, 0x1e, 0x92, 0x48, 0x48, 0xbc, 0xf1};
 
-const uint8_t* ETH_MSG_MAGIC = (uint8_t *) "\x19""Ethereum Signed Message:\n";
+const uint8_t* ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
 const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
 
 Keycard_Sign_Ctx signing_ctx;
@@ -398,6 +399,20 @@ void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
   cmd->lr = len;
 }
 
+uint8_t Keycard_Init_Sign(Keycard* kc, uint8_t* data) {
+  signing_ctx.bip44_path_len = data[0] * 4;
+
+  if (signing_ctx.bip44_path_len > BIP44_MAX_PATH_LEN) {
+    signing_ctx.bip44_path_len = 0;
+    return 0;    
+  }
+
+  memcpy(signing_ctx.bip44_path, &data[1], signing_ctx.bip44_path_len);
+
+  keccak_256_Init(&signing_ctx.hash_ctx);
+  return 1;
+}
+
 void Keycard_Sign(Keycard* kc, APDU* cmd) {
   uint8_t* out = APDU_RESP(cmd);
   keccak_Final(&signing_ctx.hash_ctx, signing_ctx.digest);
@@ -454,22 +469,44 @@ void Keycard_SignTX(Keycard* kc, APDU* cmd) {
 }
 
 void Keycard_SignMessage(Keycard* kc, APDU* cmd) {
-  Keycard_Error_SW(cmd, 0x6d, 0x00);
+  cmd->has_lc = 1;
+  uint8_t* data = APDU_DATA(cmd);
+  uint32_t len = APDU_LC(cmd);
+
+  if (APDU_P2(cmd) == 0) {
+    Keycard_Init_Sign(kc, data);
+    signing_ctx.remaining = (data[1+signing_ctx.bip44_path_len] << 24) | (data[2+signing_ctx.bip44_path_len] << 16) | (data[3+signing_ctx.bip44_path_len] << 8) | data[4+signing_ctx.bip44_path_len];
+    keccak_Update(&signing_ctx.hash_ctx, ETH_MSG_MAGIC, ETH_MSG_MAGIC_LEN);
+    uint8_t tmp[11];
+    uint8_t* ascii_len = u32toa(signing_ctx.remaining, tmp, 11);
+    keccak_Update(&signing_ctx.hash_ctx, ascii_len, 10 - (size_t)(ascii_len - tmp));
+    len -= signing_ctx.bip44_path_len + 5;
+    data = &data[signing_ctx.bip44_path_len + 5];    
+  }
+
+  if (signing_ctx.remaining < len) {
+    Keycard_Error_SW(cmd, 0x6a, 0x80);
+    return;
+  }
+  
+  keccak_Update(&signing_ctx.hash_ctx, data, len);
+  signing_ctx.remaining -= len;
+
+  if (signing_ctx.remaining == 0) {
+    Keycard_Sign(kc, cmd);
+  } else {
+    Keycard_Error_SW(cmd, 0x90, 0x00);
+  }
 }
 
 void Keycard_SignEIP712(Keycard* kc, APDU* cmd) {
   uint8_t* data = APDU_DATA(cmd);
-  signing_ctx.bip44_path_len = data[0] * 4;
-
-  if (signing_ctx.bip44_path_len > BIP44_MAX_PATH_LEN) {
-    signing_ctx.bip44_path_len = 0;
+  
+  if (!Keycard_Init_Sign(kc, data)) {
     Keycard_Error_SW(cmd, 0x6a, 0x80);
-    return;    
+    return;
   }
 
-  memcpy(signing_ctx.bip44_path, &data[1], signing_ctx.bip44_path_len);
-
-  keccak_256_Init(&signing_ctx.hash_ctx);
   keccak_Update(&signing_ctx.hash_ctx, ETH_EIP712_MAGIC, ETH_EIP712_MAGIC_LEN);
   keccak_Update(&signing_ctx.hash_ctx, &data[1+signing_ctx.bip44_path_len], (SHA3_256_DIGEST_LENGTH * 2));
 

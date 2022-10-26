@@ -11,3 +11,15 @@ uint32_t unpad_iso9797_m1(uint8_t* data, uint32_t size) {
   while(data[--size] != 0x80) {}
   return size;
 }
+
+uint8_t* u32toa(uint32_t value, uint8_t* buf, uint32_t len) {
+  uint8_t *p = &buf[len - 1];
+  *p-- = '\0';
+
+  do {
+    *p-- = (value % 10) + '0';
+    value /= 10;
+  } while (value > 0);
+
+  return (p + 1);
+}
