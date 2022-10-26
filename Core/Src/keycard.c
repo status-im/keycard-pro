@@ -473,8 +473,12 @@ void Keycard_SignMessage(Keycard* kc, APDU* cmd) {
   uint8_t* data = APDU_DATA(cmd);
   uint32_t len = APDU_LC(cmd);
 
-  if (APDU_P2(cmd) == 0) {
-    Keycard_Init_Sign(kc, data);
+  if (APDU_P1(cmd) == 0) {
+    if (!Keycard_Init_Sign(kc, data)) {
+      Keycard_Error_SW(cmd, 0x6a, 0x80);
+      return;
+    }
+    
     signing_ctx.remaining = (data[1+signing_ctx.bip44_path_len] << 24) | (data[2+signing_ctx.bip44_path_len] << 16) | (data[3+signing_ctx.bip44_path_len] << 8) | data[4+signing_ctx.bip44_path_len];
     keccak_Update(&signing_ctx.hash_ctx, ETH_MSG_MAGIC, ETH_MSG_MAGIC_LEN);
     uint8_t tmp[11];
