@@ -1,6 +1,8 @@
 #include "iso7816/t1.h"
 
-#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#ifndef MIN
+#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
+#endif
 
 #define T1_FAIL 0
 #define T1_RETRY 1

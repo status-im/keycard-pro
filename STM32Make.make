@@ -88,6 +88,8 @@ Core/Src/crypto/sha3.c \
 Core/Src/crypto/shamir.c \
 Core/Src/crypto/slip39.c \
 Core/Src/crypto/util.c \
+Core/Src/ethereum/ethUstream.c \
+Core/Src/ethereum/ethUtils.c \
 Core/Src/iso7816/atr.c \
 Core/Src/iso7816/pps.c \
 Core/Src/iso7816/smartcard.c \
@@ -227,6 +229,7 @@ C_INCLUDES =  \
 -ICore/Inc/crypto \
 -ICore/Inc/crypto/chacha20poly1305 \
 -ICore/Inc/crypto/ed25519-donna \
+-ICore/Inc/ethereum \
 -ICore/Inc/iso7816 \
 -IDrivers/BSP/Components/Common \
 -IDrivers/BSP/Components/cbtl08gp053 \
