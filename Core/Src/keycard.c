@@ -353,10 +353,13 @@ void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
     return;    
   }
 
+  uint8_t extended = APDU_P2(cmd) == 1;
+  uint8_t export_type = 1 + extended;
+
   SC_BUF(path, BIP44_MAX_PATH_LEN);
   memcpy(path, &data[1], len);
 
-  if (!Keycard_CMD_ExportKey(kc, 1, path, len) || (APDU_SW(&kc->apdu) != 0x9000)) {
+  if (!Keycard_CMD_ExportKey(kc, export_type, path, len) || (APDU_SW(&kc->apdu) != 0x9000)) {
     Keycard_Error_SW(cmd, 0x69, 0x82);
     return;
   }
@@ -376,6 +379,7 @@ void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
     Keycard_Error_SW(cmd, 0x6f, 0x00);
     return;    
   }
+  off += len;
   out[0] = 65;
   out[66] = 40;
 
@@ -384,9 +388,11 @@ void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
 
   len = 107;
 
-  //TODO: change this by having the card actually return the chain code
-  if (APDU_P2(cmd) != 0) {
-    random_buffer(&out[len], 32);
+  if (extended) {
+    if (tlv_read_fixed_primitive(0x82, 32, &data[off], &out[len]) == TLV_INVALID) {
+      Keycard_Error_SW(cmd, 0x6f, 0x00);
+      return;    
+    }
     len += 32;
   }
   
