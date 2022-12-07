@@ -171,7 +171,7 @@ uint8_t Keycard_CMD_Sign(Keycard* kc, uint8_t* path, uint8_t path_len, uint8_t* 
   APDU_CLA(&kc->apdu) = 0x80;
   APDU_INS(&kc->apdu) = 0xc0;
   APDU_P1(&kc->apdu) = 1;
-  APDU_P2(&kc->apdu) = 0;
+  APDU_P2(&kc->apdu) = 1;
 
   SC_BUF(data, 72);
 

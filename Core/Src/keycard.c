@@ -423,23 +423,16 @@ uint8_t Keycard_Init_Sign(Keycard* kc, uint8_t* data) {
   return 1;
 }
 
-void Keycard_Sign(Keycard* kc, APDU* cmd, uint8_t v_base) {
-  uint8_t* out = APDU_RESP(cmd);
-  keccak_Final(&signing_ctx.hash_ctx, signing_ctx.digest);
-  
-  if (!Keycard_CMD_Sign(kc, signing_ctx.bip44_path, signing_ctx.bip44_path_len, signing_ctx.digest) || (APDU_SW(&kc->apdu) != 0x9000)) {
-    Keycard_Error_SW(cmd, 0x69, 0x82);
-    return;    
-  }
-
-  uint8_t* data = APDU_RESP(&kc->apdu);
-  uint16_t tag;
+void Keycard_SignLegacy(APDU* cmd, uint8_t v_base, uint8_t* data, uint8_t* out) {
   uint16_t len;
+  uint16_t tag;
   uint16_t off = tlv_read_tag(data, &tag);
+
   if (tag != 0xa0) {
     Keycard_Error_SW(cmd, 0x6f, 0x00);
-    return;    
+    return; 
   }
+
   off += tlv_read_length(&data[off], &len);
   
   off += tlv_read_tag(&data[off], &tag);
@@ -471,7 +464,28 @@ void Keycard_Sign(Keycard* kc, APDU* cmd, uint8_t v_base) {
     }
   }
 
-  Keycard_Error_SW(cmd, 0x6f, 0x00);
+  Keycard_Error_SW(cmd, 0x6f, 0x00);  
+}
+
+void Keycard_Sign(Keycard* kc, APDU* cmd, uint8_t v_base) {
+  uint8_t* out = APDU_RESP(cmd);
+  keccak_Final(&signing_ctx.hash_ctx, signing_ctx.digest);
+  
+  if (!Keycard_CMD_Sign(kc, signing_ctx.bip44_path, signing_ctx.bip44_path_len, signing_ctx.digest) || (APDU_SW(&kc->apdu) != 0x9000)) {
+    Keycard_Error_SW(cmd, 0x69, 0x82);
+    return;    
+  }
+
+  uint8_t* data = APDU_RESP(&kc->apdu);
+
+  if (tlv_read_fixed_primitive(0x80, 65, data, &out[1]) == TLV_INVALID) {
+    return Keycard_SignLegacy(cmd, v_base, data, out);
+  }
+
+  out[0] = v_base + out[65];
+  out[65] = 0x90;
+  out[66] = 0x00;
+  cmd->lr = 67;
 }
 
 void Keycard_SignTX(Keycard* kc, APDU* cmd) {
