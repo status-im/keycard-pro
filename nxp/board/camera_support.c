@@ -9,7 +9,7 @@
 #include "fsl_gpio.h"
 #include "fsl_csi.h"
 #include "fsl_csi_camera_adapter.h"
-#if (DEMO_CAMERA == DEMO_CAMERA_OV7725)
+#if (APP_CAMERA == CAMERA_OV7725)
 #include "fsl_ov7725.h"
 #endif
 #include "fsl_mt9m114.h"
@@ -23,7 +23,7 @@
 /*******************************************************************************
  * Prototypes
  ******************************************************************************/
-#if (DEMO_CAMERA == DEMO_CAMERA_OV7725)
+#if (APP_CAMERA == CAMERA_OV7725)
 static void BOARD_PullCameraPowerDownPin(bool pullUp);
 #endif
 static void BOARD_PullCameraResetPin(bool pullUp);
@@ -45,7 +45,7 @@ camera_receiver_handle_t cameraReceiver = {
     .privateData = &csiPrivateData,
 };
 
-#if (DEMO_CAMERA == DEMO_CAMERA_OV7725)
+#if (APP_CAMERA == CAMERA_OV7725)
 
 static ov7725_resource_t ov7725Resource = {
     .i2cSendFunc       = BOARD_Camera_I2C_SendSCCB,
@@ -93,7 +93,7 @@ static void BOARD_PullCameraResetPin(bool pullUp)
     return;
 }
 
-#if (DEMO_CAMERA == DEMO_CAMERA_OV7725)
+#if (APP_CAMERA == CAMERA_OV7725)
 static void BOARD_PullCameraPowerDownPin(bool pullUp)
 {
     if (pullUp)
@@ -172,7 +172,7 @@ static void BOARD_I2C_ReleaseBus(void)
 
 void BOARD_EarlyPrepareCamera(void)
 {
-#if (DEMO_CAMERA != DEMO_CAMERA_OV7725)
+#if (APP_CAMERA != CAMERA_OV7725)
     BOARD_I2C_ReleaseBus();
 #endif
 }

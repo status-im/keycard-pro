@@ -56,3 +56,48 @@ hal_err_t hal_init(void) {
 
   return HAL_OK;
 }
+
+hal_err_t hal_camera_init(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
+  const camera_config_t cameraConfig = {
+      .pixelFormat                = kVIDEO_PixelFormatRAW8,
+      .bytesPerPixel              = CAMERA_BPP,
+      .resolution                 = FSL_VIDEO_RESOLUTION(CAMERA_WIDTH, CAMERA_HEIGHT),
+      .frameBufferLinePitch_Bytes = CAMERA_WIDTH * CAMERA_BPP,
+      .interface                  = kCAMERA_InterfaceGatedClock,
+      .controlFlags               = (kCAMERA_HrefActiveHigh | kCAMERA_DataLatchOnRisingEdge),
+      .framePerSec                = 30,
+  };
+
+  memset(fb, 0, CAMERA_FB_SIZE*CAMERA_FB_COUNT);
+
+  BOARD_InitCameraResource();
+
+  CAMERA_RECEIVER_Init(&cameraReceiver, &cameraConfig, NULL, NULL);
+
+  if (kStatus_Success != CAMERA_DEVICE_Init(&cameraDevice, &cameraConfig)) {
+    return HAL_ERROR;
+  }
+
+  CAMERA_DEVICE_Start(&cameraDevice);
+
+  for (uint32_t i = 0; i < CAMERA_FB_COUNT; i++) {
+    CAMERA_RECEIVER_SubmitEmptyBuffer(&cameraReceiver, (uint32_t)(fb[i]));
+  }
+
+  CAMERA_RECEIVER_Start(&cameraReceiver);
+
+  return HAL_OK;
+}
+
+hal_err_t hal_camera_next_frame(uint8_t** fb) {
+  while (CAMERA_RECEIVER_GetFullBuffer(&cameraReceiver, (uint32_t*)fb) != kStatus_Success) {
+    ;
+  }
+
+  return HAL_OK;
+}
+
+hal_err_t hal_camera_submit(uint8_t* fb) {
+  CAMERA_RECEIVER_SubmitEmptyBuffer(&cameraReceiver, (uint32_t)fb);
+  return HAL_OK;
+}

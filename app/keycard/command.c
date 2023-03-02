@@ -42,7 +42,7 @@ void Command_Init_Send(Command* cmd) {
 }
 
 void Command_Receive(Command* cmd, uint8_t* data, uint8_t len) {
-  len = OMV_MIN(len, cmd->to_rxtx);
+  len = APP_MIN(len, cmd->to_rxtx);
 
   memcpy(&cmd->apdu.data[cmd->apdu.lr], data, len);
   cmd->apdu.lr += len;
@@ -54,7 +54,7 @@ void Command_Receive(Command* cmd, uint8_t* data, uint8_t len) {
 }
 
 uint8_t Command_Send(Command* cmd, uint8_t* buf, uint8_t len) {
-  len = OMV_MIN(len, cmd->apdu.lr);
+  len = APP_MIN(len, cmd->apdu.lr);
   uint8_t* data = APDU_RESP(&cmd->apdu);
   memcpy(buf, &data[cmd->to_rxtx], len);
   return len;

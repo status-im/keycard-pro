@@ -24,32 +24,32 @@ const float __atanf_lut[4] = {
 
 #if (__ARM_ARCH < 7)
 #include <math.h>
-float OMV_ATTR_ALWAYS_INLINE fast_sqrtf(float x)
+float APP_ALWAYS_INLINE fast_sqrtf(float x)
 {
     return sqrtf(x);
 }
 
-int OMV_ATTR_ALWAYS_INLINE fast_floorf(float x)
+int APP_ALWAYS_INLINE fast_floorf(float x)
 {
     return floorf(x);
 }
 
-int OMV_ATTR_ALWAYS_INLINE fast_ceilf(float x)
+int APP_ALWAYS_INLINE fast_ceilf(float x)
 {
     return ceilf(x);
 }
 
-int OMV_ATTR_ALWAYS_INLINE fast_roundf(float x)
+int APP_ALWAYS_INLINE fast_roundf(float x)
 {
     return roundf(x);
 }
 
-float OMV_ATTR_ALWAYS_INLINE fast_fabsf(float x)
+float APP_ALWAYS_INLINE fast_fabsf(float x)
 {
     return fabsf(x);
 }
 #else
-float OMV_ATTR_ALWAYS_INLINE fast_sqrtf(float x)
+float APP_ALWAYS_INLINE fast_sqrtf(float x)
 {
     asm volatile (
             "vsqrt.f32  %[r], %[x]\n"
@@ -58,7 +58,7 @@ float OMV_ATTR_ALWAYS_INLINE fast_sqrtf(float x)
     return x;
 }
 
-int OMV_ATTR_ALWAYS_INLINE fast_floorf(float x)
+int APP_ALWAYS_INLINE fast_floorf(float x)
 {
     int i;
     asm volatile (
@@ -68,7 +68,7 @@ int OMV_ATTR_ALWAYS_INLINE fast_floorf(float x)
     return i;
 }
 
-int OMV_ATTR_ALWAYS_INLINE fast_ceilf(float x)
+int APP_ALWAYS_INLINE fast_ceilf(float x)
 {
     int i;
     asm volatile (
@@ -78,7 +78,7 @@ int OMV_ATTR_ALWAYS_INLINE fast_ceilf(float x)
     return i;
 }
 
-int OMV_ATTR_ALWAYS_INLINE fast_roundf(float x)
+int APP_ALWAYS_INLINE fast_roundf(float x)
 {
     int i;
     asm volatile (
@@ -88,7 +88,7 @@ int OMV_ATTR_ALWAYS_INLINE fast_roundf(float x)
     return i;
 }
 
-float OMV_ATTR_ALWAYS_INLINE fast_fabsf(float x)
+float APP_ALWAYS_INLINE fast_fabsf(float x)
 {
     asm volatile (
             "vabs.f32  %[r], %[x]\n"
