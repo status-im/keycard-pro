@@ -17,13 +17,6 @@
 
 #define OMG_BREAK() __asm__ volatile ("BKPT")
 
-#ifdef OMV_DEBUG_PRINTF
-#define debug_printf(fmt, ...) \
-            do { printf("%s(): " fmt, __func__, ##__VA_ARGS__);} while (0)
-#else
-#define debug_printf(...)
-#endif
-
 #define OMV_MAX(a,b)                    \
 ({                                      \
     __typeof__ (a) _a = (a);            \
