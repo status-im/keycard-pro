@@ -9,11 +9,11 @@
  * QR-code recognition library.
  */
 
-#include <qrcode.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
-#include "fmath.h"
+#include "qrcode.h"
+#include "util/fmath.h"
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 //////// "quirc_internal.h"

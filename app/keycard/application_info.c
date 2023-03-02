@@ -1,7 +1,7 @@
 #include <string.h>
 
 #include "application_info.h"
-#include "tlv.h"
+#include "util/tlv.h"
 
 #define TLV_APPLICATION_INFO_TEMPLATE 0xa4
 #define TLV_APPLICATION_STATUS_TEMPLATE 0xa3

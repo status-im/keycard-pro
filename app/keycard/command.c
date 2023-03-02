@@ -1,10 +1,7 @@
 #include <string.h>
 
 #include "command.h"
-
-#ifndef MIN
-#define MIN(a, b)  (((a) < (b)) ? (a) : (b))
-#endif
+#include "common.h"
 
 uint8_t Command_Lock(CommandChannel ch, Command* cmd) {
   if (cmd->channel == ch) {
@@ -57,7 +54,7 @@ void Command_Receive(Command* cmd, uint8_t* data, uint8_t len) {
 }
 
 uint8_t Command_Send(Command* cmd, uint8_t* buf, uint8_t len) {
-  len = MIN(len, cmd->apdu.lr);
+  len = OVM_MIN(len, cmd->apdu.lr);
   uint8_t* data = APDU_RESP(&cmd->apdu);
   memcpy(buf, &data[cmd->to_rxtx], len);
   return len;
