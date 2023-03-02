@@ -21,7 +21,7 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
 }
 #endif
 
-#define QRSCAN_STACK_SIZE 2048
+#define QRSCAN_STACK_SIZE 512
 static StaticTask_t qrscan_task_memory;
 static StackType_t qrscan_task_stack[QRSCAN_STACK_SIZE];
 TaskHandle_t qrscan_task;

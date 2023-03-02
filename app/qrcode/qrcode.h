@@ -24,27 +24,82 @@
 extern "C" {
 #endif
 
+#define QUIRC_PIXEL_WHITE   0
+#define QUIRC_PIXEL_BLACK   1
+#define QUIRC_PIXEL_REGION  2
 
-struct quirc;
+#ifndef QUIRC_MAX_REGIONS
+#define QUIRC_MAX_REGIONS   254
+#endif
 
-/* Construct a new QR-code recognizer. This function will return NULL
- * if sufficient memory could not be allocated.
- */
-struct quirc *quirc_new(void);
+#define QUIRC_MAX_CAPSTONES 32
+#define QUIRC_MAX_GRIDS     8
 
-/* Destroy a QR-code recognizer. */
-void quirc_destroy(struct quirc *q);
+#define QUIRC_PERSPECTIVE_PARAMS    8
+
+#define QUIRC_SCRATCH_LEN 24576
+
+typedef uint8_t quirc_pixel_t;
+
+/* This structure describes a location in the input image buffer. */
+struct quirc_point {
+    int x;
+    int y;
+};
+
+struct quirc_region {
+    struct quirc_point  seed;
+    int                 count;
+    int                 capstone;
+};
+
+struct quirc_capstone {
+    int                 ring;
+    int                 stone;
+
+    struct quirc_point  corners[4];
+    struct quirc_point  center;
+    float               c[QUIRC_PERSPECTIVE_PARAMS];
+
+    int                 qr_grid;
+};
+
+struct quirc_grid {
+    /* Capstone indices */
+    int                 caps[3];
+
+    /* Alignment pattern region and corner */
+    int                 align_region;
+    struct quirc_point  align;
+
+    /* Timing pattern endpoints */
+    struct quirc_point  tpep[3];
+    int                 hscan;
+    int                 vscan;
+
+    /* Grid size and perspective transform */
+    int                 grid_size;
+    float               c[QUIRC_PERSPECTIVE_PARAMS];
+};
+
+struct quirc {
+    uint8_t                 *image;
+    quirc_pixel_t           *pixels;
+    int                     w;
+    int                     h;
+
+    int                     num_regions;
+    struct quirc_region     regions[QUIRC_MAX_REGIONS];
+
+    int                     num_capstones;
+    struct quirc_capstone   capstones[QUIRC_MAX_CAPSTONES];
+
+    int                     num_grids;
+    struct quirc_grid       grids[QUIRC_MAX_GRIDS];
+};
 
 /* Set image buffer */
 int quirc_set_image(struct quirc *q, uint8_t* image, int w, int h);
-
-/* Resize the QR-code recognizer. The size of an image must be
- * specified before codes can be analyzed.
- *
- * This function returns 0 on success, or -1 if sufficient memory could
- * not be allocated.
- */
-int quirc_resize(struct quirc *q, int w, int h);
 
 /* These functions are used to process images for QR-code recognition.
  * quirc_begin() must first be called to obtain access to a buffer into
@@ -57,12 +112,6 @@ int quirc_resize(struct quirc *q, int w, int h);
  */
 uint8_t *quirc_begin(struct quirc *q, int *w, int *h);
 void quirc_end(struct quirc *q);
-
-/* This structure describes a location in the input image buffer. */
-struct quirc_point {
-    int x;
-    int y;
-};
 
 /* This enum describes the various decoder errors which may occur. */
 typedef enum {
@@ -161,12 +210,10 @@ struct quirc_data {
 int quirc_count(const struct quirc *q);
 
 /* Extract the QR-code specified by the given index. */
-void quirc_extract(const struct quirc *q, int index,
-                   struct quirc_code *code);
+void quirc_extract(const struct quirc *q, int index, struct quirc_code *code);
 
 /* Decode a QR-code, returning the payload data. */
-quirc_decode_error_t quirc_decode(const struct quirc_code *code,
-                                  struct quirc_data *data);
+quirc_decode_error_t quirc_decode(const struct quirc_code *code, struct quirc_data *data);
 
 #ifdef __cplusplus
 }

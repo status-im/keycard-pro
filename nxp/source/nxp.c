@@ -68,8 +68,6 @@ hal_err_t hal_camera_init(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
       .framePerSec                = 30,
   };
 
-  memset(fb, 0, CAMERA_FB_SIZE*CAMERA_FB_COUNT);
-
   BOARD_InitCameraResource();
 
   CAMERA_RECEIVER_Init(&cameraReceiver, &cameraConfig, NULL, NULL);

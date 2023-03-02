@@ -35,71 +35,6 @@
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-#define QUIRC_PIXEL_WHITE   0
-#define QUIRC_PIXEL_BLACK   1
-#define QUIRC_PIXEL_REGION  2
-
-#ifndef QUIRC_MAX_REGIONS
-#define QUIRC_MAX_REGIONS   254
-#endif
-
-#define QUIRC_MAX_CAPSTONES 32
-#define QUIRC_MAX_GRIDS     8
-
-#define QUIRC_PERSPECTIVE_PARAMS    8
-
-typedef uint8_t quirc_pixel_t;
-
-struct quirc_region {
-    struct quirc_point  seed;
-    int                 count;
-    int                 capstone;
-};
-
-struct quirc_capstone {
-    int                 ring;
-    int                 stone;
-
-    struct quirc_point  corners[4];
-    struct quirc_point  center;
-    float               c[QUIRC_PERSPECTIVE_PARAMS];
-
-    int                 qr_grid;
-};
-
-struct quirc_grid {
-    /* Capstone indices */
-    int                 caps[3];
-
-    /* Alignment pattern region and corner */
-    int                 align_region;
-    struct quirc_point  align;
-
-    /* Timing pattern endpoints */
-    struct quirc_point  tpep[3];
-    int                 hscan;
-    int                 vscan;
-
-    /* Grid size and perspective transform */
-    int                 grid_size;
-    float               c[QUIRC_PERSPECTIVE_PARAMS];
-};
-
-struct quirc {
-    uint8_t                 *image;
-    quirc_pixel_t           *pixels;
-    int                     w;
-    int                     h;
-
-    int                     num_regions;
-    struct quirc_region     regions[QUIRC_MAX_REGIONS];
-
-    int                     num_capstones;
-    struct quirc_capstone   capstones[QUIRC_MAX_CAPSTONES];
-
-    int                     num_grids;
-    struct quirc_grid       grids[QUIRC_MAX_GRIDS];
-};
 
 /************************************************************************
  * QR-code version information database
@@ -681,12 +616,15 @@ typedef struct lifo
 }
 lifo_t;
 
-void lifo_alloc(lifo_t *ptr, size_t size, size_t data_len)
+static uint8_t _quirc_scratch[QUIRC_SCRATCH_LEN];
+
+size_t lifo_alloc_all(lifo_t *ptr, size_t data_len)
 {
     ptr->len = 0;
-    ptr->size = size;
+    ptr->size = QUIRC_SCRATCH_LEN / data_len;
     ptr->data_len = data_len;
-    ptr->data = (char *) malloc(size * data_len);
+    ptr->data = (char *) _quirc_scratch;
+    return ptr->size;
 }
 
 void lifo_free(lifo_t *ptr)
@@ -712,16 +650,13 @@ static void lifo_dequeue_fast(lifo_t *ptr, void *data)
     ptr->len -= 1;
 }
 
-static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to,
-                            span_func_t func, void *user_data,
-                            int depth)
+static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, span_func_t func, void *user_data, int depth)
 {
     (void) depth; // unused
     uint8_t from8 = from, to8=to;
 
     lifo_t lifo;
-    size_t lifo_len = q->h; // change this
-    lifo_alloc(&lifo, lifo_len, sizeof(xylf_t));
+    size_t lifo_len = lifo_alloc_all(&lifo, sizeof(xylf_t));
 
     for(;;) {
         int left = x;
@@ -2675,7 +2610,7 @@ quirc_decode_error_t quirc_decode(const struct quirc_code *code,
                                   struct quirc_data *data)
 {
     quirc_decode_error_t err;
-    struct datastream *ds = malloc(sizeof(struct datastream));
+    struct datastream *ds = (struct datastream*) _quirc_scratch;
 
     if ((code->size - 17) % 4)
         { free(ds); return QUIRC_ERROR_INVALID_GRID_SIZE; }
@@ -2728,43 +2663,12 @@ quirc_decode_error_t quirc_decode(const struct quirc_code *code,
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-struct quirc *quirc_new(void)
-{
-    struct quirc *q = malloc(sizeof(*q));
-
-    if (!q)
-        return NULL;
-
-    memset(q, 0, sizeof(*q));
-    return q;
-}
-
-void quirc_destroy(struct quirc *q)
-{
-    if (q->image) {
-    	free(q->image);
-    }
-
-    free(q);
-}
-
 int quirc_set_image(struct quirc *q, uint8_t* image, int w, int h) {
     q->image = image;
     q->w = w;
     q->h = h;
 
     return 0;
-}
-
-int quirc_resize(struct quirc *q, int w, int h)
-{
-    if (q->image) free(q->image);
-    uint8_t *new_image = malloc(w * h);
-
-    if (!new_image)
-        return -1;
-
-    return quirc_set_image(q, new_image, w, h);
 }
 
 int quirc_count(const struct quirc *q)
