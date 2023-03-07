@@ -32,20 +32,30 @@
  * @file    nxp.c
  * @brief   Application entry point.
  */
+#include <nxp_camera.h>
 #include <stdio.h>
 #include "board.h"
 #include "pin_mux.h"
-#include "camera_support.h"
 #include "clock_config.h"
+#include "fsl_csi.h"
 #include "MIMXRT1064.h"
 #include "fsl_debug_console.h"
 #include "hal.h"
+
+struct gpio_pin_spec {
+    GPIO_Type* base;
+    uint32_t pin;
+};
+
+struct gpio_pin_spec NXP_PIN_MAP[] = {
+    {BOARD_CAMERA_PWDN_GPIO, BOARD_CAMERA_PWDN_PIN},
+    {NULL, 0}, //{BOARD_CAMERA_RST_GPIO, BOARD_CAMERA_RST_PIN},
+};
 
 hal_err_t hal_init(void) {
    /* Init board hardware. */
   BOARD_ConfigMPU();
   BOARD_InitBootPins();
-  BOARD_EarlyPrepareCamera();
   BOARD_InitCSIPins();
   BOARD_InitBootClocks();
 #ifndef BOARD_INIT_DEBUG_CONSOLE_PERIPHERAL
@@ -54,48 +64,20 @@ hal_err_t hal_init(void) {
   BOARD_InitDebugConsole();
 #endif
 
-  return HAL_OK;
-}
-
-hal_err_t hal_camera_init(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
-  const camera_config_t cameraConfig = {
-      .pixelFormat                = kVIDEO_PixelFormatRAW8,
-      .bytesPerPixel              = CAMERA_BPP,
-      .resolution                 = FSL_VIDEO_RESOLUTION(CAMERA_WIDTH, CAMERA_HEIGHT),
-      .frameBufferLinePitch_Bytes = CAMERA_WIDTH * CAMERA_BPP,
-      .interface                  = kCAMERA_InterfaceGatedClock,
-      .controlFlags               = (kCAMERA_HrefActiveHigh | kCAMERA_DataLatchOnRisingEdge),
-      .framePerSec                = 30,
-  };
-
   BOARD_InitCameraResource();
 
-  CAMERA_RECEIVER_Init(&cameraReceiver, &cameraConfig, NULL, NULL);
-
-  if (kStatus_Success != CAMERA_DEVICE_Init(&cameraDevice, &cameraConfig)) {
-    return HAL_ERROR;
-  }
-
-  CAMERA_DEVICE_Start(&cameraDevice);
-
-  for (uint32_t i = 0; i < CAMERA_FB_COUNT; i++) {
-    CAMERA_RECEIVER_SubmitEmptyBuffer(&cameraReceiver, (uint32_t)(fb[i]));
-  }
-
-  CAMERA_RECEIVER_Start(&cameraReceiver);
-
   return HAL_OK;
 }
 
-hal_err_t hal_camera_next_frame(uint8_t** fb) {
-  while (CAMERA_RECEIVER_GetFullBuffer(&cameraReceiver, (uint32_t*)fb) != kStatus_Success) {
-    ;
-  }
+hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, uint8_t* data, size_t len) {
+  assert(port == I2C_CAMERA);
+  return BOARD_LPI2C_Send(BOARD_CAMERA_I2C_BASEADDR, addr, 0, 0, data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
+}
 
+hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
+  if (pin == GPIO_CAMERA_RST) return HAL_OK; // dev board does not connect this PIN, will connect in real board though
+  GPIO_WritePinOutput(NXP_PIN_MAP[pin].base, NXP_PIN_MAP[pin].pin, state);
   return HAL_OK;
 }
 
-hal_err_t hal_camera_submit(uint8_t* fb) {
-  CAMERA_RECEIVER_SubmitEmptyBuffer(&cameraReceiver, (uint32_t)fb);
-  return HAL_OK;
-}
+
