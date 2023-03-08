@@ -30,5 +30,10 @@
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/app</locationURI>
 		</link>
+		<link>
+			<name>freertos</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/freertos</locationURI>
+		</link>
 	</linkedResources>
 </projectDescription>
