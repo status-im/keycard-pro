@@ -40,6 +40,7 @@
 #include "fsl_csi.h"
 #include "MIMXRT1064.h"
 #include "fsl_debug_console.h"
+#include "fsl_trng.h"
 #include "hal.h"
 
 struct gpio_pin_spec {
@@ -66,6 +67,10 @@ hal_err_t hal_init(void) {
 
   BOARD_InitCameraResource();
 
+  trng_config_t trngConfig;
+  TRNG_GetDefaultConfig(&trngConfig);
+  TRNG_Init(TRNG, &trngConfig);
+
   return HAL_OK;
 }
 
@@ -78,6 +83,10 @@ hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
   if (pin == GPIO_CAMERA_RST) return HAL_OK; // dev board does not connect this PIN, will connect in real board though
   GPIO_WritePinOutput(NXP_PIN_MAP[pin].base, NXP_PIN_MAP[pin].pin, state);
   return HAL_OK;
+}
+
+void random_buffer(uint8_t *buf, size_t len) {
+  TRNG_GetRandomData(TRNG, buf, len);
 }
 
 
