@@ -86,7 +86,7 @@ hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
 }
 
 hal_err_t hal_rng_next(uint8_t *buf, size_t len) {
-  TRNG_GetRandomData(TRNG, buf, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return TRNG_GetRandomData(TRNG, buf, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
 }
 
 
