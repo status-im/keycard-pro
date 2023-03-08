@@ -43,7 +43,9 @@ typedef enum {
   I2C_CAMERA,
 } hal_i2c_port_t;
 
-// I2C
 hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, uint8_t* data, size_t len);
+
+// Crypto
+hal_err_t hal_rng_next(uint8_t *buf, size_t len);
 
 #endif

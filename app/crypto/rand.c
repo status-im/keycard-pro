@@ -23,18 +23,11 @@
 
 #include "rand.h"
 
-//
-// The following code is platform independent
-//
+uint32_t random32(void) {
+  uint32_t val;
+  random_buffer((uint8_t*)&val, 4);
 
-void __attribute__((weak)) random_buffer(uint8_t *buf, size_t len) {
-  uint32_t r = 0;
-  for (size_t i = 0; i < len; i++) {
-    if (i % 4 == 0) {
-      r = random32();
-    }
-    buf[i] = (r >> ((i % 4) * 8)) & 0xFF;
-  }
+  return val;
 }
 
 uint32_t random_uniform(uint32_t n) {
