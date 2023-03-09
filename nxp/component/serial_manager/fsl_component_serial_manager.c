@@ -665,9 +665,12 @@ static void SerialManager_Task(void *param)
                 if (0U != (ev[SERIAL_EVENT_DATA_RX_NOTIFY]))
 #endif
         {
+            primask                                                 = DisableGlobalIRQ();
+            handle->serialManagerState[SERIAL_EVENT_DATA_RX_NOTIFY] = 0;
             ringBufferLength =
                 handle->ringBuffer.ringHead + handle->ringBuffer.ringBufferSize - handle->ringBuffer.ringTail;
             ringBufferLength = ringBufferLength % handle->ringBuffer.ringBufferSize;
+            EnableGlobalIRQ(primask);
             /* Notify there are data in ringbuffer */
             if (0U != ringBufferLength)
             {
@@ -679,9 +682,6 @@ static void SerialManager_Task(void *param)
                                                            kStatus_SerialManager_Notify);
                 }
             }
-            primask = DisableGlobalIRQ();
-            handle->serialManagerState[SERIAL_EVENT_DATA_RX_NOTIFY]--;
-            EnableGlobalIRQ(primask);
         }
 #endif /* SERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY */
 
@@ -907,8 +907,11 @@ void SerialManager_RxCallback(void *callbackParam,
     if (0U != ringBufferLength)
     {
 #if (defined(SERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY) && (SERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY > 0U))
-        handle->serialManagerState[SERIAL_EVENT_DATA_RX_NOTIFY]++;
-        (void)OSA_SemaphorePost((osa_semaphore_handle_t)handle->serSemaphore);
+        if (handle->serialManagerState[SERIAL_EVENT_DATA_RX_NOTIFY] == 0)
+        {
+            handle->serialManagerState[SERIAL_EVENT_DATA_RX_NOTIFY]++;
+            (void)OSA_SemaphorePost((osa_semaphore_handle_t)handle->serSemaphore);
+        }
 
         (void)status; /* Fix "set but never used" warning. */
 #else  /* !SERIAL_MANAGER_TASK_HANDLE_RX_AVAILABLE_NOTIFY */
@@ -1678,10 +1681,8 @@ serial_manager_status_t SerialManager_CancelWriting(serial_write_handle_t writeH
     }
 
     primask = DisableGlobalIRQ();
-    if (serialWriteHandle !=
-        (serial_manager_write_handle_t *)((uint32_t)LIST_GetHead(
-                                              &serialWriteHandle->serialManagerHandle->runningWriteHandleHead) -
-                                          4U))
+    if (serialWriteHandle != (serial_manager_write_handle_t *)(void *)LIST_GetHead(
+                                 &serialWriteHandle->serialManagerHandle->runningWriteHandleHead))
     {
         if (kLIST_Ok == LIST_RemoveElement(&serialWriteHandle->link))
         {

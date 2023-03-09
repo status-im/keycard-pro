@@ -13,7 +13,7 @@
 **
 **     Reference manual:    IMXRT1064RM Rev.2, 7/2021 | IMXRT106XSRM Rev.0
 **     Version:             rev. 1.3, 2021-08-10
-**     Build:               b220720
+**     Build:               b221010
 **
 **     Abstract:
 **         CMSIS Peripheral Access Layer for MIMXRT1064
@@ -205,8 +205,8 @@ typedef enum IRQn {
   USB_OTG1_IRQn                = 113,              /**< USBO2 USB OTG1 */
   ENET_IRQn                    = 114,              /**< ENET interrupt */
   ENET_1588_Timer_IRQn         = 115,              /**< ENET_1588_Timer interrupt */
-  XBAR1_IRQ_0_1_IRQn           = 116,              /**< XBAR1 interrupt */
-  XBAR1_IRQ_2_3_IRQn           = 117,              /**< XBAR1 interrupt */
+  XBAR1_IRQ_0_1_IRQn           = 116,              /**< XBARA1 output signal 0, 1 interrupt */
+  XBAR1_IRQ_2_3_IRQn           = 117,              /**< XBARA1 output signal 2, 3 interrupt */
   ADC_ETC_IRQ0_IRQn            = 118,              /**< ADCETC IRQ0 interrupt */
   ADC_ETC_IRQ1_IRQn            = 119,              /**< ADCETC IRQ1 interrupt */
   ADC_ETC_IRQ2_IRQn            = 120,              /**< ADCETC IRQ2 interrupt */
@@ -49406,9 +49406,10 @@ typedef struct {
 #define USBHS_EPCR_TXE(x)                        USB_ENDPTCTRL_TXE(x)
 #define USBHS_EPCR_COUNT                         USB_ENDPTCTRL_COUNT
 #define USBHS_Type                               USB_Type
-#define USBHS_BASE_ADDRS                         { USB1_BASE, USB2_BASE }
+#define USBHS_BASE_ADDRS                         USB_BASE_ADDRS
 #define USBHS_IRQS                               { USB_OTG1_IRQn, USB_OTG2_IRQn }
 #define USBHS_IRQHandler                         USB_OTG1_IRQHandler
+#define USBHS_STACK_BASE_ADDRS                   { USB1_BASE, USB2_BASE }
 
 
 /*!
@@ -49557,6 +49558,9 @@ typedef struct {
 #define USBNC_BASE_ADDRS                         { 0u, USBNC1_BASE, USBNC2_BASE }
 /** Array initializer of USBNC peripheral base pointers */
 #define USBNC_BASE_PTRS                          { (USBNC_Type *)0u, USBNC1, USBNC2 }
+/* Backward compatibility */
+#define USBNC_STACK_BASE_ADDRS                   { USBNC1_BASE, USBNC2_BASE }
+
 
 /*!
  * @}
@@ -50978,6 +50982,7 @@ typedef struct {
 #define USBPHY_TX_TXCAL45DM_MASK            USBPHY_TX_TXCAL45DN_MASK
 #define USBPHY_TX_TXCAL45DM_SHIFT           USBPHY_TX_TXCAL45DN_SHIFT
 #define USBPHY_TX_TXCAL45DM(x)              USBPHY_TX_TXCAL45DN(x)
+#define USBPHY_STACK_BASE_ADDRS             { USBPHY1_BASE, USBPHY2_BASE }
 
 
 /*!

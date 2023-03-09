@@ -3,6 +3,7 @@
 #include "command.h"
 #include "common.h"
 
+//TODO: use a mutex or change approach
 uint8_t Command_Lock(CommandChannel ch, Command* cmd) {
   if (cmd->channel == ch) {
     return 1;
