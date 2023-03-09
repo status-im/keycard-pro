@@ -39,4 +39,23 @@
     __typeof__ (b) _b = (b);            \
     _a < _b ? _a : _b;                  \
 })
+
+#define _APP_DEF_TASK(__NAME__, __STACK_SIZE__) \
+  static StaticTask_t __NAME__##_task_memory; \
+  static StackType_t __NAME__##_task_stack[__STACK_SIZE__]
+
+#define _APP_CREATE_TASK(__NAME__, __PRIO__) \
+  xTaskCreateStatic(__NAME__##_task_entry, #__NAME__, sizeof(__NAME__##_task_stack), NULL, __PRIO__, __NAME__##_task_stack, &__NAME__##_task_memory)
+
+#define APP_DEF_TASK(__NAME__, __STACK_SIZE__) \
+  _APP_DEF_TASK(__NAME__, __STACK_SIZE__) \
+  TaskHandle_t __NAME__##_task
+
+#define APP_CREATE_TASK(__NAME__, __PRIO__) \
+  __NAME__##_task = _APP_CREATE_TASK(__NAME__, __PRIO__)
+
+#define APP_DEF_CREATE_TASK(__NAME__, __PRIO__, __STACK_SIZE__) \
+  _APP_DEF_TASK(__NAME__, __STACK_SIZE__); \
+  _APP_CREATE_TASK(__NAME__, __PRIO__)
+
 #endif //__APP_COMMON_H__
