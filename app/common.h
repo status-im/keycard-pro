@@ -17,7 +17,9 @@
 
 #ifdef __MCUXPRESSO
 #include "fsl_debug_console.h"
+#include "cr_section_macros.h"
 #define APP_NOCACHE AT_NONCACHEABLE_SECTION_ALIGN
+#define APP_RAMFUNC __RAMFUNC(SRAM_ITC)
 #define APP_PRINTF PRINTF
 #define CAMERA_BUFFER_ALIGN 64
 #else

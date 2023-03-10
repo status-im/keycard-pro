@@ -76,8 +76,7 @@ uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pair
   sha512_Update(&sha512, apduData, SHA256_DIGEST_LENGTH);
   sha512_Final(&sha512, sc->encKey);
 
-  aes_import_param(sc->encKey, sc->encKey, (AES_256_KEY_SIZE << 1));
-  aes_import_param(sc->iv, &apduData[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
+  memcpy(sc->iv, &apduData[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
   sc->open = 1;
 
   memset(secret, 0, SECP256K1_PUBLEN);
@@ -88,7 +87,7 @@ uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data
   len = pad_iso9797_m1(data, SC_PAD, len);
   uint8_t* apduData = APDU_DATA(apdu);
 
-  if (!aes_encrypt(sc->encKey, sc->iv, data, len, &apduData[AES_IV_SIZE])) {
+  if (!aes_encrypt_cbc(sc->encKey, sc->iv, data, len, &apduData[AES_IV_SIZE])) {
     memset(data, 0, len);
     return ERR_CRYPTO;
   }
@@ -110,7 +109,7 @@ uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data
     return ERR_CRYPTO;
   }
 
-  aes_import_param(sc->iv, apduData, AES_IV_SIZE);
+  memcpy(sc->iv, apduData, AES_IV_SIZE);
   return ERR_OK;
 }
 
@@ -142,14 +141,14 @@ uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
     return ERR_CRYPTO;
   }
 
-  if (!aes_decrypt(sc->encKey, sc->iv, &data[AES_IV_SIZE], (apdu->lr - AES_IV_SIZE), data)) {
+  if (!aes_decrypt_cbc(sc->encKey, sc->iv, &data[AES_IV_SIZE], (apdu->lr - AES_IV_SIZE), data)) {
     sc->open = 0;
     return ERR_CRYPTO;
   }
 
   apdu->lr = unpad_iso9797_m1(data, (apdu->lr - AES_IV_SIZE));
 
-  aes_import_param(sc->iv, new_iv, AES_IV_SIZE);
+  memcpy(sc->iv, new_iv, AES_IV_SIZE);
 
   return ERR_OK;
 }
@@ -161,7 +160,7 @@ uint16_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_
   uint8_t secret[SECP256K1_PUBLEN+3] __attribute__((aligned(4)));
 
   uint8_t res = ecdh_multiply(&secp256k1, priv, sc_pub, &secret[3]);
-  aes_import_param(secret, &secret[4], AES_256_KEY_SIZE);
+  memcpy(secret, &secret[4], AES_256_KEY_SIZE);
 
   uint8_t* apduData = APDU_DATA(apdu);
   apduData[0] = SECP256K1_PUBLEN;
@@ -176,10 +175,9 @@ uint16_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_
   uint8_t iv[AES_IV_SIZE] __attribute__((aligned(4)));
   random_buffer(iv, AES_IV_SIZE);
   memcpy(&apduData[SECP256K1_PUBLEN+1], iv, AES_IV_SIZE);
-  aes_import_param(iv, iv, AES_IV_SIZE);
 
   len = pad_iso9797_m1(data, SC_PAD, len);
-  res = aes_encrypt(secret, iv, data, len, data);
+  res = aes_encrypt_cbc(secret, iv, data, len, data);
 
   memset(secret, 0, SECP256K1_KEYLEN+3);
 

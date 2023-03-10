@@ -8,10 +8,8 @@
 
 //void aes_init(CRYP_HandleTypeDef* aes);
 
-uint8_t aes_encrypt(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out);
-uint8_t aes_decrypt(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out);
+uint8_t aes_encrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out);
+uint8_t aes_decrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out);
 uint8_t aes_cmac(const uint8_t* key, const uint8_t* data, uint32_t len, uint8_t* out);
-
-#define aes_import_param(__OUT__, __IN__, __LEN__) rev32_all((uint32_t*)__OUT__, (uint32_t*)__IN__, __LEN__)
 
 #endif
