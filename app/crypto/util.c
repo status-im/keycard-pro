@@ -23,3 +23,16 @@ uint8_t* u32toa(uint32_t value, uint8_t* buf, uint32_t len) {
 
   return (p + 1);
 }
+
+// if the used C library has it, prefer its version instead
+__attribute__((weak)) size_t strnlen(const char *s, size_t maxlen) {
+  size_t res;
+
+  for (res = 0; res < maxlen; res++) {
+    if (s[res] == '\0') {
+      break;
+    }
+  }
+
+  return res;
+}
