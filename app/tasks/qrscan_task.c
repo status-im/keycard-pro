@@ -20,6 +20,7 @@ void qrscan_task_entry(void* pvParameters) {
     uint8_t* fb;
     if (camera_next_frame(&fb) != HAL_OK) {
       APP_PRINTF("\r\nFailed to acquire frame\r\n");
+      continue;
     }
 
     quirc_set_image(&qr, fb, CAMERA_WIDTH, CAMERA_HEIGHT);

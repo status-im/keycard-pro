@@ -20,6 +20,7 @@ hal_err_t hal_init();
 #define CAMERA_FB_COUNT 2
 #define CAMERA_TASK_NOTIFICATION_IDX 0
 
+hal_err_t hal_camera_init();
 hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]);
 hal_err_t hal_camera_stop();
 hal_err_t hal_camera_next_frame(uint8_t** fb);

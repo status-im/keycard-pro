@@ -12,12 +12,12 @@
 APP_NOCACHE(uint8_t g_camera_fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE], CAMERA_BUFFER_ALIGN);
 
 #define CAMERA_SETTLE_MS 10
-#define CAMERA_FRAME_TIMEOUT 6
+#define CAMERA_FRAME_TIMEOUT 100
 
 hal_err_t _camera_reset() {
-  hal_gpio_set(GPIO_CAMERA_PWDN, GPIO_SET);
+  hal_gpio_set(GPIO_CAMERA_PWDN, _CAM_PWR_OFF);
   vTaskDelay(pdMS_TO_TICKS(CAMERA_SETTLE_MS));
-  hal_gpio_set(GPIO_CAMERA_PWDN, GPIO_RESET);
+  hal_gpio_set(GPIO_CAMERA_PWDN, _CAM_PWR_ON);
   vTaskDelay(pdMS_TO_TICKS(CAMERA_SETTLE_MS));
 
   hal_gpio_set(GPIO_CAMERA_RST, GPIO_RESET);
@@ -64,10 +64,21 @@ finish:
 }
 
 hal_err_t camera_start() {
-  _camera_reset();
-  _camera_load_regs();
-  hal_camera_start(g_camera_fb);
-  return HAL_OK;
+  hal_err_t err = _camera_reset();
+  if ((err = _camera_reset()) != HAL_OK) {
+    return err;
+  }
+
+  if ((err = hal_camera_init()) != HAL_OK) {
+    return err;
+  }
+
+  if ((err = _camera_load_regs()) != HAL_OK) {
+    return err;
+  }
+
+  err = hal_camera_start(g_camera_fb);;
+  return err;
 }
 
 hal_err_t camera_stop() {

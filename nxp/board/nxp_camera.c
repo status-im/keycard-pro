@@ -22,15 +22,13 @@ void BOARD_InitCameraResource(void) {
     CLOCK_SetMux(kCLOCK_CsiMux, 0);
     CLOCK_SetDiv(kCLOCK_CsiDiv, 0);
 
-    gpio_pin_config_t pinConfig = {
-        kGPIO_DigitalOutput,
-        1,
-        kGPIO_NoIntmode,
-    };
+    gpio_pin_config_t pinConfig = { kGPIO_DigitalOutput, 1, kGPIO_NoIntmode };
 
     GPIO_PinInit(BOARD_CAMERA_PWDN_GPIO, BOARD_CAMERA_PWDN_PIN, &pinConfig);
 
-    pinConfig.outputLogic = 0;
+    NVIC_SetPriority(CSI_IRQn, 2);
+
+    //pinConfig.outputLogic = 0;
 
     //GPIO_PinInit(BOARD_CAMERA_RST_GPIO, BOARD_CAMERA_RST_PIN, &pinConfig);
 }
@@ -47,7 +45,7 @@ static void __hal_frame_done_cb(CSI_Type *base, csi_handle_t *handle, status_t s
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
-hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
+hal_err_t hal_camera_init() {
   csi_config_t cfg;
   CSI_GetDefaultConfig(&cfg);
 
@@ -60,11 +58,11 @@ hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
   cfg.width = CAMERA_WIDTH;
   cfg.height = CAMERA_HEIGHT;
 
-  if (CSI_Init(CSI, &cfg) != kStatus_Success) {
-    return HAL_ERROR;
-  }
+  return CSI_Init(CSI, &cfg) == kStatus_Success ? HAL_OK : HAL_ERROR;
+}
 
-  configASSERT(g_csi_task);
+hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
+  configASSERT(g_csi_task == NULL);
   g_csi_task = xTaskGetCurrentTaskHandle();
 
   if (CSI_TransferCreateHandle(CSI, &g_csi_handle, __hal_frame_done_cb, NULL) != kStatus_Success) {

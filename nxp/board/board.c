@@ -52,17 +52,6 @@ void BOARD_InitDebugConsole(void)
 void BOARD_LPI2C_Init(LPI2C_Type *base, uint32_t clkSrc_Hz)
 {
     lpi2c_master_config_t lpi2cConfig = {0};
-
-    /*
-     * lpi2cConfig.debugEnable = false;
-     * lpi2cConfig.ignoreAck = false;
-     * lpi2cConfig.pinConfig = kLPI2C_2PinOpenDrain;
-     * lpi2cConfig.baudRate_Hz = 100000U;
-     * lpi2cConfig.busIdleTimeout_ns = 0;
-     * lpi2cConfig.pinLowTimeout_ns = 0;
-     * lpi2cConfig.sdaGlitchFilterWidth_ns = 0;
-     * lpi2cConfig.sclGlitchFilterWidth_ns = 0;
-     */
     LPI2C_MasterGetDefaultConfig(&lpi2cConfig);
     LPI2C_MasterInit(base, &lpi2cConfig, clkSrc_Hz);
 }
