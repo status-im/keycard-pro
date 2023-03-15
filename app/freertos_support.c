@@ -1,5 +1,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
+#include "log/log.h"
+#include "common.h"
 
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize) {
   static StaticTask_t xIdleTaskTCBBuffer;
@@ -16,5 +18,25 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
   *ppxTimerTaskTCBBuffer = &xTimerTaskTCB;
   *ppxTimerTaskStackBuffer = uxTimerTaskStack;
   *pulTimerTaskStackSize = configTIMER_TASK_STACK_DEPTH;
+}
+#endif
+
+#if defined(__REDLIB__)
+void __assertion_failed(char *failedExpr)
+{
+    LOG_MSG(failedExpr);
+    for (;;)
+    {
+        OMG_BREAK();
+    }
+}
+#else
+void __assert_func(const char *file, int line, const char *func, const char *failedExpr)
+{
+    LOG_MSG(failedExprt);
+    for (;;)
+    {
+      OMG_BREAK();
+    }
 }
 #endif

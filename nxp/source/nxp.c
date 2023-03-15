@@ -61,7 +61,6 @@ hal_err_t hal_init(void) {
   BOARD_InitBootClocks();
 #ifdef DEBUG
   BOARD_InitDEBUG_UARTPins();
-  /* Init FSL debug console. */
   BOARD_InitDebugConsole();
 #endif
 

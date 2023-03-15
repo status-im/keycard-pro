@@ -9,17 +9,17 @@ static struct quirc_data qrdata;
 static struct quirc qr;
 
 void qrscan_task_entry(void* pvParameters) {
-  LOG_MSG("\r\nStarting QR\r\n");
+  LOG_MSG("Starting QR");
 
   if (camera_start() != HAL_OK) {
-    LOG_MSG("\r\nFailed to init camera\r\n");
+    LOG_MSG("Failed to init camera");
     goto fail;
   }
 
   while (1) {
     uint8_t* fb;
     if (camera_next_frame(&fb) != HAL_OK) {
-      LOG_MSG("\r\nFailed to acquire frame\r\n");
+      LOG_MSG("Failed to acquire frame");
       continue;
     }
 
@@ -29,7 +29,7 @@ void qrscan_task_entry(void* pvParameters) {
     quirc_end(&qr);
 
     if (camera_submit(fb) != HAL_OK) {
-      LOG_MSG("\r\nFailed to enqueue framebuffer\r\n");
+      LOG_MSG("Failed to enqueue framebuffer");
     }
 
     int num_codes = quirc_count(&qr);
@@ -40,7 +40,7 @@ void qrscan_task_entry(void* pvParameters) {
 
       err = quirc_decode(&qrcode, &qrdata);
       if (err) {
-          LOG_MSG("\r\nDECODE FAILED\r\n");
+          LOG_MSG("Failed decoding QR Code");
       } else {
           LOG(LOG_MSG, qrdata.payload, qrdata.payload_len);
       }
