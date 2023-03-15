@@ -6,7 +6,7 @@
  */
 
 #include "fsl_common.h"
-#include "fsl_debug_console.h"
+#include "fsl_lpuart.h"
 #include "board.h"
 #if defined(SDK_I2C_BASED_COMPONENT_USED) && SDK_I2C_BASED_COMPONENT_USED
 #include "fsl_lpi2c.h"
@@ -44,8 +44,11 @@ uint32_t BOARD_DebugConsoleSrcFreq(void)
 void BOARD_InitDebugConsole(void)
 {
     uint32_t uartClkSrcFreq = BOARD_DebugConsoleSrcFreq();
-
-    DbgConsole_Init(BOARD_DEBUG_UART_INSTANCE, BOARD_DEBUG_UART_BAUDRATE, BOARD_DEBUG_UART_TYPE, uartClkSrcFreq);
+    lpuart_config_t cfg;
+    LPUART_GetDefaultConfig(&cfg);
+    cfg.baudRate_Bps = BOARD_DEBUG_UART_BAUDRATE;
+    cfg.enableTx = 1;
+    LPUART_Init(BOARD_DEBUG_UART_BASEADDR, &cfg, uartClkSrcFreq);
 }
 
 #if defined(SDK_I2C_BASED_COMPONENT_USED) && SDK_I2C_BASED_COMPONENT_USED

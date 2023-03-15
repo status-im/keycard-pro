@@ -39,8 +39,8 @@
 #include "clock_config.h"
 #include "fsl_csi.h"
 #include "MIMXRT1064.h"
-#include "fsl_debug_console.h"
 #include "fsl_trng.h"
+#include "fsl_lpuart.h"
 #include "hal.h"
 
 struct gpio_pin_spec {
@@ -59,7 +59,7 @@ hal_err_t hal_init(void) {
   BOARD_InitBootPins();
   BOARD_InitCSIPins();
   BOARD_InitBootClocks();
-#ifndef BOARD_INIT_DEBUG_CONSOLE_PERIPHERAL
+#ifdef DEBUG
   BOARD_InitDEBUG_UARTPins();
   /* Init FSL debug console. */
   BOARD_InitDebugConsole();
@@ -74,9 +74,9 @@ hal_err_t hal_init(void) {
   return HAL_OK;
 }
 
-hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, uint8_t* data, size_t len) {
+hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, const uint8_t* data, size_t len) {
   assert(port == I2C_CAMERA);
-  return BOARD_LPI2C_Send(BOARD_CAMERA_I2C_BASEADDR, addr, 0, 0, data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return BOARD_LPI2C_Send(BOARD_CAMERA_I2C_BASEADDR, addr, 0, 0, (uint8_t*) data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
 }
 
 hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
@@ -89,4 +89,8 @@ hal_err_t hal_rng_next(uint8_t *buf, size_t len) {
   return TRNG_GetRandomData(TRNG, buf, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
 }
 
+hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len) {
+  assert(port == UART_LOG);
+  return LPUART_WriteBlocking(BOARD_DEBUG_UART_BASEADDR, data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
+}
 

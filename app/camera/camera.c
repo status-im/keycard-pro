@@ -77,7 +77,7 @@ hal_err_t camera_start() {
     return err;
   }
 
-  err = hal_camera_start(g_camera_fb);;
+  err = hal_camera_start(g_camera_fb);
   return err;
 }
 

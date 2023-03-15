@@ -125,9 +125,6 @@ typedef enum {
     QUIRC_ERROR_DATA_UNDERFLOW
 } quirc_decode_error_t;
 
-/* Return a string error message for an error code. */
-const char *quirc_strerror(quirc_decode_error_t err);
-
 /* Limits on the maximum size of QR-codes and their content. */
 #define QUIRC_MAX_BITMAP    3917
 #define QUIRC_MAX_PAYLOAD   8896

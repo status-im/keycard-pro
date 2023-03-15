@@ -1,6 +1,6 @@
 #include "FreeRTOS.h"
 #include "task.h"
-#include "common.h"
+#include "log/log.h"
 #include "camera/camera.h"
 #include "qrcode/qrcode.h"
 
@@ -9,17 +9,17 @@ static struct quirc_data qrdata;
 static struct quirc qr;
 
 void qrscan_task_entry(void* pvParameters) {
-  APP_PRINTF("\r\nStarting QR\r\n");
+  LOG_MSG("\r\nStarting QR\r\n");
 
   if (camera_start() != HAL_OK) {
-    APP_PRINTF("\r\nFailed to init camera\r\n");
+    LOG_MSG("\r\nFailed to init camera\r\n");
     goto fail;
   }
 
   while (1) {
     uint8_t* fb;
     if (camera_next_frame(&fb) != HAL_OK) {
-      APP_PRINTF("\r\nFailed to acquire frame\r\n");
+      LOG_MSG("\r\nFailed to acquire frame\r\n");
       continue;
     }
 
@@ -29,7 +29,7 @@ void qrscan_task_entry(void* pvParameters) {
     quirc_end(&qr);
 
     if (camera_submit(fb) != HAL_OK) {
-      APP_PRINTF("\r\nFailed to enqueue framebuffer\r\n");
+      LOG_MSG("\r\nFailed to enqueue framebuffer\r\n");
     }
 
     int num_codes = quirc_count(&qr);
@@ -40,9 +40,9 @@ void qrscan_task_entry(void* pvParameters) {
 
       err = quirc_decode(&qrcode, &qrdata);
       if (err) {
-          APP_PRINTF("\r\nDECODE FAILED: %s\r\n", quirc_strerror(err));
+          LOG_MSG("\r\nDECODE FAILED\r\n");
       } else {
-          APP_PRINTF("\r\nData: %s\r\n", qrdata.payload);
+          LOG(LOG_MSG, qrdata.payload, qrdata.payload_len);
       }
     }
   }

@@ -627,13 +627,6 @@ size_t lifo_alloc_all(lifo_t *ptr, size_t data_len)
     return ptr->size;
 }
 
-void lifo_free(lifo_t *ptr)
-{
-    if (ptr->data) {
-        free(ptr->data);
-    }
-}
-
 static void lifo_enqueue_fast(lifo_t *ptr, void *data)
 {
     uint32_t *d = (uint32_t *)(ptr->data + (ptr->len * ptr->data_len));
@@ -724,7 +717,6 @@ static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, spa
             }
 
             if (!lifo.len) {
-                lifo_free(&lifo);
                 return;
             }
 
@@ -2612,35 +2604,38 @@ quirc_decode_error_t quirc_decode(const struct quirc_code *code,
     quirc_decode_error_t err;
     struct datastream *ds = (struct datastream*) _quirc_scratch;
 
-    if ((code->size - 17) % 4)
-        { free(ds); return QUIRC_ERROR_INVALID_GRID_SIZE; }
+    if ((code->size - 17) % 4) {
+      return QUIRC_ERROR_INVALID_GRID_SIZE;
+    }
 
     memset(data, 0, sizeof(*data));
     memset(ds, 0, sizeof(*ds));
 
     data->version = (code->size - 17) / 4;
 
-    if (data->version < 1 ||
-        data->version > QUIRC_MAX_VERSION)
-        { free(ds); return QUIRC_ERROR_INVALID_VERSION; }
+    if (data->version < 1 || data->version > QUIRC_MAX_VERSION) {
+      return QUIRC_ERROR_INVALID_VERSION;
+    }
 
     /* Read format information -- try both locations */
     err = read_format(code, data, 0);
-    if (err)
+
+    if (err) {
         err = read_format(code, data, 1);
-    if (err)
-        { free(ds); return err; }
+    }
+
+    if (err) {
+      return err;
+    }
 
     read_data(code, data, ds);
     err = codestream_ecc(data, ds);
-    if (err)
-        { free(ds); return err; }
 
-    err = decode_payload(data, ds);
-    if (err)
-        { free(ds); return err; }
+    if (err) {
+      return err;
+    }
 
-    free(ds); return QUIRC_SUCCESS;
+    return decode_payload(data, ds);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -2675,23 +2670,3 @@ int quirc_count(const struct quirc *q)
 {
     return q->num_grids;
 }
-
-static const char *const error_table[] = {
-    [QUIRC_SUCCESS] = "Success",
-    [QUIRC_ERROR_INVALID_GRID_SIZE] = "Invalid grid size",
-    [QUIRC_ERROR_INVALID_VERSION] = "Invalid version",
-    [QUIRC_ERROR_FORMAT_ECC] = "Format data ECC failure",
-    [QUIRC_ERROR_DATA_ECC] = "ECC failure",
-    [QUIRC_ERROR_UNKNOWN_DATA_TYPE] = "Unknown data type",
-    [QUIRC_ERROR_DATA_OVERFLOW] = "Data overflow",
-    [QUIRC_ERROR_DATA_UNDERFLOW] = "Data underflow"
-};
-
-const char *quirc_strerror(quirc_decode_error_t err)
-{
-    if (err >= 0 && err < sizeof(error_table) / sizeof(error_table[0]))
-        return error_table[err];
-
-    return "Unknown error";
-}
-
