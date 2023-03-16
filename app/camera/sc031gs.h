@@ -11,15 +11,32 @@
 #define SC031GS_OUTPUT_WINDOW_WIDTH_L_REG 0x3209
 #define SC031GS_OUTPUT_WINDOW_HIGH_H_REG 0x320a
 #define SC031GS_OUTPUT_WINDOW_HIGH_L_REG 0x320b
-#define SC031GS_LED_STROBE_ENABLE_REG 0x3361
+
+#define SC031GS_MAX_FRAME_X 488
+#define SC031GS_MAX_FRAME_Y 648
 
 #define SC031GS_FPS_30 {0x320e, 0x0a}, {0x320f, 0xac}
+#define SC031GS_FPS_60 {0x320e, 0x05},{0x320f, 0x56}
 #define SC031GS_FPS_120 {0x320e, 0x02},{0x320f, 0xab}
+
+#define SC031GS_OUTPUT_WINDOW(w, h) \
+    {SC031GS_OUTPUT_WINDOW_START_Y_H_REG, (SC031GS_MAX_FRAME_Y - w) >> 9}, \
+    {SC031GS_OUTPUT_WINDOW_START_Y_L_REG, ((SC031GS_MAX_FRAME_Y - w) / 2) & 0xff}, \
+    {SC031GS_OUTPUT_WINDOW_START_X_H_REG, (SC031GS_MAX_FRAME_X - h) >> 9}, \
+    {SC031GS_OUTPUT_WINDOW_START_X_L_REG, ((SC031GS_MAX_FRAME_X - h) / 2) & 0xff}, \
+    {SC031GS_OUTPUT_WINDOW_WIDTH_H_REG, w >> 8}, \
+    {SC031GS_OUTPUT_WINDOW_WIDTH_L_REG, w & 0xff}, \
+    {SC031GS_OUTPUT_WINDOW_HIGH_H_REG, h >> 8}, \
+    {SC031GS_OUTPUT_WINDOW_HIGH_L_REG, h & 0xff}
 
 #define _CAM_I2C_ADDR 0x30
 
 #define _CAM_PWR_OFF GPIO_RESET
 #define _CAM_PWR_ON GPIO_SET
+
+#if CAMERA_WIDTH > 640 || CAMERA_HEIGHT > 480
+#error Max resolution is 640x480
+#endif
 
 static const struct camera_regval camera_regs[] = {
   {0x0103, 0x01}, // soft reset.
@@ -32,8 +49,8 @@ static const struct camera_regval camera_regs[] = {
   {0x3028,0x82},
   {0x320c,0x03},
   {0x320d,0x6e},
-  {0x320e,0x05},
-  {0x320f,0x56},
+  SC031GS_OUTPUT_WINDOW(CAMERA_WIDTH, CAMERA_HEIGHT),
+  SC031GS_FPS_30,
   {0x3220,0x10},
   {0x3250,0xf0},
   {0x3251,0x02},

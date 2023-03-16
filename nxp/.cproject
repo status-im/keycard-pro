@@ -91,6 +91,7 @@
 							<tool id="com.crt.advproject.gcc.exe.debug.92429184" name="MCU C Compiler" superClass="com.crt.advproject.gcc.exe.debug">
 								<option id="com.crt.advproject.gcc.hdrlib.336588597" name="Library headers" superClass="com.crt.advproject.gcc.hdrlib" useByScannerDiscovery="false"/>
 								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.preprocessor.def.symbols.2138057685" name="Defined symbols (-D)" superClass="gnu.c.compiler.option.preprocessor.def.symbols" useByScannerDiscovery="false" valueType="definedSymbols">
+									<listOptionValue builtIn="false" value="BOARD_DEBUG_UART_BAUDRATE=1176470"/>
 									<listOptionValue builtIn="false" value="__REDLIB__"/>
 									<listOptionValue builtIn="false" value="CM7"/>
 									<listOptionValue builtIn="false" value="CSI_DRIVER_QUEUE_SIZE=2"/>
@@ -98,14 +99,11 @@
 									<listOptionValue builtIn="false" value="CPU_MIMXRT1064DVL6A_cm7"/>
 									<listOptionValue builtIn="false" value="SKIP_SYSCLK_INIT"/>
 									<listOptionValue builtIn="false" value="XIP_BOOT_HEADER_DCD_ENABLE=1"/>
-									<listOptionValue builtIn="false" value="SDK_DEBUGCONSOLE=1"/>
-									<listOptionValue builtIn="false" value="CR_INTEGER_PRINTF"/>
 									<listOptionValue builtIn="false" value="PRINTF_FLOAT_ENABLE=0"/>
 									<listOptionValue builtIn="false" value="SDK_I2C_BASED_COMPONENT_USED=1"/>
 									<listOptionValue builtIn="false" value="SDK_OS_FREE_RTOS"/>
 									<listOptionValue builtIn="false" value="XIP_EXTERNAL_FLASH=1"/>
 									<listOptionValue builtIn="false" value="XIP_BOOT_HEADER_ENABLE=1"/>
-									<listOptionValue builtIn="false" value="SERIAL_PORT_TYPE_UART=1"/>
 									<listOptionValue builtIn="false" value="__MCUXPRESSO"/>
 									<listOptionValue builtIn="false" value="__USE_CMSIS"/>
 									<listOptionValue builtIn="false" value="DEBUG"/>

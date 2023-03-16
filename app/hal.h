@@ -13,7 +13,7 @@ typedef enum {
 hal_err_t hal_init();
 
 // Camera
-#define CAMERA_WIDTH 640
+#define CAMERA_WIDTH 480
 #define CAMERA_HEIGHT 480
 #define CAMERA_BPP 1
 #define CAMERA_FB_SIZE CAMERA_WIDTH*CAMERA_HEIGHT*CAMERA_BPP
