@@ -33,17 +33,19 @@ def read_block(dlen):
     return data
 
 def poll_serial():
-    if seek_start():
-        header = read_block(5)
-        (msgtype, dlen) = unpack('<bI', header)
-        data = read_block(dlen)
+    try:
+        if seek_start():
+            header = read_block(5)
+            (msgtype, dlen) = unpack('<bI', header)
+            data = read_block(dlen)
 
-        if msgtype == 1:
-            im = Image.frombytes('L', IMAGE_SIZE, bytes(data))
-            tkimage.paste(im)
-        elif msgtype == 0:
-            print(data.decode('ascii'))
-
+            if msgtype == 1:
+                im = Image.frombytes('L', IMAGE_SIZE, bytes(data))
+                tkimage.paste(im)
+            elif msgtype == 0:
+                print(data.decode('ascii'))
+    except:
+        print("Transmission error")
     root.after(1, poll_serial)
 
 root = tk.Tk()
