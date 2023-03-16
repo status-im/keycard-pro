@@ -40,8 +40,11 @@
  * QR-code version information database
  */
 
-#define QUIRC_MAX_VERSION   40
-#define QUIRC_MAX_ALIGNMENT 7
+#if QUIRC_MAX_VERSION == 1
+#define QUIRC_MAX_ALIGNMENT 1
+#else
+#define QUIRC_MAX_ALIGNMENT (QUIRC_MAX_VERSION/7) + 3
+#endif
 
 struct quirc_rs_params {
     uint8_t bs; /* Small block size */
@@ -77,6 +80,7 @@ struct quirc_version_info {
 
 const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
     {0},
+#if QUIRC_MAX_VERSION >= 1
     { /* Version 1 */
         .data_bytes = 26,
         .apat = {0},
@@ -87,6 +91,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 26, .dw = 13, .ns = 1}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 2
     { /* Version 2 */
         .data_bytes = 44,
         .apat = {6, 18, 0},
@@ -97,6 +103,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 44, .dw = 22, .ns = 1}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 3
     { /* Version 3 */
         .data_bytes = 70,
         .apat = {6, 22, 0},
@@ -107,6 +115,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 35, .dw = 17, .ns = 2}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 4
     { /* Version 4 */
         .data_bytes = 100,
         .apat = {6, 26, 0},
@@ -117,6 +127,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 50, .dw = 24, .ns = 2}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 5
     { /* Version 5 */
         .data_bytes = 134,
         .apat = {6, 30, 0},
@@ -127,6 +139,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 33, .dw = 15, .ns = 2}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 6
     { /* Version 6 */
         .data_bytes = 172,
         .apat = {6, 34, 0},
@@ -137,6 +151,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 43, .dw = 19, .ns = 4}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 7
     { /* Version 7 */
         .data_bytes = 196,
         .apat = {6, 22, 38, 0},
@@ -147,6 +163,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 32, .dw = 14, .ns = 2}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 8
     { /* Version 8 */
         .data_bytes = 242,
         .apat = {6, 24, 42, 0},
@@ -157,6 +175,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 40, .dw = 18, .ns = 4}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 9
     { /* Version 9 */
         .data_bytes = 292,
         .apat = {6, 26, 46, 0},
@@ -167,6 +187,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 36, .dw = 16, .ns = 4}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 10
     { /* Version 10 */
         .data_bytes = 346,
         .apat = {6, 28, 50, 0},
@@ -177,6 +199,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 43, .dw = 19, .ns = 6}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 11
     { /* Version 11 */
         .data_bytes = 404,
         .apat = {6, 30, 54, 0},
@@ -187,6 +211,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 50, .dw = 22, .ns = 4}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 12
     { /* Version 12 */
         .data_bytes = 466,
         .apat = {6, 32, 58, 0},
@@ -197,6 +223,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 46, .dw = 20, .ns = 4}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 13
     { /* Version 13 */
         .data_bytes = 532,
         .apat = {6, 34, 62, 0},
@@ -207,6 +235,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 44, .dw = 20, .ns = 8}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 14
     { /* Version 14 */
         .data_bytes = 581,
         .apat = {6, 26, 46, 66, 0},
@@ -217,6 +247,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 36, .dw = 16, .ns = 11}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 15
     { /* Version 15 */
         .data_bytes = 655,
         .apat = {6, 26, 48, 70, 0},
@@ -227,6 +259,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 5}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 16
     { /* Version 16 */
         .data_bytes = 733,
         .apat = {6, 26, 50, 74, 0},
@@ -237,6 +271,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 43, .dw = 19, .ns = 15}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 17
     { /* Version 17 */
         .data_bytes = 815,
         .apat = {6, 30, 54, 78, 0},
@@ -247,6 +283,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 50, .dw = 22, .ns = 1}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 18
     { /* Version 18 */
         .data_bytes = 901,
         .apat = {6, 30, 56, 82, 0},
@@ -257,6 +295,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 50, .dw = 22, .ns = 17}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 19
     { /* Version 19 */
         .data_bytes = 991,
         .apat = {6, 30, 58, 86, 0},
@@ -267,6 +307,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 47, .dw = 21, .ns = 17}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 20
     { /* Version 20 */
         .data_bytes = 1085,
         .apat = {6, 34, 62, 90, 0},
@@ -277,6 +319,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 15}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 21
     { /* Version 21 */
         .data_bytes = 1156,
         .apat = {6, 28, 50, 72, 92, 0},
@@ -287,6 +331,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 50, .dw = 22, .ns = 17}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 22
     { /* Version 22 */
         .data_bytes = 1258,
         .apat = {6, 26, 50, 74, 98, 0},
@@ -297,6 +343,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 7}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 23
     { /* Version 23 */
         .data_bytes = 1364,
         .apat = {6, 30, 54, 78, 102, 0},
@@ -307,6 +355,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 11}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 24
     { /* Version 24 */
         .data_bytes = 1474,
         .apat = {6, 28, 54, 80, 106, 0},
@@ -317,6 +367,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 11}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 25
     { /* Version 25 */
         .data_bytes = 1588,
         .apat = {6, 32, 58, 84, 110, 0},
@@ -327,6 +379,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 7}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 26
     { /* Version 26 */
         .data_bytes = 1706,
         .apat = {6, 30, 58, 86, 114, 0},
@@ -337,6 +391,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 50, .dw = 22, .ns = 28}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 27
     { /* Version 27 */
         .data_bytes = 1828,
         .apat = {6, 34, 62, 90, 118, 0},
@@ -347,6 +403,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 53, .dw = 23, .ns = 8}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 28
     { /* Version 28 */
         .data_bytes = 1921,
         .apat = {6, 26, 50, 74, 98, 122, 0},
@@ -357,6 +415,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 4}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 29
     { /* Version 29 */
         .data_bytes = 2051,
         .apat = {6, 30, 54, 78, 102, 126, 0},
@@ -367,6 +427,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 53, .dw = 23, .ns = 1}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 30
     { /* Version 30 */
         .data_bytes = 2185,
         .apat = {6, 26, 52, 78, 104, 130, 0},
@@ -377,6 +439,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 15}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 31
     { /* Version 31 */
         .data_bytes = 2323,
         .apat = {6, 30, 56, 82, 108, 134, 0},
@@ -387,6 +451,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 42}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 32
     { /* Version 32 */
         .data_bytes = 2465,
         .apat = {6, 34, 60, 86, 112, 138, 0},
@@ -397,6 +463,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 10}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 33
     { /* Version 33 */
         .data_bytes = 2611,
         .apat = {6, 30, 58, 86, 114, 142, 0},
@@ -407,6 +475,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 29}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 34
     { /* Version 34 */
         .data_bytes = 2761,
         .apat = {6, 34, 62, 90, 118, 146, 0},
@@ -417,6 +487,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 44}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 35
     { /* Version 35 */
         .data_bytes = 2876,
         .apat = {6, 30, 54, 78, 102, 126, 150},
@@ -427,6 +499,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 39}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 36
     { /* Version 36 */
         .data_bytes = 3034,
         .apat = {6, 24, 50, 76, 102, 128, 154},
@@ -437,6 +511,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 46}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 37
     { /* Version 37 */
         .data_bytes = 3196,
         .apat = {6, 28, 54, 80, 106, 132, 158},
@@ -447,6 +523,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 49}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 38
     { /* Version 38 */
         .data_bytes = 3362,
         .apat = {6, 32, 58, 84, 110, 136, 162},
@@ -457,6 +535,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 48}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 39
     { /* Version 39 */
         .data_bytes = 3532,
         .apat = {6, 26, 54, 82, 110, 138, 166},
@@ -467,6 +547,8 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 54, .dw = 24, .ns = 43}
         }
     },
+#endif
+#if QUIRC_MAX_VERSION >= 40
     { /* Version 40 */
         .data_bytes = 3706,
         .apat = {6, 30, 58, 86, 114, 142, 170},
@@ -476,7 +558,16 @@ const struct quirc_version_info quirc_version_db[QUIRC_MAX_VERSION + 1] = {
             {.bs = 45, .dw = 15, .ns = 20},
             {.bs = 54, .dw = 24, .ns = 34}
         }
-    }
+    },
+#endif
+};
+
+struct datastream {
+    uint8_t raw[QUIRC_MAX_PAYLOAD];
+    int     data_bits;
+    int     ptr;
+
+    uint8_t data[QUIRC_MAX_PAYLOAD];
 };
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -615,6 +706,12 @@ typedef struct lifo
     char *data;
 }
 lifo_t;
+
+#if QUIRC_MAX_VERSION < 32
+#define QUIRC_SCRATCH_LEN 8192
+#else
+#define QUIRC_SCRATCH_LEN sizeof(struct datastream)
+#endif
 
 static uint8_t _quirc_scratch[QUIRC_SCRATCH_LEN];
 
@@ -1324,7 +1421,6 @@ static int fitness_all(const struct quirc *q, int index)
 {
     const struct quirc_grid *qr = &q->grids[index];
     int version = (qr->grid_size - 17) / 4;
-    const struct quirc_version_info *info = &quirc_version_db[version];
     int score = 0;
     int i, j;
     int ap_count;
@@ -1344,6 +1440,8 @@ static int fitness_all(const struct quirc *q, int index)
 
     if (version < 0 || version > QUIRC_MAX_VERSION)
         return score;
+
+    const struct quirc_version_info *info = &quirc_version_db[version];
 
     /* Check alignment patterns */
     ap_count = 0;
@@ -2113,14 +2211,6 @@ static quirc_decode_error_t correct_format(uint16_t *f_ret)
 /************************************************************************
  * Decoder algorithm
  */
-
-struct datastream {
-    uint8_t raw[QUIRC_MAX_PAYLOAD];
-    int     data_bits;
-    int     ptr;
-
-    uint8_t data[QUIRC_MAX_PAYLOAD];
-};
 
 static inline int grid_bit(const struct quirc_code *code, int x, int y)
 {

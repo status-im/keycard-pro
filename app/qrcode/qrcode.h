@@ -24,20 +24,27 @@
 extern "C" {
 #endif
 
+#define QUIRC_MAX_VERSION   40
+
 #define QUIRC_PIXEL_WHITE   0
 #define QUIRC_PIXEL_BLACK   1
 #define QUIRC_PIXEL_REGION  2
 
-#ifndef QUIRC_MAX_REGIONS
 #define QUIRC_MAX_REGIONS   254
-#endif
 
 #define QUIRC_MAX_CAPSTONES 32
 #define QUIRC_MAX_GRIDS     8
 
-#define QUIRC_PERSPECTIVE_PARAMS    8
+#define QUIRC_PERSPECTIVE_PARAMS 8
 
-#define QUIRC_SCRATCH_LEN 24576
+/* Limits on the maximum size of QR-codes and their content.
+ * Payload size is an overstimated approximation based on version number for
+ * the alphanumeric type.
+ * */
+#define QUIRC_MAX_MODULES_SIDE (((QUIRC_MAX_VERSION - 1) * 4) + 21)
+#define QUIRC_MAX_MODULES (QUIRC_MAX_MODULES_SIDE * QUIRC_MAX_MODULES_SIDE)
+#define QUIRC_MAX_BITMAP ((QUIRC_MAX_MODULES / 8) + 1)
+#define QUIRC_MAX_PAYLOAD (QUIRC_MAX_MODULES / 5)
 
 typedef uint8_t quirc_pixel_t;
 
@@ -124,10 +131,6 @@ typedef enum {
     QUIRC_ERROR_DATA_OVERFLOW,
     QUIRC_ERROR_DATA_UNDERFLOW
 } quirc_decode_error_t;
-
-/* Limits on the maximum size of QR-codes and their content. */
-#define QUIRC_MAX_BITMAP    3917
-#define QUIRC_MAX_PAYLOAD   8896
 
 /* QR-code ECC types. */
 #define QUIRC_ECC_LEVEL_M   0
