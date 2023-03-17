@@ -33,7 +33,9 @@
 #define CHACHA_DRBG_SEED_LENGTH \
   (CHACHA_DRBG_KEY_LENGTH + CHACHA_DRBG_COUNTER_LENGTH + CHACHA_DRBG_IV_LENGTH)
 
+#ifndef MAX
 #define MAX(a, b) (a) > (b) ? (a) : (b)
+#endif
 
 static void derivation_function(const uint8_t *input1, size_t input1_length,
                                 const uint8_t *input2, size_t input2_length,

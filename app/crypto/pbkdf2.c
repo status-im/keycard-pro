@@ -30,7 +30,7 @@
 void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass,
                              int passlen, const uint8_t *salt, int saltlen,
                              uint32_t blocknr) {
-  SHA256_CTX ctx = {0};
+  SOFT_SHA256_CTX ctx = {0};
 #if BYTE_ORDER == LITTLE_ENDIAN
   REVERSE32(blocknr, blocknr);
 #endif
@@ -42,9 +42,9 @@ void pbkdf2_hmac_sha256_Init(PBKDF2_HMAC_SHA256_CTX *pctx, const uint8_t *pass,
 
   memcpy(ctx.state, pctx->idig, sizeof(pctx->idig));
   ctx.bitcount = SHA256_BLOCK_LENGTH * 8;
-  sha256_Update(&ctx, salt, saltlen);
-  sha256_Update(&ctx, (uint8_t *)&blocknr, sizeof(blocknr));
-  sha256_Final(&ctx, (uint8_t *)pctx->g);
+  soft_sha256_Update(&ctx, salt, saltlen);
+  soft_sha256_Update(&ctx, (uint8_t *)&blocknr, sizeof(blocknr));
+  soft_sha256_Final(&ctx, (uint8_t *)pctx->g);
 #if BYTE_ORDER == LITTLE_ENDIAN
   for (uint32_t k = 0; k < SHA256_DIGEST_LENGTH / sizeof(uint32_t); k++) {
     REVERSE32(pctx->g[k], pctx->g[k]);

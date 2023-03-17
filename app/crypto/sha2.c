@@ -33,6 +33,7 @@
 #include "sha2.h"
 #include "memzero.h"
 #include "byte_order.h"
+#include "common.h"
 
 /*
  * ASSERT NOTE:
@@ -668,22 +669,13 @@ char* sha1_Data(const sha2_byte* data, size_t len, char digest[SHA1_DIGEST_STRIN
 }
 
 /*** SHA-256: *********************************************************/
-void sha256_Init(SHA256_CTX* context) {
-	if (context == (SHA256_CTX*)0) {
+void soft_sha256_Init(SOFT_SHA256_CTX* context) {
+	if (context == (SOFT_SHA256_CTX*)0) {
 		return;
 	}
 	MEMCPY_BCOPY(context->state, sha256_initial_hash_value, SHA256_DIGEST_LENGTH);
 	memzero(context->buffer, SHA256_BLOCK_LENGTH);
 	context->bitcount = 0;
-}
-
-void sha256_Init_ex(SHA256_CTX *context, const uint32_t state[8], uint64_t bitcount) {
-  if (context == (SHA256_CTX*)0) {
-    return;
-  }
-  MEMCPY_BCOPY(context->state, state, SHA256_DIGEST_LENGTH);
-  memzero(context->buffer, SHA256_BLOCK_LENGTH);
-  context->bitcount = bitcount;
 }
 
 #ifdef SHA2_UNROLL_TRANSFORM
@@ -836,7 +828,7 @@ void sha256_Transform(const sha2_word32* state_in, const sha2_word32* data, sha2
 
 #endif /* SHA2_UNROLL_TRANSFORM */
 
-void sha256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len) {
+void soft_sha256_Update(SOFT_SHA256_CTX* context, const sha2_byte *data, size_t len) {
 	unsigned int	freespace = 0, usedspace = 0;
 
 	if (len == 0) {
@@ -894,7 +886,7 @@ void sha256_Update(SHA256_CTX* context, const sha2_byte *data, size_t len) {
 	usedspace = freespace = 0;
 }
 
-void sha256_Final(SHA256_CTX* context, sha2_byte digest[SHA256_DIGEST_LENGTH]) {
+void soft_sha256_Final(SOFT_SHA256_CTX* context, sha2_byte digest[SHA256_DIGEST_LENGTH]) {
 	unsigned int	usedspace = 0;
 
 	/* If no digest buffer is passed, we don't bother doing this: */
@@ -983,6 +975,20 @@ char* sha256_Data(const sha2_byte* data, size_t len, char digest[SHA256_DIGEST_S
 	return sha256_End(&context, digest);
 }
 
+APP_WEAK hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx) {
+  soft_sha256_Init((SOFT_SHA256_CTX*)ctx);
+  return HAL_OK;
+}
+
+APP_WEAK hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t len) {
+  soft_sha256_Update((SOFT_SHA256_CTX*)ctx, data, len);
+  return HAL_OK;
+}
+
+APP_WEAK hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
+  soft_sha256_Final((SOFT_SHA256_CTX*)ctx, out);
+  return HAL_OK;
+}
 
 /*** SHA-512: *********************************************************/
 void sha512_Init(SHA512_CTX* context) {

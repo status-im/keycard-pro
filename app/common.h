@@ -14,6 +14,7 @@
 #define APP_ALIGNED(x, a) x __attribute__((aligned(a)))
 #define APP_SECTION(x, s) x __attribute__((section(s)))
 #define APP_ALWAYS_INLINE inline __attribute__((always_inline))
+#define APP_WEAK __attribute__((weak))
 
 #ifdef __MCUXPRESSO
 #include "fsl_common.h"

@@ -38,7 +38,7 @@ static void update_k(HMAC_DRBG_CTX *ctx, uint8_t domain, const uint8_t *data1,
     ctx->v[8] = 0x80000000;
     ctx->v[15] = (SHA256_BLOCK_LENGTH + SHA256_DIGEST_LENGTH) * 8;
   } else {
-    SHA256_CTX sha_ctx = {0};
+    SOFT_SHA256_CTX sha_ctx = {0};
     memcpy(sha_ctx.state, ctx->idig, SHA256_DIGEST_LENGTH);
     for (size_t i = 0; i < SHA256_DIGEST_LENGTH / sizeof(uint32_t); i++) {
 #if BYTE_ORDER == LITTLE_ENDIAN
@@ -49,9 +49,9 @@ static void update_k(HMAC_DRBG_CTX *ctx, uint8_t domain, const uint8_t *data1,
     }
     ((uint8_t *)sha_ctx.buffer)[SHA256_DIGEST_LENGTH] = domain;
     sha_ctx.bitcount = (SHA256_BLOCK_LENGTH + SHA256_DIGEST_LENGTH + 1) * 8;
-    sha256_Update(&sha_ctx, data1, len1);
-    sha256_Update(&sha_ctx, data2, len2);
-    sha256_Final(&sha_ctx, (uint8_t *)h);
+    soft_sha256_Update(&sha_ctx, data1, len1);
+    soft_sha256_Update(&sha_ctx, data2, len2);
+    soft_sha256_Final(&sha_ctx, (uint8_t *)h);
 #if BYTE_ORDER == LITTLE_ENDIAN
     for (size_t i = 0; i < SHA256_DIGEST_LENGTH / sizeof(uint32_t); i++)
       REVERSE32(h[i], h[i]);
