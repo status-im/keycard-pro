@@ -39,11 +39,13 @@ def poll_serial():
             (msgtype, dlen) = unpack('<bI', header)
             data = read_block(dlen)
 
-            if msgtype == 1:
+            if msgtype == 0:
+                print(data.decode('ascii'))
+            elif msgtype == 1:
                 im = Image.frombytes('L', IMAGE_SIZE, bytes(data))
                 tkimage.paste(im)
-            elif msgtype == 0:
-                print(data.decode('ascii'))
+            elif msgtype == 2:
+                print(data)
     except:
         print("Transmission error")
     root.after(1, poll_serial)

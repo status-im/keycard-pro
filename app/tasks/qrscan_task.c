@@ -3,10 +3,12 @@
 #include "log/log.h"
 #include "camera/camera.h"
 #include "qrcode/qrcode.h"
+#include "ur/ur.h"
 
 static struct quirc_code qrcode;
 static struct quirc_data qrdata;
 static struct quirc qr;
+static ur_t ur;
 
 void qrscan_task_entry(void* pvParameters) {
   LOG_MSG("Starting QR");
@@ -22,6 +24,8 @@ void qrscan_task_entry(void* pvParameters) {
       LOG_MSG("Failed to acquire frame");
       continue;
     }
+
+    LOG(LOG_IMG, fb, CAMERA_FB_SIZE);
 
     quirc_set_image(&qr, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
     quirc_begin(&qr, NULL, NULL);
@@ -39,10 +43,15 @@ void qrscan_task_entry(void* pvParameters) {
       quirc_extract(&qr, i, &qrcode);
 
       err = quirc_decode(&qrcode, &qrdata);
-      if (err) {
-          LOG_MSG("Failed decoding QR Code");
+      if (!err) {
+        LOG(LOG_MSG, qrdata.payload, qrdata.payload_len);
+        if (ur_process_part(&ur, qrdata.payload, qrdata.payload_len) == HAL_OK) {
+          LOG(LOG_CBOR, ur.data, ur.data_len);
+        } else {
+          LOG_MSG("Failed decoding UR data");
+        }
       } else {
-          LOG(LOG_MSG, qrdata.payload, qrdata.payload_len);
+        LOG_MSG("Failed decoding QR Code");
       }
     }
   }

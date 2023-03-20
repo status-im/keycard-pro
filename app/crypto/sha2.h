@@ -50,7 +50,11 @@ typedef struct _SHA1_CTX {
 	uint32_t	buffer[SHA1_BLOCK_LENGTH/sizeof(uint32_t)];
 } SHA1_CTX;
 
+#ifdef SOFT_SHA256
+typedef SOFT_SHA256_CTX SHA256_CTX;
+#else
 typedef hal_sha256_ctx_t SHA256_CTX;
+#endif
 
 typedef struct _SHA512_CTX {
 	uint64_t	state[8];
@@ -72,15 +76,27 @@ char* sha1_Data(const uint8_t*, size_t, char[SHA1_DIGEST_STRING_LENGTH]);
 void sha256_Transform(const uint32_t* state_in, const uint32_t* data, uint32_t* state_out);
 
 static inline void sha256_Init(SHA256_CTX* ctx) {
+#ifdef SOFT_SHA256
+  soft_sha256_Init(ctx);
+#else
   hal_sha256_init(ctx);
+#endif
 }
 
 static inline void sha256_Update(SHA256_CTX* ctx, const uint8_t* data, size_t len) {
+#ifdef SOFT_SHA256
+  soft_sha256_Update(ctx, data, len);
+#else
   hal_sha256_update(ctx, data, len);
+#endif
 }
 
 static inline void sha256_Final(SHA256_CTX* ctx, uint8_t data[SHA256_DIGEST_LENGTH]) {
+#ifdef SOFT_SHA256
+  soft_sha256_Final(ctx, data);
+#else
   hal_sha256_finish(ctx, data);
+#endif
 }
 
 char* sha256_End(SHA256_CTX*, char[SHA256_DIGEST_STRING_LENGTH]);

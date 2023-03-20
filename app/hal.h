@@ -7,10 +7,10 @@
 #ifdef __MCUXPRESSO
 #include "fsl_dcp.h"
 typedef dcp_hash_ctx_t hal_sha256_ctx_t;
-typedef dcp_hash_ctx_t hal_crc32_ctx_t;
+#define SOFT_CRC32
 #else
-typedef SOFT_SHA256_CTX hal_sha256_ctx_t;
-#error "Unknown platform"
+#define SOFT_SHA256
+#define SOFT_CRC32
 #endif
 
 // General
@@ -64,15 +64,19 @@ typedef enum {
 hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len);
 
 
-// Crypto
+// Crypto (only use in crypto library)
 hal_err_t hal_rng_next(uint8_t *buf, size_t len);
 
+#ifndef SOFT_SHA256
 hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx);
 hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t len);
 hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]);
+#endif
 
+#ifndef SOFT_CRC32
 hal_err_t hal_crc32_init(hal_crc32_ctx_t* ctx);
 hal_err_t hal_crc32_update(hal_crc32_ctx_t* ctx, const uint8_t* data, size_t len);
 hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out);
+#endif
 
 #endif

@@ -7,7 +7,7 @@
 typedef enum {
   LOG_MSG = 0,
   LOG_IMG,
-  LOG_TXN
+  LOG_CBOR
 } log_type_t;
 
 #ifdef DEBUG

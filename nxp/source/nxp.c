@@ -55,8 +55,6 @@ struct gpio_pin_spec NXP_PIN_MAP[] = {
 };
 
 static dcp_handle_t sha256_handle;
-static dcp_handle_t crc32_handle;
-
 
 hal_err_t hal_init(void) {
    /* Init board hardware. */
@@ -80,7 +78,6 @@ hal_err_t hal_init(void) {
   DCP_Init(DCP, &dcpConfig);
 
   sha256_handle.channel = kDCP_Channel0;
-  crc32_handle.channel = kDCP_Channel1;
 
   return HAL_OK;
 }
@@ -110,18 +107,6 @@ hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t l
 
 hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
   return DCP_HASH_Finish(DCP, ctx, out, NULL) == kStatus_Success ? HAL_OK : HAL_ERROR;
-}
-
-hal_err_t hal_crc32_init(hal_crc32_ctx_t* ctx) {
-  return DCP_HASH_Init(DCP, &crc32_handle, ctx, kDCP_Crc32) == kStatus_Success ? HAL_OK : HAL_ERROR;
-}
-
-hal_err_t hal_crc32_update(hal_crc32_ctx_t* ctx, const uint8_t* data, size_t len) {
-  return DCP_HASH_Update(DCP, ctx, data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
-}
-
-hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t* out) {
-  return DCP_HASH_Finish(DCP, ctx, (uint8_t*) out, NULL) == kStatus_Success ? HAL_OK : HAL_ERROR;
 }
 
 hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len) {

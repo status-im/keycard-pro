@@ -975,21 +975,6 @@ char* sha256_Data(const sha2_byte* data, size_t len, char digest[SHA256_DIGEST_S
 	return sha256_End(&context, digest);
 }
 
-APP_WEAK hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx) {
-  soft_sha256_Init((SOFT_SHA256_CTX*)ctx);
-  return HAL_OK;
-}
-
-APP_WEAK hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t len) {
-  soft_sha256_Update((SOFT_SHA256_CTX*)ctx, data, len);
-  return HAL_OK;
-}
-
-APP_WEAK hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
-  soft_sha256_Final((SOFT_SHA256_CTX*)ctx, out);
-  return HAL_OK;
-}
-
 /*** SHA-512: *********************************************************/
 void sha512_Init(SHA512_CTX* context) {
 	if (context == (SHA512_CTX*)0) {
