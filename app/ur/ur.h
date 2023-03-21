@@ -3,7 +3,7 @@
 
 #include "hal.h"
 
-#define UR_MAX_DATA_LEN 8192
+#define UR_MAX_DATA_LEN 512
 
 typedef enum {
   CRYPTO_KEYPATH = 0,
@@ -20,6 +20,6 @@ typedef struct {
   uint8_t data[UR_MAX_DATA_LEN];
 } ur_t;
 
-hal_err_t ur_process_part(ur_t* ur, uint8_t* in, size_t in_len);
+hal_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len);
 
 #endif

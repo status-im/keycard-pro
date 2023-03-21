@@ -2,7 +2,7 @@
 #include "ur.h"
 #include "bytewords.h"
 
-hal_err_t ur_process_part(ur_t* ur, uint8_t* in, size_t in_len) {
+hal_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   if (in_len < 10) {
     return HAL_ERROR;
   }

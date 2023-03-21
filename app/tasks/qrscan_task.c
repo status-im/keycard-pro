@@ -4,11 +4,13 @@
 #include "camera/camera.h"
 #include "qrcode/qrcode.h"
 #include "ur/ur.h"
+#include "ur/eip4527_decode.h"
 
 static struct quirc_code qrcode;
 static struct quirc_data qrdata;
 static struct quirc qr;
 static ur_t ur;
+static struct eth_sign_request sign_request;
 
 void qrscan_task_entry(void* pvParameters) {
   LOG_MSG("Starting QR");
@@ -47,6 +49,11 @@ void qrscan_task_entry(void* pvParameters) {
         LOG(LOG_MSG, qrdata.payload, qrdata.payload_len);
         if (ur_process_part(&ur, qrdata.payload, qrdata.payload_len) == HAL_OK) {
           LOG(LOG_CBOR, ur.data, ur.data_len);
+          if (ur.type == ETH_SIGN_REQUEST) {
+            cbor_decode_eth_sign_request(ur.data, ur.data_len, &sign_request, NULL);
+          } else {
+            LOG_MSG("Unsupported UR type");
+          }
         } else {
           LOG_MSG("Failed decoding UR data");
         }
