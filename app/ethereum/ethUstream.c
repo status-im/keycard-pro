@@ -20,6 +20,7 @@
 
 #include "ethUstream.h"
 #include "ethUtils.h"
+#include "common.h"
 
 #define MAX_INT256  32
 #define MAX_ADDRESS 20
@@ -87,7 +88,7 @@ static uint16_t processAccessList(txContext_t *context) {
     return EXCEPTION;
   }
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, NULL, copySize) == EXCEPTION) {
       return EXCEPTION;
     }

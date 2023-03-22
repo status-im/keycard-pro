@@ -7,7 +7,7 @@
  */
 
 #include "fsl_dcp.h"
-#if defined(__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)
+#if defined(__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U)  && (DCP_USE_DCACHE == 1U)
 #include "fsl_cache.h"
 #endif
 
@@ -1150,7 +1150,9 @@ static void dcp_hash_save_running_hash(dcp_hash_ctx_internal_t *ctxInternal)
     }
     if (srcAddr != NULL)
     {
+#if defined(__DCACHE_PRESENT) && (__DCACHE_PRESENT == 1U) && defined(DCP_USE_DCACHE) && (DCP_USE_DCACHE == 1U)
         DCACHE_InvalidateByRange((uint32_t)srcAddr, sizeof(ctxInternal->runningHash));
+#endif
         (void)dcp_memcpy(ctxInternal->runningHash, srcAddr, sizeof(ctxInternal->runningHash));
     }
 }
