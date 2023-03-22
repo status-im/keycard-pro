@@ -60,15 +60,13 @@ hal_err_t hal_init(void) {
    /* Init board hardware. */
   BOARD_ConfigMPU();
   BOARD_InitBootPins();
-  BOARD_InitCSIPins();
   BOARD_InitBootClocks();
 #ifdef DEBUG
-  BOARD_InitDEBUG_UARTPins();
+  BOARD_InitDEBUG_UART();
   BOARD_InitDebugConsole();
 #endif
 
-  BOARD_InitCameraResource();
-
+  BOARD_LPI2C_Init(BOARD_CAMERA_I2C_BASEADDR, BOARD_BOOTCLOCKRUN_LPI2C_CLK_ROOT);
   trng_config_t trngConfig;
   TRNG_GetDefaultConfig(&trngConfig);
   TRNG_Init(TRNG, &trngConfig);

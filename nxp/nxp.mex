@@ -19,6 +19,10 @@
    </preferences>
    <tools>
       <pins name="Pins" version="13.0" enabled="true" update_project_code="true">
+         <generated_project_files>
+            <file path="board/pin_mux.c" update_enabled="true"/>
+            <file path="board/pin_mux.h" update_enabled="true"/>
+         </generated_project_files>
          <pins_profile>
             <processor_version>13.0.1</processor_version>
             <pin_labels>
@@ -117,7 +121,7 @@
                <pin_label pin_num="L10" pin_signal="GPIO_AD_B0_15" label="CAN2_RX/U12[4]" identifier="CAN2_RX"/>
                <pin_label pin_num="J11" pin_signal="GPIO_AD_B1_00" label="I2C1_SCL/CSI_I2C_SCL/J35[20]/J23[6]/U13[17]/U32[4]" identifier="I2C_SCL_FXOS8700CQ;CSI_I2C_SCL"/>
                <pin_label pin_num="K11" pin_signal="GPIO_AD_B1_01" label="I2C1_SDA/CSI_I2C_SDA/J35[22]/J23[5]/U13[18]/U32[6]" identifier="I2C_SDA_FXOS8700CQ;CSI_I2C_SDA"/>
-               <pin_label pin_num="L11" pin_signal="GPIO_AD_B1_02" label="SPDIF_OUT/J22[7]" identifier="SPDIF_OUT"/>
+               <pin_label pin_num="L11" pin_signal="GPIO_AD_B1_02" label="CSI_PWDN" identifier="SPDIF_OUT;CSI_PWDN"/>
                <pin_label pin_num="M12" pin_signal="GPIO_AD_B1_03" label="SPDIF_IN/J22[8]" identifier="SPDIF_IN"/>
                <pin_label pin_num="H13" pin_signal="GPIO_AD_B1_08" label="AUD_INT/CSI_D9//J35[13]/J22[4]" identifier="CSI_D9"/>
                <pin_label pin_num="M13" pin_signal="GPIO_AD_B1_09" label="SAI1_MCLK/CSI_D8/J35[11]" identifier="CSI_D8"/>
@@ -215,6 +219,9 @@
                <pin_label pin_num="K9" pin_signal="NGND_KEL0" label="GND"/>
                <pin_label pin_num="M10" pin_signal="VDD_SNVS_CAP" label="GND"/>
             </pin_labels>
+            <external_user_signals>
+               <properties/>
+            </external_user_signals>
             <power_domains/>
          </pins_profile>
          <functions_list>
@@ -237,7 +244,7 @@
             <function name="BOARD_InitDEBUG_UART">
                <description>Configures pin routing and optionally pin electrical features.</description>
                <options>
-                  <callFromInitBoot>true</callFromInitBoot>
+                  <callFromInitBoot>false</callFromInitBoot>
                   <coreID>core0</coreID>
                   <enableClock>true</enableClock>
                </options>
@@ -287,74 +294,10 @@
                   </pin>
                </pins>
             </function>
-            <function name="BOARD_InitSDRAM">
-               <description>Configures pin routing and optionally pin electrical features.</description>
-               <options>
-                  <coreID>core0</coreID>
-                  <enableClock>true</enableClock>
-               </options>
-               <dependencies>
-                  <dependency resourceType="Peripheral" resourceId="SEMC" description="Peripheral SEMC is not initialized" problem_level="1" source="Pins:BOARD_InitSDRAM">
-                     <feature name="initialized" evaluation="equal">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitSDRAM">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.iomuxc" description="Pins initialization requires the IOMUXC Driver in the project." problem_level="2" source="Pins:BOARD_InitSDRAM">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-               </dependencies>
-               <pins>
-                  <pin peripheral="SEMC" signal="ADDR, 00" pin_num="C2" pin_signal="GPIO_EMC_09"/>
-                  <pin peripheral="SEMC" signal="ADDR, 01" pin_num="G1" pin_signal="GPIO_EMC_10"/>
-                  <pin peripheral="SEMC" signal="ADDR, 02" pin_num="G3" pin_signal="GPIO_EMC_11"/>
-                  <pin peripheral="SEMC" signal="ADDR, 03" pin_num="H1" pin_signal="GPIO_EMC_12"/>
-                  <pin peripheral="SEMC" signal="ADDR, 04" pin_num="A6" pin_signal="GPIO_EMC_13"/>
-                  <pin peripheral="SEMC" signal="ADDR, 05" pin_num="B6" pin_signal="GPIO_EMC_14"/>
-                  <pin peripheral="SEMC" signal="ADDR, 06" pin_num="B1" pin_signal="GPIO_EMC_15"/>
-                  <pin peripheral="SEMC" signal="ADDR, 07" pin_num="A5" pin_signal="GPIO_EMC_16"/>
-                  <pin peripheral="SEMC" signal="ADDR, 08" pin_num="A4" pin_signal="GPIO_EMC_17"/>
-                  <pin peripheral="SEMC" signal="ADDR, 09" pin_num="B2" pin_signal="GPIO_EMC_18"/>
-                  <pin peripheral="SEMC" signal="ADDR, 10" pin_num="G2" pin_signal="GPIO_EMC_23"/>
-                  <pin peripheral="SEMC" signal="ADDR, 11" pin_num="B4" pin_signal="GPIO_EMC_19"/>
-                  <pin peripheral="SEMC" signal="ADDR, 12" pin_num="A3" pin_signal="GPIO_EMC_20"/>
-                  <pin peripheral="SEMC" signal="BA, 0" pin_num="C1" pin_signal="GPIO_EMC_21"/>
-                  <pin peripheral="SEMC" signal="BA, 1" pin_num="F1" pin_signal="GPIO_EMC_22"/>
-                  <pin peripheral="SEMC" signal="semc_cas" pin_num="D3" pin_signal="GPIO_EMC_24"/>
-                  <pin peripheral="SEMC" signal="semc_cke" pin_num="A2" pin_signal="GPIO_EMC_27"/>
-                  <pin peripheral="SEMC" signal="semc_clk" pin_num="B3" pin_signal="GPIO_EMC_26"/>
-                  <pin peripheral="SEMC" signal="DATA, 00" pin_num="E3" pin_signal="GPIO_EMC_00"/>
-                  <pin peripheral="SEMC" signal="DATA, 01" pin_num="F3" pin_signal="GPIO_EMC_01"/>
-                  <pin peripheral="SEMC" signal="DATA, 02" pin_num="F4" pin_signal="GPIO_EMC_02"/>
-                  <pin peripheral="SEMC" signal="DATA, 03" pin_num="G4" pin_signal="GPIO_EMC_03"/>
-                  <pin peripheral="SEMC" signal="DATA, 04" pin_num="F2" pin_signal="GPIO_EMC_04"/>
-                  <pin peripheral="SEMC" signal="DATA, 05" pin_num="G5" pin_signal="GPIO_EMC_05"/>
-                  <pin peripheral="SEMC" signal="DATA, 06" pin_num="H5" pin_signal="GPIO_EMC_06"/>
-                  <pin peripheral="SEMC" signal="DATA, 07" pin_num="H4" pin_signal="GPIO_EMC_07"/>
-                  <pin peripheral="SEMC" signal="DATA, 08" pin_num="C6" pin_signal="GPIO_EMC_30"/>
-                  <pin peripheral="SEMC" signal="DATA, 09" pin_num="C5" pin_signal="GPIO_EMC_31"/>
-                  <pin peripheral="SEMC" signal="DATA, 10" pin_num="D5" pin_signal="GPIO_EMC_32"/>
-                  <pin peripheral="SEMC" signal="DATA, 11" pin_num="C4" pin_signal="GPIO_EMC_33"/>
-                  <pin peripheral="SEMC" signal="DATA, 12" pin_num="D4" pin_signal="GPIO_EMC_34"/>
-                  <pin peripheral="SEMC" signal="DATA, 13" pin_num="E5" pin_signal="GPIO_EMC_35"/>
-                  <pin peripheral="SEMC" signal="DATA, 14" pin_num="C3" pin_signal="GPIO_EMC_36"/>
-                  <pin peripheral="SEMC" signal="DATA, 15" pin_num="E4" pin_signal="GPIO_EMC_37"/>
-                  <pin peripheral="SEMC" signal="DM, 0" pin_num="H3" pin_signal="GPIO_EMC_08"/>
-                  <pin peripheral="SEMC" signal="DM, 1" pin_num="D6" pin_signal="GPIO_EMC_38"/>
-                  <pin peripheral="SEMC" signal="semc_ras" pin_num="D2" pin_signal="GPIO_EMC_25"/>
-                  <pin peripheral="SEMC" signal="semc_we" pin_num="D1" pin_signal="GPIO_EMC_28"/>
-                  <pin peripheral="SEMC" signal="CSX, 0" pin_num="C7" pin_signal="GPIO_EMC_41"/>
-               </pins>
-            </function>
             <function name="BOARD_InitCSI">
                <description>Configures pin routing and optionally pin electrical features.</description>
                <options>
+                  <callFromInitBoot>true</callFromInitBoot>
                   <coreID>core0</coreID>
                   <enableClock>true</enableClock>
                </options>
@@ -379,6 +322,11 @@
                         <data>true</data>
                      </feature>
                   </dependency>
+                  <dependency resourceType="SWComponent" resourceId="platform.drivers.igpio" description="Pins initialization requires the IGPIO Driver in the project." problem_level="2" source="Pins:BOARD_InitCSI">
+                     <feature name="enabled" evaluation="equal" configuration="core0">
+                        <data>true</data>
+                     </feature>
+                  </dependency>
                </dependencies>
                <pins>
                   <pin peripheral="CSI" signal="csi_data, 09" pin_num="H13" pin_signal="GPIO_AD_B1_08"/>
@@ -396,7 +344,7 @@
                   <pin peripheral="LPI2C1" signal="SCL" pin_num="J11" pin_signal="GPIO_AD_B1_00">
                      <pin_features>
                         <pin_feature name="identifier" value="CSI_I2C_SCL"/>
-                        <pin_feature name="software_input_on" value="Disable"/>
+                        <pin_feature name="software_input_on" value="Enable"/>
                         <pin_feature name="hysteresis_enable" value="Disable"/>
                         <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
                         <pin_feature name="pull_keeper_select" value="Keeper"/>
@@ -410,7 +358,7 @@
                   <pin peripheral="LPI2C1" signal="SDA" pin_num="K11" pin_signal="GPIO_AD_B1_01">
                      <pin_features>
                         <pin_feature name="identifier" value="CSI_I2C_SDA"/>
-                        <pin_feature name="software_input_on" value="Disable"/>
+                        <pin_feature name="software_input_on" value="Enable"/>
                         <pin_feature name="hysteresis_enable" value="Disable"/>
                         <pin_feature name="pull_up_down_config" value="Pull_Up_22K_Ohm"/>
                         <pin_feature name="pull_keeper_select" value="Keeper"/>
@@ -421,317 +369,22 @@
                         <pin_feature name="slew_rate" value="Slow"/>
                      </pin_features>
                   </pin>
-                  <pin peripheral="GPIO1" signal="gpio_io, 04" pin_num="F11" pin_signal="GPIO_AD_B0_04"/>
-               </pins>
-            </function>
-            <function name="BOARD_InitLCD">
-               <description>Configures pin routing and optionally pin electrical features.</description>
-               <options>
-                  <coreID>core0</coreID>
-                  <enableClock>true</enableClock>
-               </options>
-               <dependencies>
-                  <dependency resourceType="Peripheral" resourceId="LCDIF" description="Peripheral LCDIF is not initialized" problem_level="1" source="Pins:BOARD_InitLCD">
-                     <feature name="initialized" evaluation="equal">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitLCD">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.iomuxc" description="Pins initialization requires the IOMUXC Driver in the project." problem_level="2" source="Pins:BOARD_InitLCD">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-               </dependencies>
-               <pins>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 00" pin_num="C8" pin_signal="GPIO_B0_04">
+                  <pin peripheral="GPIO1" signal="gpio_io, 18" pin_num="L11" pin_signal="GPIO_AD_B1_02">
                      <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
+                        <pin_feature name="identifier" value="CSI_PWDN"/>
+                        <pin_feature name="direction" value="OUTPUT"/>
+                        <pin_feature name="gpio_init_state" value="no_init"/>
                      </pin_features>
                   </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 01" pin_num="B8" pin_signal="GPIO_B0_05">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 02" pin_num="A8" pin_signal="GPIO_B0_06">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_clk" pin_num="D7" pin_signal="GPIO_B0_00">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 03" pin_num="A9" pin_signal="GPIO_B0_07">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 04" pin_num="B9" pin_signal="GPIO_B0_08">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 05" pin_num="C9" pin_signal="GPIO_B0_09">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 06" pin_num="D9" pin_signal="GPIO_B0_10">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 07" pin_num="A10" pin_signal="GPIO_B0_11">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 08" pin_num="C10" pin_signal="GPIO_B0_12">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 09" pin_num="D10" pin_signal="GPIO_B0_13">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 10" pin_num="E10" pin_signal="GPIO_B0_14">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 11" pin_num="E11" pin_signal="GPIO_B0_15">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 12" pin_num="A11" pin_signal="GPIO_B1_00">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 13" pin_num="B11" pin_signal="GPIO_B1_01">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 14" pin_num="C11" pin_signal="GPIO_B1_02">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_data, 15" pin_num="D11" pin_signal="GPIO_B1_03">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_enable" pin_num="E7" pin_signal="GPIO_B0_01">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_hsync" pin_num="E8" pin_signal="GPIO_B0_02">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="LCDIF" signal="lcdif_vsync" pin_num="D8" pin_signal="GPIO_B0_03">
-                     <pin_features>
-                        <pin_feature name="hysteresis_enable" value="Enable"/>
-                        <pin_feature name="pull_up_down_config" value="Pull_Up_100K_Ohm"/>
-                        <pin_feature name="pull_keeper_select" value="Pull"/>
-                     </pin_features>
-                  </pin>
-                  <pin peripheral="GPIO2" signal="gpio_io, 31" pin_num="B14" pin_signal="GPIO_B1_15">
-                     <pin_features>
-                        <pin_feature name="slew_rate" value="Slow"/>
-                     </pin_features>
-                  </pin>
-               </pins>
-            </function>
-            <function name="BOARD_InitCAN">
-               <description>Configures pin routing and optionally pin electrical features.</description>
-               <options>
-                  <coreID>core0</coreID>
-                  <enableClock>true</enableClock>
-               </options>
-               <dependencies>
-                  <dependency resourceType="Peripheral" resourceId="CAN2" description="Peripheral CAN2 is not initialized" problem_level="1" source="Pins:BOARD_InitCAN">
-                     <feature name="initialized" evaluation="equal">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitCAN">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.iomuxc" description="Pins initialization requires the IOMUXC Driver in the project." problem_level="2" source="Pins:BOARD_InitCAN">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-               </dependencies>
-               <pins>
-                  <pin peripheral="CAN2" signal="TX" pin_num="H14" pin_signal="GPIO_AD_B0_14"/>
-                  <pin peripheral="CAN2" signal="RX" pin_num="L10" pin_signal="GPIO_AD_B0_15"/>
-               </pins>
-            </function>
-            <function name="BOARD_InitENET">
-               <description>Configures pin routing and optionally pin electrical features.</description>
-               <options>
-                  <coreID>core0</coreID>
-                  <enableClock>true</enableClock>
-               </options>
-               <dependencies>
-                  <dependency resourceType="Peripheral" resourceId="ENET" description="Peripheral ENET is not initialized" problem_level="1" source="Pins:BOARD_InitENET">
-                     <feature name="initialized" evaluation="equal">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitENET">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.iomuxc" description="Pins initialization requires the IOMUXC Driver in the project." problem_level="2" source="Pins:BOARD_InitENET">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-               </dependencies>
-               <pins>
-                  <pin peripheral="ENET" signal="enet_mdc" pin_num="A7" pin_signal="GPIO_EMC_40"/>
-                  <pin peripheral="ENET" signal="enet_mdio" pin_num="C7" pin_signal="GPIO_EMC_41"/>
-                  <pin peripheral="ENET" signal="enet_ref_clk" pin_num="B13" pin_signal="GPIO_B1_10"/>
-                  <pin peripheral="ENET" signal="enet_rx_data, 0" pin_num="E12" pin_signal="GPIO_B1_04"/>
-                  <pin peripheral="ENET" signal="enet_rx_data, 1" pin_num="D12" pin_signal="GPIO_B1_05"/>
-                  <pin peripheral="ENET" signal="enet_rx_en" pin_num="C12" pin_signal="GPIO_B1_06"/>
-                  <pin peripheral="ENET" signal="enet_rx_er" pin_num="C13" pin_signal="GPIO_B1_11"/>
-                  <pin peripheral="ENET" signal="enet_tx_data, 0" pin_num="B12" pin_signal="GPIO_B1_07"/>
-                  <pin peripheral="ENET" signal="enet_tx_data, 1" pin_num="A12" pin_signal="GPIO_B1_08"/>
-                  <pin peripheral="ENET" signal="enet_tx_en" pin_num="A13" pin_signal="GPIO_B1_09"/>
-               </pins>
-            </function>
-            <function name="BOARD_InitUSDHC">
-               <description>Configures pin routing and optionally pin electrical features.</description>
-               <options>
-                  <coreID>core0</coreID>
-                  <enableClock>true</enableClock>
-               </options>
-               <dependencies>
-                  <dependency resourceType="Peripheral" resourceId="USDHC1" description="Peripheral USDHC1 is not initialized" problem_level="1" source="Pins:BOARD_InitUSDHC">
-                     <feature name="initialized" evaluation="equal">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitUSDHC">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.iomuxc" description="Pins initialization requires the IOMUXC Driver in the project." problem_level="2" source="Pins:BOARD_InitUSDHC">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-               </dependencies>
-               <pins>
-                  <pin peripheral="USDHC1" signal="usdhc_data, 3" pin_num="J2" pin_signal="GPIO_SD_B0_05"/>
-                  <pin peripheral="USDHC1" signal="usdhc_data, 2" pin_num="H2" pin_signal="GPIO_SD_B0_04"/>
-                  <pin peripheral="USDHC1" signal="usdhc_data, 1" pin_num="K1" pin_signal="GPIO_SD_B0_03"/>
-                  <pin peripheral="USDHC1" signal="usdhc_data, 0" pin_num="J1" pin_signal="GPIO_SD_B0_02"/>
-                  <pin peripheral="USDHC1" signal="usdhc_cmd" pin_num="J4" pin_signal="GPIO_SD_B0_00"/>
-                  <pin peripheral="USDHC1" signal="usdhc_clk" pin_num="J3" pin_signal="GPIO_SD_B0_01"/>
-               </pins>
-            </function>
-            <function name="BOARD_InitHyperFlash">
-               <description>Configures pin routing and optionally pin electrical features.</description>
-               <options>
-                  <coreID>core0</coreID>
-                  <enableClock>true</enableClock>
-               </options>
-               <dependencies>
-                  <dependency resourceType="Peripheral" resourceId="FLEXSPI" description="Peripheral FLEXSPI is not initialized" problem_level="1" source="Pins:BOARD_InitHyperFlash">
-                     <feature name="initialized" evaluation="equal">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.common" description="Pins initialization requires the COMMON Driver in the project." problem_level="2" source="Pins:BOARD_InitHyperFlash">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-                  <dependency resourceType="SWComponent" resourceId="platform.drivers.iomuxc" description="Pins initialization requires the IOMUXC Driver in the project." problem_level="2" source="Pins:BOARD_InitHyperFlash">
-                     <feature name="enabled" evaluation="equal" configuration="core0">
-                        <data>true</data>
-                     </feature>
-                  </dependency>
-               </dependencies>
-               <pins>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_A_SCLK" pin_num="L4" pin_signal="GPIO_SD_B1_07"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_A_DATA2" pin_num="P4" pin_signal="GPIO_SD_B1_10"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_A_DATA0" pin_num="P3" pin_signal="GPIO_SD_B1_08"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_A_DATA1" pin_num="N4" pin_signal="GPIO_SD_B1_09"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_B_DATA3" pin_num="L5" pin_signal="GPIO_SD_B1_00"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_B_DATA2" pin_num="M5" pin_signal="GPIO_SD_B1_01"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_B_DATA1" pin_num="M3" pin_signal="GPIO_SD_B1_02"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_B_DATA0" pin_num="M4" pin_signal="GPIO_SD_B1_03"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_B_SCLK" pin_num="P2" pin_signal="GPIO_SD_B1_04"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_A_SS0_B" pin_num="L3" pin_signal="GPIO_SD_B1_06"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_A_DATA3" pin_num="P5" pin_signal="GPIO_SD_B1_11"/>
-                  <pin peripheral="FLEXSPI" signal="FLEXSPI_A_DQS" pin_num="N3" pin_signal="GPIO_SD_B1_05"/>
                </pins>
             </function>
          </functions_list>
       </pins>
       <clocks name="Clocks" version="11.0" enabled="true" update_project_code="true">
+         <generated_project_files>
+            <file path="board/clock_config.c" update_enabled="true"/>
+            <file path="board/clock_config.h" update_enabled="true"/>
+         </generated_project_files>
          <clocks_profile>
             <processor_version>13.0.1</processor_version>
          </clocks_profile>
@@ -800,7 +453,7 @@
                   <clock_output id="CKIL_SYNC_CLK_ROOT.outFreq" value="32.768 kHz" locked="false" accuracy=""/>
                   <clock_output id="CLK_1M.outFreq" value="1 MHz" locked="false" accuracy=""/>
                   <clock_output id="CLK_24M.outFreq" value="24 MHz" locked="false" accuracy=""/>
-                  <clock_output id="CSI_CLK_ROOT.outFreq" value="12 MHz" locked="false" accuracy=""/>
+                  <clock_output id="CSI_CLK_ROOT.outFreq" value="24 MHz" locked="true" accuracy="0.001"/>
                   <clock_output id="ENET2_125M_CLK.outFreq" value="1.2 MHz" locked="false" accuracy=""/>
                   <clock_output id="ENET_125M_CLK.outFreq" value="2.4 MHz" locked="false" accuracy=""/>
                   <clock_output id="ENET_25M_REF_CLK.outFreq" value="1.2 MHz" locked="false" accuracy=""/>
@@ -812,7 +465,7 @@
                   <clock_output id="GPT2_ipg_clk_highfreq.outFreq" value="75 MHz" locked="false" accuracy=""/>
                   <clock_output id="IPG_CLK_ROOT.outFreq" value="150 MHz" locked="false" accuracy=""/>
                   <clock_output id="LCDIF_CLK_ROOT.outFreq" value="67.5 MHz" locked="false" accuracy=""/>
-                  <clock_output id="LPI2C_CLK_ROOT.outFreq" value="60 MHz" locked="false" accuracy=""/>
+                  <clock_output id="LPI2C_CLK_ROOT.outFreq" value="10 MHz" locked="false" accuracy=""/>
                   <clock_output id="LPSPI_CLK_ROOT.outFreq" value="105.6 MHz" locked="false" accuracy=""/>
                   <clock_output id="LVDS1_CLK.outFreq" value="1.2 GHz" locked="false" accuracy=""/>
                   <clock_output id="MQS_MCLK.outFreq" value="1080/17 MHz" locked="false" accuracy=""/>
@@ -838,12 +491,14 @@
                <clock_settings>
                   <setting id="CCM.AHB_PODF.scale" value="1" locked="true"/>
                   <setting id="CCM.ARM_PODF.scale" value="2" locked="true"/>
+                  <setting id="CCM.CSI_PODF.scale" value="1" locked="false"/>
                   <setting id="CCM.FLEXSPI2_PODF.scale" value="2" locked="true"/>
                   <setting id="CCM.FLEXSPI2_SEL.sel" value="CCM_ANALOG.PLL3_PFD0_CLK" locked="false"/>
                   <setting id="CCM.FLEXSPI_PODF.scale" value="2" locked="true"/>
                   <setting id="CCM.FLEXSPI_SEL.sel" value="CCM_ANALOG.PLL3_PFD0_CLK" locked="false"/>
                   <setting id="CCM.LCDIF_PODF.scale" value="4" locked="true"/>
                   <setting id="CCM.LCDIF_PRED.scale" value="2" locked="true"/>
+                  <setting id="CCM.LPI2C_CLK_PODF.scale" value="6" locked="true"/>
                   <setting id="CCM.LPSPI_PODF.scale" value="5" locked="true"/>
                   <setting id="CCM.PERCLK_PODF.scale" value="2" locked="true"/>
                   <setting id="CCM.SEMC_PODF.scale" value="8" locked="false"/>
@@ -885,6 +540,10 @@
          </clock_configurations>
       </clocks>
       <dcdx name="DCDx" version="3.0" enabled="true" update_project_code="true">
+         <generated_project_files>
+            <file path="board/dcd.c" update_enabled="true"/>
+            <file path="board/dcd.h" update_enabled="true"/>
+         </generated_project_files>
          <dcdx_profile>
             <processor_version>13.0.1</processor_version>
             <output_format>c_array</output_format>
@@ -1027,7 +686,8 @@
             </dcdx_configuration>
          </dcdx_configurations>
       </dcdx>
-      <periphs name="Peripherals" version="12.0" enabled="true" update_project_code="true">
+      <periphs name="Peripherals" version="12.0" enabled="false" update_project_code="true">
+         <generated_project_files/>
          <peripherals_profile>
             <processor_version>13.0.1</processor_version>
          </peripherals_profile>
@@ -1036,14 +696,7 @@
                <description></description>
                <options/>
                <dependencies/>
-               <instances>
-                  <instance name="NVIC" uuid="280f97a4-0328-47b9-840a-b5ba677894fa" type="nvic" type_id="nvic_57b5eef3774cc60acaede6f5b8bddc67" mode="general" peripheral="NVIC" enabled="true" comment="" custom_name_enabled="false" editing_lock="false">
-                     <config_set name="nvic">
-                        <array name="interrupt_table"/>
-                        <array name="interrupts"/>
-                     </config_set>
-                  </instance>
-               </instances>
+               <instances/>
             </functional_group>
          </functional_groups>
          <components>
@@ -1074,6 +727,7 @@
          </components>
       </periphs>
       <tee name="TEE" version="4.0" enabled="false" update_project_code="true">
+         <generated_project_files/>
          <tee_profile>
             <processor_version>N/A</processor_version>
          </tee_profile>

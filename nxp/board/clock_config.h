@@ -1,10 +1,3 @@
-/*
- * Copyright 2018-2020,2021 NXP
- * All rights reserved.
- *
- * SPDX-License-Identifier: BSD-3-Clause
- */
-
 #ifndef _CLOCK_CONFIG_H_
 #define _CLOCK_CONFIG_H_
 
@@ -50,7 +43,7 @@ void BOARD_InitBootClocks(void);
 #define BOARD_BOOTCLOCKRUN_CLKO2_CLK                  0UL
 #define BOARD_BOOTCLOCKRUN_CLK_1M                     1000000UL
 #define BOARD_BOOTCLOCKRUN_CLK_24M                    24000000UL
-#define BOARD_BOOTCLOCKRUN_CSI_CLK_ROOT               12000000UL
+#define BOARD_BOOTCLOCKRUN_CSI_CLK_ROOT               24000000UL
 #define BOARD_BOOTCLOCKRUN_ENET2_125M_CLK             1200000UL
 #define BOARD_BOOTCLOCKRUN_ENET2_REF_CLK              0UL
 #define BOARD_BOOTCLOCKRUN_ENET2_TX_CLK               0UL
@@ -66,7 +59,7 @@ void BOARD_InitBootClocks(void);
 #define BOARD_BOOTCLOCKRUN_GPT2_IPG_CLK_HIGHFREQ      75000000UL
 #define BOARD_BOOTCLOCKRUN_IPG_CLK_ROOT               150000000UL
 #define BOARD_BOOTCLOCKRUN_LCDIF_CLK_ROOT             67500000UL
-#define BOARD_BOOTCLOCKRUN_LPI2C_CLK_ROOT             60000000UL
+#define BOARD_BOOTCLOCKRUN_LPI2C_CLK_ROOT             10000000UL
 #define BOARD_BOOTCLOCKRUN_LPSPI_CLK_ROOT             105600000UL
 #define BOARD_BOOTCLOCKRUN_LVDS1_CLK                  1200000000UL
 #define BOARD_BOOTCLOCKRUN_MQS_MCLK                   63529411UL
@@ -125,3 +118,4 @@ void BOARD_BootClockRUN(void);
 #endif /* __cplusplus*/
 
 #endif /* _CLOCK_CONFIG_H_ */
+

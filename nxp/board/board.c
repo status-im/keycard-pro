@@ -21,34 +21,14 @@
  * Code
  ******************************************************************************/
 
-/* Get debug console frequency. */
-uint32_t BOARD_DebugConsoleSrcFreq(void)
-{
-    uint32_t freq;
-
-    /* To make it simple, we assume default PLL and divider settings, and the only variable
-       from application is use PLL3 source or OSC source */
-    if (CLOCK_GetMux(kCLOCK_UartMux) == 0) /* PLL3 div6 80M */
-    {
-        freq = (CLOCK_GetPllFreq(kCLOCK_PllUsb1) / 6U) / (CLOCK_GetDiv(kCLOCK_UartDiv) + 1U);
-    }
-    else
-    {
-        freq = CLOCK_GetOscFreq() / (CLOCK_GetDiv(kCLOCK_UartDiv) + 1U);
-    }
-
-    return freq;
-}
-
 /* Initialize debug console. */
 void BOARD_InitDebugConsole(void)
 {
-    uint32_t uartClkSrcFreq = BOARD_DebugConsoleSrcFreq();
     lpuart_config_t cfg;
     LPUART_GetDefaultConfig(&cfg);
     cfg.baudRate_Bps = BOARD_DEBUG_UART_BAUDRATE;
     cfg.enableTx = 1;
-    LPUART_Init(BOARD_DEBUG_UART_BASEADDR, &cfg, uartClkSrcFreq);
+    LPUART_Init(BOARD_DEBUG_UART_BASEADDR, &cfg, BOARD_BOOTCLOCKRUN_UART_CLK_ROOT);
 }
 
 #if defined(SDK_I2C_BASED_COMPONENT_USED) && SDK_I2C_BASED_COMPONENT_USED
@@ -97,143 +77,6 @@ status_t BOARD_LPI2C_Receive(LPI2C_Type *base,
     xfer.dataSize       = rxBuffSize;
 
     return LPI2C_MasterTransferBlocking(base, &xfer);
-}
-
-status_t BOARD_LPI2C_SendSCCB(LPI2C_Type *base,
-                              uint8_t deviceAddress,
-                              uint32_t subAddress,
-                              uint8_t subAddressSize,
-                              uint8_t *txBuff,
-                              uint8_t txBuffSize)
-{
-    lpi2c_master_transfer_t xfer;
-
-    xfer.flags          = kLPI2C_TransferDefaultFlag;
-    xfer.slaveAddress   = deviceAddress;
-    xfer.direction      = kLPI2C_Write;
-    xfer.subaddress     = subAddress;
-    xfer.subaddressSize = subAddressSize;
-    xfer.data           = txBuff;
-    xfer.dataSize       = txBuffSize;
-
-    return LPI2C_MasterTransferBlocking(base, &xfer);
-}
-
-status_t BOARD_LPI2C_ReceiveSCCB(LPI2C_Type *base,
-                                 uint8_t deviceAddress,
-                                 uint32_t subAddress,
-                                 uint8_t subAddressSize,
-                                 uint8_t *rxBuff,
-                                 uint8_t rxBuffSize)
-{
-    status_t status;
-    lpi2c_master_transfer_t xfer;
-
-    xfer.flags          = kLPI2C_TransferDefaultFlag;
-    xfer.slaveAddress   = deviceAddress;
-    xfer.direction      = kLPI2C_Write;
-    xfer.subaddress     = subAddress;
-    xfer.subaddressSize = subAddressSize;
-    xfer.data           = NULL;
-    xfer.dataSize       = 0;
-
-    status = LPI2C_MasterTransferBlocking(base, &xfer);
-
-    if (kStatus_Success == status)
-    {
-        xfer.subaddressSize = 0;
-        xfer.direction      = kLPI2C_Read;
-        xfer.data           = rxBuff;
-        xfer.dataSize       = rxBuffSize;
-
-        status = LPI2C_MasterTransferBlocking(base, &xfer);
-    }
-
-    return status;
-}
-
-void BOARD_Accel_I2C_Init(void)
-{
-    BOARD_LPI2C_Init(BOARD_ACCEL_I2C_BASEADDR, BOARD_ACCEL_I2C_CLOCK_FREQ);
-}
-
-status_t BOARD_Accel_I2C_Send(uint8_t deviceAddress, uint32_t subAddress, uint8_t subaddressSize, uint32_t txBuff)
-{
-    uint8_t data = (uint8_t)txBuff;
-
-    return BOARD_LPI2C_Send(BOARD_ACCEL_I2C_BASEADDR, deviceAddress, subAddress, subaddressSize, &data, 1);
-}
-
-status_t BOARD_Accel_I2C_Receive(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subaddressSize, uint8_t *rxBuff, uint8_t rxBuffSize)
-{
-    return BOARD_LPI2C_Receive(BOARD_ACCEL_I2C_BASEADDR, deviceAddress, subAddress, subaddressSize, rxBuff, rxBuffSize);
-}
-
-void BOARD_Codec_I2C_Init(void)
-{
-    BOARD_LPI2C_Init(BOARD_CODEC_I2C_BASEADDR, BOARD_CODEC_I2C_CLOCK_FREQ);
-}
-
-status_t BOARD_Codec_I2C_Send(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subAddressSize, const uint8_t *txBuff, uint8_t txBuffSize)
-{
-    return BOARD_LPI2C_Send(BOARD_CODEC_I2C_BASEADDR, deviceAddress, subAddress, subAddressSize, (uint8_t *)txBuff,
-                            txBuffSize);
-}
-
-status_t BOARD_Codec_I2C_Receive(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subAddressSize, uint8_t *rxBuff, uint8_t rxBuffSize)
-{
-    return BOARD_LPI2C_Receive(BOARD_CODEC_I2C_BASEADDR, deviceAddress, subAddress, subAddressSize, rxBuff, rxBuffSize);
-}
-
-void BOARD_Camera_I2C_Init(void)
-{
-    CLOCK_SetMux(kCLOCK_Lpi2cMux, BOARD_CAMERA_I2C_CLOCK_SOURCE_SELECT);
-    CLOCK_SetDiv(kCLOCK_Lpi2cDiv, BOARD_CAMERA_I2C_CLOCK_SOURCE_DIVIDER);
-    BOARD_LPI2C_Init(BOARD_CAMERA_I2C_BASEADDR, BOARD_CAMERA_I2C_CLOCK_FREQ);
-}
-
-status_t BOARD_Camera_I2C_Send(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subAddressSize, const uint8_t *txBuff, uint8_t txBuffSize)
-{
-    return BOARD_LPI2C_Send(BOARD_CAMERA_I2C_BASEADDR, deviceAddress, subAddress, subAddressSize, (uint8_t *)txBuff,
-                            txBuffSize);
-}
-
-status_t BOARD_Camera_I2C_Receive(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subAddressSize, uint8_t *rxBuff, uint8_t rxBuffSize)
-{
-    return BOARD_LPI2C_Receive(BOARD_CAMERA_I2C_BASEADDR, deviceAddress, subAddress, subAddressSize, rxBuff,
-                               rxBuffSize);
-}
-
-status_t BOARD_Camera_I2C_SendSCCB(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subAddressSize, const uint8_t *txBuff, uint8_t txBuffSize)
-{
-    return BOARD_LPI2C_SendSCCB(BOARD_CAMERA_I2C_BASEADDR, deviceAddress, subAddress, subAddressSize, (uint8_t *)txBuff,
-                                txBuffSize);
-}
-
-status_t BOARD_Camera_I2C_ReceiveSCCB(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subAddressSize, uint8_t *rxBuff, uint8_t rxBuffSize)
-{
-    return BOARD_LPI2C_ReceiveSCCB(BOARD_CAMERA_I2C_BASEADDR, deviceAddress, subAddress, subAddressSize, rxBuff,
-                                   rxBuffSize);
-}
-
-status_t BOARD_Touch_I2C_Send(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subAddressSize, const uint8_t *txBuff, uint8_t txBuffSize)
-{
-    return BOARD_LPI2C_Send(BOARD_TOUCH_I2C_BASEADDR, deviceAddress, subAddress, subAddressSize, (uint8_t *)txBuff,
-                            txBuffSize);
-}
-
-status_t BOARD_Touch_I2C_Receive(
-    uint8_t deviceAddress, uint32_t subAddress, uint8_t subAddressSize, uint8_t *rxBuff, uint8_t rxBuffSize)
-{
-    return BOARD_LPI2C_Receive(BOARD_TOUCH_I2C_BASEADDR, deviceAddress, subAddress, subAddressSize, rxBuff, rxBuffSize);
 }
 #endif /* SDK_I2C_BASED_COMPONENT_USED */
 

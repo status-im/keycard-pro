@@ -16,23 +16,6 @@ void CSI_IRQHandler(void) {
     __DSB();
 }
 
-void BOARD_InitCameraResource(void) {
-    BOARD_Camera_I2C_Init();
-
-    CLOCK_SetMux(kCLOCK_CsiMux, 0);
-    CLOCK_SetDiv(kCLOCK_CsiDiv, 0);
-
-    gpio_pin_config_t pinConfig = { kGPIO_DigitalOutput, 1, kGPIO_NoIntmode };
-
-    GPIO_PinInit(BOARD_CAMERA_PWDN_GPIO, BOARD_CAMERA_PWDN_PIN, &pinConfig);
-
-    NVIC_SetPriority(CSI_IRQn, 2);
-
-    //pinConfig.outputLogic = 0;
-
-    //GPIO_PinInit(BOARD_CAMERA_RST_GPIO, BOARD_CAMERA_RST_PIN, &pinConfig);
-}
-
 static void __hal_frame_done_cb(CSI_Type *base, csi_handle_t *handle, status_t status, void *user_data) {
   configASSERT(g_csi_task);
 
@@ -46,6 +29,8 @@ static void __hal_frame_done_cb(CSI_Type *base, csi_handle_t *handle, status_t s
 }
 
 hal_err_t hal_camera_init() {
+  NVIC_SetPriority(CSI_IRQn, 2);
+
   csi_config_t cfg;
   CSI_GetDefaultConfig(&cfg);
 
