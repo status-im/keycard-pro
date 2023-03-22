@@ -12,12 +12,26 @@
 #define SC031GS_OUTPUT_WINDOW_HIGH_H_REG 0x320a
 #define SC031GS_OUTPUT_WINDOW_HIGH_L_REG 0x320b
 
+#define SC031GS_EXPOSURE_H_REG 0x3e01
+#define SC031GS_EXPOSURE_L_REG 0x3e02
+
+#define SC031GS_GAIN_DIGITAL_H_REG 0x3e06
+#define SC031GS_GAIN_DIGITAL_L_REG 0x3e07
+#define SC031GS_GAIN_ANALOG_H_REG 0x3e08
+#define SC031GS_GAIN_ANALOG_L_REG 0x3e09
+
+#define SC031GS_GAIN_CFG_DIRECT {0x3e03,0x03}
+#define SC031GS_GAIN_CFG_TABLE {0x3e03,0x0b}
+
 #define SC031GS_MAX_FRAME_X 488
 #define SC031GS_MAX_FRAME_Y 648
 
-#define SC031GS_FPS_30 {0x320e, 0x0a}, {0x320f, 0xac}
-#define SC031GS_FPS_60 {0x320e, 0x05},{0x320f, 0x56}
-#define SC031GS_FPS_120 {0x320e, 0x02},{0x320f, 0xab}
+#define SC031GS_FPS_15 {0x320e,0x15}, {0x320f,0x58}
+#define SC031GS_FPS_30 {0x320e,0x0a}, {0x320f,0xac}
+#define SC031GS_FPS_60 {0x320e,0x05}, {0x320f,0x56}
+#define SC031GS_FPS_120 {0x320e,0x02}, {0x320f,0xab}
+
+#define SC031GS_MIRROR_FLIP {0x3221,0x63}
 
 #define SC031GS_OUTPUT_WINDOW(w, h) \
     {SC031GS_OUTPUT_WINDOW_START_Y_H_REG, (SC031GS_MAX_FRAME_Y - w) >> 9}, \
@@ -49,8 +63,8 @@ static const struct camera_regval camera_regs[] = {
   {0x3028,0x82},
   {0x320c,0x03},
   {0x320d,0x6e},
-  SC031GS_OUTPUT_WINDOW(CAMERA_WIDTH, CAMERA_HEIGHT),
   SC031GS_FPS_30,
+  SC031GS_OUTPUT_WINDOW(CAMERA_WIDTH, CAMERA_HEIGHT),
   {0x3220,0x10},
   {0x3250,0xf0},
   {0x3251,0x02},
@@ -110,9 +124,9 @@ static const struct camera_regval camera_regs[] = {
   {0x36fc,0x01},
   {0x3908,0x91},
   {0x3d08,0x01},
-  {0x3e01,0x14},
-  {0x3e02,0x80},
-  {0x3e06,0x0c},
+  {SC031GS_EXPOSURE_H_REG,0x14},
+  {SC031GS_EXPOSURE_L_REG,0x80},
+  {SC031GS_GAIN_DIGITAL_H_REG,0x0c},
   {0x4500,0x59},
   {0x4501,0xc4},
   {0x5011,0x00},

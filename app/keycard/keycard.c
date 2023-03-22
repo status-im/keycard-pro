@@ -7,6 +7,7 @@
 #include "error.h"
 #include "ui/ui.h"
 #include "util/tlv.h"
+#include "common.h"
 #include "crypto/address.h"
 #include "crypto/rand.h"
 #include "crypto/sha2.h"
@@ -542,7 +543,7 @@ void Keycard_SignTX(Keycard* kc, APDU* cmd) {
         if (signing_ctx.tx_data.vLength == 0) {
           v_base = 27;
         } else {
-          uint32_t v = (uint32_t) u64_from_BE(signing_ctx.tx_data.v, MIN(4, signing_ctx.tx_data.vLength));
+          uint32_t v = (uint32_t) u64_from_BE(signing_ctx.tx_data.v, APP_MIN(4, signing_ctx.tx_data.vLength));
           v_base = (v * 2) + 35;
         }
       }
