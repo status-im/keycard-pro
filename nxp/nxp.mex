@@ -121,7 +121,7 @@
                <pin_label pin_num="L10" pin_signal="GPIO_AD_B0_15" label="CAN2_RX/U12[4]" identifier="CAN2_RX"/>
                <pin_label pin_num="J11" pin_signal="GPIO_AD_B1_00" label="I2C1_SCL/CSI_I2C_SCL/J35[20]/J23[6]/U13[17]/U32[4]" identifier="I2C_SCL_FXOS8700CQ;CSI_I2C_SCL"/>
                <pin_label pin_num="K11" pin_signal="GPIO_AD_B1_01" label="I2C1_SDA/CSI_I2C_SDA/J35[22]/J23[5]/U13[18]/U32[6]" identifier="I2C_SDA_FXOS8700CQ;CSI_I2C_SDA"/>
-               <pin_label pin_num="L11" pin_signal="GPIO_AD_B1_02" label="CSI_PWDN" identifier="SPDIF_OUT;CSI_PWDN"/>
+               <pin_label pin_num="L11" pin_signal="GPIO_AD_B1_02" label="CSI_PWDN" identifier="CSI_PWDN"/>
                <pin_label pin_num="M12" pin_signal="GPIO_AD_B1_03" label="SPDIF_IN/J22[8]" identifier="SPDIF_IN"/>
                <pin_label pin_num="H13" pin_signal="GPIO_AD_B1_08" label="AUD_INT/CSI_D9//J35[13]/J22[4]" identifier="CSI_D9"/>
                <pin_label pin_num="M13" pin_signal="GPIO_AD_B1_09" label="SAI1_MCLK/CSI_D8/J35[11]" identifier="CSI_D8"/>
@@ -371,7 +371,6 @@
                   </pin>
                   <pin peripheral="GPIO1" signal="gpio_io, 18" pin_num="L11" pin_signal="GPIO_AD_B1_02">
                      <pin_features>
-                        <pin_feature name="identifier" value="CSI_PWDN"/>
                         <pin_feature name="direction" value="OUTPUT"/>
                         <pin_feature name="gpio_init_state" value="no_init"/>
                      </pin_features>
