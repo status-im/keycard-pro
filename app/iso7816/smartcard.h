@@ -38,8 +38,6 @@ typedef enum {
 } SmartCardProtocol;
 
 typedef struct {
-  //SMARTCARD_HandleTypeDef* dev;
-  //TIM_HandleTypeDef* usec_timer;
   SmartCardState state;
   ATR atr;
   uint8_t send_seq;
@@ -60,7 +58,7 @@ typedef struct __attribute__((packed,aligned(4))) {
 #define SC_TRANSMIT_TO 25
 
 void SmartCard_Delay(SmartCard* sc, uint32_t etu);
-//void SmartCard_Init(SmartCard* sc, SMARTCARD_HandleTypeDef* dev, TIM_HandleTypeDef* usec_timer);
+void SmartCard_Init(SmartCard* sc);
 void SmartCard_Activate(SmartCard* sc);
 void SmartCard_Deactivate(SmartCard* sc);
 void SmartCard_In(SmartCard* sc);

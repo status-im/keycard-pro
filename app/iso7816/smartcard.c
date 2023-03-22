@@ -2,6 +2,8 @@
 #include "iso7816/atr.h"
 #include "iso7816/pps.h"
 #include "iso7816/t1.h"
+#include "FreeRTOS.h"
+#include "task.h"
 
 #define SC_RESET_DELAY 400
 #define SC_DEFAULT_ETU10NS 9300
@@ -15,27 +17,25 @@ static inline void SmartCard_State_Reset(SmartCard* sc) {
 void SmartCard_Delay(SmartCard* sc, uint32_t etu) {
   uint32_t usec = (sc->etu_10ns * etu)/100;
 
-  /*if (usec & 0xffff0000) {
-    HAL_Delay(usec/1000);
+  if (usec & 0xffff0000) {
+    vTaskDelay(pdMS_TO_TICKS(usec/1000));
   } else {
-    sc->usec_timer->Instance->CNT = 0;
-    while (sc->usec_timer->Instance->CNT < usec);
-  }*/
+    //sc->usec_timer->Instance->CNT = 0;
+    //while (sc->usec_timer->Instance->CNT < usec);
+  }
 }
 
-/*
-void SmartCard_Init(SmartCard* sc, SMARTCARD_HandleTypeDef* dev, TIM_HandleTypeDef* usec_timer) {
+
+void SmartCard_Init(SmartCard* sc) {
   SmartCard_State_Reset(sc);
 
-  sc->dev = dev;
-  sc->usec_timer = usec_timer;
-
+  /*
   if (HAL_GPIO_ReadPin(SC_NOFF_GPIO_Port, SC_NOFF_Pin)) {
     sc->state = SC_OFF;
   } else {
     sc->state = SC_NOT_PRESENT;
-  }
-}*/
+  }*/
+}
 
 void SmartCard_Activate(SmartCard* sc) {
  // HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_SET);

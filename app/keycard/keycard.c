@@ -57,10 +57,10 @@ const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
 
 static Keycard_Sign_Ctx signing_ctx;
 
-//void Keycard_Init(Keycard* kc, SMARTCARD_HandleTypeDef* dev, TIM_HandleTypeDef* usec_timer) {
-//  SmartCard_Init(&kc->sc, dev, usec_timer);
-//  kc->ch.open = 0;
-//}
+void Keycard_Init(Keycard* kc) {
+  SmartCard_Init(&kc->sc);
+  kc->ch.open = 0;
+}
 
 uint16_t Keycard_Init_Card(Keycard* kc, uint8_t* sc_key) {
   uint8_t pin[6];

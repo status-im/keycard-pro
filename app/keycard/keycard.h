@@ -14,7 +14,7 @@ typedef struct {
   APDU apdu;
 } Keycard;
 
-//void Keycard_Init(Keycard* kc, SMARTCARD_HandleTypeDef* dev, TIM_HandleTypeDef* usec_timer);
+void Keycard_Init(Keycard* kc);
 void Keycard_Run(Keycard* kc, Command* cmd);
 void Keycard_In(Keycard* kc);
 void Keycard_Out(Keycard* kc);
