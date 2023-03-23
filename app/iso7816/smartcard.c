@@ -4,6 +4,7 @@
 #include "iso7816/t1.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "hal.h"
 
 #define SC_RESET_DELAY 400
 #define SC_DEFAULT_ETU10NS 9300
@@ -17,11 +18,10 @@ static inline void SmartCard_State_Reset(SmartCard* sc) {
 void SmartCard_Delay(SmartCard* sc, uint32_t etu) {
   uint32_t usec = (sc->etu_10ns * etu)/100;
 
-  if (usec & 0xffff0000) {
+  if (usec > 4000) {
     vTaskDelay(pdMS_TO_TICKS(usec/1000));
   } else {
-    //sc->usec_timer->Instance->CNT = 0;
-    //while (sc->usec_timer->Instance->CNT < usec);
+    hal_delay_us(usec);
   }
 }
 
@@ -138,38 +138,4 @@ uint8_t SmartCard_Send_APDU(SmartCard* sc, APDU* apdu) {
     return 0;
   }
 }
-/*
-void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsc) {
-  uint32_t error = HAL_SMARTCARD_GetError(hsc);
 
-  if(error & HAL_SMARTCARD_ERROR_FE) {
-    __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
-  }
-
-  if(error & HAL_SMARTCARD_ERROR_PE) {
-    __HAL_SMARTCARD_ENABLE_IT(hsc, SMARTCARD_IT_RXNE);
-    __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
-  }
-
-  if(error & HAL_SMARTCARD_ERROR_NE) {
-    __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
-  }
-
-  if(error & HAL_SMARTCARD_ERROR_ORE) {
-    __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
-  }
-
-  if(error & HAL_SMARTCARD_ERROR_RTO) {
-    __HAL_SMARTCARD_FLUSH_DRREGISTER(hsc);
-    __HAL_SMARTCARD_DISABLE_IT(hsc, SMARTCARD_IT_RTO);
-  }
-
-}
-
-void HAL_SMARTCARD_TxCpltCallback(SMARTCARD_HandleTypeDef *hsc) {
-
-}
-
-void HAL_SMARTCARD_RxCpltCallback(SMARTCARD_HandleTypeDef *hsc) {
-  __HAL_SMARTCARD_DISABLE_IT(hsc, SMARTCARD_IT_RTO);
-}*/

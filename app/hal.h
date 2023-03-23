@@ -63,7 +63,6 @@ typedef enum {
 
 hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len);
 
-
 // Crypto (only use in crypto library)
 hal_err_t hal_rng_next(uint8_t *buf, size_t len);
 
@@ -78,5 +77,8 @@ hal_err_t hal_crc32_init(hal_crc32_ctx_t* ctx);
 hal_err_t hal_crc32_update(hal_crc32_ctx_t* ctx, const uint8_t* data, size_t len);
 hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out);
 #endif
+
+// Timer
+hal_err_t hal_delay_us(uint32_t usec);
 
 #endif

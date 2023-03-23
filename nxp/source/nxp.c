@@ -42,6 +42,7 @@
 #include "fsl_trng.h"
 #include "fsl_lpuart.h"
 #include "fsl_dcp.h"
+#include "fsl_gpt.h"
 #include "hal.h"
 
 struct gpio_pin_spec {
@@ -76,6 +77,14 @@ hal_err_t hal_init(void) {
   DCP_Init(DCP, &dcpConfig);
 
   sha256_handle.channel = kDCP_Channel0;
+
+  gpt_config_t gptCfg;
+  GPT_GetDefaultConfig(&gptCfg);
+  gptCfg.clockSource = kGPT_ClockSource_Osc;
+  gptCfg.enableFreeRun = true;
+  gptCfg.enableMode = true;
+  gptCfg.divider = 24;
+  GPT_Init(GPT1, &gptCfg);
 
   return HAL_OK;
 }
@@ -112,3 +121,9 @@ hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len) {
   return LPUART_WriteBlocking(BOARD_DEBUG_UART_BASEADDR, data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
 }
 
+hal_err_t hal_delay_us(uint32_t usec) {
+  GPT_StartTimer(GPT1);
+  while(GPT_GetCurrentTimerCount(GPT1) < usec) {}
+  GPT_StopTimer(GPT1);
+  return HAL_OK;
+}
