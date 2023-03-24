@@ -5,6 +5,7 @@
 #include "qrcode/qrcode.h"
 #include "ur/ur.h"
 #include "ur/eip4527_decode.h"
+#include "screen/screen.h"
 
 static struct quirc_code qrcode;
 static struct quirc_data qrdata;
@@ -18,6 +19,10 @@ void qrscan_task_entry(void* pvParameters) {
   if (camera_start() != HAL_OK) {
     LOG_MSG("Failed to init camera");
     goto fail;
+  }
+
+  if (screen_init() != HAL_OK) {
+    LOG_MSG("Failed to init screen");
   }
 
   while (1) {

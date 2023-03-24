@@ -43,6 +43,8 @@
 #include "fsl_lpuart.h"
 #include "fsl_dcp.h"
 #include "fsl_gpt.h"
+#include "fsl_lpi2c.h"
+#include "fsl_lpspi.h"
 #include "hal.h"
 
 struct gpio_pin_spec {
@@ -52,7 +54,9 @@ struct gpio_pin_spec {
 
 struct gpio_pin_spec NXP_PIN_MAP[] = {
     {BOARD_CAMERA_PWDN_GPIO, BOARD_CAMERA_PWDN_PIN},
-    {NULL, 0}, //{BOARD_CAMERA_RST_GPIO, BOARD_CAMERA_RST_PIN},
+    {BOARD_CAMERA_RST_GPIO, BOARD_CAMERA_RST_PIN},
+    {BOARD_LCD_CD_GPIO, BOARD_LCD_CD_PIN},
+    {BOARD_LCD_RST_GPIO, BOARD_LCD_RST_PIN},
 };
 
 static dcp_handle_t sha256_handle;
@@ -67,35 +71,49 @@ hal_err_t hal_init(void) {
   BOARD_InitDebugConsole();
 #endif
 
-  BOARD_LPI2C_Init(BOARD_CAMERA_I2C_BASEADDR, BOARD_BOOTCLOCKRUN_LPI2C_CLK_ROOT);
-  trng_config_t trngConfig;
-  TRNG_GetDefaultConfig(&trngConfig);
-  TRNG_Init(TRNG, &trngConfig);
+  BOARD_IO_Init();
 
-  dcp_config_t dcpConfig;
-  DCP_GetDefaultConfig(&dcpConfig);
-  DCP_Init(DCP, &dcpConfig);
-
-  sha256_handle.channel = kDCP_Channel0;
-
-  gpt_config_t gptCfg;
-  GPT_GetDefaultConfig(&gptCfg);
-  gptCfg.clockSource = kGPT_ClockSource_Osc;
-  gptCfg.enableFreeRun = true;
-  gptCfg.enableMode = true;
-  gptCfg.divider = 24;
-  GPT_Init(GPT1, &gptCfg);
+  BOARD_Crypto_Init(&sha256_handle);
+  BOARD_Timer_Init();
 
   return HAL_OK;
 }
 
 hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, const uint8_t* data, size_t len) {
   assert(port == I2C_CAMERA);
-  return BOARD_LPI2C_Send(BOARD_CAMERA_I2C_BASEADDR, addr, 0, 0, (uint8_t*) data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
+
+  lpi2c_master_transfer_t xfer;
+
+  xfer.flags          = kLPI2C_TransferDefaultFlag;
+  xfer.slaveAddress   = addr;
+  xfer.direction      = kLPI2C_Write;
+  xfer.subaddress     = 0;
+  xfer.subaddressSize = 0;
+  xfer.data           = (uint8_t*) data;
+  xfer.dataSize       = len;
+
+  return LPI2C_MasterTransferBlocking(BOARD_CAMERA_I2C_BASEADDR, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
+}
+
+hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
+  assert(port == SPI_LCD);
+
+  lpspi_transfer_t xfer = { 0 };
+  xfer.txData = (uint8_t*) data;
+  xfer.dataSize = len;
+
+  return LPSPI_MasterTransferBlocking(BOARD_LCD_SPI_BASEADDR, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
+}
+
+hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len) {
+  return HAL_ERROR;
 }
 
 hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
-  if (pin == GPIO_CAMERA_RST) return HAL_OK; // dev board does not connect this PIN, will connect in real board though
+  if (NXP_PIN_MAP[pin].base == NULL) {
+    return HAL_OK; // unconnected PIN
+  }
+
   GPIO_WritePinOutput(NXP_PIN_MAP[pin].base, NXP_PIN_MAP[pin].pin, state);
   return HAL_OK;
 }

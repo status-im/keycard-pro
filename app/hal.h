@@ -36,10 +36,16 @@ hal_err_t hal_camera_stop();
 hal_err_t hal_camera_next_frame(uint8_t** fb);
 hal_err_t hal_camera_submit(uint8_t* fb);
 
+// Screen
+#define SCREEN_WIDTH 240
+#define SCREEN_HEIGHT 240
+
 // GPIO
 typedef enum {
   GPIO_CAMERA_PWDN = 0,
   GPIO_CAMERA_RST,
+  GPIO_LCD_CMD_DATA,
+  GPIO_LCD_RST,
 } hal_gpio_pin_t;
 
 typedef enum {
@@ -62,6 +68,14 @@ typedef enum {
 } hal_uart_port_t;
 
 hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len);
+
+// SPI
+typedef enum {
+  SPI_LCD
+} hal_spi_port_t;
+
+hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len);
+hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len);
 
 // Crypto (only use in crypto library)
 hal_err_t hal_rng_next(uint8_t *buf, size_t len);

@@ -12,19 +12,15 @@
 #include "fsl_common.h"
 #include "fsl_gpio.h"
 #include "fsl_clock.h"
+#include "fsl_dcp.h"
+#include "fsl_lpspi.h"
+#include "pin_mux.h"
 
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-/*! @brief The board name */
-#define BOARD_NAME "MIMXRT1064-EVK"
-
 /* The UART to use for debug messages. */
-#define BOARD_DEBUG_UART_BASEADDR LPUART1
-#define BOARD_DEBUG_UART_INSTANCE 1U
-
-#define BOARD_UART_IRQ         LPUART1_IRQn
-#define BOARD_UART_IRQ_HANDLER LPUART1_IRQHandler
+#define BOARD_DEBUG_UART_BASEADDR BOARD_INITDEBUG_UART_UART1_TXD_PERIPHERAL
 
 #ifndef BOARD_DEBUG_UART_BAUDRATE
 #define BOARD_DEBUG_UART_BAUDRATE (115200U)
@@ -34,10 +30,24 @@
 #define BOARD_FLASH_SIZE (0x400000U)
 
 /* @Brief Board CAMERA configuration */
-#define BOARD_CAMERA_I2C_BASEADDR             LPI2C1
+#define BOARD_CAMERA_I2C_BASEADDR BOARD_INITCAMERA_CSI_I2C_SDA_PERIPHERAL
 
-#define BOARD_CAMERA_PWDN_GPIO    GPIO1
-#define BOARD_CAMERA_PWDN_PIN     18
+#define BOARD_CAMERA_PWDN_GPIO    BOARD_INITCAMERA_CSI_PWDN_PERIPHERAL
+#define BOARD_CAMERA_PWDN_PIN     BOARD_INITCAMERA_CSI_PWDN_CHANNEL
+
+#define BOARD_CAMERA_RST_GPIO     NULL
+#define BOARD_CAMERA_RST_PIN      0
+
+/* @Brief Board LCD configuration */
+#define BOARD_LCD_SPI_BASEADDR BOARD_INITLCD_SD1_CMD_PERIPHERAL
+
+#define BOARD_LCD_RST_GPIO     BOARD_INITLCD_LCD_RESET_GPIO
+#define BOARD_LCD_RST_PIN      BOARD_INITLCD_LCD_RESET_GPIO_PIN
+
+#define BOARD_LCD_CD_GPIO      BOARD_INITLCD_LCD_CD_GPIO
+#define BOARD_LCD_CD_PIN       BOARD_INITLCD_LCD_CD_GPIO_PIN
+
+#define BOARD_LCD_BAUD_RATE    5000000
 
 #if defined(__cplusplus)
 extern "C" {
@@ -51,21 +61,10 @@ uint32_t BOARD_DebugConsoleSrcFreq(void);
 void BOARD_InitDebugConsole(void);
 
 void BOARD_ConfigMPU(void);
-#if defined(SDK_I2C_BASED_COMPONENT_USED) && SDK_I2C_BASED_COMPONENT_USED
-void BOARD_LPI2C_Init(LPI2C_Type *base, uint32_t clkSrc_Hz);
-status_t BOARD_LPI2C_Send(LPI2C_Type *base,
-                          uint8_t deviceAddress,
-                          uint32_t subAddress,
-                          uint8_t subaddressSize,
-                          uint8_t *txBuff,
-                          uint8_t txBuffSize);
-status_t BOARD_LPI2C_Receive(LPI2C_Type *base,
-                             uint8_t deviceAddress,
-                             uint32_t subAddress,
-                             uint8_t subaddressSize,
-                             uint8_t *rxBuff,
-                             uint8_t rxBuffSize);
-#endif
+
+void BOARD_IO_Init();
+void BOARD_Crypto_Init(dcp_handle_t* sha256_handle);
+void BOARD_Timer_Init();
 #if defined(__cplusplus)
 }
 #endif /* __cplusplus */

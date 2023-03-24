@@ -109,7 +109,7 @@ pin_labels:
 - {pin_num: L10, pin_signal: GPIO_AD_B0_15, label: 'CAN2_RX/U12[4]', identifier: CAN2_RX}
 - {pin_num: J11, pin_signal: GPIO_AD_B1_00, label: 'I2C1_SCL/CSI_I2C_SCL/J35[20]/J23[6]/U13[17]/U32[4]', identifier: I2C_SCL_FXOS8700CQ;CSI_I2C_SCL}
 - {pin_num: K11, pin_signal: GPIO_AD_B1_01, label: 'I2C1_SDA/CSI_I2C_SDA/J35[22]/J23[5]/U13[18]/U32[6]', identifier: I2C_SDA_FXOS8700CQ;CSI_I2C_SDA}
-- {pin_num: L11, pin_signal: GPIO_AD_B1_02, label: CSI_PWDN, identifier: SPDIF_OUT;CSI_PWDN}
+- {pin_num: L11, pin_signal: GPIO_AD_B1_02, label: CSI_PWDN, identifier: CSI_PWDN}
 - {pin_num: M12, pin_signal: GPIO_AD_B1_03, label: 'SPDIF_IN/J22[8]', identifier: SPDIF_IN}
 - {pin_num: H13, pin_signal: GPIO_AD_B1_08, label: 'AUD_INT/CSI_D9//J35[13]/J22[4]', identifier: CSI_D9}
 - {pin_num: M13, pin_signal: GPIO_AD_B1_09, label: 'SAI1_MCLK/CSI_D8/J35[11]', identifier: CSI_D8}
@@ -120,9 +120,9 @@ pin_labels:
 - {pin_num: G12, pin_signal: GPIO_AD_B1_14, label: 'SAI1_TX_BCLK/CSI_D3/J35[4]/U13[12]', identifier: CSI_D3}
 - {pin_num: J14, pin_signal: GPIO_AD_B1_15, label: 'SAI1_TX_SYNC/CSI_D2/J35[6]/U13[13]', identifier: CSI_D2}
 - {pin_num: J4, pin_signal: GPIO_SD_B0_00, label: 'SD1_CMD/J24[6]', identifier: SD1_CMD}
-- {pin_num: J3, pin_signal: GPIO_SD_B0_01, label: 'SD1_CLK/J24[3]', identifier: SD1_CLK}
+- {pin_num: J3, pin_signal: GPIO_SD_B0_01, label: 'SD1_CLK/J24[3]', identifier: SD1_CLK;LCD_CD}
 - {pin_num: J1, pin_signal: GPIO_SD_B0_02, label: 'SD1_D0/J24[4]/SPI_MOSI/PWM', identifier: SD1_D0}
-- {pin_num: K1, pin_signal: GPIO_SD_B0_03, label: 'SD1_D1/J24[5]/SPI_MISO', identifier: SD1_D1}
+- {pin_num: K1, pin_signal: GPIO_SD_B0_03, label: 'SD1_D1/J24[5]/SPI_MISO', identifier: SD1_D1;LCD_RESET}
 - {pin_num: H2, pin_signal: GPIO_SD_B0_04, label: SD1_D2, identifier: SD1_D2}
 - {pin_num: J2, pin_signal: GPIO_SD_B0_05, label: SD1_D3, identifier: SD1_D3}
 - {pin_num: L5, pin_signal: GPIO_SD_B1_00, label: FlexSPI_D3_B, identifier: FlexSPI_D3_B}
@@ -221,13 +221,15 @@ pin_labels:
  * 
  * END ****************************************************************************************************************/
 void BOARD_InitBootPins(void) {
-    BOARD_InitPins();
-    BOARD_InitCSI();
+    BOARD_InitISO7816();
+    BOARD_InitCamera();
+    BOARD_InitLCD();
+    BOARD_InitKeyboard();
 }
 
 /*
  * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-BOARD_InitPins:
+BOARD_InitISO7816:
 - options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
 - pin_list: []
  * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
@@ -235,11 +237,146 @@ BOARD_InitPins:
 
 /* FUNCTION ************************************************************************************************************
  *
- * Function Name : BOARD_InitPins
+ * Function Name : BOARD_InitISO7816
  * Description   : Configures pin routing and optionally pin electrical features.
  *
  * END ****************************************************************************************************************/
-void BOARD_InitPins(void) {
+void BOARD_InitISO7816(void) {
+}
+
+
+/*
+ * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+BOARD_InitCamera:
+- options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
+- pin_list:
+  - {pin_num: H13, peripheral: CSI, signal: 'csi_data, 09', pin_signal: GPIO_AD_B1_08}
+  - {pin_num: M13, peripheral: CSI, signal: 'csi_data, 08', pin_signal: GPIO_AD_B1_09}
+  - {pin_num: L13, peripheral: CSI, signal: 'csi_data, 07', pin_signal: GPIO_AD_B1_10}
+  - {pin_num: J13, peripheral: CSI, signal: 'csi_data, 06', pin_signal: GPIO_AD_B1_11}
+  - {pin_num: H12, peripheral: CSI, signal: 'csi_data, 05', pin_signal: GPIO_AD_B1_12}
+  - {pin_num: H11, peripheral: CSI, signal: 'csi_data, 04', pin_signal: GPIO_AD_B1_13}
+  - {pin_num: J14, peripheral: CSI, signal: 'csi_data, 02', pin_signal: GPIO_AD_B1_15}
+  - {pin_num: G12, peripheral: CSI, signal: 'csi_data, 03', pin_signal: GPIO_AD_B1_14}
+  - {pin_num: L12, peripheral: CSI, signal: csi_pixclk, pin_signal: GPIO_AD_B1_04}
+  - {pin_num: K12, peripheral: CSI, signal: csi_mclk, pin_signal: GPIO_AD_B1_05}
+  - {pin_num: J12, peripheral: CSI, signal: csi_vsync, pin_signal: GPIO_AD_B1_06}
+  - {pin_num: K10, peripheral: CSI, signal: csi_hsync, pin_signal: GPIO_AD_B1_07}
+  - {pin_num: J11, peripheral: LPI2C1, signal: SCL, pin_signal: GPIO_AD_B1_00, identifier: CSI_I2C_SCL, software_input_on: Enable, hysteresis_enable: Disable, pull_up_down_config: Pull_Up_22K_Ohm,
+    pull_keeper_select: Keeper, pull_keeper_enable: Enable, open_drain: Enable, speed: MHZ_100, drive_strength: R0_6, slew_rate: Slow}
+  - {pin_num: K11, peripheral: LPI2C1, signal: SDA, pin_signal: GPIO_AD_B1_01, identifier: CSI_I2C_SDA, software_input_on: Enable, hysteresis_enable: Disable, pull_up_down_config: Pull_Up_22K_Ohm,
+    pull_keeper_select: Keeper, pull_keeper_enable: Enable, open_drain: Enable, speed: MHZ_100, drive_strength: R0_6, slew_rate: Slow}
+  - {pin_num: L11, peripheral: GPIO1, signal: 'gpio_io, 18', pin_signal: GPIO_AD_B1_02, direction: OUTPUT, gpio_init_state: no_init}
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
+ */
+
+/* FUNCTION ************************************************************************************************************
+ *
+ * Function Name : BOARD_InitCamera
+ * Description   : Configures pin routing and optionally pin electrical features.
+ *
+ * END ****************************************************************************************************************/
+void BOARD_InitCamera(void) {
+  CLOCK_EnableClock(kCLOCK_Iomuxc);           
+
+  /* GPIO configuration of CSI_PWDN on GPIO_AD_B1_02 (pin L11) */
+  gpio_pin_config_t CSI_PWDN_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_AD_B1_02 (pin L11) */
+  GPIO_PinInit(GPIO1, 18U, &CSI_PWDN_config);
+
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 1U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 1U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_02_GPIO1_IO18, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_04_CSI_PIXCLK, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_05_CSI_MCLK, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_06_CSI_VSYNC, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_07_CSI_HSYNC, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_08_CSI_DATA09, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_09_CSI_DATA08, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_10_CSI_DATA07, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_11_CSI_DATA06, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_12_CSI_DATA05, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_13_CSI_DATA04, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_14_CSI_DATA03, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_15_CSI_DATA02, 0U); 
+  IOMUXC_GPR->GPR26 = ((IOMUXC_GPR->GPR26 &
+    (~(BOARD_INITCAMERA_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK))) 
+      | IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL(0x00U) 
+    );
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 0xD8B0U); 
+  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 0xD8B0U); 
+}
+
+
+/*
+ * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+BOARD_InitLCD:
+- options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
+- pin_list:
+  - {pin_num: J1, peripheral: LPSPI1, signal: SDO, pin_signal: GPIO_SD_B0_02}
+  - {pin_num: J4, peripheral: LPSPI1, signal: SCK, pin_signal: GPIO_SD_B0_00}
+  - {pin_num: J3, peripheral: GPIO3, signal: 'gpio_io, 13', pin_signal: GPIO_SD_B0_01, identifier: LCD_CD, direction: OUTPUT, gpio_init_state: no_init}
+  - {pin_num: K1, peripheral: GPIO3, signal: 'gpio_io, 15', pin_signal: GPIO_SD_B0_03, identifier: LCD_RESET, direction: OUTPUT, gpio_init_state: 'true'}
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
+ */
+
+/* FUNCTION ************************************************************************************************************
+ *
+ * Function Name : BOARD_InitLCD
+ * Description   : Configures pin routing and optionally pin electrical features.
+ *
+ * END ****************************************************************************************************************/
+void BOARD_InitLCD(void) {
+  CLOCK_EnableClock(kCLOCK_Iomuxc);           
+
+  /* GPIO configuration of LCD_CD on GPIO_SD_B0_01 (pin J3) */
+  gpio_pin_config_t LCD_CD_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 0U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_SD_B0_01 (pin J3) */
+  GPIO_PinInit(GPIO3, 13U, &LCD_CD_config);
+
+  /* GPIO configuration of LCD_RESET on GPIO_SD_B0_03 (pin K1) */
+  gpio_pin_config_t LCD_RESET_config = {
+      .direction = kGPIO_DigitalOutput,
+      .outputLogic = 1U,
+      .interruptMode = kGPIO_NoIntmode
+  };
+  /* Initialize GPIO functionality on GPIO_SD_B0_03 (pin K1) */
+  GPIO_PinInit(GPIO3, 15U, &LCD_RESET_config);
+
+  IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_00_LPSPI1_SCK, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_01_GPIO3_IO13, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_02_LPSPI1_SDO, 0U); 
+  IOMUXC_SetPinMux(IOMUXC_GPIO_SD_B0_03_GPIO3_IO15, 0U); 
+  IOMUXC_GPR->GPR28 = ((IOMUXC_GPR->GPR28 &
+    (~(BOARD_INITLCD_IOMUXC_GPR_GPR28_GPIO_MUX3_GPIO_SEL_MASK))) 
+      | IOMUXC_GPR_GPR28_GPIO_MUX3_GPIO_SEL(0x00U) 
+    );
+}
+
+
+/*
+ * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
+BOARD_InitKeyboard:
+- options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
+- pin_list: []
+ * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
+ */
+
+/* FUNCTION ************************************************************************************************************
+ *
+ * Function Name : BOARD_InitKeyboard
+ * Description   : Configures pin routing and optionally pin electrical features.
+ *
+ * END ****************************************************************************************************************/
+void BOARD_InitKeyboard(void) {
 }
 
 
@@ -268,73 +405,6 @@ void BOARD_InitDEBUG_UART(void) {
   IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B0_13_LPUART1_RX, 0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B0_12_LPUART1_TX, 0x10B0U); 
   IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B0_13_LPUART1_RX, 0x10B0U); 
-}
-
-
-/*
- * TEXT BELOW IS USED AS SETTING FOR TOOLS *************************************
-BOARD_InitCSI:
-- options: {callFromInitBoot: 'true', coreID: core0, enableClock: 'true'}
-- pin_list:
-  - {pin_num: H13, peripheral: CSI, signal: 'csi_data, 09', pin_signal: GPIO_AD_B1_08}
-  - {pin_num: M13, peripheral: CSI, signal: 'csi_data, 08', pin_signal: GPIO_AD_B1_09}
-  - {pin_num: L13, peripheral: CSI, signal: 'csi_data, 07', pin_signal: GPIO_AD_B1_10}
-  - {pin_num: J13, peripheral: CSI, signal: 'csi_data, 06', pin_signal: GPIO_AD_B1_11}
-  - {pin_num: H12, peripheral: CSI, signal: 'csi_data, 05', pin_signal: GPIO_AD_B1_12}
-  - {pin_num: H11, peripheral: CSI, signal: 'csi_data, 04', pin_signal: GPIO_AD_B1_13}
-  - {pin_num: J14, peripheral: CSI, signal: 'csi_data, 02', pin_signal: GPIO_AD_B1_15}
-  - {pin_num: G12, peripheral: CSI, signal: 'csi_data, 03', pin_signal: GPIO_AD_B1_14}
-  - {pin_num: L12, peripheral: CSI, signal: csi_pixclk, pin_signal: GPIO_AD_B1_04}
-  - {pin_num: K12, peripheral: CSI, signal: csi_mclk, pin_signal: GPIO_AD_B1_05}
-  - {pin_num: J12, peripheral: CSI, signal: csi_vsync, pin_signal: GPIO_AD_B1_06}
-  - {pin_num: K10, peripheral: CSI, signal: csi_hsync, pin_signal: GPIO_AD_B1_07}
-  - {pin_num: J11, peripheral: LPI2C1, signal: SCL, pin_signal: GPIO_AD_B1_00, identifier: CSI_I2C_SCL, software_input_on: Enable, hysteresis_enable: Disable, pull_up_down_config: Pull_Up_22K_Ohm,
-    pull_keeper_select: Keeper, pull_keeper_enable: Enable, open_drain: Enable, speed: MHZ_100, drive_strength: R0_6, slew_rate: Slow}
-  - {pin_num: K11, peripheral: LPI2C1, signal: SDA, pin_signal: GPIO_AD_B1_01, identifier: CSI_I2C_SDA, software_input_on: Enable, hysteresis_enable: Disable, pull_up_down_config: Pull_Up_22K_Ohm,
-    pull_keeper_select: Keeper, pull_keeper_enable: Enable, open_drain: Enable, speed: MHZ_100, drive_strength: R0_6, slew_rate: Slow}
-  - {pin_num: L11, peripheral: GPIO1, signal: 'gpio_io, 18', pin_signal: GPIO_AD_B1_02, identifier: CSI_PWDN, direction: OUTPUT, gpio_init_state: no_init}
- * BE CAREFUL MODIFYING THIS COMMENT - IT IS YAML SETTINGS FOR TOOLS ***********
- */
-
-/* FUNCTION ************************************************************************************************************
- *
- * Function Name : BOARD_InitCSI
- * Description   : Configures pin routing and optionally pin electrical features.
- *
- * END ****************************************************************************************************************/
-void BOARD_InitCSI(void) {
-  CLOCK_EnableClock(kCLOCK_Iomuxc);           
-
-  /* GPIO configuration of CSI_PWDN on GPIO_AD_B1_02 (pin L11) */
-  gpio_pin_config_t CSI_PWDN_config = {
-      .direction = kGPIO_DigitalOutput,
-      .outputLogic = 0U,
-      .interruptMode = kGPIO_NoIntmode
-  };
-  /* Initialize GPIO functionality on GPIO_AD_B1_02 (pin L11) */
-  GPIO_PinInit(GPIO1, 18U, &CSI_PWDN_config);
-
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 1U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 1U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_02_GPIO1_IO18, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_04_CSI_PIXCLK, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_05_CSI_MCLK, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_06_CSI_VSYNC, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_07_CSI_HSYNC, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_08_CSI_DATA09, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_09_CSI_DATA08, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_10_CSI_DATA07, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_11_CSI_DATA06, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_12_CSI_DATA05, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_13_CSI_DATA04, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_14_CSI_DATA03, 0U); 
-  IOMUXC_SetPinMux(IOMUXC_GPIO_AD_B1_15_CSI_DATA02, 0U); 
-  IOMUXC_GPR->GPR26 = ((IOMUXC_GPR->GPR26 &
-    (~(BOARD_INITCSI_IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL_MASK))) 
-      | IOMUXC_GPR_GPR26_GPIO_MUX1_GPIO_SEL(0x00U) 
-    );
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_00_LPI2C1_SCL, 0xD8B0U); 
-  IOMUXC_SetPinConfig(IOMUXC_GPIO_AD_B1_01_LPI2C1_SDA, 0xD8B0U); 
 }
 
 /***********************************************************************************************************************
