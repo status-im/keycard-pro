@@ -47,7 +47,7 @@
 #define BOARD_LCD_CD_GPIO      BOARD_INITLCD_LCD_CD_GPIO
 #define BOARD_LCD_CD_PIN       BOARD_INITLCD_LCD_CD_GPIO_PIN
 
-#define BOARD_LCD_BAUD_RATE    5000000
+#define BOARD_LCD_BAUD_RATE    60000000
 
 #if defined(__cplusplus)
 extern "C" {

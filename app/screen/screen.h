@@ -13,6 +13,7 @@ typedef struct {
 } screen_area_t;
 
 hal_err_t screen_init();
-hal_err_t screen_draw_area(screen_area_t* area, uint16_t* pixels);
+hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels);
+hal_err_t screen_camera_passthrough(const uint8_t* fb);
 
 #endif

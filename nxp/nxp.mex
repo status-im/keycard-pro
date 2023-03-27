@@ -529,7 +529,7 @@
                   <clock_output id="IPG_CLK_ROOT.outFreq" value="150 MHz" locked="false" accuracy=""/>
                   <clock_output id="LCDIF_CLK_ROOT.outFreq" value="67.5 MHz" locked="false" accuracy=""/>
                   <clock_output id="LPI2C_CLK_ROOT.outFreq" value="10 MHz" locked="false" accuracy=""/>
-                  <clock_output id="LPSPI_CLK_ROOT.outFreq" value="105.6 MHz" locked="false" accuracy=""/>
+                  <clock_output id="LPSPI_CLK_ROOT.outFreq" value="132 MHz" locked="true" accuracy="0.001"/>
                   <clock_output id="LVDS1_CLK.outFreq" value="1.2 GHz" locked="false" accuracy=""/>
                   <clock_output id="MQS_MCLK.outFreq" value="1080/17 MHz" locked="false" accuracy=""/>
                   <clock_output id="PERCLK_CLK_ROOT.outFreq" value="75 MHz" locked="false" accuracy=""/>
@@ -548,8 +548,8 @@
                   <clock_output id="SPDIF0_CLK_ROOT.outFreq" value="30 MHz" locked="false" accuracy=""/>
                   <clock_output id="TRACE_CLK_ROOT.outFreq" value="132 MHz" locked="false" accuracy=""/>
                   <clock_output id="UART_CLK_ROOT.outFreq" value="80 MHz" locked="false" accuracy=""/>
-                  <clock_output id="USDHC1_CLK_ROOT.outFreq" value="198 MHz" locked="false" accuracy=""/>
-                  <clock_output id="USDHC2_CLK_ROOT.outFreq" value="198 MHz" locked="false" accuracy=""/>
+                  <clock_output id="USDHC1_CLK_ROOT.outFreq" value="105.6 MHz" locked="false" accuracy=""/>
+                  <clock_output id="USDHC2_CLK_ROOT.outFreq" value="105.6 MHz" locked="false" accuracy=""/>
                </clock_outputs>
                <clock_settings>
                   <setting id="CCM.AHB_PODF.scale" value="1" locked="true"/>
@@ -562,11 +562,13 @@
                   <setting id="CCM.LCDIF_PODF.scale" value="4" locked="true"/>
                   <setting id="CCM.LCDIF_PRED.scale" value="2" locked="true"/>
                   <setting id="CCM.LPI2C_CLK_PODF.scale" value="6" locked="true"/>
-                  <setting id="CCM.LPSPI_PODF.scale" value="5" locked="true"/>
+                  <setting id="CCM.LPSPI_PODF.scale" value="4" locked="true"/>
                   <setting id="CCM.PERCLK_PODF.scale" value="2" locked="true"/>
                   <setting id="CCM.SEMC_PODF.scale" value="8" locked="false"/>
                   <setting id="CCM.TRACE_CLK_SEL.sel" value="CCM_ANALOG.PLL2_MAIN_CLK" locked="false"/>
                   <setting id="CCM.TRACE_PODF.scale" value="4" locked="true"/>
+                  <setting id="CCM.USDHC1_PODF.scale" value="5" locked="false"/>
+                  <setting id="CCM.USDHC2_PODF.scale" value="5" locked="false"/>
                   <setting id="CCM_ANALOG.PLL1_BYPASS.sel" value="CCM_ANALOG.PLL1" locked="false"/>
                   <setting id="CCM_ANALOG.PLL1_PREDIV.scale" value="1" locked="true"/>
                   <setting id="CCM_ANALOG.PLL1_VDIV.scale" value="50" locked="true"/>
@@ -576,6 +578,7 @@
                   <setting id="CCM_ANALOG.PLL2_PFD0_BYPASS.sel" value="CCM_ANALOG.PLL2_PFD0" locked="false"/>
                   <setting id="CCM_ANALOG.PLL2_PFD1_BYPASS.sel" value="CCM_ANALOG.PLL2_PFD1" locked="false"/>
                   <setting id="CCM_ANALOG.PLL2_PFD2_BYPASS.sel" value="CCM_ANALOG.PLL2_PFD2" locked="false"/>
+                  <setting id="CCM_ANALOG.PLL2_PFD2_DIV.scale" value="18" locked="false"/>
                   <setting id="CCM_ANALOG.PLL2_PFD3_BYPASS.sel" value="CCM_ANALOG.PLL2_PFD3" locked="false"/>
                   <setting id="CCM_ANALOG.PLL3_BYPASS.sel" value="CCM_ANALOG.PLL3" locked="false"/>
                   <setting id="CCM_ANALOG.PLL3_PFD0_BYPASS.sel" value="CCM_ANALOG.PLL3_PFD0" locked="false"/>

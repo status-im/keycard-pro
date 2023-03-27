@@ -9,10 +9,10 @@
 
 #define ST7789_NOP0x00
 #define ST7789_SWRESET    0x01
-#define ST7789_RDDID    0x04
-#define ST7789_RDDST    0x09
+#define ST7789_RDDID      0x04
+#define ST7789_RDDST      0x09
 
-#define ST7789_SLPIN    0x10
+#define ST7789_SLPIN      0x10
 #define ST7789_SLPOUT     0x11
 #define ST7789_PTLON      0x12
 #define ST7789_NORON      0x13

@@ -32,7 +32,11 @@ void qrscan_task_entry(void* pvParameters) {
       continue;
     }
 
+#ifdef APP_DEBUG_NO_SCREEN
     LOG(LOG_IMG, fb, CAMERA_FB_SIZE);
+#endif
+
+    screen_camera_passthrough(fb);
 
     quirc_set_image(&qr, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
     quirc_begin(&qr, NULL, NULL);
