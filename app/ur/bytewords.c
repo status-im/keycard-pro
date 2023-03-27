@@ -1,6 +1,6 @@
 #include "bytewords.h"
 #include "hal.h"
-#include "crypto/util.h"
+#include "common.h"
 #include "crypto/crc32.h"
 #include <ctype.h>
 

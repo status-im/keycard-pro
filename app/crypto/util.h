@@ -21,20 +21,4 @@ static inline int memcmp_ct(const uint8_t* a, const uint8_t* b, size_t length) {
   return compareSum;
 }
 
-static inline uint32_t rev32(uint32_t value) {
-  __asm__ volatile (
-      "REV %0, %0  \n"
-      : "+r" (value)
-      :
-  );
-  return value;
-}
-
-static inline void rev32_all(uint32_t* out, uint32_t* in, size_t len) {
-  len >>= 2;
-  for (int i = 0; i < len; i++) {
-    out[i] = rev32(in[i]);
-  }
-}
-
 #endif

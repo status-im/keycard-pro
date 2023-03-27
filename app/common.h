@@ -60,4 +60,29 @@
   _APP_DEF_TASK(__NAME__, __STACK_SIZE__); \
   _APP_CREATE_TASK(__NAME__, __PRIO__)
 
+static inline uint32_t rev32(uint32_t value) {
+  __asm__ volatile (
+      "REV %0, %0  \n"
+      : "+r" (value)
+      :
+  );
+  return value;
+}
+
+static inline uint32_t rev16(uint16_t value) {
+  __asm__ volatile (
+      "REV16 %0, %0  \n"
+      : "+r" (value)
+      :
+  );
+  return value;
+}
+
+static inline void rev32_all(uint32_t* out, uint32_t* in, size_t len) {
+  len >>= 2;
+  for (int i = 0; i < len; i++) {
+    out[i] = rev32(in[i]);
+  }
+}
+
 #endif //__APP_COMMON_H__
