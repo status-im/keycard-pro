@@ -36,12 +36,13 @@ void qrscan_task_entry(void* pvParameters) {
     LOG(LOG_IMG, fb, CAMERA_FB_SIZE);
 #endif
 
-    screen_camera_passthrough(fb);
 
     quirc_set_image(&qr, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
     quirc_begin(&qr, NULL, NULL);
 
     quirc_end(&qr);
+
+    screen_camera_passthrough(fb);
 
     if (camera_submit(fb) != HAL_OK) {
       LOG_MSG("Failed to enqueue framebuffer");

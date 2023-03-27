@@ -14,7 +14,7 @@ hal_err_t screen_camera_passthrough(const uint8_t* fb) {
     for(int i = 0; i < _SCREEN_FB_SIZE; i++) {
       uint8_t luma = fb[fboff];
       fboff += 2;
-      g_screen_fb[i] = rev16(((luma & 0xf8) << 8) | ((luma & 0xfc) << 3) | (luma >> 3));
+      g_screen_fb[i] = ~((luma << 8) | luma);
     }
 
     if (screen_draw_area(&screen, g_screen_fb) != HAL_OK) {

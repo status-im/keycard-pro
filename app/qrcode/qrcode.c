@@ -1748,11 +1748,6 @@ static void test_grouping(struct quirc *q, int i)
     test_neighbours(q, i, &hlist, &vlist);
 }
 
-static void pixels_setup(struct quirc *q)
-{
-	q->pixels = (quirc_pixel_t *)q->image;
-}
-
 uint8_t *quirc_begin(struct quirc *q, int *w, int *h)
 {
     q->num_regions = QUIRC_PIXEL_REGION;
@@ -1764,20 +1759,17 @@ uint8_t *quirc_begin(struct quirc *q, int *w, int *h)
     if (h)
         *h = q->h;
 
-    return q->image;
+    return q->pixels;
 }
 
 void quirc_end(struct quirc *q)
 {
-    int i;
-
-    pixels_setup(q);
     threshold(q);
 
-    for (i = 0; i < q->h; i++)
+    for (int i = 0; i < q->h; i++)
         finder_scan(q, i);
 
-    for (i = 0; i < q->num_capstones; i++)
+    for (int i = 0; i < q->num_capstones; i++)
         test_grouping(q, i);
 }
 
@@ -2749,7 +2741,7 @@ quirc_decode_error_t quirc_decode(const struct quirc_code *code,
  */
 
 int quirc_set_image(struct quirc *q, uint8_t* image, int w, int h) {
-    q->image = image;
+    q->pixels = image;
     q->w = w;
     q->h = h;
 
