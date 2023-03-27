@@ -36,7 +36,6 @@ void qrscan_task_entry(void* pvParameters) {
     LOG(LOG_IMG, fb, CAMERA_FB_SIZE);
 #endif
 
-
     quirc_set_image(&qr, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
     quirc_begin(&qr, NULL, NULL);
 

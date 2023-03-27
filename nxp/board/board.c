@@ -5,10 +5,11 @@
  * SPDX-License-Identifier: BSD-3-Clause
  */
 
+#include "board.h"
 #include "fsl_common.h"
 #include "fsl_lpuart.h"
-#include "board.h"
 #include "fsl_lpi2c.h"
+#include "fsl_lpspi_edma.h"
 #include "fsl_iomuxc.h"
 #include "fsl_trng.h"
 #include "fsl_gpt.h"
@@ -21,6 +22,9 @@
  * Code
  ******************************************************************************/
 
+static edma_handle_t lcd_edma_rx_handle;
+static edma_handle_t lcd_edma_tx_handle;
+
 /* Initialize debug console. */
 void BOARD_InitDebugConsole(void) {
   lpuart_config_t cfg;
@@ -31,16 +35,25 @@ void BOARD_InitDebugConsole(void) {
 }
 
 void BOARD_IO_Init() {
-  lpi2c_master_config_t lpi2cConfig = {0};
+  edma_config_t edmaConfig;
+  EDMA_GetDefaultConfig(&edmaConfig);
+  EDMA_Init(DMA0, &edmaConfig);
+
+  lpi2c_master_config_t lpi2cConfig;
   LPI2C_MasterGetDefaultConfig(&lpi2cConfig);
   LPI2C_MasterInit(BOARD_CAMERA_I2C_BASEADDR, &lpi2cConfig, BOARD_BOOTCLOCKRUN_LPI2C_CLK_ROOT);
 
-  lpspi_master_config_t lpspiConfig = {0};
+  lpspi_master_config_t lpspiConfig;
   LPSPI_MasterGetDefaultConfig(&lpspiConfig);
   lpspiConfig.baudRate = BOARD_LCD_BAUD_RATE;
   lpspiConfig.pinCfg = kLPSPI_SdoInSdoOut;
   lpspiConfig.cpol = kLPSPI_ClockPolarityActiveLow;
   LPSPI_MasterInit(BOARD_LCD_SPI_BASEADDR, &lpspiConfig, BOARD_BOOTCLOCKRUN_LPSPI_CLK_ROOT);
+
+  EDMA_CreateHandle(&lcd_edma_rx_handle, DMA0, BOARD_LCD_DMA_RX_CH);
+  EDMA_CreateHandle(&lcd_edma_tx_handle, DMA0, BOARD_LCD_DMA_TX_CH);
+
+  //LPSPI_MasterTransferCreateHandleEDMA(BOARD_LCD_SPI_BASEADDR, &g_m_edma_handle, LCD_DMACallback, NULL, &lcd_edma_rx_handle, &lcd_edma_tx_handle);
 }
 
 void BOARD_Crypto_Init(dcp_handle_t* sha256_handle) {

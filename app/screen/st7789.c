@@ -1,5 +1,6 @@
 #include "screen.h"
 #include "st7789.h"
+#include "common.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -15,47 +16,12 @@ static hal_err_t st7789_write_params(const uint8_t* params, size_t len) {
   return hal_spi_send(SPI_LCD, params, len);
 }
 
-static hal_err_t st7789_write_data(const uint8_t* data, size_t len) {
-  //TODO: replace with DMA
-  hal_gpio_set(GPIO_LCD_CMD_DATA, GPIO_SET);
-  return hal_spi_send(SPI_LCD, data, len);
-}
-
 static inline hal_err_t st7789_set_reg8(uint8_t reg, uint8_t value) {
   if (st7789_write_cmd(reg) != HAL_OK) {
     return HAL_ERROR;
   }
 
   return st7789_write_params(&value, 1);
-}
-
-static hal_err_t st7789_set_drawing_window(const screen_area_t* area) {
-  if (st7789_write_cmd(ST7789_CASET) != HAL_OK) {
-    return HAL_ERROR;
-  }
-
-  uint16_t end = (area->x + area->width);
-  uint8_t data[4];
-  data[0] = area->x >> 8;
-  data[1] = area->x & 0xff;
-  data[2] = end >> 8;
-  data[3] = end & 0xff;
-
-  if (st7789_write_params(data, 4) != HAL_OK) {
-    return HAL_ERROR;
-  }
-
-  if (st7789_write_cmd(ST7789_RASET) != HAL_OK) {
-    return HAL_ERROR;
-  }
-
-  end = (area->y + area->height);
-  data[0] = area->y >> 8;
-  data[1] = area->y & 0xff;
-  data[2] = end >> 8;
-  data[3] = end & 0xff;
-
-  return st7789_write_params(data, 4);
 }
 
 hal_err_t screen_init() {
@@ -89,17 +55,42 @@ hal_err_t screen_init() {
   return st7789_write_cmd(ST7789_DISPON);
 }
 
-hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels) {
-  st7789_set_drawing_window(area);
+hal_err_t screen_set_drawing_window(const screen_area_t* area) {
+  if (st7789_write_cmd(ST7789_CASET) != HAL_OK) {
+    return HAL_ERROR;
+  }
+
+  uint16_t data[2];
+  data[0] = rev16(area->x);
+  data[1] = rev16(area->x + area->width);
+
+  if (st7789_write_params((uint8_t*) data, 4) != HAL_OK) {
+    return HAL_ERROR;
+  }
+
+  if (st7789_write_cmd(ST7789_RASET) != HAL_OK) {
+    return HAL_ERROR;
+  }
+
+  data[0] = rev16(area->y);
+  data[1] = rev16(area->y + area->height);
+
+  if (st7789_write_params((uint8_t*) data, 4) != HAL_OK) {
+    return HAL_ERROR;
+  }
 
   if (st7789_write_cmd(ST7789_RAMWR) != HAL_OK) {
     return HAL_ERROR;
   }
 
-  size_t len = area->width * area->height * sizeof(uint16_t);
-  st7789_write_data((uint8_t*) pixels, len);
+  hal_gpio_set(GPIO_LCD_CMD_DATA, GPIO_SET);
 
   return HAL_OK;
+}
+
+hal_err_t screen_draw_pixels(const uint16_t* pixels, size_t count) {
+  //TODO: replace with DMA
+  return hal_spi_send(SPI_LCD, (uint8_t*) pixels, (count << 1));
 }
 
 #endif

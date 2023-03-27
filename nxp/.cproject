@@ -121,6 +121,10 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/xip}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/device}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/CMSIS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/xip}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/device}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/CMSIS}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/board}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/freertos/freertos_kernel/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/freertos/freertos_kernel/include}&quot;"/>
@@ -465,6 +469,10 @@
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/xip}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/device}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/CMSIS}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/drivers}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/xip}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/device}&quot;"/>
+									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/CMSIS}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/board}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/freertos/freertos_kernel/portable/GCC/ARM_CM4F}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/${ProjName}/freertos/freertos_kernel/include}&quot;"/>
@@ -710,7 +718,7 @@
 	<storageModule moduleId="com.nxp.mcuxpresso.core.datamodels">
 		<sdkName>SDK_2.x_EVK-MIMXRT1064</sdkName>
 		<sdkVersion>2.13.0</sdkVersion>
-		<sdkComponents>platform.drivers.clock.MIMXRT1064;platform.drivers.xip_device.MIMXRT1064;platform.drivers.igpio.MIMXRT1064;platform.drivers.common.MIMXRT1064;platform.drivers.lpuart.MIMXRT1064;platform.drivers.iomuxc.MIMXRT1064;platform.drivers.lpi2c.MIMXRT1064;platform.drivers.trng.MIMXRT1064;platform.drivers.csi.MIMXRT1064;device.MIMXRT1064_CMSIS.MIMXRT1064;device.MIMXRT1064_system.MIMXRT1064;CMSIS_Include_core_cm.MIMXRT1064;platform.drivers.xip_board.evkmimxrt1064.MIMXRT1064;device.MIMXRT1064_startup.MIMXRT1064;platform.drivers.dcp.MIMXRT1064;platform.drivers.flexio.MIMXRT1064;platform.drivers.lpspi.MIMXRT1064;</sdkComponents>
+		<sdkComponents>platform.drivers.clock.MIMXRT1064;platform.drivers.xip_device.MIMXRT1064;platform.drivers.igpio.MIMXRT1064;platform.drivers.common.MIMXRT1064;platform.drivers.lpuart.MIMXRT1064;platform.drivers.iomuxc.MIMXRT1064;platform.drivers.lpi2c.MIMXRT1064;platform.drivers.trng.MIMXRT1064;platform.drivers.csi.MIMXRT1064;device.MIMXRT1064_CMSIS.MIMXRT1064;device.MIMXRT1064_system.MIMXRT1064;CMSIS_Include_core_cm.MIMXRT1064;platform.drivers.xip_board.evkmimxrt1064.MIMXRT1064;device.MIMXRT1064_startup.MIMXRT1064;platform.drivers.dcp.MIMXRT1064;platform.drivers.flexio.MIMXRT1064;platform.drivers.lpspi.MIMXRT1064;platform.drivers.lpspi_edma.MIMXRT1064;platform.drivers.dmamux.MIMXRT1064;platform.drivers.cache_armv7_m7.MIMXRT1064;platform.drivers.edma.MIMXRT1064;</sdkComponents>
 		<boardId>evkmimxrt1064</boardId>
 		<package>MIMXRT1064DVL6A</package>
 		<core>cm7</core>

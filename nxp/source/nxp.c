@@ -44,7 +44,8 @@
 #include "fsl_dcp.h"
 #include "fsl_gpt.h"
 #include "fsl_lpi2c.h"
-#include "fsl_lpspi.h"
+#include "fsl_lpspi_edma.h"
+#include "fsl_gpio.h"
 #include "hal.h"
 
 struct gpio_pin_spec {
@@ -106,6 +107,8 @@ hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
 }
 
 hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len) {
+  assert(port == SPI_LCD);
+
   return HAL_ERROR;
 }
 
