@@ -91,7 +91,7 @@ static inline uint16_t bytewords_decode_hash(uint8_t i, uint8_t j) {
 }
 
 
-size_t bytewords_decode(uint8_t* in, size_t in_len, uint8_t* out, size_t max_out) {
+size_t bytewords_decode(const uint8_t* in, size_t in_len, uint8_t* out, size_t max_out) {
   in_len /= 2;
   size_t outlen = in_len - 4;
 
@@ -122,7 +122,7 @@ size_t bytewords_decode(uint8_t* in, size_t in_len, uint8_t* out, size_t max_out
   return checksum == rev32(expectedChecksum) ? outlen : 0;
 }
 
-size_t bytewords_encode(uint8_t* in, size_t in_len, uint8_t* out, size_t max_out) {
+size_t bytewords_encode(const uint8_t* in, size_t in_len, uint8_t* out, size_t max_out) {
   size_t outlen = (in_len + 4) * 2;
 
   if (max_out < outlen) {
