@@ -29,10 +29,8 @@ static lpspi_master_edma_handle_t lcd_edma_handle;
 static void (*g_lcd_callback)();
 
 void LCD_DMACallback(LPSPI_Type *base, lpspi_master_edma_handle_t *handle, status_t status, void *userData) {
-  if (status == kStatus_Success) {
-    if (g_lcd_callback) {
-      g_lcd_callback();
-    }
+  if (status == kStatus_Success && g_lcd_callback) {
+    g_lcd_callback();
   }
 }
 

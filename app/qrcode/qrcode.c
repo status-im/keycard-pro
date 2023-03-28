@@ -740,10 +740,9 @@ static void lifo_dequeue_fast(lifo_t *ptr, void *data)
     ptr->len -= 1;
 }
 
-static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, span_func_t func, void *user_data, int depth)
+static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, span_func_t func, void *user_data, int __attribute__((unused)) depth)
 {
-    (void) depth; // unused
-    uint8_t from8 = from, to8=to;
+    uint8_t from8 = from;
 
     lifo_t lifo;
     size_t lifo_len = lifo_alloc_all(&lifo, sizeof(xylf_t));
@@ -761,8 +760,7 @@ static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, spa
             right++;
 
         /* Fill the extent */
-        for (i = left; i <= right; i++)
-            row[i] = to8;
+        memset(&row[left], to, ((right - left) + 1));
 
         if (func)
             func(user_data, y, left, right);
