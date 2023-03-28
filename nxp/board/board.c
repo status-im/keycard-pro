@@ -24,7 +24,6 @@
  * Code
  ******************************************************************************/
 
-static edma_handle_t lcd_edma_rx_handle;
 static edma_handle_t lcd_edma_tx_handle;
 static lpspi_master_edma_handle_t lcd_edma_handle;
 static void (*g_lcd_callback)();
@@ -44,6 +43,7 @@ hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len,
   lpspi_transfer_t xfer = { 0 };
   xfer.txData = (uint8_t*) data;
   xfer.dataSize = len;
+  xfer.configFlags = kLPSPI_MasterPcsContinuous;
 
   return LPSPI_MasterTransferEDMA(BOARD_LCD_SPI_BASEADDR, &lcd_edma_handle, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
 }
@@ -59,9 +59,6 @@ void BOARD_InitDebugConsole(void) {
 
 void BOARD_IO_Init() {
   DMAMUX_Init(DMAMUX);
-
-  DMAMUX_SetSource(DMAMUX, BOARD_LCD_DMA_RX_CH, BOARD_LCD_DMA_RX_IRQ);
-  DMAMUX_EnableChannel(DMAMUX, BOARD_LCD_DMA_RX_CH);
 
   DMAMUX_SetSource(DMAMUX, BOARD_LCD_DMA_TX_CH, BOARD_LCD_DMA_TX_IRQ);
   DMAMUX_EnableChannel(DMAMUX, BOARD_LCD_DMA_TX_CH);
@@ -79,14 +76,16 @@ void BOARD_IO_Init() {
   lpspiConfig.baudRate = BOARD_LCD_BAUD_RATE;
   lpspiConfig.pinCfg = kLPSPI_SdoInSdoOut;
   lpspiConfig.cpol = kLPSPI_ClockPolarityActiveLow;
+  lpspiConfig.lastSckToPcsDelayInNanoSec = 0;
+  lpspiConfig.pcsToSckDelayInNanoSec = 0;
+  lpspiConfig.betweenTransferDelayInNanoSec = 0;
+
   LPSPI_MasterInit(BOARD_LCD_SPI_BASEADDR, &lpspiConfig, BOARD_BOOTCLOCKRUN_LPSPI_CLK_ROOT);
 
-  EDMA_CreateHandle(&lcd_edma_rx_handle, DMA0, BOARD_LCD_DMA_RX_CH);
   EDMA_CreateHandle(&lcd_edma_tx_handle, DMA0, BOARD_LCD_DMA_TX_CH);
 
-  LPSPI_MasterTransferCreateHandleEDMA(BOARD_LCD_SPI_BASEADDR, &lcd_edma_handle, LCD_DMACallback, NULL, &lcd_edma_rx_handle, &lcd_edma_tx_handle);
+  LPSPI_MasterTransferCreateHandleEDMA(BOARD_LCD_SPI_BASEADDR, &lcd_edma_handle, LCD_DMACallback, NULL, NULL, &lcd_edma_tx_handle);
   NVIC_SetPriority(DMA0_DMA16_IRQn, 2);
-  NVIC_SetPriority(DMA1_DMA17_IRQn, 2);
 }
 
 void BOARD_Crypto_Init(dcp_handle_t* sha256_handle) {

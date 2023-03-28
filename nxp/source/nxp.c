@@ -102,6 +102,7 @@ hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
   lpspi_transfer_t xfer = { 0 };
   xfer.txData = (uint8_t*) data;
   xfer.dataSize = len;
+  xfer.configFlags = kLPSPI_MasterPcsContinuous;
 
   return LPSPI_MasterTransferBlocking(BOARD_LCD_SPI_BASEADDR, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
 }

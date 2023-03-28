@@ -154,7 +154,6 @@ void LPSPI_MasterTransferCreateHandleEDMA(LPSPI_Type *base,
                                           edma_handle_t *edmaTxDataToTxRegHandle)
 {
     assert(handle != NULL);
-    assert(edmaRxRegToRxDataHandle != NULL);
     assert(edmaTxDataToTxRegHandle != NULL);
 
     /* Zero the handle. */
@@ -228,11 +227,9 @@ status_t LPSPI_MasterTransferEDMA(LPSPI_Type *base, lpspi_master_edma_handle_t *
     uint8_t bytesLastWrite   = 0;
     /*Used for byte swap*/
     uint32_t addrOffset    = 0;
-    uint32_t rxAddr        = LPSPI_GetRxRegisterAddress(base);
     uint32_t txAddr        = LPSPI_GetTxRegisterAddress(base);
     uint32_t whichPcs      = (transfer->configFlags & LPSPI_MASTER_PCS_MASK) >> LPSPI_MASTER_PCS_SHIFT;
     uint32_t bytesPerFrame = ((base->TCR & LPSPI_TCR_FRAMESZ_MASK) >> LPSPI_TCR_FRAMESZ_SHIFT) / 8U + 1U;
-    edma_transfer_config_t transferConfigRx = {0};
     edma_transfer_config_t transferConfigTx = {0};
     edma_tcd_t *softwareTCD_pcsContinuous   = (edma_tcd_t *)((uint32_t)(&handle->lpspiSoftwareTCD[2]) & (~0x1FU));
     edma_tcd_t *softwareTCD_extraBytes      = (edma_tcd_t *)((uint32_t)(&handle->lpspiSoftwareTCD[1]) & (~0x1FU));
@@ -298,65 +295,6 @@ status_t LPSPI_MasterTransferEDMA(LPSPI_Type *base, lpspi_master_edma_handle_t *
 
     EDMA_SetCallback(handle->edmaTxDataToTxRegHandle, EDMA_LpspiMasterCallback,
                      &s_lpspiMasterEdmaPrivateHandle[instance]);
-
-    /* Configure rx EDMA transfer */
-    EDMA_ResetChannel(handle->edmaRxRegToRxDataHandle->base, handle->edmaRxRegToRxDataHandle->channel);
-
-    if (handle->rxData != NULL)
-    {
-        transferConfigRx.destAddr   = (uint32_t) & (handle->rxData[0]);
-        transferConfigRx.destOffset = 1;
-    }
-    else
-    {
-        transferConfigRx.destAddr   = (uint32_t) & (handle->rxBuffIfNull);
-        transferConfigRx.destOffset = 0;
-    }
-    transferConfigRx.destTransferSize = kEDMA_TransferSize1Bytes;
-
-    addrOffset = 0;
-    switch (handle->bytesEachRead)
-    {
-        case (1U):
-            transferConfigRx.srcTransferSize = kEDMA_TransferSize1Bytes;
-            transferConfigRx.minorLoopBytes  = 1;
-            if (handle->isByteSwap)
-            {
-                addrOffset = 3;
-            }
-            break;
-
-        case (2U):
-            transferConfigRx.srcTransferSize = kEDMA_TransferSize2Bytes;
-            transferConfigRx.minorLoopBytes  = 2;
-            if (handle->isByteSwap)
-            {
-                addrOffset = 2;
-            }
-            break;
-
-        case (4U):
-            transferConfigRx.srcTransferSize = kEDMA_TransferSize4Bytes;
-            transferConfigRx.minorLoopBytes  = 4;
-            break;
-
-        default:
-            transferConfigRx.srcTransferSize = kEDMA_TransferSize1Bytes;
-            transferConfigRx.minorLoopBytes  = 1;
-            assert(false);
-            break;
-    }
-
-    transferConfigRx.srcAddr   = (uint32_t)rxAddr + addrOffset;
-    transferConfigRx.srcOffset = 0;
-
-    transferConfigRx.majorLoopCounts = handle->readRegRemainingTimes;
-
-    /* Store the initially configured eDMA minor byte transfer count into the LPSPI handle */
-    handle->nbytes = (uint8_t)transferConfigRx.minorLoopBytes;
-
-    EDMA_SetTransferConfig(handle->edmaRxRegToRxDataHandle->base, handle->edmaRxRegToRxDataHandle->channel,
-                           &transferConfigRx, NULL);
 
     /* Configure tx EDMA transfer */
     EDMA_ResetChannel(handle->edmaTxDataToTxRegHandle->base, handle->edmaTxDataToTxRegHandle->channel);
@@ -513,8 +451,7 @@ status_t LPSPI_MasterTransferEDMA(LPSPI_Type *base, lpspi_master_edma_handle_t *
                                  (uint32_t)kEDMA_MajorInterruptEnable);
 
     EDMA_StartTransfer(handle->edmaTxDataToTxRegHandle);
-    EDMA_StartTransfer(handle->edmaRxRegToRxDataHandle);
-    LPSPI_EnableDMA(base, (uint32_t)kLPSPI_RxDmaEnable | (uint32_t)kLPSPI_TxDmaEnable);
+    LPSPI_EnableDMA(base, (uint32_t)kLPSPI_TxDmaEnable);
 
     return kStatus_Success;
 }
@@ -527,31 +464,11 @@ static void EDMA_LpspiMasterCallback(edma_handle_t *edmaHandle,
     assert(edmaHandle != NULL);
     assert(g_lpspiEdmaPrivateHandle != NULL);
 
-    uint32_t readData;
-
     lpspi_master_edma_private_handle_t *lpspiEdmaPrivateHandle;
 
     lpspiEdmaPrivateHandle = (lpspi_master_edma_private_handle_t *)g_lpspiEdmaPrivateHandle;
 
-    size_t rxRemainingByteCount = lpspiEdmaPrivateHandle->handle->rxRemainingByteCount;
-    uint8_t bytesLastRead       = lpspiEdmaPrivateHandle->handle->bytesLastRead;
-    bool isByteSwap             = lpspiEdmaPrivateHandle->handle->isByteSwap;
-
     LPSPI_DisableDMA(lpspiEdmaPrivateHandle->base, (uint32_t)kLPSPI_TxDmaEnable | (uint32_t)kLPSPI_RxDmaEnable);
-
-    if (lpspiEdmaPrivateHandle->handle->isThereExtraRxBytes)
-    {
-        while (LPSPI_GetRxFifoCount(lpspiEdmaPrivateHandle->base) == 0U)
-        {
-        }
-        readData = LPSPI_ReadData(lpspiEdmaPrivateHandle->base);
-
-        if (lpspiEdmaPrivateHandle->handle->rxData != NULL)
-        {
-            LPSPI_SeparateEdmaReadData(&(lpspiEdmaPrivateHandle->handle->rxData[rxRemainingByteCount - bytesLastRead]),
-                                       readData, bytesLastRead, isByteSwap);
-        }
-    }
 
     lpspiEdmaPrivateHandle->handle->state = (uint8_t)kLPSPI_Idle;
 
@@ -576,7 +493,6 @@ void LPSPI_MasterTransferAbortEDMA(LPSPI_Type *base, lpspi_master_edma_handle_t 
 
     LPSPI_DisableDMA(base, (uint32_t)kLPSPI_RxDmaEnable | (uint32_t)kLPSPI_TxDmaEnable);
 
-    EDMA_AbortTransfer(handle->edmaRxRegToRxDataHandle);
     EDMA_AbortTransfer(handle->edmaTxDataToTxRegHandle);
 
     handle->state = (uint8_t)kLPSPI_Idle;
@@ -611,8 +527,8 @@ status_t LPSPI_MasterTransferGetCountEDMA(LPSPI_Type *base, lpspi_master_edma_ha
     size_t remainingByte;
 
     remainingByte =
-        (uint32_t)handle->nbytes * EDMA_GetRemainingMajorLoopCount(handle->edmaRxRegToRxDataHandle->base,
-                                                                   handle->edmaRxRegToRxDataHandle->channel);
+        (uint32_t)handle->nbytes * EDMA_GetRemainingMajorLoopCount(handle->edmaTxDataToTxRegHandle->base,
+                                                                   handle->edmaTxDataToTxRegHandle->channel);
 
     *count = handle->totalByteCount - remainingByte;
 

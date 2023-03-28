@@ -46,9 +46,7 @@
 #define BOARD_LCD_CD_PIN       BOARD_INITLCD_LCD_CD_GPIO_PIN
 
 #define BOARD_LCD_BAUD_RATE    60000000
-#define BOARD_LCD_DMA_RX_CH    0
-#define BOARD_LCD_DMA_TX_CH    1
-#define BOARD_LCD_DMA_RX_IRQ   kDmaRequestMuxLPSPI1Rx
+#define BOARD_LCD_DMA_TX_CH    0
 #define BOARD_LCD_DMA_TX_IRQ   kDmaRequestMuxLPSPI1Tx
 
 #if defined(__cplusplus)
