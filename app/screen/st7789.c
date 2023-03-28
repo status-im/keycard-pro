@@ -88,9 +88,8 @@ hal_err_t screen_set_drawing_window(const screen_area_t* area) {
   return HAL_OK;
 }
 
-hal_err_t screen_draw_pixels(const uint16_t* pixels, size_t count) {
-  //TODO: replace with DMA
-  return hal_spi_send(SPI_LCD, (uint8_t*) pixels, (count << 1));
+hal_err_t screen_draw_pixels(const uint16_t* pixels, size_t count, void (*cb)()) {
+  return hal_spi_send_dma(SPI_LCD, (uint8_t*) pixels, (count << 1), cb);
 }
 
 #endif

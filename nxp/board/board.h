@@ -11,6 +11,7 @@
 #include "clock_config.h"
 #include "fsl_common.h"
 #include "fsl_dcp.h"
+#include "fsl_dmamux.h"
 #include "pin_mux.h"
 
 /*******************************************************************************
@@ -47,6 +48,8 @@
 #define BOARD_LCD_BAUD_RATE    60000000
 #define BOARD_LCD_DMA_RX_CH    0
 #define BOARD_LCD_DMA_TX_CH    1
+#define BOARD_LCD_DMA_RX_IRQ   kDmaRequestMuxLPSPI1Rx
+#define BOARD_LCD_DMA_TX_IRQ   kDmaRequestMuxLPSPI1Tx
 
 #if defined(__cplusplus)
 extern "C" {

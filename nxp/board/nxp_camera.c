@@ -9,13 +9,6 @@
 static csi_handle_t g_csi_handle;
 static TaskHandle_t g_csi_task = NULL;
 
-extern void CSI_DriverIRQHandler(void);
-
-void CSI_IRQHandler(void) {
-    CSI_DriverIRQHandler();
-    __DSB();
-}
-
 static void __hal_frame_done_cb(CSI_Type *base, csi_handle_t *handle, status_t status, void *user_data) {
   configASSERT(g_csi_task);
 

@@ -117,6 +117,7 @@ int quirc_set_image(struct quirc *q, uint8_t* image, int w, int h);
  * code may be obtained using accessor functions described below.
  */
 uint8_t *quirc_begin(struct quirc *q, int *w, int *h);
+void quirc_threshold(struct quirc *q);
 void quirc_end(struct quirc *q);
 
 /* This enum describes the various decoder errors which may occur. */

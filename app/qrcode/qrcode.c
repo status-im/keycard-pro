@@ -835,7 +835,7 @@ static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, spa
 #define THRESHOLD_S_DEN 8
 #define THRESHOLD_T     5
 
-static void threshold(struct quirc *q)
+void quirc_threshold(struct quirc *q)
 {
     int x, y;
     int avg_w = 0;
@@ -1764,8 +1764,6 @@ uint8_t *quirc_begin(struct quirc *q, int *w, int *h)
 
 void quirc_end(struct quirc *q)
 {
-    threshold(q);
-
     for (int i = 0; i < q->h; i++)
         finder_scan(q, i);
 

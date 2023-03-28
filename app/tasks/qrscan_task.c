@@ -39,13 +39,10 @@ void qrscan_task_entry(void* pvParameters) {
     quirc_set_image(&qr, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
     quirc_begin(&qr, NULL, NULL);
 
-    quirc_end(&qr);
-
+    quirc_threshold(&qr);
     screen_camera_passthrough(fb);
 
-    if (camera_submit(fb) != HAL_OK) {
-      LOG_MSG("Failed to enqueue framebuffer");
-    }
+    quirc_end(&qr);
 
     int num_codes = quirc_count(&qr);
     for (int i = 0; i < num_codes; i++) {
@@ -69,6 +66,14 @@ void qrscan_task_entry(void* pvParameters) {
       } else {
         LOG_MSG("Failed decoding QR Code");
       }
+    }
+
+    if (screen_wait() != HAL_OK) {
+      LOG_MSG("Timeout while redrawing screen");
+    }
+
+    if (camera_submit(fb) != HAL_OK) {
+      LOG_MSG("Failed to enqueue framebuffer");
     }
   }
 

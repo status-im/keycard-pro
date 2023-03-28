@@ -106,12 +106,6 @@ hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
   return LPSPI_MasterTransferBlocking(BOARD_LCD_SPI_BASEADDR, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
 }
 
-hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len) {
-  assert(port == SPI_LCD);
-
-  return HAL_ERROR;
-}
-
 hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
   if (NXP_PIN_MAP[pin].base == NULL) {
     return HAL_OK; // unconnected PIN

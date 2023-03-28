@@ -13,6 +13,8 @@
 #include "fsl_iomuxc.h"
 #include "fsl_trng.h"
 #include "fsl_gpt.h"
+#include "fsl_dmamux.h"
+#include "hal.h"
 
 /*******************************************************************************
  * Variables
@@ -24,6 +26,27 @@
 
 static edma_handle_t lcd_edma_rx_handle;
 static edma_handle_t lcd_edma_tx_handle;
+static lpspi_master_edma_handle_t lcd_edma_handle;
+static void (*g_lcd_callback)();
+
+void LCD_DMACallback(LPSPI_Type *base, lpspi_master_edma_handle_t *handle, status_t status, void *userData) {
+  if (status == kStatus_Success) {
+    if (g_lcd_callback) {
+      g_lcd_callback();
+    }
+  }
+}
+
+hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len, void (*cb)()) {
+  assert(port == SPI_LCD);
+  g_lcd_callback = cb;
+
+  lpspi_transfer_t xfer = { 0 };
+  xfer.txData = (uint8_t*) data;
+  xfer.dataSize = len;
+
+  return LPSPI_MasterTransferEDMA(BOARD_LCD_SPI_BASEADDR, &lcd_edma_handle, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
+}
 
 /* Initialize debug console. */
 void BOARD_InitDebugConsole(void) {
@@ -35,6 +58,14 @@ void BOARD_InitDebugConsole(void) {
 }
 
 void BOARD_IO_Init() {
+  DMAMUX_Init(DMAMUX);
+
+  DMAMUX_SetSource(DMAMUX, BOARD_LCD_DMA_RX_CH, BOARD_LCD_DMA_RX_IRQ);
+  DMAMUX_EnableChannel(DMAMUX, BOARD_LCD_DMA_RX_CH);
+
+  DMAMUX_SetSource(DMAMUX, BOARD_LCD_DMA_TX_CH, BOARD_LCD_DMA_TX_IRQ);
+  DMAMUX_EnableChannel(DMAMUX, BOARD_LCD_DMA_TX_CH);
+
   edma_config_t edmaConfig;
   EDMA_GetDefaultConfig(&edmaConfig);
   EDMA_Init(DMA0, &edmaConfig);
@@ -53,7 +84,9 @@ void BOARD_IO_Init() {
   EDMA_CreateHandle(&lcd_edma_rx_handle, DMA0, BOARD_LCD_DMA_RX_CH);
   EDMA_CreateHandle(&lcd_edma_tx_handle, DMA0, BOARD_LCD_DMA_TX_CH);
 
-  //LPSPI_MasterTransferCreateHandleEDMA(BOARD_LCD_SPI_BASEADDR, &g_m_edma_handle, LCD_DMACallback, NULL, &lcd_edma_rx_handle, &lcd_edma_tx_handle);
+  LPSPI_MasterTransferCreateHandleEDMA(BOARD_LCD_SPI_BASEADDR, &lcd_edma_handle, LCD_DMACallback, NULL, &lcd_edma_rx_handle, &lcd_edma_tx_handle);
+  NVIC_SetPriority(DMA0_DMA16_IRQn, 2);
+  NVIC_SetPriority(DMA1_DMA17_IRQn, 2);
 }
 
 void BOARD_Crypto_Init(dcp_handle_t* sha256_handle) {
