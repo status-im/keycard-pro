@@ -296,7 +296,7 @@ status_t LPSPI_MasterTransferEDMA(LPSPI_Type *base, lpspi_master_edma_handle_t *
         }
     }
 
-    EDMA_SetCallback(handle->edmaRxRegToRxDataHandle, EDMA_LpspiMasterCallback,
+    EDMA_SetCallback(handle->edmaTxDataToTxRegHandle, EDMA_LpspiMasterCallback,
                      &s_lpspiMasterEdmaPrivateHandle[instance]);
 
     /* Configure rx EDMA transfer */
@@ -357,8 +357,6 @@ status_t LPSPI_MasterTransferEDMA(LPSPI_Type *base, lpspi_master_edma_handle_t *
 
     EDMA_SetTransferConfig(handle->edmaRxRegToRxDataHandle->base, handle->edmaRxRegToRxDataHandle->channel,
                            &transferConfigRx, NULL);
-    EDMA_EnableChannelInterrupts(handle->edmaRxRegToRxDataHandle->base, handle->edmaRxRegToRxDataHandle->channel,
-                                 (uint32_t)kEDMA_MajorInterruptEnable);
 
     /* Configure tx EDMA transfer */
     EDMA_ResetChannel(handle->edmaTxDataToTxRegHandle->base, handle->edmaTxDataToTxRegHandle->channel);
@@ -510,6 +508,9 @@ status_t LPSPI_MasterTransferEDMA(LPSPI_Type *base, lpspi_master_edma_handle_t *
         EDMA_SetTransferConfig(handle->edmaTxDataToTxRegHandle->base, handle->edmaTxDataToTxRegHandle->channel,
                                &transferConfigTx, NULL);
     }
+
+    EDMA_EnableChannelInterrupts(handle->edmaTxDataToTxRegHandle->base, handle->edmaTxDataToTxRegHandle->channel,
+                                 (uint32_t)kEDMA_MajorInterruptEnable);
 
     EDMA_StartTransfer(handle->edmaTxDataToTxRegHandle);
     EDMA_StartTransfer(handle->edmaRxRegToRxDataHandle);
