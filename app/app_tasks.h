@@ -1,6 +1,11 @@
-#ifndef __APP_TASKS_H_
-#define __APP_TASKS_H_
+#ifndef _APP_TASKS_H_
+#define _APP_TASKS_H_
 
-void qrscan_task_entry(void* pvParameters);
+#include "FreeRTOS.h"
+#include "task.h"
+#include "common.h"
 
-#endif /* __APP_TASKS_H_ */
+APP_DEF_EXTERN_TASK(core);
+APP_DEF_EXTERN_TASK(ui);
+
+#endif

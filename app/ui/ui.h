@@ -3,38 +3,37 @@
 
 #include <stdint.h>
 
-void UI_Init();
-void UI_Card_Inserted();
-void UI_Card_Removed();
-void UI_Card_Transport_Error();
-void UI_Card_Accepted();
-void UI_Clear();
-void UI_Fatal();
-void UI_Keycard_Wrong_Card();
-void UI_Keycard_Not_Initalized();
-void UI_Keycard_Init_Failed();
-void UI_Keycard_No_Keys();
-void UI_Keycard_Ready();
-void UI_Keycard_Paired();
-void UI_Keycard_Already_Paired();
-void UI_Keycard_Wrong_Pairing();
-void UI_Keycard_Flash_Error();
-void UI_Keycard_Secure_Channel_Failed();
-void UI_Keycard_Secure_Channel_OK();
-void UI_Keycard_Wrong_PIN();
-void UI_Keycard_PIN_OK();
-void UI_Keycard_PUK_OK();
-void UI_Keycard_Wrong_PUK();
-void UI_Seed_Loaded();
+void ui_card_inserted();
+void ui_card_removed();
+void ui_card_transport_error();
+void ui_card_accepted();
+void ui_clear();
+void ui_fatal();
+void ui_keycard_wrong_card();
+void ui_keycard_not_initialized();
+void ui_keycard_init_failed();
+void ui_keycard_no_keys();
+void ui_keycarrd_ready();
+void ui_keyard_paired();
+void ui_keycard_already_paired();
+void ui_keycard_pairing_failed();
+void ui_keycard_flash_failed();
+void ui_keycard_secure_channel_failed();
+void ui_keycard_secure_channel_ok();
+void ui_keycard_wrong_pin();
+void ui_keycard_pin_ok();
+void ui_keycard_puk_ok();
+void ui_keycard_wrong_puk();
+void ui_seed_loaded();
 
-uint8_t UI_Prompt_Try_PUK();
-uint8_t UI_Read_PIN(uint8_t* out, int8_t retries);
-uint8_t UI_Read_PUK(uint8_t* out, int8_t retries);
-uint8_t UI_Read_Pairing(uint8_t* pairing, uint32_t *len);
+uint8_t ui_prompt_try_puk();
+uint8_t ui_read_pin(uint8_t* out, int8_t retries);
+uint8_t ui_read_puk(uint8_t* out, int8_t retries);
+uint8_t ui_read_pairing(uint8_t* pairing, uint32_t *len);
 
-uint8_t UI_Backup_Mnemonic(const char* mnemonic);
-uint16_t UI_ReadMnemonic(uint16_t* indexes, uint32_t* len);
+uint8_t ui_backup_mnemonic(const char* mnemonic);
+uint16_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len);
 
-uint8_t UI_Confirm_EthAddress(const char* address);
+uint8_t ui_confirm_eth_address(const char* address);
 
 #endif

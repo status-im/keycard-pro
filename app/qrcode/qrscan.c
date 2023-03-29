@@ -1,8 +1,6 @@
-#include "FreeRTOS.h"
-#include "task.h"
 #include "log/log.h"
 #include "camera/camera.h"
-#include "qrcode/qrcode.h"
+#include "qrcode.h"
 #include "ur/ur.h"
 #include "ur/eip4527_decode.h"
 #include "screen/screen.h"
@@ -13,16 +11,9 @@ static struct quirc qr;
 static ur_t ur;
 static struct eth_sign_request sign_request;
 
-void qrscan_task_entry(void* pvParameters) {
-  LOG_MSG("Starting QR");
-
+hal_err_t qrscan_scan() {
   if (camera_start() != HAL_OK) {
-    LOG_MSG("Failed to init camera");
-    goto fail;
-  }
-
-  if (screen_init() != HAL_OK) {
-    LOG_MSG("Failed to init screen");
+    return HAL_ERROR;
   }
 
   while (1) {
@@ -69,14 +60,13 @@ void qrscan_task_entry(void* pvParameters) {
     }
 
     if (screen_wait() != HAL_OK) {
-      LOG_MSG("Timeout while redrawing screen");
+      return HAL_ERROR;
     }
 
     if (camera_submit(fb) != HAL_OK) {
-      LOG_MSG("Failed to enqueue framebuffer");
+      return HAL_ERROR;
     }
   }
 
-fail:
-  vTaskSuspend(NULL);
+  return HAL_OK;
 }

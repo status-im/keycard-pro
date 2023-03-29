@@ -65,16 +65,16 @@ void Keycard_Init(Keycard* kc) {
 uint16_t Keycard_Init_Card(Keycard* kc, uint8_t* sc_key) {
   uint8_t pin[6];
   uint8_t puk[12];
-  if (!UI_Read_PIN(pin, -1)) {
+  if (!ui_read_pin(pin, -1)) {
     return ERR_CANCEL;
   }
 
-  if (!UI_Read_PUK(puk, -1)) {
+  if (!ui_read_puk(puk, -1)) {
     return ERR_CANCEL;
   }
 
   if (Keycard_CMD_Init(kc, sc_key, pin, puk, (uint8_t*)KEYCARD_DEFAULT_PSK) != ERR_OK) {
-    UI_Keycard_Init_Failed();
+    ui_keycard_init_failed();
     return ERR_CRYPTO;
   }
 
@@ -85,7 +85,7 @@ uint16_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
   memcpy(pairing->instance_uid, instance_uid, APP_INFO_INSTANCE_UID_LEN);
   
   if (Pairing_Read(pairing)) {
-    UI_Keycard_Already_Paired();
+    ui_keycard_already_paired();
     return ERR_OK;
   }
 
@@ -94,11 +94,11 @@ uint16_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
   while(1) {
     if (Keycard_CMD_AutoPair(kc, psk, pairing) == ERR_OK) {
       if (!Pairing_Write(pairing)) {
-        UI_Keycard_Flash_Error();
+        ui_keycard_flash_failed();
         return ERR_DATA;
       }
 
-      UI_Keycard_Paired();
+      ui_keyard_paired();
       return ERR_OK;
     }
 
@@ -107,9 +107,9 @@ uint16_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
     uint32_t len = 16;
     psk = pairing;
 
-    UI_Keycard_Wrong_Pairing();
+    ui_keycard_pairing_failed();
 
-    if (!UI_Read_Pairing(pairing, &len)) {
+    if (!ui_read_pairing(pairing, &len)) {
       return ERR_CANCEL;
     }
 
@@ -126,16 +126,16 @@ uint16_t Keycard_Unblock(Keycard* kc, uint8_t pukRetries) {
   uint8_t pin[KEYCARD_PIN_LEN];
 
   if (pukRetries) {
-    if (!UI_Prompt_Try_PUK()) {
+    if (!ui_prompt_try_puk()) {
       pukRetries = 0;
-    } else if (!UI_Read_PIN(pin, -1)) {
+    } else if (!ui_read_pin(pin, -1)) {
       return ERR_CANCEL;
     }
   }
 
   while(pukRetries) {
     uint8_t puk[KEYCARD_PUK_LEN];
-    if (!UI_Read_PUK(puk, pukRetries)) {
+    if (!ui_read_puk(puk, pukRetries)) {
       return ERR_CANCEL;
     }
 
@@ -146,10 +146,10 @@ uint16_t Keycard_Unblock(Keycard* kc, uint8_t pukRetries) {
     uint16_t sw = APDU_SW(&kc->apdu);
 
     if (sw == SW_OK) {
-      UI_Keycard_PUK_OK();
+      ui_keycard_puk_ok();
       return ERR_OK;
     } else if ((sw & 0x63c0) == 0x63c0) {
-      UI_Keycard_Wrong_PUK();
+      ui_keycard_wrong_puk();
       pukRetries = (sw & 0xf);
     } else {
       return sw;
@@ -170,7 +170,7 @@ uint16_t Keycard_Authenticate(Keycard* kc) {
 
   while(pinStatus.pin_retries) {
     SC_BUF(pin, KEYCARD_PIN_LEN);
-    if (!UI_Read_PIN(pin, pinStatus.pin_retries)) {
+    if (!ui_read_pin(pin, pinStatus.pin_retries)) {
       return ERR_CANCEL;
     }
 
@@ -181,10 +181,10 @@ uint16_t Keycard_Authenticate(Keycard* kc) {
     uint16_t sw = APDU_SW(&kc->apdu);
 
     if (sw == SW_OK) {
-      UI_Keycard_PIN_OK();
+      ui_keycard_pin_ok();
       return ERR_OK;
     } else if ((sw & 0x63c0) == 0x63c0) {
-      UI_Keycard_Wrong_PIN();
+      ui_keycard_wrong_pin();
       pinStatus.pin_retries = (sw & 0xf);
     } else {
       return sw;
@@ -198,7 +198,7 @@ uint16_t Keycard_Init_Keys(Keycard* kc) {
   uint16_t indexes[24];
   uint32_t len;
 
-  uint16_t err = UI_ReadMnemonic(indexes, &len);
+  uint16_t err = ui_read_mnemonic(indexes, &len);
 
   if (err == ERR_CANCEL) {
     return err;
@@ -220,7 +220,7 @@ uint16_t Keycard_Init_Keys(Keycard* kc) {
   const char* mnemonic = mnemonic_from_indexes(indexes, len);
 
   if (err == ERR_DATA) {
-    if (!UI_Backup_Mnemonic(mnemonic)) {
+    if (!ui_backup_mnemonic(mnemonic)) {
       mnemonic_clear();
       return ERR_CANCEL;
     }
@@ -236,7 +236,7 @@ uint16_t Keycard_Init_Keys(Keycard* kc) {
 
   APDU_ASSERT_OK(&kc->apdu);
 
-  UI_Seed_Loaded();
+  ui_seed_loaded();
   return ERR_OK;
 }
 
@@ -246,13 +246,13 @@ uint16_t Keycard_Setup(Keycard* kc) {
   }  
 
   if (APDU_SW(&kc->apdu) != SW_OK) {
-    UI_Keycard_Wrong_Card();
+    ui_keycard_wrong_card();
     return APDU_SW(&kc->apdu);
   }
 
   ApplicationInfo info;
   if (!ApplicationInfo_Parse(APDU_RESP(&kc->apdu), &info)) {
-    UI_Keycard_Wrong_Card();
+    ui_keycard_wrong_card();
     return ERR_DATA;
   }
 
@@ -261,7 +261,7 @@ uint16_t Keycard_Setup(Keycard* kc) {
 
   switch (info.status) {
     case NOT_INITIALIZED:
-      UI_Keycard_Not_Initalized();
+      ui_keycard_not_initialized();
       err = Keycard_Init_Card(kc, info.sc_key);
       if (err != ERR_OK) {
         return err;
@@ -269,11 +269,11 @@ uint16_t Keycard_Setup(Keycard* kc) {
       return ERR_RETRY;
     case INIT_NO_KEYS:
       initKeys = 1;
-      UI_Keycard_No_Keys();
+      ui_keycard_no_keys();
       break;
     case INIT_WITH_KEYS:
       initKeys = 0;
-      UI_Keycard_Ready();
+      ui_keycarrd_ready();
       break;
     default:
       return ERR_DATA;
@@ -287,11 +287,11 @@ uint16_t Keycard_Setup(Keycard* kc) {
 
   if (SecureChannel_Open(&kc->ch, &kc->sc, &kc->apdu, &pairing, info.sc_key) != ERR_OK) {
     Pairing_Erase(&pairing);
-    UI_Keycard_Secure_Channel_Failed();
+    ui_keycard_secure_channel_failed();
     return ERR_RETRY;
   }
 
-  UI_Keycard_Secure_Channel_OK();
+  ui_keycard_secure_channel_ok();
 
   err = Keycard_Authenticate(kc);
   if (err != ERR_OK) {
@@ -308,14 +308,14 @@ uint16_t Keycard_Setup(Keycard* kc) {
 void Keycard_Activate(Keycard* kc) {
   SmartCard_Activate(&kc->sc);
   
-  UI_Card_Accepted();
+  ui_card_accepted();
 
   if (kc->sc.state != SC_READY) {
-    UI_Card_Transport_Error();
+    ui_card_transport_error();
     return;
   }
 
-  UI_Clear();
+  ui_clear();
 
   uint16_t res;
   do {
@@ -323,7 +323,7 @@ void Keycard_Activate(Keycard* kc) {
   } while(res == ERR_RETRY);
 
   if (res != ERR_OK) {
-    UI_Card_Transport_Error();
+    ui_card_transport_error();
     SmartCard_Deactivate(&kc->sc);
   }
 }
@@ -398,7 +398,7 @@ void Keycard_Get_Address(Keycard* kc, APDU* cmd) {
   }
   
   if (APDU_P1(cmd) == 1) {
-    if (!UI_Confirm_EthAddress((char *)&out[67])) {
+    if (!ui_confirm_eth_address((char *)&out[67])) {
       Keycard_Error_SW(cmd, 0x69, 0x82);
       return;
     }
@@ -657,12 +657,12 @@ void Keycard_Run(Keycard* kc, Command* cmd) {
 }
 
 void Keycard_In(Keycard* kc) {
-  UI_Card_Inserted();
+  ui_card_inserted();
   SmartCard_In(&kc->sc);
 }
 
 void Keycard_Out(Keycard* kc) {
-  UI_Card_Removed();
+  ui_card_removed();
   SmartCard_Out(&kc->sc);
   kc->ch.open = 0;
 }

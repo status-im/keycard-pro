@@ -1,44 +1,29 @@
 #include "ui.h"
 #include "error.h"
 
-void UI_Init() {
-/*  BSP_LED_Off(LED1);
-  BSP_LED_Off(LED2);
-  BSP_LED_Off(LED3);
-  BSP_LED_Off(LED4);
 
-  BSP_LCD_Init();
-  BSP_LCD_DisplayOn();
-  BSP_LCD_Clear(LCD_COLOR_ST_BLUE_DARK);
-  BSP_LCD_DisplayOn();
-  BSP_LCD_SetBackColor(LCD_COLOR_ST_BLUE_DARK);
-  BSP_LCD_SetTextColor(LCD_COLOR_LIGHTGRAY);
-  BSP_LCD_SetFont(&Font24);
-  BSP_LCD_DisplayStringAtLine(1, (uint8_t*) "Keycard Pro");  
-  BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Waiting for card...");*/
-}
 
-void UI_Card_Inserted() {
+void ui_card_inserted() {
  /* BSP_LCD_ClearStringLine(4);
   BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card IN");*/
 }
 
-void UI_Card_Removed() {
+void ui_card_removed() {
  /* BSP_LED_Off(LED4);
   BSP_LED_Off(LED3);
   BSP_LCD_ClearStringLine(4);
   BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card OUT");*/
 }
 
-void UI_Card_Transport_Error() {
+void ui_card_transport_error() {
   //BSP_LED_On(LED3);
 }
 
-void UI_Card_Accepted() {
+void ui_card_accepted() {
   //BSP_LED_On(LED4);
 }
 
-void UI_Clear() {
+void ui_clear() {
   //BSP_LCD_ClearStringLine(3);
   //BSP_LCD_ClearStringLine(4);
   //BSP_LCD_ClearStringLine(5);
@@ -46,76 +31,76 @@ void UI_Clear() {
   //BSP_LCD_ClearStringLine(7);
 }
 
-void UI_Fatal() {
+void ui_fatal() {
  // BSP_LCD_ClearStringLine(4);
  // BSP_LCD_DisplayStringAtLine(4, (uint8_t*)"Error!");
 }
 
-void UI_Keycard_Wrong_Card() {
+void ui_keycard_wrong_card() {
   //BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Not a Keycard!");
 }
 
-void UI_Keycard_Not_Initalized() {
+void ui_keycard_not_initialized() {
  // BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Not initialized!");
 }
 
-void UI_Keycard_Init_Failed() {
+void ui_keycard_init_failed() {
  // BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Initialization failed!");
 }
 
-void UI_Keycard_No_Keys() {
+void ui_keycard_no_keys() {
  // BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Card has no keys!");
 }
 
-void UI_Keycard_Ready() {
+void ui_keycarrd_ready() {
  // BSP_LCD_DisplayStringAtLine(3, (uint8_t*) "Ready for signing!");
 }
 
-void UI_Keycard_Paired() {
+void ui_keyard_paired() {
  // BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Pairing succesful!");
 }
 
-void UI_Keycard_Already_Paired() {
+void ui_keycard_already_paired() {
  // BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Already paired!");
 }
 
-void UI_Keycard_Wrong_Pairing() {
+void ui_keycard_pairing_failed() {
  // BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Pairing failed");
 }
 
-void UI_Keycard_Flash_Error() {
+void ui_keycard_flash_failed() {
  // BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Write error!");
 }
 
-void UI_Keycard_Secure_Channel_Failed() {
+void ui_keycard_secure_channel_failed() {
  // BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "Failure opening SC");
 }
 
-void UI_Keycard_Secure_Channel_OK() {
+void ui_keycard_secure_channel_ok() {
  // BSP_LCD_DisplayStringAtLine(5, (uint8_t*) "SecureChannel opened");
 }
 
-void UI_Keycard_Wrong_PIN() {
+void ui_keycard_wrong_pin() {
 //  BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Wrong PIN");
 }
 
-void UI_Keycard_PIN_OK() {
+void ui_keycard_pin_ok() {
  // BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Authenticated");
 }
 
-void UI_Keycard_PUK_OK() {
+void ui_keycard_puk_ok() {
  // BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "PIN changed");
 }
 
-void UI_Keycard_Wrong_PUK() {
+void ui_keycard_wrong_puk() {
  // BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Wrong PUK");
 }
 
-uint8_t UI_Prompt_Try_PUK() {
+uint8_t ui_prompt_try_puk() {
   return 1;
 }
 
-uint8_t UI_Read_PIN(uint8_t* out, int8_t retries) {
+uint8_t ui_read_pin(uint8_t* out, int8_t retries) {
   out[0] = '1';
   out[1] = '2';
   out[2] = '3';
@@ -126,7 +111,7 @@ uint8_t UI_Read_PIN(uint8_t* out, int8_t retries) {
   return 1;
 }
 
-uint8_t UI_Read_PUK(uint8_t* out, int8_t retries) {
+uint8_t ui_read_puk(uint8_t* out, int8_t retries) {
   out[0] = '1';
   out[1] = '2';
   out[2] = '3';
@@ -143,24 +128,24 @@ uint8_t UI_Read_PUK(uint8_t* out, int8_t retries) {
   return 1;
 }
 
-uint8_t UI_Read_Pairing(uint8_t* pairing, uint32_t *len) {
+uint8_t ui_read_pairing(uint8_t* pairing, uint32_t *len) {
   return 0;
 }
 
-void UI_Seed_Loaded() {
+void ui_seed_loaded() {
   //BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Seed loaded");
 }
 
-uint8_t UI_Backup_Mnemonic(const char* mnemonic) {
+uint8_t ui_backup_mnemonic(const char* mnemonic) {
  // BSP_LCD_DisplayStringAtLine(7, (uint8_t*) mnemonic);
   return 1;
 }
 
-uint16_t UI_ReadMnemonic(uint16_t* indexes, uint32_t* len) {
+uint16_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len) {
   *len = 12;
   return ERR_DATA;
 }
 
-uint8_t UI_Confirm_EthAddress(const char* address) {
+uint8_t ui_confirm_eth_address(const char* address) {
   return 1;
 }

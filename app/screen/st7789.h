@@ -51,35 +51,4 @@
 #define ST7789_COLOR_MODE_18BIT    0x06
 #define ST7789_COLOR_MODE_16M      0x07
 
-// Color definitions
-
-#define ST_R_POS_RGB   11 // Red last bit position for RGB display
-#define ST_G_POS_RGB   5  // Green last bit position for RGB display
-#define ST_B_POS_RGB   0  // Blue last bit position for RGB display
-
-#define ST_RGB(R,G,B) \
-  (((uint16_t)(R >> 3) << ST_R_POS_RGB) | \
-  ((uint16_t)(G >> 2) << ST_G_POS_RGB) | \
-  ((uint16_t)(B >> 3) << ST_B_POS_RGB))
-
-#define ST_COLOR_BLACK       ST_RGB(0,     0,   0)
-#define ST_COLOR_NAVY        ST_RGB(0,     0, 123)
-#define ST_COLOR_DARKGREEN   ST_RGB(0,   125,   0)
-#define ST_COLOR_DARKCYAN    ST_RGB(0,   125, 123)
-#define ST_COLOR_MAROON      ST_RGB(123,   0,   0)
-#define ST_COLOR_PURPLE      ST_RGB(123,   0, 123)
-#define ST_COLOR_OLIVE       ST_RGB(123, 125,   0)
-#define ST_COLOR_LIGHTGREY   ST_RGB(198, 195, 198)
-#define ST_COLOR_DARKGREY    ST_RGB(123, 125, 123)
-#define ST_COLOR_BLUE        ST_RGB(0,     0, 255)
-#define ST_COLOR_GREEN       ST_RGB(0,   255,   0)
-#define ST_COLOR_CYAN        ST_RGB(0,   255, 255)
-#define ST_COLOR_RED         ST_RGB(255,   0,   0)
-#define ST_COLOR_MAGENTA     ST_RGB(255,   0, 255)
-#define ST_COLOR_YELLOW      ST_RGB(255, 255,   0)
-#define ST_COLOR_WHITE       ST_RGB(255, 255, 255)
-#define ST_COLOR_ORANGE      ST_RGB(255, 165,   0)
-#define ST_COLOR_GREENYELLOW ST_RGB(173, 255,  41)
-#define ST_COLOR_PINK        ST_RGB(255, 130, 198)
-
 #endif
