@@ -9,8 +9,6 @@
 
 const screen_area_t screen_fullarea = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 
-static uint32_t g_screen_busy;
-
 struct _screen_camera_passthrough_ctx {
   uint8_t* fb;
   int y;
@@ -20,26 +18,10 @@ static struct _screen_camera_passthrough_ctx _cp_ctx;
 
 APP_NOCACHE(uint16_t g_screen_fb[SCREEN_WIDTH], 2);
 
-static inline hal_err_t _screen_preamble(const screen_area_t* area) {
-  if (g_screen_busy) {
-    return HAL_ERROR;
-  }
-
-  if (screen_set_drawing_window(area) != HAL_OK) {
-    return HAL_ERROR;
-  }
-
-  g_screen_busy = 1;
-
-  return HAL_OK;
-}
 
 static void screen_signal() {
-  configASSERT(g_screen_busy);
-
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   vTaskNotifyGiveIndexedFromISR(ui_task, SCREEN_TASK_NOTIFICATION_IDX, &xHigherPriorityTaskWoken);
-  g_screen_busy = 0;
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
@@ -62,7 +44,7 @@ static void screen_camera_line() {
 }
 
 hal_err_t screen_camera_passthrough(const uint8_t* fb) {
-  if (_screen_preamble(&screen_fullarea) != HAL_OK) {
+  if (screen_set_drawing_window(&screen_fullarea) != HAL_OK) {
     return HAL_ERROR;
   }
 
@@ -75,7 +57,7 @@ hal_err_t screen_camera_passthrough(const uint8_t* fb) {
 }
 
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color) {
-  if (_screen_preamble(&screen_fullarea) != HAL_OK) {
+  if (screen_set_drawing_window(&screen_fullarea) != HAL_OK) {
     return HAL_ERROR;
   }
 
@@ -84,7 +66,6 @@ hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color) {
   }
 
   for(int y = area->y; y < area->height; y++) {
-    g_screen_busy = 1;
     if (screen_draw_pixels(g_screen_fb, area->width, screen_signal) != HAL_OK) {
       return HAL_ERROR;
     }
@@ -98,7 +79,7 @@ hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color) {
 }
 
 hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels) {
-  if (_screen_preamble(&screen_fullarea) != HAL_OK) {
+  if (screen_set_drawing_window(area) != HAL_OK) {
     return HAL_ERROR;
   }
 

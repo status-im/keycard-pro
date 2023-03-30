@@ -15,7 +15,7 @@ APP_DEF_TASK(ui, UI_STACK_SIZE);
 int main(void) {
   hal_init();
 
-  //APP_CREATE_TASK(core, CORE_TASK_PRIO);
+  APP_CREATE_TASK(core, CORE_TASK_PRIO);
   APP_CREATE_TASK(ui, UI_TASK_PRIO);
 
   vTaskStartScheduler();

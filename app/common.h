@@ -48,7 +48,7 @@
   static StackType_t __NAME__##_task_stack[__STACK_SIZE__]
 
 #define _APP_CREATE_TASK(__NAME__, __PRIO__) \
-  xTaskCreateStatic(__NAME__##_task_entry, #__NAME__, sizeof(__NAME__##_task_stack), NULL, __PRIO__, __NAME__##_task_stack, &__NAME__##_task_memory)
+  xTaskCreateStatic(__NAME__##_task_entry, #__NAME__, (sizeof(__NAME__##_task_stack)/sizeof(uint32_t)), NULL, __PRIO__, __NAME__##_task_stack, &__NAME__##_task_memory)
 
 #define APP_DEF_TASK(__NAME__, __STACK_SIZE__) \
   _APP_DEF_TASK(__NAME__, __STACK_SIZE__); \

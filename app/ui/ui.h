@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 
+void ui_qrscan();
 void ui_card_inserted();
 void ui_card_removed();
 void ui_card_transport_error();

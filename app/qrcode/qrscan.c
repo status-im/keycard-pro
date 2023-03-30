@@ -68,5 +68,7 @@ hal_err_t qrscan_scan() {
     }
   }
 
+  hal_camera_stop();
+
   return HAL_OK;
 }

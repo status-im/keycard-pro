@@ -1,7 +1,12 @@
 #include "ui.h"
+#include "ui_internal.h"
+#include "app_tasks.h"
 #include "error.h"
 
-
+void ui_qrscan() {
+  g_ui_cmd.type = UI_CMD_QRSCAN;
+  xTaskNotifyGiveIndexed(ui_task, UI_NOTIFICATION_IDX);
+}
 
 void ui_card_inserted() {
  /* BSP_LCD_ClearStringLine(4);
