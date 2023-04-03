@@ -2,6 +2,7 @@
 #define __APPLICATION_INFO_H
 
 #include <stdint.h>
+#include "error.h"
 
 #define APP_INFO_INSTANCE_UID_LEN 16
 #define APP_INFO_KEY_UID_LEN 32
@@ -28,6 +29,6 @@ typedef struct {
   uint8_t has_key;
 } ApplicationStatus;
 
-uint8_t ApplicationInfo_Parse(uint8_t* buf, ApplicationInfo* info);
-uint8_t ApplicationStatus_Parse(uint8_t* buf, ApplicationStatus* status);
+app_err_t ApplicationInfo_Parse(uint8_t* buf, ApplicationInfo* info);
+app_err_t ApplicationStatus_Parse(uint8_t* buf, ApplicationStatus* status);
 #endif

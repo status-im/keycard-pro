@@ -251,7 +251,7 @@ app_err_t Keycard_Setup(Keycard* kc) {
   }
 
   ApplicationInfo info;
-  if (!ApplicationInfo_Parse(APDU_RESP(&kc->apdu), &info)) {
+  if (ApplicationInfo_Parse(APDU_RESP(&kc->apdu), &info) != ERR_OK) {
     ui_keycard_wrong_card();
     return ERR_DATA;
   }

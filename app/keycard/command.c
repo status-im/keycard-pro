@@ -3,7 +3,7 @@
 #include "command.h"
 #include "common.h"
 
-uint8_t Command_Init_Recv(Command* cmd, uint16_t len) {
+app_err_t Command_Init_Recv(Command* cmd, uint16_t len) {
   if (len >= APDU_BUF_LEN) {
     return 0;
   }

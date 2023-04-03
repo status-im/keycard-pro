@@ -18,7 +18,7 @@ typedef struct {
   APDU apdu;
 } Command;
 
-uint8_t Command_Init_Recv(Command* cmd, uint16_t len);
+app_err_t Command_Init_Recv(Command* cmd, uint16_t len);
 void Command_Init_Send(Command* cmd);
 void Command_Receive(Command* cmd, uint8_t* data, uint8_t len);
 uint8_t Command_Send(Command* cmd, uint8_t* buf, uint8_t len);
