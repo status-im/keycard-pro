@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "iso7816/smartcard.h"
+#include "error.h"
 
 typedef enum {
   COMMAND_IDLE = 0x00,

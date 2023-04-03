@@ -18,7 +18,7 @@ void ui_task_entry(void* pvParameters) {
   screen_fill_area(&screen_fullarea, SCREEN_COLOR_BLACK);
 
   while(1) {
-    if (!ulTaskNotifyTakeIndexed(UI_NOTIFICATION_IDX, pdTRUE, UINT32_MAX)) {
+    if (!ulTaskNotifyTakeIndexed(UI_NOTIFICATION_IDX, pdTRUE, portMAX_DELAY)) {
       continue;
     }
 
@@ -32,6 +32,6 @@ void ui_task_entry(void* pvParameters) {
       break;
     }
 
-    xTaskNotifyIndexed(APP_TASK(ui), CORE_EVENT_IDX, CORE_UI_EVT, eSetBits);
+    xTaskNotifyIndexed(APP_TASK(core), CORE_EVENT_IDX, CORE_UI_EVT, eSetBits);
   }
 }

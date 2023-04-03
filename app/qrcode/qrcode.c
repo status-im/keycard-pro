@@ -858,9 +858,9 @@ void quirc_threshold(struct quirc *q)
     fracmul2 = (0x100000 * (100 - THRESHOLD_T)) / (200 * threshold_s); // use as many bits as possible without overflowing
 
     for (y = 0; y < q->h; y++) {
-        int row_average[q->w];
+        int *row_average = (int*)_quirc_scratch;
 
-        memset(row_average, 0, sizeof(row_average));
+        memset(row_average, 0, width * 4);
 
         for (x = 0; x < width; x++) {
             int w, u;
@@ -1701,8 +1701,8 @@ static void test_grouping(struct quirc *q, int i)
 {
     struct quirc_capstone *c1 = &q->capstones[i];
     int j;
-    struct neighbour_list hlist;
-    struct neighbour_list vlist;
+    static struct neighbour_list hlist;
+    static struct neighbour_list vlist;
 
     if (c1->qr_grid >= 0)
         return;

@@ -6,7 +6,7 @@
 #define CORE_STACK_SIZE 128
 #define CORE_TASK_PRIO 1
 
-#define UI_STACK_SIZE 512
+#define UI_STACK_SIZE 256
 #define UI_TASK_PRIO 2
 
 APP_DEF_TASK(core, CORE_STACK_SIZE);

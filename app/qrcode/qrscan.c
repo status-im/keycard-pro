@@ -13,9 +13,9 @@ static struct quirc qr;
 static ur_t ur;
 
 hal_err_t qrscan_scan() {
-  hal_err_t err = HAL_OK;
+  hal_err_t res = HAL_OK;
 
-  if ((err = camera_start()) != HAL_OK) {
+  if ((res = camera_start()) != HAL_OK) {
     goto end;
   }
 
@@ -63,16 +63,16 @@ hal_err_t qrscan_scan() {
       }
     }
 
-    if ((err = screen_wait()) != HAL_OK) {
+    if ((res = screen_wait()) != HAL_OK) {
       goto end;
     }
 
-    if ((err = camera_submit(fb)) != HAL_OK) {
+    if ((res = camera_submit(fb)) != HAL_OK) {
       goto end;
     }
   }
 
 end:
   hal_camera_stop();
-  return err;
+  return res;
 }
