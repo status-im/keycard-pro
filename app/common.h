@@ -42,6 +42,8 @@
     _a < _b ? _a : _b;                  \
 })
 
+#define APP_TASK(__NAME__) __NAME__##_task
+
 #define _APP_DEF_TASK(__NAME__, __STACK_SIZE__) \
   void __NAME__##_task_entry(void* pvParameters); \
   static StaticTask_t __NAME__##_task_memory; \
@@ -52,17 +54,17 @@
 
 #define APP_DEF_TASK(__NAME__, __STACK_SIZE__) \
   _APP_DEF_TASK(__NAME__, __STACK_SIZE__); \
-  TaskHandle_t __NAME__##_task
+  TaskHandle_t APP_TASK(__NAME__)
 
 #define APP_CREATE_TASK(__NAME__, __PRIO__) \
-  __NAME__##_task = _APP_CREATE_TASK(__NAME__, __PRIO__)
+  APP_TASK(__NAME__) = _APP_CREATE_TASK(__NAME__, __PRIO__)
 
 #define APP_DEF_CREATE_TASK(__NAME__, __PRIO__, __STACK_SIZE__) \
   _APP_DEF_TASK(__NAME__, __STACK_SIZE__); \
   _APP_CREATE_TASK(__NAME__, __PRIO__)
 
 #define APP_DEF_EXTERN_TASK(__NAME__) \
-  extern TaskHandle_t __NAME__##_task;
+  extern TaskHandle_t APP_TASK(__NAME__)
 
 static inline uint32_t rev32(uint32_t value) {
   __asm__ volatile (

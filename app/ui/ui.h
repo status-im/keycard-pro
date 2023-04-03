@@ -2,14 +2,14 @@
 #define __UI_H
 
 #include <stdint.h>
+#include "ur/eip4527_types.h"
 
-void ui_qrscan();
+void ui_qrscan(struct eth_sign_request* sign_request);
+
 void ui_card_inserted();
 void ui_card_removed();
 void ui_card_transport_error();
 void ui_card_accepted();
-void ui_clear();
-void ui_fatal();
 void ui_keycard_wrong_card();
 void ui_keycard_not_initialized();
 void ui_keycard_init_failed();

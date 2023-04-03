@@ -4,6 +4,7 @@
 #include "pairing.h"
 #include "iso7816/smartcard.h"
 #include "crypto/aes.h"
+#include "error.h"
 
 #define SC_PAD AES_IV_SIZE
 
@@ -16,11 +17,11 @@ typedef struct __attribute__((packed, aligned(4))) {
   uint8_t open;
 } SecureChannel;
 
-uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pairing* pairing, uint8_t* sc_pub);
-uint16_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_t* data, uint32_t len);
-uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len);
-uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu);
-uint16_t SecureChannel_Send_APDU(SmartCard* card, SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len);
+app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pairing* pairing, uint8_t* sc_pub);
+app_err_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_t* data, uint32_t len);
+app_err_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len);
+app_err_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu);
+app_err_t SecureChannel_Send_APDU(SmartCard* card, SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len);
 void SecureChannel_Close(SecureChannel* sc);
 
 #endif

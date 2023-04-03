@@ -2,13 +2,13 @@
 #include "ur.h"
 #include "bytewords.h"
 
-hal_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
+app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   if (in_len < 10) {
-    return HAL_ERROR;
+    return ERR_DATA;
   }
 
   if (!(tolower(in[0]) == 'u' && tolower(in[1]) == 'r' && in[2] == ':')) {
-    return HAL_ERROR;
+    return ERR_DATA;
   }
 
   size_t offset;
@@ -23,7 +23,7 @@ hal_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   }
 
   if (offset == in_len) {
-    return HAL_ERROR;
+    return ERR_DATA;
   }
 
   // we assume we are dealing with a supported type and moving the
@@ -34,11 +34,11 @@ hal_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
     ur->is_multipart = 1;
     while((offset < in_len) && in[offset++] != '/') { /*we don't need this*/}
     if (offset == in_len) {
-      return HAL_ERROR;
+      return ERR_DATA;
     }
 
     //TODO: remove this when multipart support is implemented
-    return HAL_ERROR;
+    return ERR_CANCEL;
   } else {
     ur->is_multipart = 0;
     ur->is_complete = 1;
@@ -46,5 +46,5 @@ hal_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
 
   ur->data_len = bytewords_decode(&in[offset], (in_len - offset), ur->data, UR_MAX_DATA_LEN);
 
-  return ur->data_len == 0 ? HAL_ERROR : HAL_OK;
+  return ur->data_len == 0 ? ERR_DATA : ERR_OK;
 }

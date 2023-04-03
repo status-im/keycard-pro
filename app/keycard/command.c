@@ -3,27 +3,6 @@
 #include "command.h"
 #include "common.h"
 
-//TODO: use a mutex or change approach
-uint8_t Command_Lock(CommandChannel ch, Command* cmd) {
-  if (cmd->channel == ch) {
-    return 1;
-  }
-
-  uint32_t prim = __get_PRIMASK();
-
-  __disable_irq();
-  if (cmd->status == COMMAND_IDLE) {
-    cmd->status = COMMAND_INBOUND;
-    cmd->channel = ch;
-  }
-
-  if (!prim) {
-    __enable_irq();
-  }
-
-  return cmd->channel == ch;
-}
-
 uint8_t Command_Init_Recv(Command* cmd, uint16_t len) {
   if (len >= APDU_BUF_LEN) {
     return 0;

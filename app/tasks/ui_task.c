@@ -4,6 +4,7 @@
 #include "qrcode/qrscan.h"
 #include "screen/screen.h"
 #include "ui/ui_internal.h"
+#include "app_tasks.h"
 
 struct ui_cmd g_ui_cmd;
 
@@ -30,5 +31,7 @@ void ui_task_entry(void* pvParameters) {
     default:
       break;
     }
+
+    xTaskNotifyIndexed(APP_TASK(ui), CORE_EVENT_IDX, CORE_UI_EVT, eSetBits);
   }
 }

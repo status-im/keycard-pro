@@ -11,7 +11,7 @@
 #define SECP256K1_KEYLEN 32
 #define SECP256K1_PUBLEN 65
 
-uint16_t SecureChannel_Mutual_Authenticate(SecureChannel* sc, SmartCard* card, APDU* apdu) {
+app_err_t SecureChannel_Mutual_Authenticate(SecureChannel* sc, SmartCard* card, APDU* apdu) {
   SC_BUF(data, 32);
   random_buffer(data, 32);
   APDU_RESET(apdu);
@@ -37,7 +37,7 @@ uint16_t SecureChannel_Mutual_Authenticate(SecureChannel* sc, SmartCard* card, A
   return ERR_OK;
 }
 
-uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pairing* pairing, uint8_t* sc_pub) {
+app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pairing* pairing, uint8_t* sc_pub) {
   uint8_t priv[SECP256K1_KEYLEN];
   random_buffer(priv, SECP256K1_KEYLEN);
   APDU_RESET(apdu);
@@ -83,7 +83,7 @@ uint16_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pair
   return SecureChannel_Mutual_Authenticate(sc, card, apdu);
 }
 
-uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len) {
+app_err_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len) {
   len = pad_iso9797_m1(data, SC_PAD, len);
   uint8_t* apduData = APDU_DATA(apdu);
 
@@ -113,7 +113,7 @@ uint16_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data
   return ERR_OK;
 }
 
-uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
+app_err_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
   if (APDU_SW(apdu) == 0x6982) {
     sc->open = 0;
     return ERR_CRYPTO;
@@ -153,7 +153,7 @@ uint16_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
   return ERR_OK;
 }
 
-uint16_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_t* data, uint32_t len) {
+app_err_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_t* data, uint32_t len) {
   uint8_t priv[SECP256K1_KEYLEN];
   random_buffer(priv, SECP256K1_KEYLEN);
 
@@ -205,7 +205,7 @@ uint16_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_
   return ERR_OK;
 }
 
-uint16_t SecureChannel_Send_APDU(SmartCard* card, SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len) {
+app_err_t SecureChannel_Send_APDU(SmartCard* card, SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len) {
   uint16_t err;
   if ((err = SecureChannel_Protect_APDU(sc, apdu, data, len)) != ERR_OK) {
     return err;

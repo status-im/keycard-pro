@@ -62,7 +62,7 @@ void Keycard_Init(Keycard* kc) {
   kc->ch.open = 0;
 }
 
-uint16_t Keycard_Init_Card(Keycard* kc, uint8_t* sc_key) {
+app_err_t Keycard_Init_Card(Keycard* kc, uint8_t* sc_key) {
   uint8_t pin[6];
   uint8_t puk[12];
   if (!ui_read_pin(pin, -1)) {
@@ -81,7 +81,7 @@ uint16_t Keycard_Init_Card(Keycard* kc, uint8_t* sc_key) {
   return ERR_OK;
 }
 
-uint16_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
+app_err_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
   memcpy(pairing->instance_uid, instance_uid, APP_INFO_INSTANCE_UID_LEN);
   
   if (Pairing_Read(pairing)) {
@@ -117,12 +117,12 @@ uint16_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
   }
 }
 
-uint16_t Keycard_FactoryReset(Keycard* kc) {
+app_err_t Keycard_FactoryReset(Keycard* kc) {
   //TODO: implement global platform
   return ERR_CANCEL;
 }
 
-uint16_t Keycard_Unblock(Keycard* kc, uint8_t pukRetries) {
+app_err_t Keycard_Unblock(Keycard* kc, uint8_t pukRetries) {
   uint8_t pin[KEYCARD_PIN_LEN];
 
   if (pukRetries) {
@@ -159,7 +159,7 @@ uint16_t Keycard_Unblock(Keycard* kc, uint8_t pukRetries) {
   return Keycard_FactoryReset(kc);
 }
 
-uint16_t Keycard_Authenticate(Keycard* kc) {
+app_err_t Keycard_Authenticate(Keycard* kc) {
   if (!Keycard_CMD_GetStatus(kc)) {
     return ERR_TXRX;
   }
@@ -194,7 +194,7 @@ uint16_t Keycard_Authenticate(Keycard* kc) {
   return Keycard_Unblock(kc, pinStatus.puk_retries);
 }
 
-uint16_t Keycard_Init_Keys(Keycard* kc) {
+app_err_t Keycard_Init_Keys(Keycard* kc) {
   uint16_t indexes[24];
   uint32_t len;
 
@@ -240,7 +240,7 @@ uint16_t Keycard_Init_Keys(Keycard* kc) {
   return ERR_OK;
 }
 
-uint16_t Keycard_Setup(Keycard* kc) {
+app_err_t Keycard_Setup(Keycard* kc) {
   if (!Keycard_CMD_Select(kc, KEYCARD_AID, KEYCARD_AID_LEN)) {
     return ERR_TXRX;
   }  
@@ -314,8 +314,6 @@ void Keycard_Activate(Keycard* kc) {
     ui_card_transport_error();
     return;
   }
-
-  ui_clear();
 
   uint16_t res;
   do {

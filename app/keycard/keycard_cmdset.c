@@ -34,7 +34,7 @@ uint8_t Keycard_CMD_Pair(Keycard* kc, uint8_t step, uint8_t* data) {
   return SmartCard_Send_APDU(&kc->sc, &kc->apdu);
 }
 
-uint16_t Keycard_CMD_AutoPair(Keycard* kc, const uint8_t* psk, Pairing* pairing) {
+app_err_t Keycard_CMD_AutoPair(Keycard* kc, const uint8_t* psk, Pairing* pairing) {
   uint8_t buf[SHA256_DIGEST_LENGTH];
   random_buffer(buf, SHA256_DIGEST_LENGTH);
 
@@ -118,7 +118,7 @@ uint8_t Keycard_CMD_GetStatus(Keycard* kc) {
   return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, data, 0) == ERR_OK;
 }
 
-uint16_t Keycard_CMD_Init(Keycard* kc, uint8_t* sc_pub, uint8_t* pin, uint8_t* puk, uint8_t* psk) {
+app_err_t Keycard_CMD_Init(Keycard* kc, uint8_t* sc_pub, uint8_t* pin, uint8_t* puk, uint8_t* psk) {
   SC_BUF(data, (KEYCARD_PIN_LEN + KEYCARD_PUK_LEN + SHA256_DIGEST_LENGTH));
   memcpy(data, pin, KEYCARD_PIN_LEN);
   memcpy(&data[KEYCARD_PIN_LEN], puk, KEYCARD_PUK_LEN);

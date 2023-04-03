@@ -4,16 +4,19 @@
 #include "ur/ur.h"
 #include "ur/eip4527_decode.h"
 #include "screen/screen.h"
+#include "ui/ui_internal.h"
+#include "error.h"
 
 static struct quirc_code qrcode;
 static struct quirc_data qrdata;
 static struct quirc qr;
 static ur_t ur;
-static struct eth_sign_request sign_request;
 
 hal_err_t qrscan_scan() {
-  if (camera_start() != HAL_OK) {
-    return HAL_ERROR;
+  hal_err_t err = HAL_OK;
+
+  if ((err = camera_start()) != HAL_OK) {
+    goto end;
   }
 
   while (1) {
@@ -44,10 +47,11 @@ hal_err_t qrscan_scan() {
       err = quirc_decode(&qrcode, &qrdata);
       if (!err) {
         LOG(LOG_MSG, qrdata.payload, qrdata.payload_len);
-        if (ur_process_part(&ur, qrdata.payload, qrdata.payload_len) == HAL_OK) {
+        if (ur_process_part(&ur, qrdata.payload, qrdata.payload_len) == ERR_OK) {
           LOG(LOG_CBOR, ur.data, ur.data_len);
           if (ur.type == ETH_SIGN_REQUEST) {
-            cbor_decode_eth_sign_request(ur.data, ur.data_len, &sign_request, NULL);
+            cbor_decode_eth_sign_request(ur.data, ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
+            goto end;
           } else {
             LOG_MSG("Unsupported UR type");
           }
@@ -59,16 +63,16 @@ hal_err_t qrscan_scan() {
       }
     }
 
-    if (screen_wait() != HAL_OK) {
-      return HAL_ERROR;
+    if ((err = screen_wait()) != HAL_OK) {
+      goto end;
     }
 
-    if (camera_submit(fb) != HAL_OK) {
-      return HAL_ERROR;
+    if ((err = camera_submit(fb)) != HAL_OK) {
+      goto end;
     }
   }
 
+end:
   hal_camera_stop();
-
-  return HAL_OK;
+  return err;
 }

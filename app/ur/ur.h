@@ -1,7 +1,8 @@
 #ifndef _UR_H_
 #define _UR_H_
 
-#include "hal.h"
+#include <stdint.h>
+#include "error.h"
 
 #define UR_MAX_DATA_LEN 512
 
@@ -20,6 +21,6 @@ typedef struct {
   uint8_t data[UR_MAX_DATA_LEN];
 } ur_t;
 
-hal_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len);
+app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len);
 
 #endif

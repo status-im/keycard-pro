@@ -3,9 +3,14 @@
 #include "app_tasks.h"
 #include "error.h"
 
-void ui_qrscan() {
+static inline void ui_signal() {
+  xTaskNotifyGiveIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX);
+}
+
+void ui_qrscan(struct eth_sign_request* sign_request) {
   g_ui_cmd.type = UI_CMD_QRSCAN;
-  xTaskNotifyGiveIndexed(ui_task, UI_NOTIFICATION_IDX);
+  g_ui_cmd.params.qrscan.out = sign_request;
+  ui_signal();
 }
 
 void ui_card_inserted() {
@@ -26,19 +31,6 @@ void ui_card_transport_error() {
 
 void ui_card_accepted() {
   //BSP_LED_On(LED4);
-}
-
-void ui_clear() {
-  //BSP_LCD_ClearStringLine(3);
-  //BSP_LCD_ClearStringLine(4);
-  //BSP_LCD_ClearStringLine(5);
-  //BSP_LCD_ClearStringLine(6);
-  //BSP_LCD_ClearStringLine(7);
-}
-
-void ui_fatal() {
- // BSP_LCD_ClearStringLine(4);
- // BSP_LCD_DisplayStringAtLine(4, (uint8_t*)"Error!");
 }
 
 void ui_keycard_wrong_card() {

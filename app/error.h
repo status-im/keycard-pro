@@ -1,11 +1,13 @@
 #ifndef __ERROR
 #define __ERROR
 
-#define ERR_OK 0
-#define ERR_TXRX 1
-#define ERR_CRYPTO 2
-#define ERR_RETRY 3
-#define ERR_DATA 4
-#define ERR_CANCEL 5
+typedef enum {
+  ERR_OK = 0,
+  ERR_TXRX,
+  ERR_CRYPTO,
+  ERR_RETRY,
+  ERR_DATA,
+  ERR_CANCEL
+} app_err_t;
 
 #endif

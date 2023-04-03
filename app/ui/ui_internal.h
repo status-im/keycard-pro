@@ -1,6 +1,8 @@
 #ifndef _UI_INTERNAL_
 #define _UI_INTERNAL_
 
+#include "ur/eip4527_types.h"
+
 #define UI_NOTIFICATION_IDX 2
 
 extern struct ui_cmd g_ui_cmd;
@@ -27,7 +29,7 @@ struct cmd_menu {
 };
 
 struct cmd_qrscan {
-
+  struct eth_sign_request* out;
 };
 
 struct cmd_input_pin {

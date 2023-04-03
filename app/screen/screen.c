@@ -21,7 +21,7 @@ APP_NOCACHE(uint16_t g_screen_fb[SCREEN_WIDTH], 2);
 
 static void screen_signal() {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-  vTaskNotifyGiveIndexedFromISR(ui_task, SCREEN_TASK_NOTIFICATION_IDX, &xHigherPriorityTaskWoken);
+  vTaskNotifyGiveIndexedFromISR(APP_TASK(ui), SCREEN_TASK_NOTIFICATION_IDX, &xHigherPriorityTaskWoken);
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
