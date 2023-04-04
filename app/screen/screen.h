@@ -2,6 +2,7 @@
 #define _SCREEN_H_
 
 #include "hal.h"
+#include "font/font.h"
 
 #define _SCREEN_MODEL ST7789
 #define _SCREEN_MSB_FIRST
@@ -12,6 +13,14 @@ typedef struct {
   uint16_t width;
   uint16_t height;
 } screen_area_t;
+
+typedef struct {
+  const font_t *font;
+  uint16_t fg;
+  uint16_t bg;
+  uint16_t x;
+  uint16_t y;
+} screen_text_ctx_t;
 
 extern const screen_area_t screen_fullarea;
 
@@ -57,6 +66,8 @@ hal_err_t screen_set_drawing_window(const screen_area_t* area);
 hal_err_t screen_draw_pixels(const uint16_t* pixels, size_t count, void (*cb)());
 
 // High level API
+hal_err_t screen_draw_char(screen_text_ctx_t* ctx, char c);
+hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str);
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color);
 hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels);
 hal_err_t screen_camera_passthrough(const uint8_t* fb);

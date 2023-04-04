@@ -62,7 +62,7 @@ hal_err_t screen_set_drawing_window(const screen_area_t* area) {
 
   uint16_t data[2];
   data[0] = rev16(area->x);
-  data[1] = rev16(area->x + area->width);
+  data[1] = rev16(area->x + area->width - 1);
 
   if (st7789_write_params((uint8_t*) data, 4) != HAL_OK) {
     return HAL_ERROR;
@@ -73,7 +73,7 @@ hal_err_t screen_set_drawing_window(const screen_area_t* area) {
   }
 
   data[0] = rev16(area->y);
-  data[1] = rev16(area->y + area->height);
+  data[1] = rev16(area->y + area->height - 1);
 
   if (st7789_write_params((uint8_t*) data, 4) != HAL_OK) {
     return HAL_ERROR;

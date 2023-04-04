@@ -18,7 +18,6 @@ static struct _screen_camera_passthrough_ctx _cp_ctx;
 
 APP_NOCACHE(uint16_t g_screen_fb[SCREEN_WIDTH], 2);
 
-
 static void screen_signal() {
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   vTaskNotifyGiveIndexedFromISR(APP_TASK(ui), SCREEN_TASK_NOTIFICATION_IDX, &xHigherPriorityTaskWoken);
@@ -88,6 +87,111 @@ hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels) {
   }
 
   return screen_wait();
+}
+
+const glyph_t *screen_lookup_glyph(const font_t* font, char c) {
+  if (c < font->first || c > font->last) {
+    c = 0x0a; // '*' for now, substitute with placeholder later
+  } else {
+    c -= font->first;
+  }
+
+  return &font->glyph[(int)c];
+}
+
+static inline hal_err_t _screen_char_flush(uint16_t* to_write, uint16_t threshold) {
+  if (*to_write >= threshold) {
+    if (screen_draw_pixels(g_screen_fb, *to_write, screen_signal) != HAL_OK) {
+      return HAL_ERROR;
+    }
+
+    if (screen_wait()) {
+      return HAL_ERROR;
+    }
+
+    *to_write = 0;
+  }
+
+  return HAL_OK;
+}
+
+hal_err_t screen_draw_glyph(screen_text_ctx_t* ctx, const glyph_t* glyph) {
+  screen_area_t area = { ctx->x, ctx->y, glyph->xAdvance, ctx->font->height};
+  if (screen_set_drawing_window(&area) != HAL_OK) {
+    return HAL_ERROR;
+  }
+
+  int y = 0;
+  uint16_t to_write = 0;
+  uint16_t ystart = (ctx->font->yAdvance + glyph->yOffset);
+  uint16_t yend = ystart + glyph->height;
+  uint16_t xend = glyph->xOffset + glyph->width;
+  uint16_t used_buf = (SCREEN_WIDTH / glyph->xAdvance) * glyph->xAdvance;
+
+  while(y < ystart) {
+    for(int x = 0; x < area.width; x++) {
+      g_screen_fb[to_write++] = ctx->bg;
+    }
+
+    if (_screen_char_flush(&to_write, used_buf) != HAL_OK) {
+      return HAL_ERROR;
+    }
+
+    y++;
+  }
+
+  uint8_t* bitmap = (uint8_t*)&ctx->font->bitmap[glyph->bitmapOffset];
+  uint8_t pixel = *(bitmap++);
+  uint8_t pixcount = 0;
+
+  while(y < yend) {
+    int x = 0;
+
+    for(; x < glyph->xOffset; x++) {
+      g_screen_fb[to_write++] = ctx->bg;
+    }
+
+    for(; x < xend; x++) {
+      g_screen_fb[to_write++] = (pixel & 0x80) ? ctx->fg : ctx->bg;
+      pixel <<= 1;
+      if (pixcount++ == 7) {
+        pixcount = 0;
+        pixel = *(bitmap++);
+      }
+    }
+
+    for(; x < area.width; x++) {
+      g_screen_fb[to_write++] = ctx->bg;
+    }
+
+    if (_screen_char_flush(&to_write, used_buf) != HAL_OK) {
+      return HAL_ERROR;
+    }
+
+    y++;
+  }
+
+  while(y < area.height) {
+    for(int x = 0; x < area.width; x++) {
+      g_screen_fb[to_write++] = ctx->bg;
+    }
+
+    if (_screen_char_flush(&to_write, used_buf) != HAL_OK) {
+      return HAL_ERROR;
+    }
+
+    y++;
+  }
+
+  return _screen_char_flush(&to_write, 1);
+}
+
+hal_err_t screen_draw_char(screen_text_ctx_t* ctx, char c) {
+  return screen_draw_glyph(ctx, screen_lookup_glyph(ctx->font, c));
+}
+
+hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
+  return HAL_ERROR;
 }
 
 hal_err_t screen_wait() {
