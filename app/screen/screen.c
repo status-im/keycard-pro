@@ -191,7 +191,27 @@ hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, char c) {
 }
 
 hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
-  return HAL_ERROR;
+  char c;
+
+  while((c = *(str++))) {
+    switch(c) {
+    case '\n':
+      ctx->y += ctx->font->yAdvance;
+      ctx->x = ctx->xStart;
+      break;
+    case '\r':
+      ctx->x = ctx->xStart;
+      break;
+    default: {
+        const glyph_t* glyph = screen_lookup_glyph(ctx->font, c);
+        screen_draw_char(ctx, c);
+        ctx->x += glyph->xAdvance;
+        break;
+      }
+    }
+  }
+
+  return HAL_OK;
 }
 
 hal_err_t screen_wait() {

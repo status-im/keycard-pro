@@ -18,6 +18,7 @@ typedef struct {
   const font_t *font;
   uint16_t fg;
   uint16_t bg;
+  uint16_t xStart;
   uint16_t x;
   uint16_t y;
 } screen_text_ctx_t;
