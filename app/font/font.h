@@ -21,7 +21,7 @@ typedef struct {
   const glyph_t *glyph;  ///< Glyph array
   uint16_t first;   ///< ASCII extents (first char)
   uint16_t last;    ///< ASCII extents (last char)
-  uint8_t height;
+  uint8_t baseline; ///< Baseline
   uint8_t yAdvance; ///< Newline distance (y axis)
 } font_t;
 

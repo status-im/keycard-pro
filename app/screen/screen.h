@@ -66,7 +66,7 @@ hal_err_t screen_set_drawing_window(const screen_area_t* area);
 hal_err_t screen_draw_pixels(const uint16_t* pixels, size_t count, void (*cb)());
 
 // High level API
-hal_err_t screen_draw_char(screen_text_ctx_t* ctx, char c);
+hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, char c);
 hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str);
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color);
 hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels);
