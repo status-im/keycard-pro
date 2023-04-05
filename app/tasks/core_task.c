@@ -10,7 +10,9 @@ static struct eth_sign_request sign_request;
 
 void core_task_entry(void* pvParameters) {
   while(1) {
-    ui_qrscan(&sign_request);
+    //ui_qrscan(&sign_request);
+    ui_menu(&menu_mainmenu);
+
     uint32_t events;
 
     BaseType_t res = pdFAIL;

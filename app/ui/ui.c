@@ -13,6 +13,12 @@ void ui_qrscan(struct eth_sign_request* sign_request) {
   ui_signal();
 }
 
+void ui_menu(menu_t* menu) {
+  g_ui_cmd.type = UI_CMD_MENU;
+  g_ui_cmd.params.menu.menu = menu;
+  ui_signal();
+}
+
 void ui_card_inserted() {
  /* BSP_LCD_ClearStringLine(4);
   BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card IN");*/

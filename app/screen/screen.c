@@ -56,15 +56,11 @@ hal_err_t screen_camera_passthrough(const uint8_t* fb) {
 }
 
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color) {
-  if (screen_set_drawing_window(&screen_fullarea) != HAL_OK) {
-    return HAL_ERROR;
-  }
-
   for(int x = 0; x < area->width; x++) {
     g_screen_fb[x] = color;
   }
 
-  for(int y = area->y; y < area->height; y++) {
+  for(int y = 0; y < area->height; y++) {
     if (screen_draw_pixels(g_screen_fb, area->width, screen_signal) != HAL_OK) {
       return HAL_ERROR;
     }
@@ -204,7 +200,9 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
       break;
     default: {
         const glyph_t* glyph = screen_lookup_glyph(ctx->font, c);
-        screen_draw_char(ctx, c);
+        if (screen_draw_char(ctx, c) != HAL_OK) {
+          return HAL_ERROR;
+        }
         ctx->x += glyph->xAdvance;
         break;
       }

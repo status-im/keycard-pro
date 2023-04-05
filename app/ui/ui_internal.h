@@ -2,6 +2,7 @@
 #define _UI_INTERNAL_
 
 #include "ur/eip4527_types.h"
+#include "menu.h"
 
 #define UI_NOTIFICATION_IDX 2
 
@@ -25,7 +26,8 @@ struct cmd_txn {
 };
 
 struct cmd_menu {
-
+  menu_t* menu;
+  i18n_str_t selected;
 };
 
 struct cmd_qrscan {

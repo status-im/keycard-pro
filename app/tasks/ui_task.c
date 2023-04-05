@@ -1,10 +1,10 @@
 #include "FreeRTOS.h"
 #include "task.h"
+#include "app_tasks.h"
 #include "log/log.h"
 #include "qrcode/qrscan.h"
-#include "screen/screen.h"
+#include "ui/menu.h"
 #include "ui/ui_internal.h"
-#include "app_tasks.h"
 
 struct ui_cmd g_ui_cmd;
 
@@ -15,8 +15,6 @@ void ui_task_entry(void* pvParameters) {
     LOG_MSG("Failed to init screen");
   }
 
-  screen_fill_area(&screen_fullarea, SCREEN_COLOR_BLACK);
-
   while(1) {
     if (!ulTaskNotifyTakeIndexed(UI_NOTIFICATION_IDX, pdTRUE, portMAX_DELAY)) {
       continue;
@@ -24,6 +22,7 @@ void ui_task_entry(void* pvParameters) {
 
     switch(g_ui_cmd.type) {
     case UI_CMD_MENU:
+      menu_run(g_ui_cmd.params.menu.menu);
       break;
     case UI_CMD_QRSCAN:
       qrscan_scan();
