@@ -101,7 +101,7 @@ app_err_t menu_run() {
           menus[++depth] = menu->entries[selected].submenu;
           selected = 0;
         } else {
-          g_ui_cmd.params.menu.selected = menu->entries[selected].label_id;
+          *g_ui_cmd.params.menu.selected = menu->entries[selected].label_id;
           return ERR_OK;
         }
         break;

@@ -1,32 +1,38 @@
-#include "FreeRTOS.h"
-#include "task.h"
-#include "log/log.h"
-#include "ui/ui.h"
-#include "ur/eip4527_types.h"
-#include "log/log.h"
-#include "app_tasks.h"
+#include "core/core.h"
 
-static struct eth_sign_request sign_request;
+#ifdef DEBUG
+#include "ui/ui_internal.h"
+void core_simulate_keypress(keypad_key_t key) {
+  vTaskDelay(pdMS_TO_TICKS(1000));
+  g_last_key = key;
+  xTaskNotifyIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_KEY_EVT, eSetBits);
+}
+#endif
 
 void core_task_entry(void* pvParameters) {
   while(1) {
-    //ui_qrscan(&sign_request);
-    ui_menu(&menu_mainmenu);
+    i18n_str_id_t selected;
+    ui_menu(&menu_mainmenu, &selected);
 
-    uint32_t events;
+#ifdef DEBUG
+    core_simulate_keypress(KEYPAD_KEY_DOWN);
+    core_simulate_keypress(KEYPAD_KEY_DOWN);
+    core_simulate_keypress(KEYPAD_KEY_DOWN);
+    core_simulate_keypress(KEYPAD_KEY_CONFIRM);
+    core_simulate_keypress(KEYPAD_KEY_BACK);
+    core_simulate_keypress(KEYPAD_KEY_CONFIRM);
+#endif
 
-    BaseType_t res = pdFAIL;
-
-    do {
-      res = xTaskNotifyWait(pdFALSE, UINT32_MAX, &events, portMAX_DELAY);
-    } while(res != pdPASS);
-
-    if (events & CORE_USB_EVT) {
-      //TODO: handle
-    }
-
-    if (events & CORE_UI_EVT) {
-      LOG(LOG_CBOR, sign_request._eth_sign_request_sign_data.value, sign_request._eth_sign_request_sign_data.len);
+    switch(core_wait_event(1)) {
+    case CORE_EVT_USB_CMD:
+      core_usb_run();
+      break;
+    case CORE_EVT_UI_OK:
+      core_action_run(selected);
+      break;
+    default:
+      // should not happen, if it does we restart the main menu
+      break;
     }
   }
 }

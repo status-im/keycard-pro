@@ -26,7 +26,7 @@ enum cmd_type {
 };
 
 struct cmd_msg {
-  char* msg;
+  const char* msg;
 };
 
 struct cmd_txn {
@@ -35,7 +35,7 @@ struct cmd_txn {
 
 struct cmd_menu {
   const menu_t* menu;
-  i18n_str_t selected;
+  i18n_str_id_t* selected;
 };
 
 struct cmd_qrscan {
@@ -43,7 +43,7 @@ struct cmd_qrscan {
 };
 
 struct cmd_input_pin {
-  char* prompt;
+  const char* prompt;
   uint8_t len;
   uint8_t* out;
 };

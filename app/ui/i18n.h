@@ -16,7 +16,7 @@ typedef enum {
 
   // Settings meu
   MENU_INFO
-} i18n_str_t;
+} i18n_str_id_t;
 
 //TODO: replace with proper lookup
 #define LSTR(__ID__) i18n_english_strings[__ID__]

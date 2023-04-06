@@ -49,7 +49,6 @@ app_err_t qrscan_scan() {
       if (!err) {
         LOG(LOG_MSG, qrdata.payload, qrdata.payload_len);
         if (ur_process_part(&ur, qrdata.payload, qrdata.payload_len) == ERR_OK) {
-          LOG(LOG_CBOR, ur.data, ur.data_len);
           if (ur.type == ETH_SIGN_REQUEST) {
             cbor_decode_eth_sign_request(ur.data, ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
             screen_wait();

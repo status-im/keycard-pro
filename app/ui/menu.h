@@ -8,7 +8,7 @@
 struct _menu;
 
 typedef struct {
-  i18n_str_t label_id;
+  i18n_str_id_t label_id;
   const struct _menu* submenu;
 } menu_entry_t;
 
