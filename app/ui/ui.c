@@ -4,7 +4,7 @@
 #include "error.h"
 
 static inline void ui_signal() {
-  xTaskNotifyGiveIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX);
+  xTaskNotifyIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_CMD_EVT, eSetBits);
 }
 
 void ui_qrscan(struct eth_sign_request* sign_request) {
@@ -13,7 +13,7 @@ void ui_qrscan(struct eth_sign_request* sign_request) {
   ui_signal();
 }
 
-void ui_menu(menu_t* menu) {
+void ui_menu(const menu_t* menu) {
   g_ui_cmd.type = UI_CMD_MENU;
   g_ui_cmd.params.menu.menu = menu;
   ui_signal();

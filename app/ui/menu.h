@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "i18n.h"
+#include "error.h"
 
 struct _menu;
 
@@ -18,6 +19,6 @@ typedef struct _menu {
 
 extern const menu_t menu_mainmenu;
 
-void menu_run(const menu_t* menu);
+app_err_t menu_run();
 
 #endif

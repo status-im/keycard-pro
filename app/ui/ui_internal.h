@@ -1,12 +1,20 @@
 #ifndef _UI_INTERNAL_
 #define _UI_INTERNAL_
 
-#include "ur/eip4527_types.h"
+#include "FreeRTOS.h"
+#include "task.h"
+
 #include "menu.h"
+#include "keypad/keypad.h"
+#include "ur/eip4527_types.h"
 
 #define UI_NOTIFICATION_IDX 2
 
+#define UI_CMD_EVT 1
+#define UI_KEY_EVT 2
+
 extern struct ui_cmd g_ui_cmd;
+extern keypad_key_t g_last_key;
 
 enum cmd_type {
   UI_CMD_MSG,
@@ -26,7 +34,7 @@ struct cmd_txn {
 };
 
 struct cmd_menu {
-  menu_t* menu;
+  const menu_t* menu;
   i18n_str_t selected;
 };
 
@@ -55,7 +63,27 @@ union cmd_params {
 
 struct ui_cmd {
   enum cmd_type type;
+  uint8_t received;
+  app_err_t result;
   union cmd_params params;
 };
+
+static inline uint32_t ui_wait_event(uint32_t timeout) {
+  uint32_t evt;
+  return xTaskNotifyWaitIndexed(UI_NOTIFICATION_IDX, 0, UINT32_MAX, &evt, timeout) == pdPASS ? evt : 0;
+}
+
+static inline keypad_key_t ui_wait_keypress(uint32_t timeout) {
+  uint32_t evt = ui_wait_event(timeout);
+
+  if (evt & UI_CMD_EVT) {
+    g_ui_cmd.received = 1;
+    return KEYPAD_KEY_CANCEL;
+  } else if (evt & UI_KEY_EVT) {
+    return g_last_key;
+  }
+
+  return KEYPAD_KEY_INVALID;
+}
 
 #endif

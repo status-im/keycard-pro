@@ -56,6 +56,10 @@ hal_err_t screen_camera_passthrough(const uint8_t* fb) {
 }
 
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color) {
+  if (screen_set_drawing_window(area) != HAL_OK) {
+    return HAL_ERROR;
+  }
+
   for(int x = 0; x < area->width; x++) {
     g_screen_fb[x] = color;
   }

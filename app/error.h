@@ -7,7 +7,8 @@ typedef enum {
   ERR_CRYPTO,
   ERR_RETRY,
   ERR_DATA,
-  ERR_CANCEL
+  ERR_CANCEL,
+  ERR_HW,
 } app_err_t;
 
 #endif

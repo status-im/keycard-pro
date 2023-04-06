@@ -1,12 +1,16 @@
 #include "FreeRTOS.h"
 #include "task.h"
+
 #include "app_tasks.h"
 #include "log/log.h"
+#include "keypad/keypad.h"
 #include "qrcode/qrscan.h"
+#include "screen/screen.h"
 #include "ui/menu.h"
 #include "ui/ui_internal.h"
 
 struct ui_cmd g_ui_cmd;
+keypad_key_t g_last_key;
 
 void ui_task_entry(void* pvParameters) {
   LOG_MSG("Starting UI task");
@@ -15,17 +19,21 @@ void ui_task_entry(void* pvParameters) {
     LOG_MSG("Failed to init screen");
   }
 
+  g_ui_cmd.received = 0;
+
   while(1) {
-    if (!ulTaskNotifyTakeIndexed(UI_NOTIFICATION_IDX, pdTRUE, portMAX_DELAY)) {
+    if (!g_ui_cmd.received && ((ui_wait_event(portMAX_DELAY) & UI_CMD_EVT) == 0)) {
       continue;
     }
 
+    g_ui_cmd.received = 0;
+
     switch(g_ui_cmd.type) {
     case UI_CMD_MENU:
-      menu_run(g_ui_cmd.params.menu.menu);
+      g_ui_cmd.result = menu_run();
       break;
     case UI_CMD_QRSCAN:
-      qrscan_scan();
+      g_ui_cmd.result = qrscan_scan();
       break;
     default:
       break;

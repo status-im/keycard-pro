@@ -6,7 +6,7 @@
 #include "menu.h"
 
 void ui_qrscan(struct eth_sign_request* sign_request);
-void ui_menu(menu_t* menu);
+void ui_menu(const menu_t* menu);
 
 void ui_card_inserted();
 void ui_card_removed();

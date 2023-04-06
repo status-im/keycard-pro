@@ -16,7 +16,7 @@ typedef dcp_hash_ctx_t hal_sha256_ctx_t;
 // General
 typedef enum {
 	HAL_OK,
-	HAL_ERROR
+	HAL_ERROR,
 } hal_err_t;
 
 

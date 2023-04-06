@@ -12,10 +12,11 @@ static struct quirc_data qrdata;
 static struct quirc qr;
 static ur_t ur;
 
-hal_err_t qrscan_scan() {
-  hal_err_t res = HAL_OK;
+app_err_t qrscan_scan() {
+  app_err_t res = ERR_OK;
 
-  if ((res = camera_start()) != HAL_OK) {
+  if (camera_start() != HAL_OK) {
+    res = ERR_HW;
     goto end;
   }
 
@@ -51,6 +52,7 @@ hal_err_t qrscan_scan() {
           LOG(LOG_CBOR, ur.data, ur.data_len);
           if (ur.type == ETH_SIGN_REQUEST) {
             cbor_decode_eth_sign_request(ur.data, ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
+            screen_wait();
             goto end;
           } else {
             LOG_MSG("Unsupported UR type");
@@ -63,11 +65,17 @@ hal_err_t qrscan_scan() {
       }
     }
 
-    if ((res = screen_wait()) != HAL_OK) {
+    screen_wait();
+
+    if (camera_submit(fb) != HAL_OK) {
+      res = ERR_HW;
       goto end;
     }
 
-    if ((res = camera_submit(fb)) != HAL_OK) {
+    keypad_key_t k = ui_wait_keypress(0);
+
+    if ((k == KEYPAD_KEY_CANCEL) || (k == KEYPAD_KEY_BACK)) {
+      res = ERR_CANCEL;
       goto end;
     }
   }
