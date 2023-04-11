@@ -58,7 +58,12 @@ static app_err_t core_sign(Keycard* kc, uint8_t* out) {
   return ERR_OK;
 }
 
-static app_err_t core_process_tx(uint8_t* data, uint8_t len, uint8_t first_segment) {
+static app_err_t core_wait_tx_confirmation() {
+  ui_display_tx(&g_core.tx_data);
+  return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+}
+
+static app_err_t core_process_tx(const uint8_t* data, uint8_t len, uint8_t first_segment) {
   if (first_segment) {
     // EIP 2718: TransactionType might be present before the TransactionPayload.
     uint8_t txType = data[0];
@@ -81,13 +86,13 @@ static app_err_t core_process_tx(uint8_t* data, uint8_t len, uint8_t first_segme
   }
 
   if (g_core.tx_ctx.currentField == RLP_NONE) {
-    return ERR_CANCEL;
+    return ERR_DATA;
   }
 
   parserStatus_e res = processTx(&g_core.tx_ctx, data, len, 0);
   switch (res) {
     case USTREAM_FINISHED:
-      return ERR_OK;
+      return core_wait_tx_confirmation();
     case USTREAM_PROCESSING:
       return ERR_NEED_MORE_DATA;
     case USTREAM_FAULT:
@@ -238,14 +243,14 @@ static void core_usb_sign_tx(Keycard* kc, APDU* cmd) {
   case ERR_NEED_MORE_DATA:
     core_usb_err_sw(cmd, 0x90, 0x00);
     break;
+  case ERR_DATA:
+    core_usb_err_sw(cmd, 0x6a, 0x80);
+    break;
   case ERR_CANCEL:
-    core_usb_err_sw(cmd, 0x69, 0x85);
+    core_usb_err_sw(cmd, 0x69, 0x82);
     break;
   case ERR_UNSUPPORTED:
     core_usb_err_sw(cmd, 0x65, 0x01);
-    break;
-  case ERR_DATA:
-    core_usb_err_sw(cmd, 0x6a, 0x80);
     break;
   default:
     core_usb_err_sw(cmd, 0x6f, 0x00);
@@ -341,6 +346,29 @@ void core_usb_run() {
 
 }
 
+app_err_t core_eip4527_init_sign() {
+  g_core.bip44_path_len = g_core.qr_request._eth_sign_request_derivation_path._crypto_keypath_components__path_component_count * 4;
+
+  if (g_core.bip44_path_len > BIP44_MAX_PATH_LEN) {
+    g_core.bip44_path_len = 0;
+    return ERR_DATA;
+  }
+
+  for (int i = 0; i < g_core.qr_request._eth_sign_request_derivation_path._crypto_keypath_components__path_component_count; i++) {
+    uint32_t idx = g_core.qr_request._eth_sign_request_derivation_path._crypto_keypath_components__path_component[0]._path_component__child_index;
+    if (g_core.qr_request._eth_sign_request_derivation_path._crypto_keypath_components__path_component[0]._path_component__is_hardened) {
+      idx |= 0x80000000;
+    }
+
+    g_core.bip44_path[(i * 4)] = idx >> 24;
+    g_core.bip44_path[(i * 4) + 1] = (idx & 0xff0000) >> 16;
+    g_core.bip44_path[(i * 4) + 2] = (idx & 0xff00) >> 8;
+    g_core.bip44_path[(i * 4) + 3] = idx & 0xff;
+  }
+
+  return core_init_sign();
+}
+
 void core_qr_run() {
   ui_qrscan(&g_core.qr_request);
 
@@ -348,8 +376,35 @@ void core_qr_run() {
     return;
   }
 
-  LOG(LOG_CBOR, g_core.qr_request._eth_sign_request_sign_data.value, g_core.qr_request._eth_sign_request_sign_data.len);
+  if (core_eip4527_init_sign() != ERR_OK) {
+    return;
+  }
 
+  app_err_t err;
+
+  switch(g_core.qr_request._eth_sign_request_data_type._sign_data_type_choice) {
+    case _sign_data_type__eth_transaction_data:
+    case _sign_data_type__eth_typed_transaction:
+      err = core_process_tx(g_core.qr_request._eth_sign_request_sign_data.value, g_core.qr_request._eth_sign_request_sign_data.len, 1);
+      break;
+    case _sign_data_type__eth_raw_bytes:
+      err = ERR_UNSUPPORTED;
+      break;
+    case _sign_data_type__eth_typed_data:
+      err = ERR_UNSUPPORTED;
+      break;
+    default:
+      err = ERR_UNSUPPORTED;
+      break;
+  }
+
+  if(err != ERR_OK) {
+    return;
+  }
+
+  if (core_sign(&g_core.keycard, g_core.signature) != ERR_OK) {
+    return;
+  }
 }
 
 void core_action_run(i18n_str_id_t menu) {

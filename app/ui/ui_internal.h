@@ -6,6 +6,7 @@
 
 #include "menu.h"
 #include "keypad/keypad.h"
+#include "ethereum/ethUstream.h"
 #include "ur/eip4527_types.h"
 
 #define UI_NOTIFICATION_IDX 2
@@ -30,7 +31,7 @@ struct cmd_msg {
 };
 
 struct cmd_txn {
-
+  const txContent_t* tx;
 };
 
 struct cmd_menu {

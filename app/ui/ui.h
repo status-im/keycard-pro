@@ -2,11 +2,13 @@
 #define __UI_H
 
 #include <stdint.h>
-#include "ur/eip4527_types.h"
+#include "ethereum/ethUstream.h"
 #include "menu.h"
+#include "ur/eip4527_types.h"
 
 void ui_qrscan(struct eth_sign_request* sign_request);
 void ui_menu(const menu_t* menu, i18n_str_id_t* selected);
+void ui_display_tx(const txContent_t* tx);
 
 void ui_card_inserted();
 void ui_card_removed();

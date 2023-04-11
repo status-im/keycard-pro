@@ -13,6 +13,7 @@
 #include "ur/eip4527_types.h"
 
 #define BIP44_MAX_PATH_LEN 40
+#define SIGNATURE_LEN 65
 
 typedef enum {
   CORE_EVT_USB_CMD,
@@ -28,6 +29,7 @@ typedef struct {
   uint8_t digest[SHA3_256_DIGEST_LENGTH];
   uint8_t bip44_path[BIP44_MAX_PATH_LEN];
   uint8_t bip44_path_len;
+  uint8_t signature[SIGNATURE_LEN];
   uint32_t remaining;
   SHA3_CTX hash_ctx;
   txContent_t tx_data;
