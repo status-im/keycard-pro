@@ -14,6 +14,6 @@ app_err_t Keycard_CMD_Init(Keycard* kc, uint8_t* sc_pub, uint8_t* pin, uint8_t* 
 uint8_t Keycard_CMD_GenerateMnemonic(Keycard* kc, uint8_t len);
 uint8_t Keycard_CMD_LoadSeed(Keycard* kc, uint8_t* seed);
 uint8_t Keycard_CMD_ExportKey(Keycard* kc, uint8_t export_type, uint8_t* path, uint8_t len);
-uint8_t Keycard_CMD_Sign(Keycard* kc, uint8_t* path, uint8_t path_len, uint8_t* hash);
+app_err_t Keycard_CMD_Sign(Keycard* kc, uint8_t* path, uint8_t path_len, uint8_t* hash);
 
 #endif

@@ -166,7 +166,7 @@ uint8_t Keycard_CMD_ExportKey(Keycard* kc, uint8_t export_type, uint8_t* path, u
   return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, path, len) == ERR_OK;
 }
 
-uint8_t Keycard_CMD_Sign(Keycard* kc, uint8_t* path, uint8_t path_len, uint8_t* hash) {
+app_err_t Keycard_CMD_Sign(Keycard* kc, uint8_t* path, uint8_t path_len, uint8_t* hash) {
   APDU_RESET(&kc->apdu);
   APDU_CLA(&kc->apdu) = 0x80;
   APDU_INS(&kc->apdu) = 0xc0;
@@ -178,5 +178,5 @@ uint8_t Keycard_CMD_Sign(Keycard* kc, uint8_t* path, uint8_t path_len, uint8_t* 
   memcpy(data, hash, 32);
   memcpy(&data[32], path, path_len);
 
-  return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, data, (32 + path_len)) == ERR_OK;
+  return SecureChannel_Send_APDU(&kc->sc, &kc->ch, &kc->apdu, data, (32 + path_len));
 }

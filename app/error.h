@@ -9,6 +9,8 @@ typedef enum {
   ERR_DATA,
   ERR_CANCEL,
   ERR_HW,
+  ERR_UNSUPPORTED,
+  ERR_NEED_MORE_DATA,
 } app_err_t;
 
 #endif

@@ -19,4 +19,6 @@ void Keycard_Run(Keycard* kc, Command* cmd);
 void Keycard_In(Keycard* kc);
 void Keycard_Out(Keycard* kc);
 
+app_err_t Keycard_ConvertSignature(uint8_t* data, uint8_t* digest, uint8_t* out_sig);
+
 #endif
