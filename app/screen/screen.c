@@ -207,9 +207,14 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
       break;
     default: {
         const glyph_t* glyph = screen_lookup_glyph(ctx->font, c);
+        if ((ctx->x + glyph->xAdvance) > SCREEN_WIDTH) {
+          screen_newline(ctx);
+        }
+
         if (screen_draw_glyph(ctx, glyph) != HAL_OK) {
           return HAL_ERROR;
         }
+
         ctx->x += glyph->xAdvance;
         break;
       }

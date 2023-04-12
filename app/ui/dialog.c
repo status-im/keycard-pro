@@ -12,11 +12,12 @@ app_err_t display_tx() {
   char address[41];
   ethereum_address_checksum(g_ui_cmd.params.txn.tx->destination, address);
 
-  screen_text_ctx_t ctx = {0};
+  screen_text_ctx_t ctx;
   ctx.bg = TH_COLOR_BG;
   ctx.fg = TH_COLOR_FG;
   ctx.font = TH_FONT_CAPTION;
   ctx.xStart = TH_MSG_LEFT_MARGIN;
+  ctx.x = ctx.xStart;
   ctx.y = TH_MSG_TOP_MARGIN;
 
   if (screen_draw_string(&ctx, LSTR(TX_CAPTION_ADDRESS)) != HAL_OK) {
