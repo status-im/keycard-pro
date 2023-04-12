@@ -7,7 +7,11 @@
 
 #define SCREEN_TIMEOUT 100
 
+#define CAM_OUT_WIDTH (CAMERA_WIDTH/2)
+#define CAM_OUT_HEIGHT (CAMERA_HEIGHT/2)
+
 const screen_area_t screen_fullarea = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
+const screen_area_t screen_camarea = { (SCREEN_WIDTH - CAM_OUT_WIDTH)/2, (SCREEN_HEIGHT - CAM_OUT_HEIGHT)/2, CAM_OUT_WIDTH, CAM_OUT_HEIGHT };
 
 struct _screen_camera_passthrough_ctx {
   uint8_t* fb;
@@ -25,12 +29,12 @@ static void screen_signal() {
 }
 
 static void screen_camera_line() {
-  if (_cp_ctx.y >= SCREEN_HEIGHT) {
+  if (_cp_ctx.y >= CAM_OUT_HEIGHT) {
     screen_signal();
     return;
   }
 
-  for(int x = 0; x < SCREEN_WIDTH; x++) {
+  for(int x = 0; x < CAM_OUT_WIDTH; x++) {
     uint8_t luma = *_cp_ctx.fb;
     _cp_ctx.fb += 2;
     g_screen_fb[x] = luma ? SCREEN_COLOR_BLACK : SCREEN_COLOR_WHITE;
@@ -39,11 +43,11 @@ static void screen_camera_line() {
   _cp_ctx.fb += CAMERA_WIDTH;
   _cp_ctx.y++;
 
-  screen_draw_pixels(g_screen_fb, SCREEN_WIDTH, screen_camera_line);
+  screen_draw_pixels(g_screen_fb, CAM_OUT_WIDTH, screen_camera_line);
 }
 
 hal_err_t screen_camera_passthrough(const uint8_t* fb) {
-  if (screen_set_drawing_window(&screen_fullarea) != HAL_OK) {
+  if (screen_set_drawing_window(&screen_camarea) != HAL_OK) {
     return HAL_ERROR;
   }
 
