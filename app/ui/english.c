@@ -2,6 +2,7 @@
 
 const char* i18n_english_strings[] = {
     // Main menu
+    "Keycard Pro",
     "Scan QR Code",
     "Display public QR",
     "Keycard",
@@ -14,5 +15,9 @@ const char* i18n_english_strings[] = {
     // Settings menu
     "Info",
 
-    "Destination address"
+    "Sign transaction",
+    "To",
+    "Amount",
+    "Fee",
+    "Total"
 };

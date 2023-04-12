@@ -37,7 +37,7 @@ void ui_task_entry(void* pvParameters) {
       g_ui_cmd.result = qrscan_scan();
       break;
     case UI_CMD_DISPLAY_TXN:
-      g_ui_cmd.result = display_tx();
+      g_ui_cmd.result = dialog_confirm_tx();
       break;
     default:
       break;

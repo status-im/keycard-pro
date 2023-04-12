@@ -5,7 +5,8 @@ extern const char* i18n_english_strings[];
 
 typedef enum {
   // Main menu
-  MENU_QRCODE = 0,
+  MENU_TITLE = 0,
+  MENU_QRCODE,
   MENU_DISPLAY_PUBLIC,
   MENU_KEYCARD,
   MENU_SETTINGS,
@@ -17,7 +18,12 @@ typedef enum {
   // Settings meu
   MENU_INFO,
 
-  TX_CAPTION_ADDRESS
+  // TX Confirmation
+  TX_CONFIRM_TITLE,
+  TX_ADDRESS,
+  TX_AMOUNT,
+  TX_FEE,
+  TX_TOTAL
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

@@ -18,7 +18,6 @@ typedef struct {
   const font_t *font;
   uint16_t fg;
   uint16_t bg;
-  uint16_t xStart;
   uint16_t x;
   uint16_t y;
 } screen_text_ctx_t;
@@ -72,10 +71,5 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str);
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color);
 hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels);
 hal_err_t screen_camera_passthrough(const uint8_t* fb);
-
-static inline void screen_newline(screen_text_ctx_t* ctx) {
-  ctx->y += ctx->font->yAdvance;
-  ctx->x = ctx->xStart;
-}
 
 #endif

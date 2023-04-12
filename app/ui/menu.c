@@ -1,9 +1,11 @@
 #include <stddef.h>
-#include "theme.h"
+
+#include "dialog.h"
 #include "menu.h"
-#include "screen/screen.h"
-#include "ui_internal.h"
 #include "keypad/keypad.h"
+#include "screen/screen.h"
+#include "theme.h"
+#include "ui_internal.h"
 
 const menu_t menu_keycard = {
   1, {
@@ -41,40 +43,37 @@ void menu_render_entry(const menu_entry_t* entry, uint8_t is_selected, uint16_t 
     ctx.fg = TH_COLOR_MENU_FG;
   }
 
-  ctx.xStart = TH_MENU_LEFT_MARGIN;
   ctx.x = TH_MENU_LEFT_MARGIN;
-  ctx.y = yOff + (((TH_MENU_HEIGHT - TH_MENU_SEP_HEIGHT) - ctx.font->yAdvance) / 2);
+  ctx.y = yOff;
 
-  screen_area_t fillarea = { 0, yOff, SCREEN_WIDTH, (TH_MENU_HEIGHT - TH_MENU_SEP_HEIGHT) };
-  screen_fill_area(&fillarea, ctx.bg);
-  fillarea.y += fillarea.height;
-  fillarea.height = TH_MENU_SEP_HEIGHT;
-  screen_fill_area(&fillarea, TH_COLOR_MENU_SEPARATOR);
-
-  screen_draw_string(&ctx, LSTR(entry->label_id));
+  dialog_line(&ctx, LSTR(entry->label_id), (TH_MENU_HEIGHT - TH_SEP_HEIGHT));
+  dialog_separator(yOff + (TH_MENU_HEIGHT - TH_SEP_HEIGHT));
 }
 
-void menu_render(const menu_t* menu, uint8_t selected) {
-  uint16_t yOff = 0;
+void menu_render(const menu_t* menu, const char* title, uint8_t selected) {
+  dialog_title(title);
+  uint16_t yOff = TH_TITLE_HEIGHT;
 
   for (int i = 0; i < menu->len; i++) {
     menu_render_entry(&menu->entries[i], i == selected, yOff);
     yOff += TH_MENU_HEIGHT;
   }
 
-  screen_area_t area = { 0, yOff, SCREEN_WIDTH, SCREEN_HEIGHT - yOff };
-  screen_fill_area(&area, TH_COLOR_BG);
+  dialog_footer(yOff);
 }
 
 app_err_t menu_run() {
   const menu_t* menus[MENU_MAX_DEPTH];
+  i18n_str_id_t titles[MENU_MAX_DEPTH];
+
   uint8_t selected = 0;
   uint8_t depth = 0;
   menus[depth] = g_ui_cmd.params.menu.menu;
+  titles[depth] = MENU_TITLE;
 
   while(1) {
     const menu_t* menu = menus[depth];
-    menu_render(menu, selected);
+    menu_render(menu, LSTR(titles[depth]), selected);
 
     switch(ui_wait_keypress(portMAX_DELAY)) {
       case KEYPAD_KEY_CANCEL:
@@ -99,6 +98,7 @@ app_err_t menu_run() {
         if (menu->entries[selected].submenu) {
           assert(depth < (MENU_MAX_DEPTH - 1));
           menus[++depth] = menu->entries[selected].submenu;
+          titles[depth] = menu->entries[selected].label_id;
           selected = 0;
         } else {
           *g_ui_cmd.params.menu.selected = menu->entries[selected].label_id;

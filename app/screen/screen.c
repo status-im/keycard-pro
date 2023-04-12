@@ -198,27 +198,13 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
   char c;
 
   while((c = *(str++))) {
-    switch(c) {
-    case '\n':
-      screen_newline(ctx);
-      break;
-    case '\r':
-      ctx->x = ctx->xStart;
-      break;
-    default: {
-        const glyph_t* glyph = screen_lookup_glyph(ctx->font, c);
-        if ((ctx->x + glyph->xAdvance) > SCREEN_WIDTH) {
-          screen_newline(ctx);
-        }
+    const glyph_t* glyph = screen_lookup_glyph(ctx->font, c);
 
-        if (screen_draw_glyph(ctx, glyph) != HAL_OK) {
-          return HAL_ERROR;
-        }
-
-        ctx->x += glyph->xAdvance;
-        break;
-      }
+    if (screen_draw_glyph(ctx, glyph) != HAL_OK) {
+      return HAL_ERROR;
     }
+
+    ctx->x += glyph->xAdvance;
   }
 
   return HAL_OK;
