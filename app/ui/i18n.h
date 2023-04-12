@@ -15,7 +15,9 @@ typedef enum {
   MENU_CHANGE_PIN,
 
   // Settings meu
-  MENU_INFO
+  MENU_INFO,
+
+  TX_CAPTION_ADDRESS
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

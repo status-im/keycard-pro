@@ -12,5 +12,7 @@ const char* i18n_english_strings[] = {
     "Change PIN",
 
     // Settings menu
-    "Info"
+    "Info",
+
+    "Destination address"
 };

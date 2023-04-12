@@ -105,7 +105,7 @@ static inline hal_err_t _screen_char_flush(uint16_t* to_write, uint16_t threshol
       return HAL_ERROR;
     }
 
-    if (screen_wait()) {
+    if (screen_wait() != HAL_OK) {
       return HAL_ERROR;
     }
 
@@ -196,15 +196,14 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
   while((c = *(str++))) {
     switch(c) {
     case '\n':
-      ctx->y += ctx->font->yAdvance;
-      ctx->x = ctx->xStart;
+      screen_newline(ctx);
       break;
     case '\r':
       ctx->x = ctx->xStart;
       break;
     default: {
         const glyph_t* glyph = screen_lookup_glyph(ctx->font, c);
-        if (screen_draw_char(ctx, c) != HAL_OK) {
+        if (screen_draw_glyph(ctx, glyph) != HAL_OK) {
           return HAL_ERROR;
         }
         ctx->x += glyph->xAdvance;

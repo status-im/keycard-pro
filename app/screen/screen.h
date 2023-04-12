@@ -73,4 +73,9 @@ hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color);
 hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels);
 hal_err_t screen_camera_passthrough(const uint8_t* fb);
 
+static inline void screen_newline(screen_text_ctx_t* ctx) {
+  ctx->y += ctx->font->yAdvance;
+  ctx->x = ctx->xStart;
+}
+
 #endif

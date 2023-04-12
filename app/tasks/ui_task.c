@@ -6,6 +6,7 @@
 #include "keypad/keypad.h"
 #include "qrcode/qrscan.h"
 #include "screen/screen.h"
+#include "ui/dialog.h"
 #include "ui/menu.h"
 #include "ui/ui_internal.h"
 
@@ -34,6 +35,9 @@ void ui_task_entry(void* pvParameters) {
       break;
     case UI_CMD_QRSCAN:
       g_ui_cmd.result = qrscan_scan();
+      break;
+    case UI_CMD_DISPLAY_TXN:
+      g_ui_cmd.result = display_tx();
       break;
     default:
       break;
