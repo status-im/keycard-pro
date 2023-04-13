@@ -29,7 +29,7 @@
 
 #define TH_FONT_MENU &free_sans_9pt
 #define TH_FONT_LABEL &free_sans_9pt
-#define TH_FONT_DATA &free_sans_9pt
+#define TH_FONT_DATA &plat_nomor_8pt
 #define TH_FONT_TITLE &free_sans_9pt
 
 #define TH_MENU_HEIGHT 30
