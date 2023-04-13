@@ -40,7 +40,7 @@ hal_err_t screen_init() {
     return HAL_ERROR;
   }
 
-  if (st7789_set_reg8(ST7789_MADCTL, ST7789_MADCTL_RGB) != HAL_OK) {
+  if (st7789_set_reg8(ST7789_MADCTL, (_SCREEN_ORIENTATION | ST7789_MADCTL_RGB)) != HAL_OK) {
     return HAL_ERROR;
   }
 

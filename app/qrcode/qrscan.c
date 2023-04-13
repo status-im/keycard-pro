@@ -4,6 +4,7 @@
 #include "ur/ur.h"
 #include "ur/eip4527_decode.h"
 #include "screen/screen.h"
+#include "ui/theme.h"
 #include "ui/ui_internal.h"
 #include "error.h"
 
@@ -14,6 +15,8 @@ static ur_t ur;
 
 app_err_t qrscan_scan() {
   app_err_t res = ERR_OK;
+
+  screen_fill_area(&screen_fullarea, TH_COLOR_QR_BG);
 
   if (camera_start() != HAL_OK) {
     res = ERR_HW;

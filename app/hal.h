@@ -37,7 +37,7 @@ hal_err_t hal_camera_next_frame(uint8_t** fb);
 hal_err_t hal_camera_submit(uint8_t* fb);
 
 // Screen
-#define SCREEN_WIDTH 240
+#define SCREEN_WIDTH 320
 #define SCREEN_HEIGHT 240
 #define SCREEN_TASK_NOTIFICATION_IDX 1
 
