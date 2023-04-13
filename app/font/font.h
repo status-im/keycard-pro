@@ -26,7 +26,6 @@ typedef struct {
 } font_t;
 
 extern const font_t free_sans_9pt;
-extern const font_t org_01_5pt;
 extern const font_t plat_nomor_8pt;
 
 #endif // _FONT_H_
