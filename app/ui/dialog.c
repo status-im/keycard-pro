@@ -10,8 +10,11 @@ app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_hei
   screen_area_t fillarea = { 0, ctx->y, SCREEN_WIDTH, line_height };
   screen_fill_area(&fillarea, ctx->bg);
 
+  uint16_t tmp = ctx->y;
   ctx->y += ((line_height - ctx->font->yAdvance) / 2);
-  return screen_draw_string(ctx, str) == HAL_OK? ERR_OK : ERR_HW;
+  app_err_t err = screen_draw_string(ctx, str) == HAL_OK? ERR_OK : ERR_HW;
+  ctx->y = tmp + line_height;
+  return err;
 }
 
 app_err_t dialog_separator(uint16_t yOff) {
@@ -35,7 +38,6 @@ static inline void dialog_label(screen_text_ctx_t *ctx, const char* label) {
   ctx->bg = TH_COLOR_LABEL_BG;
   ctx->x = TH_LABEL_LEFT_MARGIN;
   dialog_line(ctx, label, TH_LABEL_HEIGHT);
-  ctx->y += TH_LABEL_HEIGHT;
 }
 
 static inline void dialog_data(screen_text_ctx_t *ctx, const char* data) {
@@ -44,7 +46,6 @@ static inline void dialog_data(screen_text_ctx_t *ctx, const char* data) {
   ctx->bg = TH_COLOR_DATA_BG;
   ctx->x = TH_DATA_LEFT_MARGIN;
   dialog_line(ctx, data, TH_DATA_HEIGHT);
-  ctx->y += TH_DATA_HEIGHT;
 }
 
 app_err_t dialog_confirm_tx() {
@@ -57,7 +58,6 @@ app_err_t dialog_confirm_tx() {
 
   char address[41];
   ethereum_address_checksum(g_ui_cmd.params.txn.tx->destination, address);
-  address[20] = '\0'; // remove
 
   dialog_data(&ctx, address);
 
