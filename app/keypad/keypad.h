@@ -1,0 +1,27 @@
+#ifndef _KEYPAD_H_
+#define _KEYPAD_H_
+
+#include <stdint.h>
+
+typedef enum {
+  KEYPAD_KEY_CANCEL = 0,
+  KEYPAD_KEY_BACK = 1,
+  KEYPAD_KEY_CONFIRM = 2,
+  KEYPAD_KEY_1 = 3,
+  KEYPAD_KEY_2 = 4,
+  KEYPAD_KEY_3 = 5,
+  KEYPAD_KEY_4 = 6,
+  KEYPAD_KEY_5 = 7,
+  KEYPAD_KEY_6 = 8,
+  KEYPAD_KEY_7 = 9,
+  KEYPAD_KEY_8 = 10,
+  KEYPAD_KEY_9 = 11,
+  KEYPAD_KEY_INVALID = UINT32_MAX
+} keypad_key_t;
+
+#define KEYPAD_KEY_UP KEYPAD_KEY_2
+#define KEYPAD_KEY_LEFT KEYPAD_KEY_4
+#define KEYPAD_KEY_RIGHT KEYPAD_KEY_6
+#define KEYPAD_KEY_DOWN KEYPAD_KEY_8
+
+#endif
