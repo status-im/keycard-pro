@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-#define QUIRC_MAX_VERSION   40
+#define QUIRC_MAX_VERSION   25
 
 #define QUIRC_PIXEL_WHITE   0
 #define QUIRC_PIXEL_BLACK   1

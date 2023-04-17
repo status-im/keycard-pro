@@ -43,8 +43,6 @@ static uint64_t keccak_round_constants[NumberOfRounds] = {
 	I64(0x8000000080008081), I64(0x8000000000008080), I64(0x0000000080000001), I64(0x8000000080008008)
 };
 
-static SHA3_CTX g_ctx;
-
 /* Initializing a sha3 context for given number of output bits */
 static void keccak_Init(SHA3_CTX *ctx, unsigned bits)
 {
@@ -383,28 +381,32 @@ void keccak_Final(SHA3_CTX *ctx, unsigned char* result)
 
 void keccak_256(const unsigned char* data, size_t len, unsigned char* digest)
 {
-	keccak_256_Init(&g_ctx);
-	keccak_Update(&g_ctx, data, len);
-	keccak_Final(&g_ctx, digest);
+  SHA3_CTX ctx;
+	keccak_256_Init(&ctx);
+	keccak_Update(&ctx, data, len);
+	keccak_Final(&ctx, digest);
 }
 
 void keccak_512(const unsigned char* data, size_t len, unsigned char* digest)
 {
-	keccak_512_Init(&g_ctx);
-	keccak_Update(&g_ctx, data, len);
-	keccak_Final(&g_ctx, digest);
+  SHA3_CTX ctx;
+	keccak_512_Init(&ctx);
+	keccak_Update(&ctx, data, len);
+	keccak_Final(&ctx, digest);
 }
 #endif /* USE_KECCAK */
 
 void sha3_256(const unsigned char* data, size_t len, unsigned char* digest)
 {
-	sha3_Update(&g_ctx, data, len);
-	sha3_Final(&g_ctx, digest);
+  SHA3_CTX ctx;
+	sha3_Update(&ctx, data, len);
+	sha3_Final(&ctx, digest);
 }
 
 void sha3_512(const unsigned char* data, size_t len, unsigned char* digest)
 {
-	sha3_512_Init(&g_ctx);
-	sha3_Update(&g_ctx, data, len);
-	sha3_Final(&g_ctx, digest);
+  SHA3_CTX ctx;
+	sha3_512_Init(&ctx);
+	sha3_Update(&ctx, data, len);
+	sha3_Final(&ctx, digest);
 }

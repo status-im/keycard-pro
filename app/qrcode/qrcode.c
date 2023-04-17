@@ -694,6 +694,8 @@ static void perspective_unmap(const float *c,
 
 typedef void (*span_func_t)(void *user_data, int y, int left, int right);
 
+#define QUIRC_LIFO_DATA 8192
+
 typedef struct xylf
 {
     int16_t x, y, l, r;
@@ -703,24 +705,16 @@ xylf_t;
 typedef struct lifo
 {
     size_t len, size, data_len;
-    char *data;
+    uint8_t data[QUIRC_LIFO_DATA];
 }
 lifo_t;
 
-#if QUIRC_MAX_VERSION < 32
-#define QUIRC_SCRATCH_LEN 8192
-#else
-#define QUIRC_SCRATCH_LEN sizeof(struct datastream)
-#endif
-
-static uint8_t _quirc_scratch[QUIRC_SCRATCH_LEN];
 
 size_t lifo_alloc_all(lifo_t *ptr, size_t data_len)
 {
     ptr->len = 0;
-    ptr->size = QUIRC_SCRATCH_LEN / data_len;
+    ptr->size = QUIRC_LIFO_DATA / data_len;
     ptr->data_len = data_len;
-    ptr->data = (char *) _quirc_scratch;
     return ptr->size;
 }
 
@@ -745,6 +739,7 @@ static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, spa
     uint8_t from8 = from;
 
     lifo_t lifo;
+
     size_t lifo_len = lifo_alloc_all(&lifo, sizeof(xylf_t));
 
     for(;;) {
@@ -858,7 +853,7 @@ void quirc_threshold(struct quirc *q)
     fracmul2 = (0x100000 * (100 - THRESHOLD_T)) / (200 * threshold_s); // use as many bits as possible without overflowing
 
     for (y = 0; y < q->h; y++) {
-        int *row_average = (int*)_quirc_scratch;
+        int row_average[q->w];
 
         memset(row_average, 0, width * 4);
 
@@ -1701,8 +1696,8 @@ static void test_grouping(struct quirc *q, int i)
 {
     struct quirc_capstone *c1 = &q->capstones[i];
     int j;
-    static struct neighbour_list hlist;
-    static struct neighbour_list vlist;
+    struct neighbour_list hlist;
+    struct neighbour_list vlist;
 
     if (c1->qr_grid >= 0)
         return;
@@ -2680,14 +2675,14 @@ quirc_decode_error_t quirc_decode(const struct quirc_code *code,
                                   struct quirc_data *data)
 {
     quirc_decode_error_t err;
-    struct datastream *ds = (struct datastream*) _quirc_scratch;
+    struct datastream ds;
 
     if ((code->size - 17) % 4) {
       return QUIRC_ERROR_INVALID_GRID_SIZE;
     }
 
     memset(data, 0, sizeof(*data));
-    memset(ds, 0, sizeof(*ds));
+    memset(&ds, 0, sizeof(ds));
 
     data->version = (code->size - 17) / 4;
 
@@ -2706,14 +2701,14 @@ quirc_decode_error_t quirc_decode(const struct quirc_code *code,
       return err;
     }
 
-    read_data(code, data, ds);
-    err = codestream_ecc(data, ds);
+    read_data(code, data, &ds);
+    err = codestream_ecc(data, &ds);
 
     if (err) {
       return err;
     }
 
-    return decode_payload(data, ds);
+    return decode_payload(data, &ds);
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
