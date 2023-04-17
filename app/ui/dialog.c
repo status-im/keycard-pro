@@ -7,6 +7,7 @@
 #include "ui/ui_internal.h"
 
 #define TX_CONFIRM_TIMEOUT 30000
+#define TICKER_LEN 3
 
 app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_height) {
   screen_area_t fillarea = { 0, ctx->y, SCREEN_WIDTH, line_height };
@@ -50,35 +51,52 @@ static inline void dialog_data(screen_text_ctx_t *ctx, const char* data) {
   dialog_line(ctx, data, TH_DATA_HEIGHT);
 }
 
+static void dialog_tx_address(screen_text_ctx_t *ctx) {
+  char address[41];
+  ethereum_address_checksum(g_ui_cmd.params.txn.tx->destination, address);
+
+  dialog_label(ctx, LSTR(TX_ADDRESS));
+  dialog_data(ctx, address);
+}
+
+static void dialog_calculate_fees(uint256_t* fees) {
+  uint256_t gas_amount;
+  uint256_t gas_price;
+
+  convertUint256BE(g_ui_cmd.params.txn.tx->startgas.value, g_ui_cmd.params.txn.tx->startgas.length, &gas_amount);
+  convertUint256BE(g_ui_cmd.params.txn.tx->gasprice.value, g_ui_cmd.params.txn.tx->gasprice.length, &gas_price);
+  mul256(&gas_amount, &gas_price, fees);
+}
+
+static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const uint256_t* amount, int decimals, const char ticker[TICKER_LEN]) {
+  char tmp[UINT256_STRING_LEN+TICKER_LEN+2];
+  uint32_t off = tostring256(amount, 10, decimals, tmp);
+
+  tmp[off++] = ' ';
+
+  for(int i = 0; i < TICKER_LEN; i++) {
+    tmp[off++] = ticker[i];
+  }
+
+  tmp[off++] = '\0';
+  dialog_label(ctx, LSTR(prompt));
+  dialog_data(ctx, tmp);
+}
+
 app_err_t dialog_confirm_tx() {
   dialog_title(LSTR(TX_CONFIRM_TITLE));
 
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
 
-  char tmp[41];
-  ethereum_address_checksum(g_ui_cmd.params.txn.tx->destination, tmp);
-
-  dialog_label(&ctx, LSTR(TX_ADDRESS));
-  dialog_data(&ctx, tmp);
-
+  dialog_tx_address(&ctx);
 
   uint256_t data;
   convertUint256BE(g_ui_cmd.params.txn.tx->value.value, g_ui_cmd.params.txn.tx->value.length, &data);
-  tostring256(&data, 10, tmp, sizeof(tmp) - 4);
-  dialog_label(&ctx, LSTR(TX_AMOUNT));
-  dialog_data(&ctx, tmp);
+  dialog_amount(&ctx, TX_AMOUNT, &data, 18, "ETH");
 
-  uint256_t gas_amount;
-  uint256_t gas_price;
-
-  convertUint256BE(g_ui_cmd.params.txn.tx->startgas.value, g_ui_cmd.params.txn.tx->startgas.length, &gas_amount);
-  convertUint256BE(g_ui_cmd.params.txn.tx->gasprice.value, g_ui_cmd.params.txn.tx->gasprice.length, &gas_price);
-  mul256(&gas_amount, &gas_price, &data);
-
-  tostring256(&data, 10, tmp, sizeof(tmp) - 4);
-  dialog_label(&ctx, LSTR(TX_FEE));
-  dialog_data(&ctx, tmp);
+  dialog_calculate_fees(&data);
+  dialog_amount(&ctx, TX_FEE, &data, 18, "ETH");
 
   dialog_footer(ctx.y);
 

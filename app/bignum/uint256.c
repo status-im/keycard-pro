@@ -304,10 +304,7 @@ void divmod256(const uint256_t *const l,
     }
 }
 
-bool tostring256(const uint256_t *const number,
-                 uint32_t baseParam,
-                 char *const out,
-                 uint32_t outLength) {
+uint32_t tostring256(const uint256_t *const number, uint32_t baseParam, uint32_t decimals, char out[UINT256_STRING_LEN]) {
     uint256_t rDiv;
     uint256_t rMod;
     uint256_t base;
@@ -317,22 +314,32 @@ bool tostring256(const uint256_t *const number,
     UPPER(LOWER(base)) = 0;
     LOWER(LOWER(base)) = baseParam;
     uint32_t offset = 0;
+
     if ((baseParam < 2) || (baseParam > 16)) {
         return false;
     }
+
     do {
-        if (offset > (outLength - 1)) {
-            return false;
-        }
         divmod256(&rDiv, &base, &rDiv, &rMod);
         out[offset++] = HEXDIGITS[(uint8_t) LOWER(LOWER(rMod))];
+        if (offset == decimals) {
+          out[offset++] = '.';
+        }
     } while (!zero256(&rDiv));
 
-    if (offset > (outLength - 1)) {
-        return false;
+    while(offset < decimals) {
+      out[offset++] = '0';
+    }
+
+    if (offset == decimals) {
+      out[offset++] = '.';
+    }
+
+    if (offset == (decimals + 1)) {
+      out[offset++] = '0';
     }
 
     out[offset] = '\0';
     reverseString(out, offset);
-    return true;
+    return offset;
 }

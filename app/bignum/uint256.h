@@ -28,6 +28,8 @@ typedef struct uint256_t {
     uint128_t elements[2];
 } uint256_t;
 
+#define UINT256_STRING_LEN 84
+
 void convertUint256BE(const uint8_t *const data, uint32_t length, uint256_t *const target);
 void readu256BE(const uint8_t *const buffer, uint256_t *const target);
 bool zero256(const uint256_t *const number);
@@ -53,6 +55,6 @@ void divmod256(const uint256_t *const l,
                const uint256_t *const r,
                uint256_t *const div,
                uint256_t *const mod);
-bool tostring256(const uint256_t *const number, uint32_t base, char *const out, uint32_t outLength);
+uint32_t tostring256(const uint256_t *const number, uint32_t base, uint32_t decimals, char out[UINT256_STRING_LEN]);
 
 #endif  // _UINT256_H_
