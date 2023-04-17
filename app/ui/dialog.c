@@ -1,6 +1,8 @@
 #include "dialog.h"
 #include "crypto/address.h"
 #include "ethereum/ethUstream.h"
+#include "ethereum/ethUtils.h"
+#include "bignum/uint256.h"
 #include "theme.h"
 #include "ui/ui_internal.h"
 
@@ -54,18 +56,29 @@ app_err_t dialog_confirm_tx() {
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
 
+  char tmp[41];
+  ethereum_address_checksum(g_ui_cmd.params.txn.tx->destination, tmp);
+
   dialog_label(&ctx, LSTR(TX_ADDRESS));
+  dialog_data(&ctx, tmp);
 
-  char address[41];
-  ethereum_address_checksum(g_ui_cmd.params.txn.tx->destination, address);
 
-  dialog_data(&ctx, address);
-
+  uint256_t data;
+  convertUint256BE(g_ui_cmd.params.txn.tx->value.value, g_ui_cmd.params.txn.tx->value.length, &data);
+  tostring256(&data, 10, tmp, sizeof(tmp) - 4);
   dialog_label(&ctx, LSTR(TX_AMOUNT));
-  dialog_data(&ctx, address);
+  dialog_data(&ctx, tmp);
 
+  uint256_t gas_amount;
+  uint256_t gas_price;
+
+  convertUint256BE(g_ui_cmd.params.txn.tx->startgas.value, g_ui_cmd.params.txn.tx->startgas.length, &gas_amount);
+  convertUint256BE(g_ui_cmd.params.txn.tx->gasprice.value, g_ui_cmd.params.txn.tx->gasprice.length, &gas_price);
+  mul256(&gas_amount, &gas_price, &data);
+
+  tostring256(&data, 10, tmp, sizeof(tmp) - 4);
   dialog_label(&ctx, LSTR(TX_FEE));
-  dialog_data(&ctx, address);
+  dialog_data(&ctx, tmp);
 
   dialog_footer(ctx.y);
 
