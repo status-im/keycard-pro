@@ -10,6 +10,8 @@
 #define CAM_OUT_WIDTH (CAMERA_WIDTH/2)
 #define CAM_OUT_HEIGHT (CAMERA_HEIGHT/2)
 
+#define MAX_GLYPHS_PER_LINE 50
+
 const screen_area_t screen_fullarea = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 const screen_area_t screen_camarea = { (SCREEN_WIDTH - CAM_OUT_WIDTH)/2, (SCREEN_HEIGHT - CAM_OUT_HEIGHT)/2, CAM_OUT_WIDTH, CAM_OUT_HEIGHT };
 
@@ -205,6 +207,81 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
     }
 
     ctx->x += glyph->xAdvance;
+  }
+
+  return HAL_OK;
+}
+
+hal_err_t screen_draw_glyphs(screen_text_ctx_t* ctx, const glyph_t* glyphs[], size_t len) {
+  for (int i = 0; i < len; i++) {
+    if (screen_draw_glyph(ctx, glyphs[i]) != HAL_OK) {
+      return HAL_ERROR;
+    }
+
+    ctx->x += glyphs[i]->xAdvance;
+  }
+
+  return HAL_OK;
+}
+
+hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, const uint8_t* text, size_t len) {
+  uint16_t start_x = ctx->x;
+
+  while(len) {
+    // TODO: improve support for carriage return, for now since we break on newline we support skipping it at the beginning of a line only.
+    if (text[0] == '\r') {
+      text++;
+      if (!--len) {
+        break;
+      }
+    }
+
+    size_t line_len = 0;
+    size_t line_width = start_x;
+    const glyph_t* line[MAX_GLYPHS_PER_LINE];
+
+    size_t lim = MIN(MAX_GLYPHS_PER_LINE, len);
+    uint8_t wrapped = 0;
+
+    for (int i = 0; i < lim; i++) {
+      char c = (char) text[i];
+      if (c == '\n') {
+        line_len = i;
+        wrapped = 1;
+        break;
+      } else if (c == ' ') {
+        line_len = i;
+      }
+
+      line[i] = screen_lookup_glyph(ctx->font, c);
+      line_width += line[i]->xAdvance;
+      if (line_width > max_x) {
+        if (line_len == 0) {
+          line_len = i - 1;
+        }
+
+        wrapped = 1;
+        break;
+      }
+    }
+
+    if (!wrapped) {
+      line_len = lim;
+    }
+
+    if (screen_draw_glyphs(ctx, line, line_len) != HAL_OK) {
+      return HAL_ERROR;
+    }
+
+    text += line_len;
+    len -= line_len;
+
+    ctx->x = start_x;
+    ctx->y += ctx->font->yAdvance;
+
+    if (ctx->y > max_y) {
+      break;
+    }
   }
 
   return HAL_OK;

@@ -18,20 +18,26 @@ extern struct ui_cmd g_ui_cmd;
 extern keypad_key_t g_last_key;
 
 enum cmd_type {
-  UI_CMD_MSG,
+  UI_CMD_DIALOG,
   UI_CMD_MENU,
   UI_CMD_DISPLAY_TXN,
+  UI_CMD_DISPLAY_MSG,
   UI_CMD_QRSCAN,
   UI_CMD_INPUT_PIN,
   UI_CMD_INPUT_MNEMO
 };
 
-struct cmd_msg {
+struct cmd_dialog {
   const char* msg;
 };
 
 struct cmd_txn {
   const txContent_t* tx;
+};
+
+struct cmd_msg {
+  uint32_t len;
+  const uint8_t* data;
 };
 
 struct cmd_menu {
@@ -54,8 +60,9 @@ struct cmd_input_mnemo {
 };
 
 union cmd_params {
-  struct cmd_msg msg;
+  struct cmd_dialog dialog;
   struct cmd_txn txn;
+  struct cmd_msg msg;
   struct cmd_menu menu;
   struct cmd_qrscan qrscan;
   struct cmd_input_pin input_pin;

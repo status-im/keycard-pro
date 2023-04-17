@@ -26,6 +26,13 @@ void ui_display_tx(const txContent_t* tx) {
   ui_signal();
 }
 
+void ui_display_msg(const uint8_t* msg, uint32_t len) {
+  g_ui_cmd.type = UI_CMD_DISPLAY_MSG;
+  g_ui_cmd.params.msg.data = msg;
+  g_ui_cmd.params.msg.len = len;
+  ui_signal();
+}
+
 void ui_card_inserted() {
  /* BSP_LCD_ClearStringLine(4);
   BSP_LCD_DisplayStringAtLine(4, (uint8_t*) "Card IN");*/

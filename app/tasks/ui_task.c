@@ -39,6 +39,9 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_DISPLAY_TXN:
       g_ui_cmd.result = dialog_confirm_tx();
       break;
+    case UI_CMD_DISPLAY_MSG:
+      g_ui_cmd.result = dialog_confirm_msg();
+      break;
     default:
       break;
     }

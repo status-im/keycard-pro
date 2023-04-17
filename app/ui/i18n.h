@@ -23,7 +23,9 @@ typedef enum {
   TX_ADDRESS,
   TX_AMOUNT,
   TX_FEE,
-  TX_TOTAL
+
+  // MSG Confirmation
+  MSG_CONFIRM_TITLE
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

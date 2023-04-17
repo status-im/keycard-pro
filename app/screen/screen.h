@@ -68,6 +68,7 @@ hal_err_t screen_draw_pixels(const uint16_t* pixels, size_t count, void (*cb)())
 // High level API
 hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, char c);
 hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str);
+hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, const uint8_t* text, size_t len);
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color);
 hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels);
 hal_err_t screen_camera_passthrough(const uint8_t* fb);

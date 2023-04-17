@@ -19,5 +19,7 @@ const char* i18n_english_strings[] = {
     "To",
     "Amount",
     "Fee",
-    "Total"
+
+    // MSG Confirmation
+    "Sign message"
 };

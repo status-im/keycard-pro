@@ -113,3 +113,32 @@ app_err_t dialog_confirm_tx() {
     }
   }
 }
+
+app_err_t dialog_confirm_msg() {
+  dialog_title(LSTR(MSG_CONFIRM_TITLE));
+  screen_text_ctx_t ctx;
+  ctx.y = TH_TITLE_HEIGHT;
+  dialog_footer(ctx.y);
+  ctx.y += TH_DATA_LEFT_MARGIN;
+
+  ctx.font = TH_FONT_LABEL;
+  ctx.fg = TH_COLOR_DATA_FG;
+  ctx.bg = TH_COLOR_DATA_BG;
+  ctx.x = TH_DATA_LEFT_MARGIN;
+
+  screen_draw_text(&ctx, (SCREEN_WIDTH - TH_DATA_LEFT_MARGIN), (SCREEN_HEIGHT - TH_DATA_LEFT_MARGIN), g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len);
+
+  //TODO: implement scrolling
+  while(1) {
+    switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
+    case KEYPAD_KEY_CANCEL:
+    case KEYPAD_KEY_BACK:
+    case KEYPAD_KEY_INVALID:
+      return ERR_CANCEL;
+    case KEYPAD_KEY_CONFIRM:
+      return ERR_OK;
+    default:
+      break;
+    }
+  }
+}

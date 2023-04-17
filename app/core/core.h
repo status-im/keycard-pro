@@ -14,12 +14,29 @@
 
 #define BIP44_MAX_PATH_LEN 40
 #define SIGNATURE_LEN 65
+#define MAX_MSG_SIZE 512
 
 typedef enum {
   CORE_EVT_USB_CMD,
   CORE_EVT_UI_CANCELLED,
   CORE_EVT_UI_OK
 } core_evt_t;
+
+typedef struct {
+  txContext_t ctx;
+  txContent_t content;
+} core_tx_t;
+
+typedef struct {
+  uint32_t received;
+  uint32_t len;
+  uint8_t content[MAX_MSG_SIZE];
+} core_msg_t;
+
+typedef union {
+  core_tx_t tx;
+  core_msg_t msg;
+} core_data_t;
 
 typedef struct {
   Keycard keycard;
@@ -30,10 +47,8 @@ typedef struct {
   uint8_t bip44_path[BIP44_MAX_PATH_LEN];
   uint8_t bip44_path_len;
   uint8_t signature[SIGNATURE_LEN];
-  uint32_t remaining;
   SHA3_CTX hash_ctx;
-  txContent_t tx_data;
-  txContext_t tx_ctx;
+  core_data_t data;
 } core_ctx_t;
 
 extern core_ctx_t g_core;

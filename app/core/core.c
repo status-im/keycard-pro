@@ -28,13 +28,13 @@ static inline app_err_t core_init_sign() {
 
 static inline uint8_t core_get_tx_v_base() {
   uint8_t v_base;
-  if (g_core.tx_ctx.txType == EIP1559 || g_core.tx_ctx.txType == EIP2930) {
+  if (g_core.data.tx.ctx.txType == EIP1559 || g_core.data.tx.ctx.txType == EIP2930) {
     v_base = 0;
   } else {
-    if (g_core.tx_data.vLength == 0) {
+    if (g_core.data.tx.content.vLength == 0) {
       v_base = 27;
     } else {
-      uint32_t v = (uint32_t) u64_from_BE(g_core.tx_data.v, APP_MIN(4, g_core.tx_data.vLength));
+      uint32_t v = (uint32_t) u64_from_BE(g_core.data.tx.content.v, APP_MIN(4, g_core.data.tx.content.vLength));
       v_base = (v * 2) + 35;
     }
   }
@@ -58,8 +58,13 @@ static app_err_t core_sign(Keycard* kc, uint8_t* out) {
   return ERR_OK;
 }
 
-static app_err_t core_wait_tx_confirmation() {
-  ui_display_tx(&g_core.tx_data);
+static inline app_err_t core_wait_tx_confirmation() {
+  ui_display_tx(&g_core.data.tx.content);
+  return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+}
+
+static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg) {
+  ui_display_msg(msg, g_core.data.msg.len);
   return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
@@ -68,28 +73,28 @@ static app_err_t core_process_tx(const uint8_t* data, uint8_t len, uint8_t first
     // EIP 2718: TransactionType might be present before the TransactionPayload.
     uint8_t txType = data[0];
 
-    initTx(&g_core.tx_ctx, &g_core.hash_ctx, &g_core.tx_data);
+    initTx(&g_core.data.tx.ctx, &g_core.hash_ctx, &g_core.data.tx.content);
 
     if (txType >= MIN_TX_TYPE && txType <= MAX_TX_TYPE) {
       // Enumerate through all supported txTypes here...
       if (txType == EIP2930 || txType == EIP1559) {
         keccak_Update(&g_core.hash_ctx, data, 1);
-        g_core.tx_ctx.txType = txType;
+        g_core.data.tx.ctx.txType = txType;
         data++;
         len--;
       } else {
         return ERR_UNSUPPORTED;
       }
     } else {
-      g_core.tx_ctx.txType = LEGACY;
+      g_core.data.tx.ctx.txType = LEGACY;
     }
   }
 
-  if (g_core.tx_ctx.currentField == RLP_NONE) {
+  if (g_core.data.tx.ctx.currentField == RLP_NONE) {
     return ERR_DATA;
   }
 
-  parserStatus_e res = processTx(&g_core.tx_ctx, data, len, 0);
+  parserStatus_e res = processTx(&g_core.data.tx.ctx, data, len, 0);
   switch (res) {
     case USTREAM_FINISHED:
       return core_wait_tx_confirmation();
@@ -98,6 +103,29 @@ static app_err_t core_process_tx(const uint8_t* data, uint8_t len, uint8_t first
     case USTREAM_FAULT:
     default:
       return ERR_DATA;
+  }
+}
+
+static app_err_t core_process_msg(const uint8_t* data, uint8_t len, uint8_t first_segment) {
+  if (first_segment) {
+    g_core.data.msg.received = 0;
+    keccak_Update(&g_core.hash_ctx, ETH_MSG_MAGIC, ETH_MSG_MAGIC_LEN);
+    uint8_t tmp[11];
+    uint8_t* ascii_len = u32toa(g_core.data.msg.len, tmp, 11);
+    keccak_Update(&g_core.hash_ctx, ascii_len, 10 - (size_t)(ascii_len - tmp));
+  }
+
+  if ((g_core.data.msg.received + len) > g_core.data.msg.len) {
+    return ERR_DATA;
+  }
+
+  keccak_Update(&g_core.hash_ctx, data, len);
+  g_core.data.msg.received += len;
+
+  if (g_core.data.msg.received == g_core.data.msg.len) {
+    return core_wait_msg_confirmation(data);
+  } else {
+    return ERR_NEED_MORE_DATA;
   }
 }
 
@@ -262,34 +290,42 @@ static void core_usb_sign_message(Keycard* kc, APDU* cmd) {
   cmd->has_lc = 1;
   uint8_t* data = APDU_DATA(cmd);
   uint32_t len = APDU_LC(cmd);
+  uint8_t first_segment = APDU_P1(cmd) == 0;
 
-  if (APDU_P1(cmd) == 0) {
+  if (first_segment) {
     if (core_usb_init_sign(data) != ERR_OK) {
       core_usb_err_sw(cmd, 0x6a, 0x80);
       return;
     }
 
-    g_core.remaining = (data[1+g_core.bip44_path_len] << 24) | (data[2+g_core.bip44_path_len] << 16) | (data[3+g_core.bip44_path_len] << 8) | data[4+g_core.bip44_path_len];
+    g_core.data.msg.len = (data[1+g_core.bip44_path_len] << 24) | (data[2+g_core.bip44_path_len] << 16) | (data[3+g_core.bip44_path_len] << 8) | data[4+g_core.bip44_path_len];
+    g_core.data.msg.received = 0;
     keccak_Update(&g_core.hash_ctx, ETH_MSG_MAGIC, ETH_MSG_MAGIC_LEN);
-    uint8_t tmp[11];
-    uint8_t* ascii_len = u32toa(g_core.remaining, tmp, 11);
-    keccak_Update(&g_core.hash_ctx, ascii_len, 10 - (size_t)(ascii_len - tmp));
     len -= g_core.bip44_path_len + 5;
     data = &data[g_core.bip44_path_len + 5];
   }
 
-  if (g_core.remaining < len) {
-    core_usb_err_sw(cmd, 0x6a, 0x80);
-    return;
-  }
+  //TODO: inform the user that the message has been truncated!
+  int off = MIN((MAX_MSG_SIZE - len), (g_core.data.msg.received + len));
+  uint8_t* buf = &g_core.data.msg.content[off];
+  memcpy(buf, data, len);
 
-  keccak_Update(&g_core.hash_ctx, data, len);
-  g_core.remaining -= len;
-
-  if (g_core.remaining == 0) {
-    core_usb_sign(kc, cmd, 27);
-  } else {
-    core_usb_err_sw(cmd, 0x90, 0x00);
+  switch(core_process_msg(buf, len, first_segment)) {
+    case ERR_OK:
+      core_usb_sign(kc, cmd, 27);
+      break;
+    case ERR_NEED_MORE_DATA:
+      core_usb_err_sw(cmd, 0x90, 0x00);
+      break;
+    case ERR_DATA:
+      core_usb_err_sw(cmd, 0x6a, 0x80);
+      break;
+    case ERR_CANCEL:
+      core_usb_err_sw(cmd, 0x69, 0x82);
+      break;
+    default:
+      core_usb_err_sw(cmd, 0x6f, 0x00);
+      break;
   }
 }
 
@@ -388,7 +424,8 @@ void core_qr_run() {
       err = core_process_tx(g_core.qr_request._eth_sign_request_sign_data.value, g_core.qr_request._eth_sign_request_sign_data.len, 1);
       break;
     case _sign_data_type__eth_raw_bytes:
-      err = ERR_UNSUPPORTED;
+      g_core.data.msg.len = g_core.qr_request._eth_sign_request_sign_data.len;
+      err = core_process_msg(g_core.qr_request._eth_sign_request_sign_data.value, g_core.qr_request._eth_sign_request_sign_data.len, 1);
       break;
     case _sign_data_type__eth_typed_data:
       err = ERR_UNSUPPORTED;

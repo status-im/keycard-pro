@@ -12,5 +12,6 @@ app_err_t dialog_title(const char* title);
 app_err_t dialog_footer(uint16_t yOff);
 
 app_err_t dialog_confirm_tx();
+app_err_t dialog_confirm_msg();
 
 #endif
