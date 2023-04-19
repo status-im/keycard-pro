@@ -27,10 +27,14 @@
 #define TH_COLOR_DATA_BG TH_COLOR_BG
 #define TH_COLOR_DATA_FG TH_COLOR_FG
 
+#define TH_COLOR_TEXT_BG TH_COLOR_BG
+#define TH_COLOR_TEXT_FG TH_COLOR_FG
+
 #define TH_FONT_MENU &free_sans_9pt
 #define TH_FONT_LABEL &free_sans_9pt
 #define TH_FONT_DATA &plat_nomor_8pt
 #define TH_FONT_TITLE &free_sans_9pt
+#define TH_FONT_TEXT &free_sans_9pt
 
 #define TH_MENU_HEIGHT 30
 #define TH_MENU_LEFT_MARGIN TH_DEF_LEFT_MARGIN
@@ -45,5 +49,8 @@
 
 #define TH_TITLE_HEIGHT 28
 #define TH_TITLE_LEFT_MARGIN TH_DEF_LEFT_MARGIN
+
+#define TH_TEXT_HORIZONTAL_MARGIN TH_DEF_LEFT_MARGIN
+#define TH_TEXT_VERTICAL_MARGIN TH_DEF_LEFT_MARGIN
 
 #endif

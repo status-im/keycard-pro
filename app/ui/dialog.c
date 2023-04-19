@@ -119,14 +119,14 @@ app_err_t dialog_confirm_msg() {
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
   dialog_footer(ctx.y);
-  ctx.y += TH_DATA_LEFT_MARGIN;
+  ctx.y += TH_TEXT_VERTICAL_MARGIN;
 
-  ctx.font = TH_FONT_LABEL;
-  ctx.fg = TH_COLOR_DATA_FG;
-  ctx.bg = TH_COLOR_DATA_BG;
-  ctx.x = TH_DATA_LEFT_MARGIN;
+  ctx.font = TH_FONT_TEXT;
+  ctx.fg = TH_COLOR_TEXT_FG;
+  ctx.bg = TH_COLOR_TEXT_BG;
+  ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
 
-  screen_draw_text(&ctx, (SCREEN_WIDTH - TH_DATA_LEFT_MARGIN), (SCREEN_HEIGHT - TH_DATA_LEFT_MARGIN), g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len);
+  screen_draw_text(&ctx, (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN), (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN), g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len);
 
   //TODO: implement scrolling
   while(1) {
