@@ -7,7 +7,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
     return ERR_DATA;
   }
 
-  if (!(tolower(in[0]) == 'u' && tolower(in[1]) == 'r' && in[2] == ':')) {
+  if (!(toupper(in[0]) == 'U' && toupper(in[1]) == 'R' && in[2] == ':')) {
     return ERR_DATA;
   }
 
@@ -19,7 +19,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
       break;
     }
 
-    tmp += tolower(in[offset]);
+    tmp += toupper(in[offset]);
   }
 
   if (offset == in_len) {
@@ -28,7 +28,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
 
   // we assume we are dealing with a supported type and moving the
   // case where we are not to actual payload validation
-  ur->type = (ur_type_t)(((tmp * 5961553) >> 30) & 0x3);
+  ur->type = (ur_type_t)(((tmp * 8238429) >> 30) & 0x3);
 
   if (isdigit(in[++offset])) {
     ur->is_multipart = 1;
