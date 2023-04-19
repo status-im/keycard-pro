@@ -16,6 +16,7 @@
 #endif
 
 static bool encode_uuid(zcbor_state_t *state, const struct zcbor_string *input);
+static bool encode_repeated_eth_signature_request_id(zcbor_state_t *state, const struct eth_signature_request_id *input);
 static bool encode_repeated_eth_signature_signature_origin(zcbor_state_t *state, const struct eth_signature_signature_origin *input);
 static bool encode_repeated_hd_key_chain_code(zcbor_state_t *state, const struct hd_key_chain_code *input);
 static bool encode_path_component(zcbor_state_t *state, const struct path_component *input);
@@ -36,6 +37,20 @@ static bool encode_uuid(
 
 	bool tmp_result = ((zcbor_tag_encode(state, 37)
 	&& (zcbor_bstr_encode(state, (&(*input))))));
+
+	if (!tmp_result)
+		zcbor_trace();
+
+	return tmp_result;
+}
+
+static bool encode_repeated_eth_signature_request_id(
+		zcbor_state_t *state, const struct eth_signature_request_id *input)
+{
+	zcbor_print("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_put(state, (1))))
+	&& (encode_uuid(state, (&(*input)._eth_signature_request_id)))));
 
 	if (!tmp_result)
 		zcbor_trace();
@@ -202,8 +217,7 @@ static bool encode_eth_signature(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((zcbor_map_start_encode(state, 3) && (((((zcbor_uint32_put(state, (1))))
-	&& (encode_uuid(state, (&(*input)._eth_signature_request_id))))
+	bool tmp_result = (((zcbor_map_start_encode(state, 3) && ((zcbor_present_encode(&((*input)._eth_signature_request_id_present), (zcbor_encoder_t *)encode_repeated_eth_signature_request_id, state, (&(*input)._eth_signature_request_id))
 	&& (((zcbor_uint32_put(state, (2))))
 	&& ((((((*input)._eth_signature_signature.len >= 65)
 	&& ((*input)._eth_signature_signature.len <= 65)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))

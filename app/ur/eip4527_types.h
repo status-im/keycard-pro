@@ -22,9 +22,17 @@
  */
 #define DEFAULT_MAX_QTY 3
 
+struct eth_signature_request_id {
+
+  struct zcbor_string _eth_signature_request_id;
+
+};
+
+
+
 struct eth_signature_signature_origin {
 
-	struct zcbor_string _eth_signature_signature_origin;
+  struct zcbor_string _eth_signature_signature_origin;
 
 };
 
@@ -32,13 +40,15 @@ struct eth_signature_signature_origin {
 
 struct eth_signature {
 
-	struct zcbor_string _eth_signature_request_id;
+  struct eth_signature_request_id _eth_signature_request_id;
 
-	struct zcbor_string _eth_signature_signature;
+  uint_fast32_t _eth_signature_request_id_present;
 
-	struct eth_signature_signature_origin _eth_signature_signature_origin;
+  struct zcbor_string _eth_signature_signature;
 
-	uint_fast32_t _eth_signature_signature_origin_present;
+  struct eth_signature_signature_origin _eth_signature_signature_origin;
+
+  uint_fast32_t _eth_signature_signature_origin_present;
 
 };
 
@@ -46,7 +56,7 @@ struct eth_signature {
 
 struct hd_key_chain_code {
 
-	struct zcbor_string _hd_key_chain_code;
+  struct zcbor_string _hd_key_chain_code;
 
 };
 
@@ -54,9 +64,9 @@ struct hd_key_chain_code {
 
 struct path_component {
 
-	uint32_t _path_component__child_index;
+  uint32_t _path_component__child_index;
 
-	bool _path_component__is_hardened;
+  bool _path_component__is_hardened;
 
 };
 
@@ -64,7 +74,7 @@ struct path_component {
 
 struct crypto_keypath_source_fingerprint {
 
-	uint32_t _crypto_keypath_source_fingerprint;
+  uint32_t _crypto_keypath_source_fingerprint;
 
 };
 
@@ -72,7 +82,7 @@ struct crypto_keypath_source_fingerprint {
 
 struct crypto_keypath_depth {
 
-	uint32_t _crypto_keypath_depth;
+  uint32_t _crypto_keypath_depth;
 
 };
 
@@ -80,17 +90,17 @@ struct crypto_keypath_depth {
 
 struct crypto_keypath {
 
-	struct path_component _crypto_keypath_components__path_component[10];
+  struct path_component _crypto_keypath_components__path_component[10];
 
-	uint_fast32_t _crypto_keypath_components__path_component_count;
+  uint_fast32_t _crypto_keypath_components__path_component_count;
 
-	struct crypto_keypath_source_fingerprint _crypto_keypath_source_fingerprint;
+  struct crypto_keypath_source_fingerprint _crypto_keypath_source_fingerprint;
 
-	uint_fast32_t _crypto_keypath_source_fingerprint_present;
+  uint_fast32_t _crypto_keypath_source_fingerprint_present;
 
-	struct crypto_keypath_depth _crypto_keypath_depth;
+  struct crypto_keypath_depth _crypto_keypath_depth;
 
-	uint_fast32_t _crypto_keypath_depth_present;
+  uint_fast32_t _crypto_keypath_depth_present;
 
 };
 
@@ -98,7 +108,7 @@ struct crypto_keypath {
 
 struct hd_key_origin {
 
-	struct crypto_keypath _hd_key_origin;
+  struct crypto_keypath _hd_key_origin;
 
 };
 
@@ -106,7 +116,7 @@ struct hd_key_origin {
 
 struct hd_key_name {
 
-	struct zcbor_string _hd_key_name;
+  struct zcbor_string _hd_key_name;
 
 };
 
@@ -114,7 +124,7 @@ struct hd_key_name {
 
 struct hd_key_source {
 
-	struct zcbor_string _hd_key_source;
+  struct zcbor_string _hd_key_source;
 
 };
 
@@ -122,23 +132,23 @@ struct hd_key_source {
 
 struct hd_key {
 
-	struct zcbor_string _hd_key_key_data;
+  struct zcbor_string _hd_key_key_data;
 
-	struct hd_key_chain_code _hd_key_chain_code;
+  struct hd_key_chain_code _hd_key_chain_code;
 
-	uint_fast32_t _hd_key_chain_code_present;
+  uint_fast32_t _hd_key_chain_code_present;
 
-	struct hd_key_origin _hd_key_origin;
+  struct hd_key_origin _hd_key_origin;
 
-	uint_fast32_t _hd_key_origin_present;
+  uint_fast32_t _hd_key_origin_present;
 
-	struct hd_key_name _hd_key_name;
+  struct hd_key_name _hd_key_name;
 
-	uint_fast32_t _hd_key_name_present;
+  uint_fast32_t _hd_key_name_present;
 
-	struct hd_key_source _hd_key_source;
+  struct hd_key_source _hd_key_source;
 
-	uint_fast32_t _hd_key_source_present;
+  uint_fast32_t _hd_key_source_present;
 
 };
 
