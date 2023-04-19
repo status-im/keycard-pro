@@ -1,7 +1,7 @@
-#include "ui.h"
-#include "ui_internal.h"
 #include "app_tasks.h"
 #include "error.h"
+#include "ui.h"
+#include "ui_internal.h"
 
 static inline void ui_signal() {
   xTaskNotifyIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_CMD_EVT, eSetBits);
@@ -30,6 +30,14 @@ void ui_display_msg(const uint8_t* msg, uint32_t len) {
   g_ui_cmd.type = UI_CMD_DISPLAY_MSG;
   g_ui_cmd.params.msg.data = msg;
   g_ui_cmd.params.msg.len = len;
+  ui_signal();
+}
+
+void ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type) {
+  g_ui_cmd.type = UI_CMD_DISPLAY_QR;
+  g_ui_cmd.params.qrout.data = data;
+  g_ui_cmd.params.qrout.len = len;
+  g_ui_cmd.params.qrout.type = type;
   ui_signal();
 }
 

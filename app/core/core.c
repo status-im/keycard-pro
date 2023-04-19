@@ -6,8 +6,9 @@
 #include "keycard/secure_channel.h"
 #include "keycard/keycard_cmdset.h"
 #include "keycard/keycard.h"
-#include "util/tlv.h"
 #include "ui/ui_internal.h"
+#include "ur/eip4527_encode.h"
+#include "util/tlv.h"
 
 #define APP_MAJOR 1
 #define APP_MINOR 9
@@ -439,9 +440,22 @@ void core_qr_run() {
     return;
   }
 
-  if (core_sign(&g_core.keycard, g_core.signature) != ERR_OK) {
+  if (core_sign(&g_core.keycard, g_core.data.sig.plain_sig) != ERR_OK) {
     return;
   }
+
+  struct eth_signature sig = {0};
+  sig._eth_signature_request_id_present = g_core.qr_request._eth_sign_request_request_id_present;
+  if (sig._eth_signature_request_id_present) {
+    sig._eth_signature_request_id._eth_signature_request_id.value = g_core.qr_request._eth_sign_request_request_id._eth_sign_request_request_id.value;
+    sig._eth_signature_request_id._eth_signature_request_id.len = g_core.qr_request._eth_sign_request_request_id._eth_sign_request_request_id.len;
+  }
+  sig._eth_signature_signature.value = g_core.data.sig.plain_sig;
+  sig._eth_signature_signature.len = SIGNATURE_LEN;
+  cbor_encode_eth_signature(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &sig, &g_core.data.sig.cbor_len);
+  ui_display_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGN_REQUEST);
+
+  core_wait_event(0);
 }
 
 void core_action_run(i18n_str_id_t menu) {

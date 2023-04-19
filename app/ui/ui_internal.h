@@ -8,6 +8,7 @@
 #include "keypad/keypad.h"
 #include "ethereum/ethUstream.h"
 #include "ur/eip4527_types.h"
+#include "ur/ur.h"
 
 #define UI_NOTIFICATION_IDX 2
 
@@ -22,6 +23,7 @@ enum cmd_type {
   UI_CMD_MENU,
   UI_CMD_DISPLAY_TXN,
   UI_CMD_DISPLAY_MSG,
+  UI_CMD_DISPLAY_QR,
   UI_CMD_QRSCAN,
   UI_CMD_INPUT_PIN,
   UI_CMD_INPUT_MNEMO
@@ -36,8 +38,14 @@ struct cmd_txn {
 };
 
 struct cmd_msg {
-  uint32_t len;
   const uint8_t* data;
+  uint32_t len;
+};
+
+struct cmd_qrout {
+  const uint8_t* data;
+  uint32_t len;
+  ur_type_t type;
 };
 
 struct cmd_menu {
@@ -63,6 +71,7 @@ union cmd_params {
   struct cmd_dialog dialog;
   struct cmd_txn txn;
   struct cmd_msg msg;
+  struct cmd_qrout qrout;
   struct cmd_menu menu;
   struct cmd_qrscan qrscan;
   struct cmd_input_pin input_pin;

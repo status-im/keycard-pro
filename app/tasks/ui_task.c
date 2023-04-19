@@ -4,6 +4,7 @@
 #include "app_tasks.h"
 #include "log/log.h"
 #include "keypad/keypad.h"
+#include "qrcode/qrout.h"
 #include "qrcode/qrscan.h"
 #include "screen/screen.h"
 #include "ui/dialog.h"
@@ -42,6 +43,8 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_DISPLAY_MSG:
       g_ui_cmd.result = dialog_confirm_msg();
       break;
+    case UI_CMD_DISPLAY_QR:
+      g_ui_cmd.result = qrout_run();
     default:
       break;
     }
