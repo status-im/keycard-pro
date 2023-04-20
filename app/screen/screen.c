@@ -2,6 +2,7 @@
 #include "screen.h"
 #include "common.h"
 #include "log/log.h"
+#include "qrcode/qrcodegen.h"
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -15,12 +16,16 @@
 const screen_area_t screen_fullarea = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
 const screen_area_t screen_camarea = { (SCREEN_WIDTH - CAM_OUT_WIDTH)/2, (SCREEN_HEIGHT - CAM_OUT_HEIGHT)/2, CAM_OUT_WIDTH, CAM_OUT_HEIGHT };
 
-struct _screen_camera_passthrough_ctx {
-  uint8_t* fb;
+struct screen_render_ctx {
+  const uint8_t* data;
   int y;
+  int qr_size;
+  int render_size;
+  int scale;
+  int y_repeat;
 };
 
-static struct _screen_camera_passthrough_ctx _cp_ctx;
+static struct screen_render_ctx g_screen_render_ctx;
 
 APP_NOCACHE(uint16_t g_screen_fb[SCREEN_WIDTH], 2);
 
@@ -31,19 +36,19 @@ static void screen_signal() {
 }
 
 static void screen_camera_line() {
-  if (_cp_ctx.y >= CAM_OUT_HEIGHT) {
+  if (g_screen_render_ctx.y >= CAM_OUT_HEIGHT) {
     screen_signal();
     return;
   }
 
   for(int x = 0; x < CAM_OUT_WIDTH; x++) {
-    uint8_t luma = *_cp_ctx.fb;
-    _cp_ctx.fb += 2;
+    uint8_t luma = *g_screen_render_ctx.data;
+    g_screen_render_ctx.data += 2;
     g_screen_fb[x] = luma ? SCREEN_COLOR_BLACK : SCREEN_COLOR_WHITE;
   }
 
-  _cp_ctx.fb += CAMERA_WIDTH;
-  _cp_ctx.y++;
+  g_screen_render_ctx.data += CAMERA_WIDTH;
+  g_screen_render_ctx.y++;
 
   screen_draw_pixels(g_screen_fb, CAM_OUT_WIDTH, screen_camera_line);
 }
@@ -53,12 +58,55 @@ hal_err_t screen_camera_passthrough(const uint8_t* fb) {
     return HAL_ERROR;
   }
 
-  _cp_ctx.fb = (uint8_t*) fb;
-  _cp_ctx.y = 0;
+  g_screen_render_ctx.data = (uint8_t*) fb;
+  g_screen_render_ctx.y = 0;
 
   screen_camera_line();
 
   return HAL_OK;
+}
+
+static void screen_qr_line() {
+  if (g_screen_render_ctx.y_repeat == 0) {
+    if (g_screen_render_ctx.y >= g_screen_render_ctx.qr_size) {
+      screen_signal();
+      return;
+    }
+
+    int fb_x = 0;
+
+    for(int x = 0; x < g_screen_render_ctx.qr_size; x++) {
+      uint8_t module = qrcodegen_getModule(g_screen_render_ctx.data, x, g_screen_render_ctx.y);
+      int x_repeat = g_screen_render_ctx.scale;
+      while(x_repeat--) {
+        g_screen_fb[fb_x++] = module ? SCREEN_COLOR_BLACK : SCREEN_COLOR_WHITE;
+      }
+    }
+
+    g_screen_render_ctx.y++;
+    g_screen_render_ctx.y_repeat = (g_screen_render_ctx.scale - 1);
+  } else {
+    g_screen_render_ctx.y_repeat--;
+  }
+
+  screen_draw_pixels(g_screen_fb, g_screen_render_ctx.render_size, screen_qr_line);
+}
+
+hal_err_t screen_draw_qrcode(const screen_area_t* area, const uint8_t* qrcode) {
+  if (screen_set_drawing_window(area) != HAL_OK) {
+    return HAL_ERROR;
+  }
+
+  g_screen_render_ctx.data = qrcode;
+  g_screen_render_ctx.y = 0;
+  g_screen_render_ctx.qr_size = qrcodegen_getSize(qrcode);
+  g_screen_render_ctx.render_size = area->width;
+  g_screen_render_ctx.scale =  g_screen_render_ctx.render_size / g_screen_render_ctx.qr_size;
+  g_screen_render_ctx.y_repeat = 0;
+
+  screen_qr_line();
+
+  return screen_wait();
 }
 
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color) {
