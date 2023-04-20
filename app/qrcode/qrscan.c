@@ -8,8 +8,21 @@
 #include "ui/ui_internal.h"
 #include "error.h"
 
+app_err_t qrscan_decode() {
+  if (quirc_count(&g_ui_ctx.qr_internal.qrctx) != 1) {
+    return ERR_RETRY;
+  }
+
+  quirc_extract(&g_ui_ctx.qr_internal.qrctx, 0, &g_ui_ctx.qrcode);
+  quirc_decode_error_t err = quirc_decode(&g_ui_ctx.qrcode, &g_ui_ctx.qr_internal.qrdata);
+
+  return !err ? ur_process_part(&g_ui_ctx.ur, g_ui_ctx.qr_internal.qrdata.payload, g_ui_ctx.qr_internal.qrdata.payload_len) : ERR_RETRY;
+}
+
 app_err_t qrscan_scan() {
   app_err_t res = ERR_OK;
+  g_ui_ctx.ur.data_max_len = sizeof(struct quirc_code);
+  g_ui_ctx.ur.data = (uint8_t*)&g_ui_ctx.qrcode;
 
   screen_fill_area(&screen_fullarea, TH_COLOR_QR_BG);
 
@@ -50,29 +63,10 @@ app_err_t qrscan_scan() {
 
     quirc_end(&g_ui_ctx.qr_internal.qrctx);
 
-    int num_codes = quirc_count(&g_ui_ctx.qr_internal.qrctx);
-    for (int i = 0; i < num_codes; i++) {
-      quirc_decode_error_t err;
-
-      quirc_extract(&g_ui_ctx.qr_internal.qrctx, i, &g_ui_ctx.qrcode);
-
-      err = quirc_decode(&g_ui_ctx.qrcode, &g_ui_ctx.qr_internal.qrdata);
-      if (!err) {
-        LOG(LOG_MSG, g_ui_ctx.qr_internal.qrdata.payload, g_ui_ctx.qr_internal.qrdata.payload_len);
-        if (ur_process_part(&g_ui_ctx.ur, g_ui_ctx.qr_internal.qrdata.payload, g_ui_ctx.qr_internal.qrdata.payload_len) == ERR_OK) {
-          if (g_ui_ctx.ur.type == ETH_SIGN_REQUEST) {
-            cbor_decode_eth_sign_request(g_ui_ctx.ur.data, g_ui_ctx.ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
-            screen_wait();
-            goto end;
-          } else {
-            LOG_MSG("Unsupported UR type");
-          }
-        } else {
-          LOG_MSG("Failed decoding UR data");
-        }
-      } else {
-        LOG_MSG("Failed decoding QR Code");
-      }
+    if (qrscan_decode() == ERR_OK && g_ui_ctx.ur.type == ETH_SIGN_REQUEST) {
+      cbor_decode_eth_sign_request(g_ui_ctx.ur.data, g_ui_ctx.ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
+      screen_wait();
+      goto end;
     }
 
     screen_wait();

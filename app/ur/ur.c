@@ -44,7 +44,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
     ur->is_complete = 1;
   }
 
-  ur->data_len = bytewords_decode(&in[offset], (in_len - offset), ur->data, UR_MAX_DATA_LEN);
+  ur->data_len = bytewords_decode(&in[offset], (in_len - offset), ur->data, ur->data_max_len);
 
   return ur->data_len == 0 ? ERR_DATA : ERR_OK;
 }
