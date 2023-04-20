@@ -23,7 +23,6 @@ typedef struct {
 } screen_text_ctx_t;
 
 extern const screen_area_t screen_fullarea;
-extern const screen_area_t screen_camarea;
 
 #define SCREEN_R_POS_RGB 11
 #define SCREEN_G_POS_RGB 5
@@ -73,6 +72,6 @@ hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color);
 hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels);
 hal_err_t screen_camera_passthrough(const uint8_t* fb);
-hal_err_t screen_draw_qrcode(const screen_area_t* area, const uint8_t* qrcode);
+hal_err_t screen_draw_qrcode(const screen_area_t* area, const uint8_t* qrcode, int qrsize, int scale);
 
 #endif

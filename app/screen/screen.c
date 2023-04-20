@@ -92,16 +92,16 @@ static void screen_qr_line() {
   screen_draw_pixels(g_screen_fb, g_screen_render_ctx.render_size, screen_qr_line);
 }
 
-hal_err_t screen_draw_qrcode(const screen_area_t* area, const uint8_t* qrcode) {
+hal_err_t screen_draw_qrcode(const screen_area_t* area, const uint8_t* qrcode, int qrsize, int scale) {
   if (screen_set_drawing_window(area) != HAL_OK) {
     return HAL_ERROR;
   }
 
   g_screen_render_ctx.data = qrcode;
   g_screen_render_ctx.y = 0;
-  g_screen_render_ctx.qr_size = qrcodegen_getSize(qrcode);
+  g_screen_render_ctx.qr_size = qrsize;
   g_screen_render_ctx.render_size = area->width;
-  g_screen_render_ctx.scale =  g_screen_render_ctx.render_size / g_screen_render_ctx.qr_size;
+  g_screen_render_ctx.scale =  scale;
   g_screen_render_ctx.y_repeat = 0;
 
   screen_qr_line();

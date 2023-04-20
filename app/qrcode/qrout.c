@@ -4,6 +4,7 @@
 #include "qrout.h"
 #include "screen/screen.h"
 #include "ur/ur.h"
+#include "ui/dialog.h"
 #include "ui/theme.h"
 #include "ui/ui_internal.h"
 
@@ -20,16 +21,30 @@ app_err_t qrout_run() {
   uint8_t* qrcode = &tmpBuf[qrcodegen_BUFFER_LEN_MAX];
   char* urstr = (char*)&qrcode[qrcodegen_BUFFER_LEN_MAX];
 
+  dialog_title(LSTR(QR_OUTPUT_TITLE));
+  screen_area_t bgarea = { 0, TH_TITLE_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - TH_TITLE_HEIGHT };
+  screen_fill_area(&bgarea, SCREEN_COLOR_WHITE);
+
   if (ur_encode(&g_ui_ctx.ur, urstr, CAMERA_FB_SIZE - (qrcodegen_BUFFER_LEN_MAX * 2)) != ERR_OK) {
     return ERR_DATA;
   }
 
-  if (!qrcodegen_encodeText(urstr, tmpBuf, qrcode, qrcodegen_Ecc_LOW, 4, 40, qrcodegen_Mask_AUTO, 1)) {
+  if (!qrcodegen_encodeText(urstr, tmpBuf, qrcode, qrcodegen_Ecc_LOW, 1, 40, qrcodegen_Mask_AUTO, 1)) {
     return ERR_DATA;
   }
 
-  screen_fill_area(&screen_fullarea, SCREEN_COLOR_WHITE);
-  screen_draw_qrcode(&screen_camarea, qrcode);
+  screen_area_t qrarea;
+  qrarea.height = SCREEN_HEIGHT - (TH_TITLE_HEIGHT + (TH_QRCODE_VERTICAL_MARGIN * 2));
+
+  int qrsize = qrcodegen_getSize(qrcode);
+  int scale = qrarea.height / qrsize;
+  qrarea.height = scale * qrsize;
+
+  qrarea.width = qrarea.height;
+  qrarea.x = (SCREEN_WIDTH - qrarea.width) / 2;
+  qrarea.y = TH_TITLE_HEIGHT + (((SCREEN_HEIGHT - TH_TITLE_HEIGHT) - qrarea.height) / 2);
+
+  screen_draw_qrcode(&qrarea, qrcode, qrsize, scale);
 
   while(1) {
     switch(ui_wait_keypress(pdMS_TO_TICKS(QR_DISPLAY_TIMEOUT))) {

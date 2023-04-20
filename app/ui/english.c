@@ -21,5 +21,8 @@ const char* i18n_english_strings[] = {
     "Fee",
 
     // MSG Confirmation
-    "Sign message"
+    "Sign message",
+
+    // QR output
+    "Scan with your wallet",
 };

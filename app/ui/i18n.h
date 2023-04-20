@@ -25,7 +25,10 @@ typedef enum {
   TX_FEE,
 
   // MSG Confirmation
-  MSG_CONFIRM_TITLE
+  MSG_CONFIRM_TITLE,
+
+  // QR output
+  QR_OUTPUT_TITLE,
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

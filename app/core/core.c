@@ -453,7 +453,7 @@ void core_qr_run() {
   sig._eth_signature_signature.value = g_core.data.sig.plain_sig;
   sig._eth_signature_signature.len = SIGNATURE_LEN;
   cbor_encode_eth_signature(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &sig, &g_core.data.sig.cbor_len);
-  ui_display_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGN_REQUEST);
+  ui_display_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGNATURE);
 
   core_wait_event(0);
 }
