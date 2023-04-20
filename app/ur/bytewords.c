@@ -132,19 +132,23 @@ size_t bytewords_encode(const uint8_t* in, size_t in_len, uint8_t* out, size_t m
   crc32_ctx_t crc32;
   crc32_init(&crc32);
 
-  uint16_t* _out = (uint16_t*) out;
   while(in_len--) {
     crc32_update_one(&crc32, *in);
-    *(_out++) = BW_ENCODE_LUT[*(in++)];
+    uint16_t encoded = BW_ENCODE_LUT[*(in++)];
+    *(out++) = (encoded >> 8);
+    *(out++) = (encoded & 0xff);
   }
 
   uint32_t checksum;
   crc32_finish(&crc32, &checksum);
 
-  *(_out++) = checksum & 0xff;
-  *(_out++) = (checksum >> 8) & 0xff;
-  *(_out++) = (checksum >> 16) & 0xff;
-  *(_out++) = (checksum >> 24);
+  in_len = 4;
+  while(in_len--) {
+    uint16_t encoded = BW_ENCODE_LUT[(checksum & 0xff)];
+    checksum >>= 8;
+    *(out++) = (encoded >> 8);
+    *(out++) = (encoded & 0xff);
+  }
 
   return outlen;
 }

@@ -2,6 +2,15 @@
 #include "ur.h"
 #include "bytewords.h"
 
+#define MIN_ENCODED_LEN 22
+
+const char* ur_type_string[] = {
+    "CRYPTO-KEYPATH",
+    "ETH-SIGN-REQUEST",
+    "CRYPTO-HDKEY",
+    "ETH-SIGNATURE",
+};
+
 app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   if (in_len < 10) {
     return ERR_DATA;
@@ -47,4 +56,31 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   ur->data_len = bytewords_decode(&in[offset], (in_len - offset), ur->data, ur->data_max_len);
 
   return ur->data_len == 0 ? ERR_DATA : ERR_OK;
+}
+
+app_err_t ur_encode(ur_t* ur, char* out, size_t max_len) {
+  if (max_len < MIN_ENCODED_LEN) {
+    return ERR_DATA;
+  }
+
+  size_t off = 0;
+  out[off++] = 'U';
+  out[off++] = 'R';
+  out[off++] = ':';
+
+  const char* typestr = ur_type_string[ur->type];
+
+  while(*typestr != '\0') {
+    out[off++] = *(typestr++);
+  }
+
+  out[off++] = '/';
+
+  size_t outlen = bytewords_encode(ur->data, ur->data_len, (uint8_t*)&out[off], (max_len-off-1));
+  if (!outlen) {
+    return ERR_DATA;
+  }
+
+  out[off+outlen] = '\0';
+  return ERR_OK;
 }

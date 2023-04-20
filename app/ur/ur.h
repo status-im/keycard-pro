@@ -21,5 +21,6 @@ typedef struct {
 } ur_t;
 
 app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len);
+app_err_t ur_encode(ur_t* ur, char* out, size_t max_len);
 
 #endif
