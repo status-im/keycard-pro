@@ -7,6 +7,7 @@
 #include "menu.h"
 #include "keypad/keypad.h"
 #include "ethereum/ethUstream.h"
+#include "qrcode/qrcode.h"
 #include "ur/eip4527_types.h"
 #include "ur/ur.h"
 
@@ -16,7 +17,7 @@
 #define UI_KEY_EVT 2
 
 extern struct ui_cmd g_ui_cmd;
-extern keypad_key_t g_last_key;
+extern struct ui_ctx g_ui_ctx;
 
 enum cmd_type {
   UI_CMD_DIALOG,
@@ -85,6 +86,16 @@ struct ui_cmd {
   union cmd_params params;
 };
 
+struct ui_ctx {
+  keypad_key_t last_key;
+  ur_t ur;
+  struct quirc_code qrcode;
+  union {
+    struct quirc_data qrdata;
+    struct quirc qrctx;
+  } qr_internal;
+};
+
 static inline uint32_t ui_wait_event(uint32_t timeout) {
   uint32_t evt;
   return xTaskNotifyWaitIndexed(UI_NOTIFICATION_IDX, 0, UINT32_MAX, &evt, timeout) == pdPASS ? evt : 0;
@@ -97,7 +108,7 @@ static inline keypad_key_t ui_wait_keypress(uint32_t timeout) {
     g_ui_cmd.received = 1;
     return KEYPAD_KEY_CANCEL;
   } else if (evt & UI_KEY_EVT) {
-    return g_last_key;
+    return g_ui_ctx.last_key;
   }
 
   return KEYPAD_KEY_INVALID;

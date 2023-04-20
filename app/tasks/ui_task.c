@@ -3,7 +3,6 @@
 
 #include "app_tasks.h"
 #include "log/log.h"
-#include "keypad/keypad.h"
 #include "qrcode/qrout.h"
 #include "qrcode/qrscan.h"
 #include "screen/screen.h"
@@ -12,7 +11,7 @@
 #include "ui/ui_internal.h"
 
 struct ui_cmd g_ui_cmd;
-keypad_key_t g_last_key;
+struct ui_ctx g_ui_ctx;
 
 void ui_task_entry(void* pvParameters) {
   LOG_MSG("Starting UI task");

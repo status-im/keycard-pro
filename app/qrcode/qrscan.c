@@ -8,11 +8,6 @@
 #include "ui/ui_internal.h"
 #include "error.h"
 
-static struct quirc_code qrcode;
-static struct quirc_data qrdata;
-static struct quirc qr;
-static ur_t ur;
-
 app_err_t qrscan_scan() {
   app_err_t res = ERR_OK;
 
@@ -47,26 +42,26 @@ app_err_t qrscan_scan() {
     LOG(LOG_IMG, fb, CAMERA_FB_SIZE);
 #endif
 
-    quirc_set_image(&qr, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
-    quirc_begin(&qr, NULL, NULL);
+    quirc_set_image(&g_ui_ctx.qr_internal.qrctx, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
+    quirc_begin(&g_ui_ctx.qr_internal.qrctx, NULL, NULL);
 
-    quirc_threshold(&qr);
+    quirc_threshold(&g_ui_ctx.qr_internal.qrctx);
     screen_camera_passthrough(fb);
 
-    quirc_end(&qr);
+    quirc_end(&g_ui_ctx.qr_internal.qrctx);
 
-    int num_codes = quirc_count(&qr);
+    int num_codes = quirc_count(&g_ui_ctx.qr_internal.qrctx);
     for (int i = 0; i < num_codes; i++) {
       quirc_decode_error_t err;
 
-      quirc_extract(&qr, i, &qrcode);
+      quirc_extract(&g_ui_ctx.qr_internal.qrctx, i, &g_ui_ctx.qrcode);
 
-      err = quirc_decode(&qrcode, &qrdata);
+      err = quirc_decode(&g_ui_ctx.qrcode, &g_ui_ctx.qr_internal.qrdata);
       if (!err) {
-        LOG(LOG_MSG, qrdata.payload, qrdata.payload_len);
-        if (ur_process_part(&ur, qrdata.payload, qrdata.payload_len) == ERR_OK) {
-          if (ur.type == ETH_SIGN_REQUEST) {
-            cbor_decode_eth_sign_request(ur.data, ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
+        LOG(LOG_MSG, g_ui_ctx.qr_internal.qrdata.payload, g_ui_ctx.qr_internal.qrdata.payload_len);
+        if (ur_process_part(&g_ui_ctx.ur, g_ui_ctx.qr_internal.qrdata.payload, g_ui_ctx.qr_internal.qrdata.payload_len) == ERR_OK) {
+          if (g_ui_ctx.ur.type == ETH_SIGN_REQUEST) {
+            cbor_decode_eth_sign_request(g_ui_ctx.ur.data, g_ui_ctx.ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
             screen_wait();
             goto end;
           } else {

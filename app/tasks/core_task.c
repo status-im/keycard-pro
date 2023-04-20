@@ -4,7 +4,7 @@
 #include "ui/ui_internal.h"
 void core_simulate_keypress(keypad_key_t key) {
   vTaskDelay(pdMS_TO_TICKS(1000));
-  g_last_key = key;
+  g_ui_ctx.last_key = key;
   xTaskNotifyIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_KEY_EVT, eSetBits);
 }
 #endif
