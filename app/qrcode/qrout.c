@@ -1,4 +1,3 @@
-#include "camera/camera.h"
 #include "log/log.h"
 #include "qrcodegen.h"
 #include "qrout.h"
@@ -18,15 +17,15 @@ app_err_t qrout_run() {
   ur.is_complete = 1;
   ur.is_multipart = 0;
 
-  uint8_t* tmpBuf = g_camera_fb[0];
-  uint8_t* qrcode = &tmpBuf[qrcodegen_BUFFER_LEN_MAX];
-  char* urstr = (char*)&qrcode[qrcodegen_BUFFER_LEN_MAX];
+  uint8_t tmpBuf[qrcodegen_BUFFER_LEN_MAX];
+  uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
+  char urstr[qrcodegen_BUFFER_LEN_MAX/2];
 
   dialog_title(LSTR(QR_OUTPUT_TITLE));
   screen_area_t bgarea = { 0, TH_TITLE_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - TH_TITLE_HEIGHT };
   screen_fill_area(&bgarea, SCREEN_COLOR_WHITE);
 
-  if (ur_encode(&ur, urstr, CAMERA_FB_SIZE - (qrcodegen_BUFFER_LEN_MAX * 2)) != ERR_OK) {
+  if (ur_encode(&ur, urstr, sizeof(urstr)) != ERR_OK) {
     return ERR_DATA;
   }
 
