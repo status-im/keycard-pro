@@ -88,12 +88,6 @@ struct ui_cmd {
 
 struct ui_ctx {
   keypad_key_t last_key;
-  ur_t ur;
-  struct quirc_code qrcode;
-  union {
-    struct quirc_data qrdata;
-    struct quirc qrctx;
-  } qr_internal;
 };
 
 static inline uint32_t ui_wait_event(uint32_t timeout) {

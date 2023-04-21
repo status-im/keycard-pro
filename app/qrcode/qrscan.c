@@ -8,21 +8,26 @@
 #include "ui/ui_internal.h"
 #include "error.h"
 
-app_err_t qrscan_decode() {
-  if (quirc_count(&g_ui_ctx.qr_internal.qrctx) != 1) {
+app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
+  struct quirc_code qrcode;
+  struct quirc_data qrdata;
+
+  if (quirc_count(qrctx) != 1) {
     return ERR_RETRY;
   }
 
-  quirc_extract(&g_ui_ctx.qr_internal.qrctx, 0, &g_ui_ctx.qrcode);
-  quirc_decode_error_t err = quirc_decode(&g_ui_ctx.qrcode, &g_ui_ctx.qr_internal.qrdata);
+  quirc_extract(qrctx, 0, &qrcode);
+  quirc_decode_error_t err = quirc_decode(&qrcode, &qrdata);
 
-  return !err ? ur_process_part(&g_ui_ctx.ur, g_ui_ctx.qr_internal.qrdata.payload, g_ui_ctx.qr_internal.qrdata.payload_len) : ERR_RETRY;
+  return !err ? ur_process_part(ur, qrdata.payload, qrdata.payload_len) : ERR_RETRY;
 }
 
 app_err_t qrscan_scan() {
+  struct quirc qrctx;
   app_err_t res = ERR_OK;
-  g_ui_ctx.ur.data_max_len = sizeof(struct quirc_code);
-  g_ui_ctx.ur.data = (uint8_t*)&g_ui_ctx.qrcode;
+  ur_t ur;
+  ur.data_max_len = sizeof(struct quirc);
+  ur.data = (uint8_t*) &qrctx;
 
   screen_fill_area(&screen_fullarea, TH_COLOR_QR_BG);
 
@@ -55,16 +60,16 @@ app_err_t qrscan_scan() {
     LOG(LOG_IMG, fb, CAMERA_FB_SIZE);
 #endif
 
-    quirc_set_image(&g_ui_ctx.qr_internal.qrctx, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
-    quirc_begin(&g_ui_ctx.qr_internal.qrctx, NULL, NULL);
+    quirc_set_image(&qrctx, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
+    quirc_begin(&qrctx, NULL, NULL);
 
-    quirc_threshold(&g_ui_ctx.qr_internal.qrctx);
+    quirc_threshold(&qrctx);
     screen_camera_passthrough(fb);
 
-    quirc_end(&g_ui_ctx.qr_internal.qrctx);
+    quirc_end(&qrctx);
 
-    if (qrscan_decode() == ERR_OK && g_ui_ctx.ur.type == ETH_SIGN_REQUEST) {
-      cbor_decode_eth_sign_request(g_ui_ctx.ur.data, g_ui_ctx.ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
+    if (qrscan_decode(&qrctx, &ur) == ERR_OK && ur.type == ETH_SIGN_REQUEST) {
+      cbor_decode_eth_sign_request(ur.data, ur.data_len, g_ui_cmd.params.qrscan.out, NULL);
       screen_wait();
       goto end;
     }

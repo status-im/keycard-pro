@@ -11,11 +11,12 @@
 #define QR_DISPLAY_TIMEOUT 60000
 
 app_err_t qrout_run() {
-  g_ui_ctx.ur.data = (uint8_t*) g_ui_cmd.params.qrout.data;
-  g_ui_ctx.ur.data_len = g_ui_cmd.params.qrout.len;
-  g_ui_ctx.ur.type = g_ui_cmd.params.qrout.type;
-  g_ui_ctx.ur.is_complete = 1;
-  g_ui_ctx.ur.is_multipart = 0;
+  ur_t ur;
+  ur.data = (uint8_t*) g_ui_cmd.params.qrout.data;
+  ur.data_len = g_ui_cmd.params.qrout.len;
+  ur.type = g_ui_cmd.params.qrout.type;
+  ur.is_complete = 1;
+  ur.is_multipart = 0;
 
   uint8_t* tmpBuf = g_camera_fb[0];
   uint8_t* qrcode = &tmpBuf[qrcodegen_BUFFER_LEN_MAX];
@@ -25,7 +26,7 @@ app_err_t qrout_run() {
   screen_area_t bgarea = { 0, TH_TITLE_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - TH_TITLE_HEIGHT };
   screen_fill_area(&bgarea, SCREEN_COLOR_WHITE);
 
-  if (ur_encode(&g_ui_ctx.ur, urstr, CAMERA_FB_SIZE - (qrcodegen_BUFFER_LEN_MAX * 2)) != ERR_OK) {
+  if (ur_encode(&ur, urstr, CAMERA_FB_SIZE - (qrcodegen_BUFFER_LEN_MAX * 2)) != ERR_OK) {
     return ERR_DATA;
   }
 
