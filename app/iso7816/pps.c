@@ -65,7 +65,7 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
 
   sc->dev->Init.GuardTime = (sc->atr.n == 0 || sc->atr.n == 255) ? 0 : (fd * sc->atr.n);
 
-  if (HAL_SMARTCARD_Init(sc->dev) != HAL_OK) {
+  if (HAL_SMARTCARD_Init(sc->dev) != HAL_SUCCESS) {
       return 0;
   }*/
 

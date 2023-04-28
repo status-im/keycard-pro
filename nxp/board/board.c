@@ -43,7 +43,7 @@ hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len,
   xfer.dataSize = len;
   xfer.configFlags = kLPSPI_MasterPcsContinuous;
 
-  return LPSPI_MasterTransferEDMA(BOARD_LCD_SPI_BASEADDR, &lcd_edma_handle, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return LPSPI_MasterTransferEDMA(BOARD_LCD_SPI_BASEADDR, &lcd_edma_handle, &xfer) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 /* Initialize debug console. */

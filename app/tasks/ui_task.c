@@ -16,7 +16,7 @@ struct ui_ctx g_ui_ctx;
 void ui_task_entry(void* pvParameters) {
   LOG_MSG("Starting UI task");
 
-  if (screen_init() != HAL_OK) {
+  if (screen_init() != HAL_SUCCESS) {
     LOG_MSG("Failed to init screen");
   }
 

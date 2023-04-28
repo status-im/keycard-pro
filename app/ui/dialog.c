@@ -15,14 +15,14 @@ app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_hei
 
   uint16_t tmp = ctx->y;
   ctx->y += ((line_height - ctx->font->yAdvance) / 2);
-  app_err_t err = screen_draw_string(ctx, str) == HAL_OK? ERR_OK : ERR_HW;
+  app_err_t err = screen_draw_string(ctx, str) == HAL_SUCCESS? ERR_OK : ERR_HW;
   ctx->y = tmp + line_height;
   return err;
 }
 
 app_err_t dialog_separator(uint16_t yOff) {
   screen_area_t fillarea = { 0, yOff, SCREEN_WIDTH, TH_SEP_HEIGHT };
-  return screen_fill_area(&fillarea, TH_COLOR_SEP) == HAL_OK? ERR_OK : ERR_HW;
+  return screen_fill_area(&fillarea, TH_COLOR_SEP) == HAL_SUCCESS? ERR_OK : ERR_HW;
 }
 
 app_err_t dialog_title(const char* title) {

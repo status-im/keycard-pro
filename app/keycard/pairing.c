@@ -90,12 +90,12 @@ uint8_t Pairing_Compact(uint32_t page) {
   }
 
   uint32_t err;
-  if (HAL_FLASHEx_Erase(&erase, &err) != HAL_OK) {
+  if (HAL_FLASHEx_Erase(&erase, &err) != HAL_SUCCESS) {
     return 0;
   }
 
   for (int i = 0; i < page_size; i++) {
-    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&p[i], data[i]) != HAL_OK) {
+    if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&p[i], data[i]) != HAL_SUCCESS) {
       return 0;
     }
   }*/
@@ -109,16 +109,16 @@ uint8_t Pairing_Write(Pairing* in) {
 
   while(write < PAIRING_END_ADDR) {
     if ((*write & 0xff) == 0xff) {
-      if (HAL_FLASH_Unlock() != HAL_OK) {
+      if (HAL_FLASH_Unlock() != HAL_SUCCESS) {
         return 0;
       }
 
-      if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)write++, (0xa500 | in->idx)) != HAL_OK) {
+      if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)write++, (0xa500 | in->idx)) != HAL_SUCCESS) {
         return 0;
       }
 
       for (int i = 0; i < (APP_INFO_INSTANCE_UID_LEN/8); i++) {
-        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&write[i], ((uint64_t*) in->instance_uid)[i]) != HAL_OK) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&write[i], ((uint64_t*) in->instance_uid)[i]) != HAL_SUCCESS) {
           HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)write, 0);
           return 0;
         }
@@ -127,7 +127,7 @@ uint8_t Pairing_Write(Pairing* in) {
       write += (APP_INFO_INSTANCE_UID_LEN/8);
 
       for (int i = 0; i < (SHA256_DIGEST_LENGTH/8); i++) {
-        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&write[i], ((uint64_t*) in->key)[i]) != HAL_OK) {
+        if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)&write[i], ((uint64_t*) in->key)[i]) != HAL_SUCCESS) {
           HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)(write - (APP_INFO_INSTANCE_UID_LEN/8)), 0);
           return 0;
         }
@@ -164,11 +164,11 @@ uint8_t Pairing_Erase(Pairing* in) {
 
   erase--;
   
-  if (HAL_FLASH_Unlock() != HAL_OK) {
+  if (HAL_FLASH_Unlock() != HAL_SUCCESS) {
     return 0;
   }
 
-  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)erase, 0) != HAL_OK) {
+  if (HAL_FLASH_Program(FLASH_TYPEPROGRAM_DOUBLEWORD, (uint32_t)erase, 0) != HAL_SUCCESS) {
     return 0;
   }
 

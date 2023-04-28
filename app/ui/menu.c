@@ -1,5 +1,6 @@
 #include <stddef.h>
 
+#include "common.h"
 #include "dialog.h"
 #include "menu.h"
 #include "keypad/keypad.h"
@@ -69,13 +70,13 @@ void menu_render(const menu_t* menu, const char* title, uint8_t selected, enum m
     l = menu->len;
     break;
   case MENU_NEXT:
-    i = MAX(0, selected);
-    l = MIN(menu->len, (selected + 2));
+    i = APP_MAX(0, selected);
+    l = APP_MIN(menu->len, (selected + 2));
     yOff += (i * TH_MENU_HEIGHT);
     break;
   case MENU_PREV:
-    i = MAX(0, (selected - 1));
-    l = MIN(menu->len, (selected + 1));
+    i = APP_MAX(0, (selected - 1));
+    l = APP_MIN(menu->len, (selected + 1));
     yOff += (i * TH_MENU_HEIGHT);
     break;
   case MENU_NONE:

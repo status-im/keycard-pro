@@ -2,11 +2,15 @@
 #define __HAL__
 
 #include <stdint.h>
+#include <stddef.h>
 #include "crypto/sha2_soft.h"
 
 #ifdef __MCUXPRESSO
 #include "fsl_dcp.h"
 typedef dcp_hash_ctx_t hal_sha256_ctx_t;
+#define SOFT_CRC32
+#elif defined STM32_HAL
+#define SOFT_SHA256
 #define SOFT_CRC32
 #else
 #define SOFT_SHA256
@@ -15,10 +19,9 @@ typedef dcp_hash_ctx_t hal_sha256_ctx_t;
 
 // General
 typedef enum {
-	HAL_OK,
-	HAL_ERROR,
+	HAL_SUCCESS,
+	HAL_FAIL,
 } hal_err_t;
-
 
 hal_err_t hal_init();
 

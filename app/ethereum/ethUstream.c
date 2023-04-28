@@ -112,7 +112,7 @@ static uint16_t processType(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, NULL, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -136,7 +136,7 @@ static uint16_t processChainID(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, context->content->chainID.value, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -158,7 +158,7 @@ static uint16_t processNonce(txContext_t *context) {
     return EXCEPTION;
   }
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, context->content->nonce.value, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -182,7 +182,7 @@ static uint16_t processStartGas(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, context->content->startgas.value + context->currentFieldPos, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -206,7 +206,7 @@ static uint16_t processGasprice(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, context->content->gasprice.value + context->currentFieldPos, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -231,7 +231,7 @@ static uint16_t processValue(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, context->content->value.value + context->currentFieldPos, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -256,7 +256,7 @@ static uint16_t processTo(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, context->content->destination + context->currentFieldPos, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -277,7 +277,7 @@ static uint16_t processData(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     // If there is no data, set dataPresent to false.
     if (copySize == 1 && *context->workBuffer == 0x00) {
       context->content->dataPresent = false;
@@ -302,7 +302,7 @@ static uint16_t processAndDiscard(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     if (copyTxData(context, NULL, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -325,9 +325,9 @@ static uint16_t processV(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
+    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     // Make sure we do not copy more than the size of v.
-    copySize = MIN(copySize, sizeof(context->content->v));
+    copySize = APP_MIN(copySize, sizeof(context->content->v));
     if (copyTxData(context, context->content->v + context->currentFieldPos, copySize) == EXCEPTION) {
       return EXCEPTION;
     }

@@ -54,8 +54,8 @@ static void screen_camera_line() {
 }
 
 hal_err_t screen_camera_passthrough(const uint8_t* fb) {
-  if (screen_set_drawing_window(&screen_camarea) != HAL_OK) {
-    return HAL_ERROR;
+  if (screen_set_drawing_window(&screen_camarea) != HAL_SUCCESS) {
+    return HAL_FAIL;
   }
 
   g_screen_render_ctx.data = (uint8_t*) fb;
@@ -63,7 +63,7 @@ hal_err_t screen_camera_passthrough(const uint8_t* fb) {
 
   screen_camera_line();
 
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 static void screen_qr_line() {
@@ -93,8 +93,8 @@ static void screen_qr_line() {
 }
 
 hal_err_t screen_draw_qrcode(const screen_area_t* area, const uint8_t* qrcode, int qrsize, int scale) {
-  if (screen_set_drawing_window(area) != HAL_OK) {
-    return HAL_ERROR;
+  if (screen_set_drawing_window(area) != HAL_SUCCESS) {
+    return HAL_FAIL;
   }
 
   g_screen_render_ctx.data = qrcode;
@@ -110,8 +110,8 @@ hal_err_t screen_draw_qrcode(const screen_area_t* area, const uint8_t* qrcode, i
 }
 
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color) {
-  if (screen_set_drawing_window(area) != HAL_OK) {
-    return HAL_ERROR;
+  if (screen_set_drawing_window(area) != HAL_SUCCESS) {
+    return HAL_FAIL;
   }
 
   for(int x = 0; x < area->width; x++) {
@@ -119,25 +119,25 @@ hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color) {
   }
 
   for(int y = 0; y < area->height; y++) {
-    if (screen_draw_pixels(g_screen_fb, area->width, screen_signal) != HAL_OK) {
-      return HAL_ERROR;
+    if (screen_draw_pixels(g_screen_fb, area->width, screen_signal) != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
-    if (screen_wait() != HAL_OK) {
-      return HAL_ERROR;
+    if (screen_wait() != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
   }
 
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels) {
-  if (screen_set_drawing_window(area) != HAL_OK) {
-    return HAL_ERROR;
+  if (screen_set_drawing_window(area) != HAL_SUCCESS) {
+    return HAL_FAIL;
   }
 
-  if (screen_draw_pixels(pixels, (area->width*area->height), screen_signal) != HAL_OK) {
-    return HAL_ERROR;
+  if (screen_draw_pixels(pixels, (area->width*area->height), screen_signal) != HAL_SUCCESS) {
+    return HAL_FAIL;
   }
 
   return screen_wait();
@@ -155,24 +155,24 @@ const glyph_t *screen_lookup_glyph(const font_t* font, char c) {
 
 static inline hal_err_t _screen_char_flush(uint16_t* to_write, uint16_t threshold) {
   if (*to_write >= threshold) {
-    if (screen_draw_pixels(g_screen_fb, *to_write, screen_signal) != HAL_OK) {
-      return HAL_ERROR;
+    if (screen_draw_pixels(g_screen_fb, *to_write, screen_signal) != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
-    if (screen_wait() != HAL_OK) {
-      return HAL_ERROR;
+    if (screen_wait() != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
     *to_write = 0;
   }
 
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph) {
   screen_area_t area = { ctx->x, ctx->y, glyph->xAdvance, ctx->font->yAdvance};
-  if (screen_set_drawing_window(&area) != HAL_OK) {
-    return HAL_ERROR;
+  if (screen_set_drawing_window(&area) != HAL_SUCCESS) {
+    return HAL_FAIL;
   }
 
   int y = 0;
@@ -187,8 +187,8 @@ hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph) 
       g_screen_fb[to_write++] = ctx->bg;
     }
 
-    if (_screen_char_flush(&to_write, used_buf) != HAL_OK) {
-      return HAL_ERROR;
+    if (_screen_char_flush(&to_write, used_buf) != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
     y++;
@@ -218,8 +218,8 @@ hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph) 
       g_screen_fb[to_write++] = ctx->bg;
     }
 
-    if (_screen_char_flush(&to_write, used_buf) != HAL_OK) {
-      return HAL_ERROR;
+    if (_screen_char_flush(&to_write, used_buf) != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
     y++;
@@ -230,8 +230,8 @@ hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph) 
       g_screen_fb[to_write++] = ctx->bg;
     }
 
-    if (_screen_char_flush(&to_write, used_buf) != HAL_OK) {
-      return HAL_ERROR;
+    if (_screen_char_flush(&to_write, used_buf) != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
     y++;
@@ -250,26 +250,26 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
   while((c = *(str++))) {
     const glyph_t* glyph = screen_lookup_glyph(ctx->font, c);
 
-    if (screen_draw_glyph(ctx, glyph) != HAL_OK) {
-      return HAL_ERROR;
+    if (screen_draw_glyph(ctx, glyph) != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
     ctx->x += glyph->xAdvance;
   }
 
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 hal_err_t screen_draw_glyphs(screen_text_ctx_t* ctx, const glyph_t* glyphs[], size_t len) {
   for (int i = 0; i < len; i++) {
-    if (screen_draw_glyph(ctx, glyphs[i]) != HAL_OK) {
-      return HAL_ERROR;
+    if (screen_draw_glyph(ctx, glyphs[i]) != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
     ctx->x += glyphs[i]->xAdvance;
   }
 
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, const uint8_t* text, size_t len) {
@@ -288,7 +288,7 @@ hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_
     size_t line_width = start_x;
     const glyph_t* line[MAX_GLYPHS_PER_LINE];
 
-    size_t lim = MIN(MAX_GLYPHS_PER_LINE, len);
+    size_t lim = APP_MIN(MAX_GLYPHS_PER_LINE, len);
     uint8_t wrapped = 0;
 
     for (int i = 0; i < lim; i++) {
@@ -317,8 +317,8 @@ hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_
       line_len = lim;
     }
 
-    if (screen_draw_glyphs(ctx, line, line_len) != HAL_OK) {
-      return HAL_ERROR;
+    if (screen_draw_glyphs(ctx, line, line_len) != HAL_SUCCESS) {
+      return HAL_FAIL;
     }
 
     text += line_len;
@@ -332,9 +332,9 @@ hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_
     }
   }
 
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 hal_err_t screen_wait() {
-  return ulTaskNotifyTakeIndexed(SCREEN_TASK_NOTIFICATION_IDX, pdTRUE, pdMS_TO_TICKS(SCREEN_TIMEOUT)) ? HAL_OK : HAL_ERROR;
+  return ulTaskNotifyTakeIndexed(SCREEN_TASK_NOTIFICATION_IDX, pdTRUE, pdMS_TO_TICKS(SCREEN_TIMEOUT)) ? HAL_SUCCESS : HAL_FAIL;
 }
