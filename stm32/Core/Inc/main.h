@@ -53,7 +53,6 @@ extern "C" {
 /* Exported constants --------------------------------------------------------*/
 /* USER CODE BEGIN EC */
 extern DCMI_HandleTypeDef hdcmi;
-extern DMA_HandleTypeDef handle_GPDMA1_Channel5;
 extern HASH_HandleTypeDef hhash;
 extern I2C_HandleTypeDef hi2c2;
 extern RNG_HandleTypeDef hrng;
@@ -61,6 +60,7 @@ extern SPI_HandleTypeDef hspi1;
 extern SMARTCARD_HandleTypeDef hsmartcard1;
 extern UART_HandleTypeDef huart3;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
+extern TIM_HandleTypeDef htim6;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -72,7 +72,7 @@ extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 void Error_Handler(void);
 void MX_GPIO_Init(void);
 void MX_GPDMA1_Init(void);
-void MX_USART3_UART_Init(void);
+void MX_GPDMA2_Init(void);
 void MX_UCPD1_Init(void);
 void MX_USB_PCD_Init(void);
 void MX_DCMI_Init(void);
@@ -81,7 +81,9 @@ void MX_ICACHE_Init(void);
 void MX_HASH_Init(void);
 void MX_SPI1_Init(void);
 void MX_I2C2_Init(void);
+void MX_USART3_UART_Init(void);
 void MX_USART1_SMARTCARD_Init(void);
+void MX_TIM6_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);

@@ -55,8 +55,10 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef handle_GPDMA1_Channel5;
+extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern DCMI_HandleTypeDef hdcmi;
+extern DMA_HandleTypeDef handle_GPDMA2_Channel0;
+extern SPI_HandleTypeDef hspi1;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -160,17 +162,45 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles GPDMA1 Channel 5 global interrupt.
+  * @brief This function handles GPDMA1 Channel 0 global interrupt.
   */
-void GPDMA1_Channel5_IRQHandler(void)
+void GPDMA1_Channel0_IRQHandler(void)
 {
-  /* USER CODE BEGIN GPDMA1_Channel5_IRQn 0 */
+  /* USER CODE BEGIN GPDMA1_Channel0_IRQn 0 */
 
-  /* USER CODE END GPDMA1_Channel5_IRQn 0 */
-  HAL_DMA_IRQHandler(&handle_GPDMA1_Channel5);
-  /* USER CODE BEGIN GPDMA1_Channel5_IRQn 1 */
+  /* USER CODE END GPDMA1_Channel0_IRQn 0 */
+  HAL_DMA_IRQHandler(&handle_GPDMA1_Channel0);
+  /* USER CODE BEGIN GPDMA1_Channel0_IRQn 1 */
 
-  /* USER CODE END GPDMA1_Channel5_IRQn 1 */
+  /* USER CODE END GPDMA1_Channel0_IRQn 1 */
+}
+
+/**
+  * @brief This function handles SPI1 global interrupt.
+  */
+void SPI1_IRQHandler(void)
+{
+  /* USER CODE BEGIN SPI1_IRQn 0 */
+
+  /* USER CODE END SPI1_IRQn 0 */
+  HAL_SPI_IRQHandler(&hspi1);
+  /* USER CODE BEGIN SPI1_IRQn 1 */
+
+  /* USER CODE END SPI1_IRQn 1 */
+}
+
+/**
+  * @brief This function handles GPDMA2 Channel 0 global interrupt.
+  */
+void GPDMA2_Channel0_IRQHandler(void)
+{
+  /* USER CODE BEGIN GPDMA2_Channel0_IRQn 0 */
+
+  /* USER CODE END GPDMA2_Channel0_IRQn 0 */
+  HAL_DMA_IRQHandler(&handle_GPDMA2_Channel0);
+  /* USER CODE BEGIN GPDMA2_Channel0_IRQn 1 */
+
+  /* USER CODE END GPDMA2_Channel0_IRQn 1 */
 }
 
 /**
