@@ -25,10 +25,10 @@ struct dcmi_buf {
 };
 
 const struct gpio_pin_spec STM32_PIN_MAP[] = {
-    /*{BOARD_CAMERA_PWDN_GPIO, BOARD_CAMERA_PWDN_PIN},
-    {BOARD_CAMERA_RST_GPIO, BOARD_CAMERA_RST_PIN},
-    {BOARD_LCD_CD_GPIO, BOARD_LCD_CD_PIN},
-    {BOARD_LCD_RST_GPIO, BOARD_LCD_RST_PIN},*/
+  {GPIO_CAMERA_PWDN_GPIO_Port, GPIO_CAMERA_PWDN_Pin},
+  {GPIO_CAMERA_RST_GPIO_Port, GPIO_CAMERA_RST_Pin},
+  {GPIO_LCD_CD_GPIO_Port, GPIO_LCD_CD_Pin},
+  {GPIO_LCD_RST_GPIO_Port, GPIO_LCD_RST_Pin},
 };
 
 static void (*g_spi_callback)();
@@ -78,7 +78,7 @@ hal_err_t hal_init() {
   MX_HASH_Init();
   MX_SPI1_Init();
   MX_I2C2_Init();
-  MX_USART1_SMARTCARD_Init();
+  MX_USART2_SMARTCARD_Init();
   MX_TIM6_Init();
 
   return HAL_SUCCESS;

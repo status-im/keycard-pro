@@ -57,7 +57,7 @@ extern HASH_HandleTypeDef hhash;
 extern I2C_HandleTypeDef hi2c2;
 extern RNG_HandleTypeDef hrng;
 extern SPI_HandleTypeDef hspi1;
-extern SMARTCARD_HandleTypeDef hsmartcard1;
+extern SMARTCARD_HandleTypeDef hsmartcard2;
 extern UART_HandleTypeDef huart3;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim6;
@@ -82,8 +82,8 @@ void MX_HASH_Init(void);
 void MX_SPI1_Init(void);
 void MX_I2C2_Init(void);
 void MX_USART3_UART_Init(void);
-void MX_USART1_SMARTCARD_Init(void);
 void MX_TIM6_Init(void);
+void MX_USART2_SMARTCARD_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);
@@ -100,10 +100,20 @@ void SystemClock_Config(void);
 #define TRACE_D2_GPIO_Port GPIOE
 #define TRACE_D3_Pin GPIO_PIN_6
 #define TRACE_D3_GPIO_Port GPIOE
-#define USER_BUTTON_Pin GPIO_PIN_13
-#define USER_BUTTON_GPIO_Port GPIOC
-#define LED1_GREEN_Pin GPIO_PIN_0
-#define LED1_GREEN_GPIO_Port GPIOB
+#define GPIO_USER_BUTTON_Pin GPIO_PIN_13
+#define GPIO_USER_BUTTON_GPIO_Port GPIOC
+#define GPIO_LED2_YELLOW_Pin GPIO_PIN_4
+#define GPIO_LED2_YELLOW_GPIO_Port GPIOF
+#define GPIO_LCD_CD_Pin GPIO_PIN_0
+#define GPIO_LCD_CD_GPIO_Port GPIOA
+#define GPIO_LCD_RST_Pin GPIO_PIN_1
+#define GPIO_LCD_RST_GPIO_Port GPIOA
+#define GPIO_LED1_GREEN_Pin GPIO_PIN_0
+#define GPIO_LED1_GREEN_GPIO_Port GPIOB
+#define GPIO_CAMERA_PWDN_Pin GPIO_PIN_10
+#define GPIO_CAMERA_PWDN_GPIO_Port GPIOE
+#define GPIO_CAMERA_RST_Pin GPIO_PIN_12
+#define GPIO_CAMERA_RST_GPIO_Port GPIOE
 #define UCPD_CC1_Pin GPIO_PIN_13
 #define UCPD_CC1_GPIO_Port GPIOB
 #define UCPD_CC2_Pin GPIO_PIN_14
@@ -112,8 +122,8 @@ void SystemClock_Config(void);
 #define T_VCP_TX_GPIO_Port GPIOD
 #define T_VCP_RX_Pin GPIO_PIN_9
 #define T_VCP_RX_GPIO_Port GPIOD
-#define LED3_RED_Pin GPIO_PIN_4
-#define LED3_RED_GPIO_Port GPIOG
+#define GPIO_LED3_RED_Pin GPIO_PIN_4
+#define GPIO_LED3_RED_GPIO_Port GPIOG
 #define UCPD_FLT_Pin GPIO_PIN_7
 #define UCPD_FLT_GPIO_Port GPIOG
 #define UCPD_DBn_Pin GPIO_PIN_9
