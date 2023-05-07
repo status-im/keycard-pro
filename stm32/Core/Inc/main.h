@@ -61,6 +61,8 @@ extern SMARTCARD_HandleTypeDef hsmartcard2;
 extern UART_HandleTypeDef huart3;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim6;
+extern DMA_HandleTypeDef handle_GPDMA1_Channel6;
+
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/

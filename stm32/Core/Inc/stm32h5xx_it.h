@@ -52,7 +52,7 @@ void MemManage_Handler(void);
 void BusFault_Handler(void);
 void UsageFault_Handler(void);
 void DebugMon_Handler(void);
-void GPDMA1_Channel0_IRQHandler(void);
+void GPDMA1_Channel6_IRQHandler(void);
 void SPI5_IRQHandler(void);
 void GPDMA2_Channel0_IRQHandler(void);
 void DCMI_PSSI_IRQHandler(void);

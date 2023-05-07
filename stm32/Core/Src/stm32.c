@@ -2,8 +2,11 @@
 
 #include "main.h"
 #include "hal.h"
+#include "linked_list.h"
 #include "FreeRTOS.h"
 #include "task.h"
+
+extern DMA_QListTypeDef Camera_DMA_LL;
 
 #define HAL_TIMEOUT 250
 
@@ -76,11 +79,20 @@ hal_err_t hal_init() {
   MX_GPIO_Init();
   MX_TIM6_Init();
   MX_GPDMA2_Init();
+  MX_GPDMA1_Init();
 
   MX_SPI5_Init();
   MX_I2C2_Init();
   MX_USART2_SMARTCARD_Init();
   MX_USART3_UART_Init();
+
+  MX_Camera_DMA_LL_Config();
+
+  __HAL_LINKDMA(&hdcmi, DMA_Handle, handle_GPDMA1_Channel6);
+  if (HAL_DMAEx_List_LinkQ(&handle_GPDMA1_Channel6, &Camera_DMA_LL) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   MX_ICACHE_Init();
 
@@ -88,7 +100,6 @@ hal_err_t hal_init() {
 }
 
 hal_err_t hal_camera_init() {
-  MX_GPDMA1_Init();
   MX_DCMI_Init();
   return HAL_SUCCESS;
 }
@@ -108,8 +119,6 @@ hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
 hal_err_t hal_camera_stop() {
   HAL_DCMI_Stop(&hdcmi);
   HAL_DCMI_DeInit(&hdcmi);
-  HAL_NVIC_DisableIRQ(GPDMA1_Channel0_IRQn);
-  __HAL_RCC_GPDMA1_CLK_DISABLE();
 
   return HAL_SUCCESS;
 }

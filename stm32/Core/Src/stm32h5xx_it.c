@@ -55,8 +55,8 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern DCMI_HandleTypeDef hdcmi;
+extern DMA_HandleTypeDef handle_GPDMA1_Channel6;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel0;
 extern SPI_HandleTypeDef hspi5;
 /* USER CODE BEGIN EV */
@@ -162,17 +162,17 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 
 /**
-  * @brief This function handles GPDMA1 Channel 0 global interrupt.
+  * @brief This function handles GPDMA1 Channel 6 global interrupt.
   */
-void GPDMA1_Channel0_IRQHandler(void)
+void GPDMA1_Channel6_IRQHandler(void)
 {
-  /* USER CODE BEGIN GPDMA1_Channel0_IRQn 0 */
+  /* USER CODE BEGIN GPDMA1_Channel6_IRQn 0 */
 
-  /* USER CODE END GPDMA1_Channel0_IRQn 0 */
-  HAL_DMA_IRQHandler(&handle_GPDMA1_Channel0);
-  /* USER CODE BEGIN GPDMA1_Channel0_IRQn 1 */
+  /* USER CODE END GPDMA1_Channel6_IRQn 0 */
+  HAL_DMA_IRQHandler(&handle_GPDMA1_Channel6);
+  /* USER CODE BEGIN GPDMA1_Channel6_IRQn 1 */
 
-  /* USER CODE END GPDMA1_Channel0_IRQn 1 */
+  /* USER CODE END GPDMA1_Channel6_IRQn 1 */
 }
 
 /**
