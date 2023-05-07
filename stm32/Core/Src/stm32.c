@@ -70,16 +70,19 @@ hal_err_t hal_init() {
   HAL_Init();
   SystemClock_Config();
 
-  MX_GPIO_Init();
-  MX_GPDMA2_Init();
-  MX_USART3_UART_Init();
   MX_RNG_Init();
-  MX_ICACHE_Init();
   MX_HASH_Init();
+
+  MX_GPIO_Init();
+  MX_TIM6_Init();
+  MX_GPDMA2_Init();
+
   MX_SPI1_Init();
   MX_I2C2_Init();
   MX_USART2_SMARTCARD_Init();
-  MX_TIM6_Init();
+  MX_USART3_UART_Init();
+
+  MX_ICACHE_Init();
 
   return HAL_SUCCESS;
 }
