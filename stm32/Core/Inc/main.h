@@ -56,7 +56,7 @@ extern DCMI_HandleTypeDef hdcmi;
 extern HASH_HandleTypeDef hhash;
 extern I2C_HandleTypeDef hi2c2;
 extern RNG_HandleTypeDef hrng;
-extern SPI_HandleTypeDef hspi1;
+extern SPI_HandleTypeDef hspi5;
 extern SMARTCARD_HandleTypeDef hsmartcard2;
 extern UART_HandleTypeDef huart3;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
@@ -79,11 +79,11 @@ void MX_DCMI_Init(void);
 void MX_RNG_Init(void);
 void MX_ICACHE_Init(void);
 void MX_HASH_Init(void);
-void MX_SPI1_Init(void);
 void MX_I2C2_Init(void);
 void MX_USART3_UART_Init(void);
 void MX_TIM6_Init(void);
 void MX_USART2_SMARTCARD_Init(void);
+void MX_SPI5_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);

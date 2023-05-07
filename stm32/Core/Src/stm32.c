@@ -77,7 +77,7 @@ hal_err_t hal_init() {
   MX_TIM6_Init();
   MX_GPDMA2_Init();
 
-  MX_SPI1_Init();
+  MX_SPI5_Init();
   MX_I2C2_Init();
   MX_USART2_SMARTCARD_Init();
   MX_USART3_UART_Init();
@@ -162,13 +162,13 @@ hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len) {
 
 hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
   assert(port == SPI_LCD);
-  return HAL_SPI_Transmit(&hspi1, (uint8_t*) data, len, HAL_TIMEOUT);
+  return HAL_SPI_Transmit(&hspi5, (uint8_t*) data, len, HAL_TIMEOUT);
 }
 
 hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len, void (*cb)()) {
   assert(port == SPI_LCD);
   g_spi_callback = cb;
-  return HAL_SPI_Transmit_DMA(&hspi1, (uint8_t*) data, len);
+  return HAL_SPI_Transmit_DMA(&hspi5, (uint8_t*) data, len);
 }
 
 hal_err_t hal_rng_next(uint8_t *buf, size_t len) {

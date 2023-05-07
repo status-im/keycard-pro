@@ -31,7 +31,10 @@ app_err_t qrscan_scan() {
 
   screen_fill_area(&screen_fullarea, TH_COLOR_QR_BG);
 
+  LOG_MSG("Starting QR scanner");
+
   if (camera_start() != HAL_SUCCESS) {
+    LOG_MSG("Failed to start camera");
     res = ERR_HW;
     goto end;
   }
