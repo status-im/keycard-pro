@@ -56,7 +56,7 @@ HAL_StatusTypeDef MX_Camera_DMA_LL_Config(void)
   DMA_NodeConfTypeDef pNodeConfig;
 
   /* Set node configuration ################################################*/
-  pNodeConfig.NodeType = DMA_GPDMA_2D_NODE;
+  pNodeConfig.NodeType = DMA_GPDMA_LINEAR_NODE;
   pNodeConfig.Init.Request = GPDMA1_REQUEST_DCMI;
   pNodeConfig.Init.BlkHWRequest = DMA_BREQ_SINGLE_BURST;
   pNodeConfig.Init.Direction = DMA_PERIPH_TO_MEMORY;
@@ -65,7 +65,7 @@ HAL_StatusTypeDef MX_Camera_DMA_LL_Config(void)
   pNodeConfig.Init.SrcDataWidth = DMA_SRC_DATAWIDTH_WORD;
   pNodeConfig.Init.DestDataWidth = DMA_DEST_DATAWIDTH_WORD;
   pNodeConfig.Init.SrcBurstLength = 1;
-  pNodeConfig.Init.DestBurstLength = 1;
+  pNodeConfig.Init.DestBurstLength = 4;
   pNodeConfig.Init.TransferAllocatedPort = DMA_SRC_ALLOCATED_PORT0|DMA_DEST_ALLOCATED_PORT0;
   pNodeConfig.Init.TransferEventMode = DMA_TCEM_BLOCK_TRANSFER;
   pNodeConfig.RepeatBlockConfig.RepeatCount = 1;
