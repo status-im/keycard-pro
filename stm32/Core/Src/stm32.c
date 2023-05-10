@@ -48,6 +48,7 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 static hal_err_t inline _hal_acquire(int8_t idx) {
   g_acquiring = idx;
   g_dcmi_bufs[idx].status = DCMI_ACQUIRING;
+  HAL_DCMI_Stop(&hdcmi);
   return HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t) g_dcmi_bufs[idx].addr, (CAMERA_FB_SIZE/4));
 }
 
@@ -56,13 +57,6 @@ void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
   configASSERT(g_dcmi_task);
   g_dcmi_bufs[g_acquiring].status = DCMI_ACQUIRED;
   g_acquiring = -1;
-
-  for (int i = 0; i < CAMERA_FB_COUNT; i++) {
-    if (g_dcmi_bufs[i].status == DCMI_READY) {
-      _hal_acquire(i);
-      break;
-    }
-  }
 
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   vTaskNotifyGiveIndexedFromISR(g_dcmi_task, CAMERA_TASK_NOTIFICATION_IDX, &xHigherPriorityTaskWoken);
@@ -85,6 +79,7 @@ hal_err_t hal_init() {
   MX_I2C2_Init();
   MX_USART2_SMARTCARD_Init();
   MX_USART3_UART_Init();
+  MX_DCMI_Init();
 
   MX_Camera_DMA_LL_Config();
 
@@ -100,7 +95,6 @@ hal_err_t hal_init() {
 }
 
 hal_err_t hal_camera_init() {
-  MX_DCMI_Init();
   return HAL_SUCCESS;
 }
 
@@ -117,22 +111,25 @@ hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
 }
 
 hal_err_t hal_camera_stop() {
+  g_dcmi_task = NULL;
   HAL_DCMI_Stop(&hdcmi);
-  HAL_DCMI_DeInit(&hdcmi);
 
   return HAL_SUCCESS;
 }
 
 hal_err_t hal_camera_next_frame(uint8_t** fb) {
+  hal_err_t err = HAL_FAIL;
   for (int i = 0; i < CAMERA_FB_COUNT; i++) {
-    if (g_dcmi_bufs[i].status == DCMI_ACQUIRED) {
+    if ((err == HAL_FAIL) && (g_dcmi_bufs[i].status == DCMI_ACQUIRED)) {
       g_dcmi_bufs[i].status = DCMI_PROCESSING;
       *fb = g_dcmi_bufs[i].addr;
-      return HAL_SUCCESS;
+      err = HAL_SUCCESS;
+    } else if ((g_acquiring == -1) && (g_dcmi_bufs[i].status == DCMI_READY)) {
+      _hal_acquire(i);
     }
   }
 
-  return HAL_FAIL;
+  return err;
 }
 
 hal_err_t hal_camera_submit(uint8_t* fb) {

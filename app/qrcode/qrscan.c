@@ -41,18 +41,6 @@ app_err_t qrscan_scan() {
 
   uint8_t* fb;
 
-  // prime the buffers
-  /*for(int i = 0; i < 2; i++) {
-    if (camera_next_frame(&fb) != HAL_SUCCESS) {
-      continue;
-    }
-
-    if (camera_submit(fb) != HAL_SUCCESS) {
-      res = ERR_HW;
-      goto end;
-    }
-  }*/
-
   while (1) {
     if (camera_next_frame(&fb) != HAL_SUCCESS) {
       LOG_MSG("Failed to acquire frame");
