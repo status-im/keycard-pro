@@ -1,2 +1,3 @@
 build/
 stm32/Debug
+stm32/Release

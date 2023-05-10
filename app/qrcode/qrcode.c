@@ -694,27 +694,27 @@ static void perspective_unmap(const float *c,
 
 typedef void (*span_func_t)(void *user_data, int y, int left, int right);
 
-#define QUIRC_LIFO_DATA 8192
+#define QUIRC_LIFO_DATA (8192/4)
 
-typedef struct xylf
+typedef  struct __attribute__((packed, aligned(4))) xylf
 {
     int16_t x, y, l, r;
 }
 xylf_t;
 
-typedef struct lifo
+typedef struct __attribute__((packed, aligned(4))) lifo
 {
     size_t len, size, data_len;
-    uint8_t data[QUIRC_LIFO_DATA];
+    uint32_t data[QUIRC_LIFO_DATA];
 }
 lifo_t;
 
 
-size_t lifo_alloc_all(lifo_t *ptr, size_t data_len)
+static size_t lifo_alloc_all(lifo_t *ptr, size_t data_len)
 {
     ptr->len = 0;
     ptr->size = QUIRC_LIFO_DATA / data_len;
-    ptr->data_len = data_len;
+    ptr->data_len = (data_len / sizeof(uint32_t));
     return ptr->size;
 }
 
@@ -1093,15 +1093,14 @@ static void finder_scan(struct quirc *q, int y)
     uint8_t color, last_color;
     int run_length = 1;
     int run_count = 0;
-    int pb[5];
+    int pb[5] = {0};
 
-    memset(pb, 0, sizeof(pb));
     last_color = row[0];
     for (x = 1; x < q->w; x++) {
         color = row[x];
 
         if (/* x && */ color != last_color) {
-            memmove(pb, pb + 1, sizeof(pb[0]) * 4);
+            memmove(pb, &pb[1], sizeof(pb[0]) * 4);
             pb[4] = run_length;
             run_length = 0;
             run_count++;
