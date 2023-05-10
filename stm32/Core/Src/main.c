@@ -43,7 +43,7 @@
 
 DCMI_HandleTypeDef hdcmi;
 
-DMA_HandleTypeDef handle_GPDMA1_Channel6;
+DMA_HandleTypeDef handle_GPDMA2_Channel5;
 
 HASH_HandleTypeDef hhash;
 
@@ -52,7 +52,7 @@ I2C_HandleTypeDef hi2c2;
 RNG_HandleTypeDef hrng;
 
 SPI_HandleTypeDef hspi5;
-DMA_HandleTypeDef handle_GPDMA2_Channel0;
+DMA_HandleTypeDef handle_GPDMA1_Channel0;
 
 TIM_HandleTypeDef htim6;
 
@@ -192,26 +192,12 @@ void MX_GPDMA1_Init(void)
   __HAL_RCC_GPDMA1_CLK_ENABLE();
 
   /* GPDMA1 interrupt Init */
-    HAL_NVIC_SetPriority(GPDMA1_Channel6_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(GPDMA1_Channel6_IRQn);
+    HAL_NVIC_SetPriority(GPDMA1_Channel0_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(GPDMA1_Channel0_IRQn);
 
   /* USER CODE BEGIN GPDMA1_Init 1 */
 
   /* USER CODE END GPDMA1_Init 1 */
-  handle_GPDMA1_Channel6.Instance = GPDMA1_Channel6;
-  handle_GPDMA1_Channel6.InitLinkedList.Priority = DMA_HIGH_PRIORITY;
-  handle_GPDMA1_Channel6.InitLinkedList.LinkStepMode = DMA_LSM_FULL_EXECUTION;
-  handle_GPDMA1_Channel6.InitLinkedList.LinkAllocatedPort = DMA_LINK_ALLOCATED_PORT0;
-  handle_GPDMA1_Channel6.InitLinkedList.TransferEventMode = DMA_TCEM_LAST_LL_ITEM_TRANSFER;
-  handle_GPDMA1_Channel6.InitLinkedList.LinkedListMode = DMA_LINKEDLIST_CIRCULAR;
-  if (HAL_DMAEx_List_Init(&handle_GPDMA1_Channel6) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA1_Channel6, DMA_CHANNEL_NPRIV) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN GPDMA1_Init 2 */
 
   /* USER CODE END GPDMA1_Init 2 */
@@ -234,12 +220,26 @@ void MX_GPDMA2_Init(void)
   __HAL_RCC_GPDMA2_CLK_ENABLE();
 
   /* GPDMA2 interrupt Init */
-    HAL_NVIC_SetPriority(GPDMA2_Channel0_IRQn, 0, 0);
-    HAL_NVIC_EnableIRQ(GPDMA2_Channel0_IRQn);
+    HAL_NVIC_SetPriority(GPDMA2_Channel5_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(GPDMA2_Channel5_IRQn);
 
   /* USER CODE BEGIN GPDMA2_Init 1 */
 
   /* USER CODE END GPDMA2_Init 1 */
+  handle_GPDMA2_Channel5.Instance = GPDMA2_Channel5;
+  handle_GPDMA2_Channel5.InitLinkedList.Priority = DMA_HIGH_PRIORITY;
+  handle_GPDMA2_Channel5.InitLinkedList.LinkStepMode = DMA_LSM_FULL_EXECUTION;
+  handle_GPDMA2_Channel5.InitLinkedList.LinkAllocatedPort = DMA_LINK_ALLOCATED_PORT0;
+  handle_GPDMA2_Channel5.InitLinkedList.TransferEventMode = DMA_TCEM_LAST_LL_ITEM_TRANSFER;
+  handle_GPDMA2_Channel5.InitLinkedList.LinkedListMode = DMA_LINKEDLIST_CIRCULAR;
+  if (HAL_DMAEx_List_Init(&handle_GPDMA2_Channel5) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_DMA_ConfigChannelAttributes(&handle_GPDMA2_Channel5, DMA_CHANNEL_NPRIV) != HAL_OK)
+  {
+    Error_Handler();
+  }
   /* USER CODE BEGIN GPDMA2_Init 2 */
 
   /* USER CODE END GPDMA2_Init 2 */

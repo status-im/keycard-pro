@@ -64,12 +64,13 @@ finish:
 }
 
 hal_err_t camera_start() {
-  hal_err_t err = _camera_reset();
-  if ((err = _camera_reset()) != HAL_SUCCESS) {
+  hal_err_t err;
+
+  if ((err = hal_camera_init()) != HAL_SUCCESS) {
     return err;
   }
 
-  if ((err = hal_camera_init()) != HAL_SUCCESS) {
+  if ((err = _camera_reset()) != HAL_SUCCESS) {
     return err;
   }
 

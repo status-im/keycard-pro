@@ -64,10 +64,17 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 }
 
 static hal_err_t inline _hal_acquire(int8_t idx) {
+  HAL_DCMI_Stop(&hdcmi);
   g_acquiring = idx;
   g_dcmi_bufs[idx].status = DCMI_ACQUIRING;
-  HAL_DCMI_Stop(&hdcmi);
-  return HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t) g_dcmi_bufs[idx].addr, (CAMERA_FB_SIZE/4));
+  hal_err_t err = HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t) g_dcmi_bufs[idx].addr, (CAMERA_FB_SIZE/4));
+
+  if (err != HAL_SUCCESS) {
+    g_acquiring = -1;
+    g_dcmi_bufs[idx].status = DCMI_READY;
+  }
+
+  return err;
 }
 
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
@@ -103,8 +110,8 @@ hal_err_t hal_init() {
 
   MX_Camera_DMA_LL_Config();
 
-  __HAL_LINKDMA(&hdcmi, DMA_Handle, handle_GPDMA1_Channel6);
-  HAL_DMAEx_List_LinkQ(&handle_GPDMA1_Channel6, &Camera_DMA_LL);
+  __HAL_LINKDMA(&hdcmi, DMA_Handle, handle_GPDMA2_Channel5);
+  HAL_DMAEx_List_LinkQ(&handle_GPDMA2_Channel5, &Camera_DMA_LL);
 
   MX_ICACHE_Init();
 
