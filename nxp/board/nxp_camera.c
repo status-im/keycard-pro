@@ -36,7 +36,7 @@ hal_err_t hal_camera_init() {
   cfg.width = CAMERA_WIDTH;
   cfg.height = CAMERA_HEIGHT;
 
-  return CSI_Init(CSI, &cfg) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return CSI_Init(CSI, &cfg) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
@@ -44,28 +44,28 @@ hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
   g_csi_task = xTaskGetCurrentTaskHandle();
 
   if (CSI_TransferCreateHandle(CSI, &g_csi_handle, __hal_frame_done_cb, NULL) != kStatus_Success) {
-    return HAL_ERROR;
+    return HAL_FAIL;
   }
 
   for(int i = 0; i < CAMERA_FB_COUNT; i++) {
     CSI_TransferSubmitEmptyBuffer(CSI, &g_csi_handle, (uint32_t)fb[i]);
   }
 
-  return CSI_TransferStart(CSI, &g_csi_handle) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return CSI_TransferStart(CSI, &g_csi_handle) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_camera_stop() {
   CSI_TransferStop(CSI, &g_csi_handle);
   CSI_Deinit(CSI);
   g_csi_task = NULL;
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 
 hal_err_t hal_camera_next_frame(uint8_t** fb) {
-  return CSI_TransferGetFullBuffer(CSI, &g_csi_handle, (uint32_t*) fb) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return CSI_TransferGetFullBuffer(CSI, &g_csi_handle, (uint32_t*) fb) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_camera_submit(uint8_t* fb) {
-  return CSI_TransferSubmitEmptyBuffer(CSI, &g_csi_handle, (uint32_t) fb) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return CSI_TransferSubmitEmptyBuffer(CSI, &g_csi_handle, (uint32_t) fb) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }

@@ -67,6 +67,9 @@
 #define configENABLE_BACKWARD_COMPATIBILITY     1
 #define configNUM_THREAD_LOCAL_STORAGE_POINTERS 5
 #define configUSE_APPLICATION_TASK_TAG          0
+#define configENABLE_FPU                        1
+#define configENABLE_MPU                        0
+#define configENABLE_TRUSTZONE                  0
 
 /* Memory allocation related definitions. */
 #define configSUPPORT_STATIC_ALLOCATION         1
@@ -76,7 +79,11 @@
 
 /* Hook function related definitions. */
 #define configUSE_IDLE_HOOK                     0
+#if defined STM32_HAL
+#define configUSE_TICK_HOOK                     1
+#else
 #define configUSE_TICK_HOOK                     0
+#endif
 #define configCHECK_FOR_STACK_OVERFLOW          0
 #define configUSE_MALLOC_FAILED_HOOK            0
 #define configUSE_DAEMON_TASK_STARTUP_HOOK      0

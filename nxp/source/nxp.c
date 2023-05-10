@@ -77,7 +77,7 @@ hal_err_t hal_init(void) {
   BOARD_Crypto_Init(&sha256_handle);
   BOARD_Timer_Init();
 
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, const uint8_t* data, size_t len) {
@@ -93,7 +93,7 @@ hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, const uint8_t* data, s
   xfer.data           = (uint8_t*) data;
   xfer.dataSize       = len;
 
-  return LPI2C_MasterTransferBlocking(BOARD_CAMERA_I2C_BASEADDR, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return LPI2C_MasterTransferBlocking(BOARD_CAMERA_I2C_BASEADDR, &xfer) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
@@ -104,42 +104,42 @@ hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
   xfer.dataSize = len;
   xfer.configFlags = kLPSPI_MasterPcsContinuous;
 
-  return LPSPI_MasterTransferBlocking(BOARD_LCD_SPI_BASEADDR, &xfer) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return LPSPI_MasterTransferBlocking(BOARD_LCD_SPI_BASEADDR, &xfer) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
   if (NXP_PIN_MAP[pin].base == NULL) {
-    return HAL_OK; // unconnected PIN
+    return HAL_SUCCESS; // unconnected PIN
   }
 
   GPIO_WritePinOutput(NXP_PIN_MAP[pin].base, NXP_PIN_MAP[pin].pin, state);
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 hal_err_t hal_rng_next(uint8_t *buf, size_t len) {
-  return TRNG_GetRandomData(TRNG, buf, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return TRNG_GetRandomData(TRNG, buf, len) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx) {
-  return DCP_HASH_Init(DCP, &sha256_handle, ctx, kDCP_Sha256) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return DCP_HASH_Init(DCP, &sha256_handle, ctx, kDCP_Sha256) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t len) {
-  return DCP_HASH_Update(DCP, ctx, data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return DCP_HASH_Update(DCP, ctx, data, len) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
-  return DCP_HASH_Finish(DCP, ctx, out, NULL) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return DCP_HASH_Finish(DCP, ctx, out, NULL) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len) {
   assert(port == UART_LOG);
-  return LPUART_WriteBlocking(BOARD_DEBUG_UART_BASEADDR, data, len) == kStatus_Success ? HAL_OK : HAL_ERROR;
+  return LPUART_WriteBlocking(BOARD_DEBUG_UART_BASEADDR, data, len) == kStatus_Success ? HAL_SUCCESS : HAL_FAIL;
 }
 
 hal_err_t hal_delay_us(uint32_t usec) {
   GPT_StartTimer(GPT1);
   while(GPT_GetCurrentTimerCount(GPT1) < usec) {}
   GPT_StopTimer(GPT1);
-  return HAL_OK;
+  return HAL_SUCCESS;
 }

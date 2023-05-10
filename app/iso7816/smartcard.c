@@ -104,7 +104,7 @@ static inline uint8_t SmartCard_Wait(SmartCard* sc) {
 }
 
 uint8_t SmartCard_Transmit(SmartCard* sc, uint8_t* buf, uint32_t len) {
-  //return HAL_SMARTCARD_Transmit_IT(sc->dev, buf, len) == HAL_OK;
+  //return HAL_SMARTCARD_Transmit_IT(sc->dev, buf, len) == HAL_SUCCESS;
   return 1;
 }
 
@@ -118,7 +118,7 @@ uint8_t SmartCard_Transmit_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
 
 uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len) {
   //__HAL_SMARTCARD_ENABLE_IT(sc->dev, SMARTCARD_IT_RTO);
-  //return HAL_SMARTCARD_Receive_IT(sc->dev, buf, len) == HAL_OK;
+  //return HAL_SMARTCARD_Receive_IT(sc->dev, buf, len) == HAL_SUCCESS;
   return 1;
 }
 

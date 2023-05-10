@@ -31,27 +31,18 @@ app_err_t qrscan_scan() {
 
   screen_fill_area(&screen_fullarea, TH_COLOR_QR_BG);
 
-  if (camera_start() != HAL_OK) {
+  LOG_MSG("Starting QR scanner");
+
+  if (camera_start() != HAL_SUCCESS) {
+    LOG_MSG("Failed to start camera");
     res = ERR_HW;
     goto end;
   }
 
   uint8_t* fb;
 
-  // prime the buffers
-  for(int i = 0; i < 2; i++) {
-    if (camera_next_frame(&fb) != HAL_OK) {
-      continue;
-    }
-
-    if (camera_submit(fb) != HAL_OK) {
-      res = ERR_HW;
-      goto end;
-    }
-  }
-
   while (1) {
-    if (camera_next_frame(&fb) != HAL_OK) {
+    if (camera_next_frame(&fb) != HAL_SUCCESS) {
       LOG_MSG("Failed to acquire frame");
       continue;
     }
@@ -76,7 +67,7 @@ app_err_t qrscan_scan() {
 
     screen_wait();
 
-    if (camera_submit(fb) != HAL_OK) {
+    if (camera_submit(fb) != HAL_SUCCESS) {
       res = ERR_HW;
       goto end;
     }

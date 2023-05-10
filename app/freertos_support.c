@@ -33,7 +33,7 @@ void __assertion_failed(char *failedExpr)
 #else
 void __assert_func(const char *file, int line, const char *func, const char *failedExpr)
 {
-    LOG_MSG(failedExprt);
+    LOG_MSG(failedExpr);
     for (;;)
     {
       OMG_BREAK();

@@ -25,7 +25,7 @@ hal_err_t _camera_reset() {
   hal_gpio_set(GPIO_CAMERA_RST, GPIO_SET);
   vTaskDelay(pdMS_TO_TICKS(CAMERA_SETTLE_MS));
 
-  return HAL_OK;
+  return HAL_SUCCESS;
 }
 
 hal_err_t _camera_load_reg(uint16_t addr, uint8_t val) {
@@ -39,7 +39,7 @@ hal_err_t _camera_load_reg(uint16_t addr, uint8_t val) {
 
 hal_err_t _camera_load_regs() {
   size_t i = 0;
-  hal_err_t err = HAL_OK;
+  hal_err_t err = HAL_SUCCESS;
 
   while(1) {
     switch(camera_regs[i].addr) {
@@ -50,7 +50,7 @@ hal_err_t _camera_load_regs() {
         goto finish;
       default:
         err = _camera_load_reg(camera_regs[i].addr, camera_regs[i].val);
-        if (err != HAL_OK) {
+        if (err != HAL_SUCCESS) {
           goto finish;
         }
         break;
@@ -64,16 +64,17 @@ finish:
 }
 
 hal_err_t camera_start() {
-  hal_err_t err = _camera_reset();
-  if ((err = _camera_reset()) != HAL_OK) {
+  hal_err_t err;
+
+  if ((err = hal_camera_init()) != HAL_SUCCESS) {
     return err;
   }
 
-  if ((err = hal_camera_init()) != HAL_OK) {
+  if ((err = _camera_reset()) != HAL_SUCCESS) {
     return err;
   }
 
-  if ((err = _camera_load_regs()) != HAL_OK) {
+  if ((err = _camera_load_regs()) != HAL_SUCCESS) {
     return err;
   }
 

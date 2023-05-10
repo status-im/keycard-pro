@@ -8,7 +8,10 @@
 #ifdef CM7
 #include "aes/CM7.h"
 #define _AES(x) CM7_1T_AES_##x
-#elif CM4F
+#elif defined CM4F
+#include "aes/CM3.h"
+#define _AES(x) CM3_1T_AES_##x
+#elif defined CM33
 #include "aes/CM3.h"
 #define _AES(x) CM3_1T_AES_##x
 #else

@@ -1,6 +1,6 @@
 #include "core/core.h"
 
-#ifdef DEBUG
+#ifdef APP_DEBUG_NO_KEYPAD
 #include "ui/ui_internal.h"
 void core_simulate_keypress(keypad_key_t key) {
   vTaskDelay(pdMS_TO_TICKS(1000));
@@ -14,7 +14,7 @@ void core_task_entry(void* pvParameters) {
     i18n_str_id_t selected;
     ui_menu(&menu_mainmenu, &selected);
 
-#ifdef DEBUG
+#ifdef APP_DEBUG_NO_KEYPAD
     core_simulate_keypress(KEYPAD_KEY_DOWN);
     core_simulate_keypress(KEYPAD_KEY_DOWN);
     core_simulate_keypress(KEYPAD_KEY_DOWN);
