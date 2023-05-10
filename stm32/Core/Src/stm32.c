@@ -104,10 +104,7 @@ hal_err_t hal_init() {
   MX_Camera_DMA_LL_Config();
 
   __HAL_LINKDMA(&hdcmi, DMA_Handle, handle_GPDMA1_Channel6);
-  if (HAL_DMAEx_List_LinkQ(&handle_GPDMA1_Channel6, &Camera_DMA_LL) != HAL_OK)
-  {
-    Error_Handler();
-  }
+  HAL_DMAEx_List_LinkQ(&handle_GPDMA1_Channel6, &Camera_DMA_LL);
 
   MX_ICACHE_Init();
 
