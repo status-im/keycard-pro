@@ -7,7 +7,8 @@
 #include "task.h"
 
 extern DMA_QListTypeDef Camera_DMA_LL;
-
+extern DMA_NodeTypeDef Camera_DMA_Node1;
+extern DMA_NodeTypeDef Camera_DMA_Node2;
 #define HAL_TIMEOUT 250
 
 struct gpio_pin_spec {
@@ -63,25 +64,42 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
   }
 }
 
-static hal_err_t inline _hal_acquire(int8_t idx) {
-  HAL_DCMI_Stop(&hdcmi);
+static void inline _hal_acquire(int8_t idx) {
   g_acquiring = idx;
   g_dcmi_bufs[idx].status = DCMI_ACQUIRING;
-  hal_err_t err = HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_SNAPSHOT, (uint32_t) g_dcmi_bufs[idx].addr, (CAMERA_FB_SIZE/4));
 
-  if (err != HAL_SUCCESS) {
-    g_acquiring = -1;
-    g_dcmi_bufs[idx].status = DCMI_READY;
-  }
+  hdcmi.pBuffPtr = (uint32_t) g_dcmi_bufs[idx].addr;
 
-  return err;
+  __HAL_DMA_DISABLE(hdcmi.DMA_Handle);
+  __HAL_DMA_CLEAR_FLAG(hdcmi.DMA_Handle, (DMA_FLAG_TC | DMA_FLAG_HT | DMA_FLAG_DTE | DMA_FLAG_ULE | DMA_FLAG_USE | DMA_FLAG_SUSP | DMA_FLAG_TO));
+  hdcmi.DMA_Handle->Instance->CBR1 = 0U;
+  Camera_DMA_Node1.LinkRegisters[NODE_CDAR_DEFAULT_OFFSET] = hdcmi.pBuffPtr;
+  Camera_DMA_Node2.LinkRegisters[NODE_CDAR_DEFAULT_OFFSET] = hdcmi.pBuffPtr + hdcmi.XferSize;
+
+  MODIFY_REG(hdcmi.DMA_Handle->Instance->CBR1, DMA_CBR1_BNDT, (hdcmi.XferSize & DMA_CBR1_BNDT));
+  hdcmi.DMA_Handle->Instance->CDAR = hdcmi.pBuffPtr;
+
+  __HAL_DMA_ENABLE(hdcmi.DMA_Handle);
+
+  hdcmi.Instance->CR |= DCMI_CR_CAPTURE;
 }
+
 
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
 {
   configASSERT(g_dcmi_task);
+
+  hdcmi->Instance->CR &= ~(DCMI_CR_CAPTURE);
+
   g_dcmi_bufs[g_acquiring].status = DCMI_ACQUIRED;
   g_acquiring = -1;
+
+  for (int i = 0; i < CAMERA_FB_COUNT; i++) {
+    if (g_dcmi_bufs[i].status == DCMI_READY) {
+      _hal_acquire(i);
+      break;
+    }
+  }
 
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   vTaskNotifyGiveIndexedFromISR(g_dcmi_task, CAMERA_TASK_NOTIFICATION_IDX, &xHigherPriorityTaskWoken);
@@ -107,6 +125,7 @@ hal_err_t hal_init() {
   MX_DCMI_Init();
 
   mco_off();
+  __HAL_DCMI_DISABLE_IT(&hdcmi, DCMI_IT_LINE | DCMI_IT_VSYNC);
 
   MX_Camera_DMA_LL_Config();
 
@@ -127,12 +146,16 @@ hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
   configASSERT(g_dcmi_task == NULL);
   g_dcmi_task = xTaskGetCurrentTaskHandle();
 
-  for (int i = 0; i < CAMERA_FB_COUNT; i++) {
+  g_dcmi_bufs[0].status = DCMI_ACQUIRING;
+  g_dcmi_bufs[0].addr = fb[0];
+  g_acquiring = 0;
+
+  for (int i = 1; i < CAMERA_FB_COUNT; i++) {
     g_dcmi_bufs[i].status = DCMI_READY;
     g_dcmi_bufs[i].addr = fb[i];
   }
 
-  return _hal_acquire(0);
+  return HAL_DCMI_Start_DMA(&hdcmi, DCMI_MODE_CONTINUOUS, (uint32_t) g_dcmi_bufs[0].addr, (CAMERA_FB_SIZE/4));
 }
 
 hal_err_t hal_camera_stop() {
@@ -143,32 +166,37 @@ hal_err_t hal_camera_stop() {
 }
 
 hal_err_t hal_camera_next_frame(uint8_t** fb) {
-  hal_err_t err = HAL_FAIL;
+  int ready = -1;
+
   for (int i = 0; i < CAMERA_FB_COUNT; i++) {
-    if ((err == HAL_FAIL) && (g_dcmi_bufs[i].status == DCMI_ACQUIRED)) {
+    if ((g_dcmi_bufs[i].status == DCMI_ACQUIRED)) {
       g_dcmi_bufs[i].status = DCMI_PROCESSING;
       *fb = g_dcmi_bufs[i].addr;
-      err = HAL_SUCCESS;
-    } else if ((g_acquiring == -1) && (g_dcmi_bufs[i].status == DCMI_READY)) {
-      _hal_acquire(i);
+      return HAL_SUCCESS;
+    } else if (g_dcmi_bufs[i].status == DCMI_READY) {
+      ready = i;
     }
   }
 
-  return err;
+  if (g_acquiring == -1 && ready != -1) {
+    _hal_acquire(ready);
+  }
+
+  return HAL_FAIL;
 }
 
 hal_err_t hal_camera_submit(uint8_t* fb) {
   for (int i = 0; i < CAMERA_FB_COUNT; i++) {
     if (g_dcmi_bufs[i].addr == fb) {
       if (g_acquiring == -1) {
-        return _hal_acquire(i);
+        _hal_acquire(i);
+        return HAL_SUCCESS;
       } else {
         g_dcmi_bufs[i].status = DCMI_READY;
         return HAL_SUCCESS;
       }
     }
   }
-
   return HAL_FAIL;
 }
 
