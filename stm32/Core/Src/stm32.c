@@ -39,6 +39,24 @@ static TaskHandle_t g_dcmi_task = NULL;
 static int8_t g_acquiring;
 static struct dcmi_buf g_dcmi_bufs[CAMERA_FB_COUNT];
 
+static inline void mco_off() {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
+static inline void mco_on() {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+}
+
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
   if (g_spi_callback) {
     g_spi_callback();
@@ -81,6 +99,8 @@ hal_err_t hal_init() {
   MX_USART3_UART_Init();
   MX_DCMI_Init();
 
+  mco_off();
+
   MX_Camera_DMA_LL_Config();
 
   __HAL_LINKDMA(&hdcmi, DMA_Handle, handle_GPDMA1_Channel6);
@@ -95,6 +115,7 @@ hal_err_t hal_init() {
 }
 
 hal_err_t hal_camera_init() {
+  mco_on();
   return HAL_SUCCESS;
 }
 
@@ -113,7 +134,7 @@ hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]) {
 hal_err_t hal_camera_stop() {
   g_dcmi_task = NULL;
   HAL_DCMI_Stop(&hdcmi);
-
+  mco_off();
   return HAL_SUCCESS;
 }
 
