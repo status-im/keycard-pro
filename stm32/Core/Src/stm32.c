@@ -120,7 +120,7 @@ hal_err_t hal_init() {
 
   MX_SPI5_Init();
   MX_I2C2_Init();
-  MX_USART2_SMARTCARD_Init();
+  MX_USART6_SMARTCARD_Init();
   MX_USART3_UART_Init();
   MX_DCMI_Init();
 

@@ -59,6 +59,7 @@ extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern SPI_HandleTypeDef hspi5;
+extern SMARTCARD_HandleTypeDef hsmartcard6;
 /* USER CODE BEGIN EV */
 
 /* USER CODE END EV */
@@ -187,6 +188,20 @@ void SPI5_IRQHandler(void)
   /* USER CODE BEGIN SPI5_IRQn 1 */
 
   /* USER CODE END SPI5_IRQn 1 */
+}
+
+/**
+  * @brief This function handles USART6 global interrupt.
+  */
+void USART6_IRQHandler(void)
+{
+  /* USER CODE BEGIN USART6_IRQn 0 */
+
+  /* USER CODE END USART6_IRQn 0 */
+  HAL_SMARTCARD_IRQHandler(&hsmartcard6);
+  /* USER CODE BEGIN USART6_IRQn 1 */
+
+  /* USER CODE END USART6_IRQn 1 */
 }
 
 /**

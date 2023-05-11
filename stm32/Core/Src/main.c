@@ -56,8 +56,8 @@ DMA_HandleTypeDef handle_GPDMA1_Channel0;
 
 TIM_HandleTypeDef htim6;
 
-SMARTCARD_HandleTypeDef hsmartcard2;
 UART_HandleTypeDef huart3;
+SMARTCARD_HandleTypeDef hsmartcard6;
 
 PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
@@ -99,16 +99,14 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI
-                              |RCC_OSCILLATORTYPE_HSE;
-  RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS_DIGITAL;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI48|RCC_OSCILLATORTYPE_HSI;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.HSIDiv = RCC_HSI_DIV1;
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.HSI48State = RCC_HSI48_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-  RCC_OscInitStruct.PLL.PLLSource = RCC_PLL1_SOURCE_HSE;
-  RCC_OscInitStruct.PLL.PLLM = 4;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLL1_SOURCE_HSI;
+  RCC_OscInitStruct.PLL.PLLM = 32;
   RCC_OscInitStruct.PLL.PLLN = 250;
   RCC_OscInitStruct.PLL.PLLP = 2;
   RCC_OscInitStruct.PLL.PLLQ = 2;
@@ -500,61 +498,6 @@ void MX_UCPD1_Init(void)
 }
 
 /**
-  * @brief USART2 Initialization Function
-  * @param None
-  * @retval None
-  */
-void MX_USART2_SMARTCARD_Init(void)
-{
-
-  /* USER CODE BEGIN USART2_Init 0 */
-
-  /* USER CODE END USART2_Init 0 */
-
-  /* USER CODE BEGIN USART2_Init 1 */
-
-  /* USER CODE END USART2_Init 1 */
-  hsmartcard2.Instance = USART2;
-  hsmartcard2.Init.BaudRate = 115200;
-  hsmartcard2.Init.WordLength = SMARTCARD_WORDLENGTH_9B;
-  hsmartcard2.Init.StopBits = SMARTCARD_STOPBITS_1_5;
-  hsmartcard2.Init.Parity = SMARTCARD_PARITY_EVEN;
-  hsmartcard2.Init.Mode = SMARTCARD_MODE_TX_RX;
-  hsmartcard2.Init.CLKPolarity = SMARTCARD_POLARITY_LOW;
-  hsmartcard2.Init.CLKPhase = SMARTCARD_PHASE_1EDGE;
-  hsmartcard2.Init.CLKLastBit = SMARTCARD_LASTBIT_DISABLE;
-  hsmartcard2.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_DISABLE;
-  hsmartcard2.Init.Prescaler = 25;
-  hsmartcard2.Init.GuardTime = 0;
-  hsmartcard2.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
-  hsmartcard2.Init.TimeOutEnable = SMARTCARD_TIMEOUT_DISABLE;
-  hsmartcard2.Init.BlockLength = 0;
-  hsmartcard2.Init.AutoRetryCount = 0;
-  hsmartcard2.Init.ClockPrescaler = SMARTCARD_PRESCALER_DIV1;
-  hsmartcard2.AdvancedInit.AdvFeatureInit = SMARTCARD_ADVFEATURE_NO_INIT;
-  if (HAL_SMARTCARD_Init(&hsmartcard2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_SMARTCARDEx_SetTxFifoThreshold(&hsmartcard2, SMARTCARD_TXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_SMARTCARDEx_SetRxFifoThreshold(&hsmartcard2, SMARTCARD_RXFIFO_THRESHOLD_1_8) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_SMARTCARDEx_DisableFifoMode(&hsmartcard2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN USART2_Init 2 */
-
-  /* USER CODE END USART2_Init 2 */
-
-}
-
-/**
   * @brief USART3 Initialization Function
   * @param None
   * @retval None
@@ -600,6 +543,63 @@ void MX_USART3_UART_Init(void)
   /* USER CODE BEGIN USART3_Init 2 */
 
   /* USER CODE END USART3_Init 2 */
+
+}
+
+/**
+  * @brief USART6 Initialization Function
+  * @param None
+  * @retval None
+  */
+void MX_USART6_SMARTCARD_Init(void)
+{
+
+  /* USER CODE BEGIN USART6_Init 0 */
+
+  /* USER CODE END USART6_Init 0 */
+
+  /* USER CODE BEGIN USART6_Init 1 */
+
+  /* USER CODE END USART6_Init 1 */
+  hsmartcard6.Instance = USART6;
+  hsmartcard6.Init.BaudRate = 115200;
+  hsmartcard6.Init.WordLength = SMARTCARD_WORDLENGTH_9B;
+  hsmartcard6.Init.StopBits = SMARTCARD_STOPBITS_1_5;
+  hsmartcard6.Init.Parity = SMARTCARD_PARITY_EVEN;
+  hsmartcard6.Init.Mode = SMARTCARD_MODE_TX_RX;
+  hsmartcard6.Init.CLKPolarity = SMARTCARD_POLARITY_LOW;
+  hsmartcard6.Init.CLKPhase = SMARTCARD_PHASE_1EDGE;
+  hsmartcard6.Init.CLKLastBit = SMARTCARD_LASTBIT_ENABLE;
+  hsmartcard6.Init.OneBitSampling = SMARTCARD_ONE_BIT_SAMPLE_DISABLE;
+  hsmartcard6.Init.Prescaler = 25;
+  hsmartcard6.Init.GuardTime = 0;
+  hsmartcard6.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
+  hsmartcard6.Init.TimeOutEnable = SMARTCARD_TIMEOUT_ENABLE;
+  hsmartcard6.Init.TimeOutValue = 9600;
+  hsmartcard6.Init.BlockLength = 0;
+  hsmartcard6.Init.AutoRetryCount = 3;
+  hsmartcard6.Init.ClockPrescaler = SMARTCARD_PRESCALER_DIV1;
+  hsmartcard6.AdvancedInit.AdvFeatureInit = SMARTCARD_ADVFEATURE_RXOVERRUNDISABLE_INIT;
+  hsmartcard6.AdvancedInit.OverrunDisable = SMARTCARD_ADVFEATURE_OVERRUN_DISABLE;
+  if (HAL_SMARTCARD_Init(&hsmartcard6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_SMARTCARDEx_SetTxFifoThreshold(&hsmartcard6, SMARTCARD_TXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_SMARTCARDEx_SetRxFifoThreshold(&hsmartcard6, SMARTCARD_RXFIFO_THRESHOLD_1_8) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  if (HAL_SMARTCARDEx_DisableFifoMode(&hsmartcard6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART6_Init 2 */
+
+  /* USER CODE END USART6_Init 2 */
 
 }
 
@@ -688,6 +688,16 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIO_USER_BUTTON_GPIO_Port, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PC14 PC15 PC0 PC1
+                           PC2 PC3 PC4 PC5
+                           PC10 PC12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0|GPIO_PIN_1
+                          |GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
+                          |GPIO_PIN_10|GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PF2 PF3 PF5 PF6
                            PF8 PF10 PF11 PF12
                            PF13 PF14 PF15 */
@@ -705,21 +715,11 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIO_LED2_YELLOW_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PH1 */
-  GPIO_InitStruct.Pin = GPIO_PIN_1;
+  /*Configure GPIO pins : PH0 PH1 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PC0 PC1 PC2 PC3
-                           PC4 PC5 PC8 PC10
-                           PC12 */
-  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
-                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_8|GPIO_PIN_10
-                          |GPIO_PIN_12;
-  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pin : GPIO_LCD_CD_Pin */
   GPIO_InitStruct.Pin = GPIO_LCD_CD_Pin;
@@ -735,8 +735,10 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIO_LCD_RST_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PA3 PA5 PA7 PA10 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_7|GPIO_PIN_10;
+  /*Configure GPIO pins : PA2 PA3 PA5 PA7
+                           PA10 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_7
+                          |GPIO_PIN_10;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -758,10 +760,10 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PG0 PG1 PG2 PG3
                            PG5 PG6 PG8 PG10
-                           PG12 PG13 PG14 PG15 */
+                           PG12 PG13 PG15 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
                           |GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_8|GPIO_PIN_10
-                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
@@ -783,10 +785,12 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PD10 PD11 PD12 PD13
                            PD14 PD15 PD0 PD1
-                           PD2 PD4 PD5 PD6 */
+                           PD2 PD4 PD5 PD6
+                           PD7 */
   GPIO_InitStruct.Pin = GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13
                           |GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0|GPIO_PIN_1
-                          |GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6;
+                          |GPIO_PIN_2|GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_6
+                          |GPIO_PIN_7;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
