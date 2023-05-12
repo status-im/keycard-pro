@@ -92,6 +92,8 @@ void SystemClock_Config(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SC_DEFAULT_BAUD_RATE 10752
+#define SC_DEFAULT_PSC 25
 #define TRACE_CK_Pin GPIO_PIN_2
 #define TRACE_CK_GPIO_Port GPIOE
 #define TRACE_D0_Pin GPIO_PIN_3
@@ -110,6 +112,8 @@ void SystemClock_Config(void);
 #define GPIO_LCD_CD_GPIO_Port GPIOA
 #define GPIO_LCD_RST_Pin GPIO_PIN_1
 #define GPIO_LCD_RST_GPIO_Port GPIOA
+#define GPIO_CARD_PRES_Pin GPIO_PIN_5
+#define GPIO_CARD_PRES_GPIO_Port GPIOC
 #define GPIO_LED1_GREEN_Pin GPIO_PIN_0
 #define GPIO_LED1_GREEN_GPIO_Port GPIOB
 #define GPIO_CAMERA_PWDN_Pin GPIO_PIN_10
@@ -140,6 +144,10 @@ void SystemClock_Config(void);
 #define SWCLK_GPIO_Port GPIOA
 #define T_JTDI_Pin GPIO_PIN_15
 #define T_JTDI_GPIO_Port GPIOA
+#define GPIO_CARD_RST_Pin GPIO_PIN_10
+#define GPIO_CARD_RST_GPIO_Port GPIOC
+#define GPIO_CARD_ON_Pin GPIO_PIN_12
+#define GPIO_CARD_ON_GPIO_Port GPIOC
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
 

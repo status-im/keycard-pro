@@ -1,3 +1,4 @@
+#include "hal.h"
 #include "iso7816/t1.h"
 #include <stdlib.h>
 
@@ -114,7 +115,7 @@ static uint8_t T1_Handle_R(SmartCard* sc, uint8_t pcb) {
 uint8_t T1_Handle_Resp(SmartCard* sc, APDU* apdu) {
   uint8_t header[3];
 
-  //HAL_SMARTCARDEx_TimeOut_Config(sc->dev, (sc->t1_bwt * sc->t1_bwt_factor));
+  hal_smartcard_set_timeout(sc->t1_bwt * sc->t1_bwt_factor);
   sc->t1_bwt_factor = 1;
   if (!SmartCard_Receive_Sync(sc, header, 3)) {
     return T1_FAIL;
@@ -122,8 +123,8 @@ uint8_t T1_Handle_Resp(SmartCard* sc, APDU* apdu) {
 
   uint8_t blen = header[2];
 
-  //HAL_SMARTCARDEx_BlockLength_Config(sc->dev, blen);
-  //HAL_SMARTCARDEx_TimeOut_Config(sc->dev, sc->t1_cwt);
+  hal_smartcard_set_blocklen(blen);
+  hal_smartcard_set_timeout(sc->t1_cwt);
 
   uint8_t *data;
   uint8_t s;

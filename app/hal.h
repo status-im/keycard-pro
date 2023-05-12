@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stddef.h>
 #include "crypto/sha2_soft.h"
+#include "iso7816/smartcard.h"
 
 #ifdef __MCUXPRESSO
 #include "fsl_dcp.h"
@@ -32,6 +33,7 @@ hal_err_t hal_init();
 #define CAMERA_FB_SIZE CAMERA_WIDTH*CAMERA_HEIGHT*CAMERA_BPP
 #define CAMERA_FB_COUNT 2
 #define CAMERA_TASK_NOTIFICATION_IDX 0
+#define SMARTCARD_TASK_NOTIFICATION_IDX 1
 
 hal_err_t hal_camera_init();
 hal_err_t hal_camera_start(uint8_t fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE]);
@@ -80,6 +82,16 @@ typedef enum {
 
 hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len);
 hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len, void (*cb)());
+
+// SmartCard
+hal_err_t hal_smartcard_start();
+hal_err_t hal_smartcard_stop();
+hal_err_t hal_smartcard_pps(smartcard_protocol_t protocol, uint32_t baud, uint32_t freq, uint8_t guard, uint32_t timeout);
+hal_err_t hal_smartcard_set_timeout(uint32_t timeout);
+hal_err_t hal_smartcard_set_blocklen(uint32_t len);
+hal_err_t hal_smartcard_send(const uint8_t* data, size_t len);
+hal_err_t hal_smarcard_recv(uint8_t* data, size_t len);
+
 
 // Crypto (only use in crypto library)
 hal_err_t hal_rng_next(uint8_t *buf, size_t len);

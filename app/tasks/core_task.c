@@ -1,4 +1,5 @@
 #include "core/core.h"
+#include "iso7816/smartcard.h"
 
 #ifdef APP_DEBUG_NO_KEYPAD
 #include "ui/ui_internal.h"
@@ -10,6 +11,9 @@ void core_simulate_keypress(keypad_key_t key) {
 #endif
 
 void core_task_entry(void* pvParameters) {
+  SmartCard_Init(&g_core.keycard.sc);
+  SmartCard_Activate(&g_core.keycard.sc);
+
   while(1) {
     i18n_str_id_t selected;
     ui_menu(&menu_mainmenu, &selected);

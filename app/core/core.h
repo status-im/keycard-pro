@@ -38,7 +38,7 @@ typedef struct {
 typedef struct {
   uint8_t plain_sig[SIGNATURE_LEN];
   uint8_t cbor_sig[CBOR_SIG_MAX_LEN];
-  uint32_t cbor_len;
+  size_t cbor_len;
 } core_sig_t;
 
 typedef union {

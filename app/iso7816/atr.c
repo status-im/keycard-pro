@@ -1,5 +1,6 @@
 #include "atr.h"
 
+#define ATR_T0_DEF_TIMEOUT 9600
 #define ATR_TIMEOUT 110
 #define ATR_SIZE 2
 #define ATR_DIRECT_CONVENTION 0x3b
@@ -75,13 +76,12 @@ uint8_t ATR_Read(SmartCard* sc) {
 
   uint8_t buf[4];
 
-  //__HAL_SMARTCARD_FLUSH_DRREGISTER(sc->dev);
-  //HAL_SMARTCARDEx_TimeOut_Config(sc->dev, ATR_TIMEOUT);
+  hal_smartcard_set_timeout(ATR_TIMEOUT);
   if (!SmartCard_Receive_Sync(sc, buf, 2)) {
     return 0;
   }
   
-  //HAL_SMARTCARDEx_TimeOut_Config(sc->dev, sc->dev->Init.TimeOutValue);
+  hal_smartcard_set_timeout(ATR_T0_DEF_TIMEOUT);
 
   if (buf[0] != ATR_DIRECT_CONVENTION) {
     return 0;

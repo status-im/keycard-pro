@@ -1,18 +1,18 @@
+#include "hal.h"
 #include "iso7816/pps.h"
 #include "iso7816/atr.h"
 
 #define PPS_TIMEOUT 20
 
-#define SMARTCARD_STOPBITS_1 0x00000000U
-
 const static uint32_t F_Table[] = {372, 372, 558, 744, 1116, 1488, 1860, 0, 0, 512, 768, 1024, 1536, 2048, 0, 0};
 const static uint32_t D_Table[] = {0, 1, 2, 4, 8, 16, 32, 0, 12, 20, 0, 0, 0, 0, 0, 0};
 
-// Move this to correct place
-#define USART_CLOCK 64000000
-
-#if(USART_CLOCK == 64000000)
+#if(SMARTCARD_CLOCK == 64000000)
 const static uint32_t F_freq_Table[] = {4000000, 4533333, 5333333, 8000000, 10666666, 16000000, 16000000, 0, 0, 4533333, 6400000, 8000000, 10666666, 16000000, 0, 0};
+#elif(SMARTCARD_CLOCK == 200000000)
+const static uint32_t F_freq_Table[] = {4000000, 5000000, 5882352, 7692307, 11111111, 14285714, 20000000, 0, 0, 5000000, 7142857, 10000000, 14285714, 20000000, 0, 0};
+#elif(SMARTCARD_CLOCK == 250000000)
+const static uint32_t F_freq_Table[] = {3906250, 5000000, 5952380, 7812500, 11363636, 15625000, 17857142, 0, 0, 5000000, 7352941, 9615384, 13888888, 17857142, 0, 0};
 #else
 #error "Frequency table not found"
 #endif
@@ -46,28 +46,20 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
   uint32_t freq = F_freq_Table[fi];
   uint32_t fd = F/D;
 
-  /*sc->dev->Init.BaudRate = ((freq * D) / F);
-  sc->dev->Init.Prescaler = (USART_CLOCK / freq / 2);
+  uint32_t baud = ((freq * D) / F);
+  uint32_t timeout = 0;
 
   sc->etu_10ns = (100000000/freq) * fd;
 
   if (sc->atr.default_protocol == SC_T1) {
-    sc->dev->Init.StopBits = SMARTCARD_STOPBITS_1;
-    sc->dev->Init.NACKEnable = SMARTCARD_NACK_DISABLE;
     sc->t1_cwt = (1 << sc->atr.t1_cwi);
     sc->t1_bwt = (((1 << sc->atr.t1_bwi) * 960 * 372 * D) / F);
     sc->t1_bwt_factor = 1;
-    sc->dev->Init.BlockLength = 255;
-    sc->dev->Init.AutoRetryCount = 0;
   } else {
-    sc->dev->Init.TimeOutValue = sc->atr.t0_wi * D * 960;
+    timeout = sc->atr.t0_wi * D * 960;
   }
 
-  sc->dev->Init.GuardTime = (sc->atr.n == 0 || sc->atr.n == 255) ? 0 : (fd * sc->atr.n);
+  uint8_t guard = (sc->atr.n == 0 || sc->atr.n == 255) ? 0 : (fd * sc->atr.n);
 
-  if (HAL_SMARTCARD_Init(sc->dev) != HAL_SUCCESS) {
-      return 0;
-  }*/
-
-  return 1;
+  return hal_smartcard_pps(sc->atr.default_protocol, baud, freq, guard, timeout) == HAL_SUCCESS;
 }

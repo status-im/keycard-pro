@@ -6,10 +6,13 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#define HAL_TIMEOUT 250
+#define SC_RESET_DELAY 37
+#define SMARTCARD_STOPBITS_1 0x00000000U
+
 extern DMA_QListTypeDef Camera_DMA_LL;
 extern DMA_NodeTypeDef Camera_DMA_Node1;
 extern DMA_NodeTypeDef Camera_DMA_Node2;
-#define HAL_TIMEOUT 250
 
 struct gpio_pin_spec {
   GPIO_TypeDef* base;
@@ -37,6 +40,7 @@ const struct gpio_pin_spec STM32_PIN_MAP[] = {
 
 static void (*g_spi_callback)();
 static TaskHandle_t g_dcmi_task = NULL;
+static TaskHandle_t g_smartcard_task = NULL;
 static int8_t g_acquiring;
 static struct dcmi_buf g_dcmi_bufs[CAMERA_FB_COUNT];
 
@@ -64,6 +68,27 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
   }
 }
 
+static void hal_smartcard_complete(uint32_t err) {
+  configASSERT(g_smartcard_task);
+
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  xTaskNotifyIndexedFromISR(g_smartcard_task, SMARTCARD_TASK_NOTIFICATION_IDX, err, eSetValueWithOverwrite, &xHigherPriorityTaskWoken);
+  g_smartcard_task = NULL;
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+void HAL_SMARTCARD_TxCpltCallback(SMARTCARD_HandleTypeDef *hsmartcard) {
+  hal_smartcard_complete(HAL_SMARTCARD_GetError(hsmartcard));
+}
+
+void HAL_SMARTCARD_RxCpltCallback(SMARTCARD_HandleTypeDef *hsmartcard) {
+  hal_smartcard_complete(HAL_SMARTCARD_GetError(hsmartcard));
+}
+
+void HAL_SMARTCARD_ErrorCallback(SMARTCARD_HandleTypeDef *hsmartcard) {
+  hal_smartcard_complete(HAL_SMARTCARD_GetError(hsmartcard));
+}
+
 static void inline _hal_acquire(int8_t idx) {
   g_acquiring = idx;
   g_dcmi_bufs[idx].status = DCMI_ACQUIRING;
@@ -85,8 +110,7 @@ static void inline _hal_acquire(int8_t idx) {
 }
 
 
-void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi)
-{
+void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi) {
   configASSERT(g_dcmi_task);
 
   hdcmi->Instance->CR &= ~(DCMI_CR_CAPTURE);
@@ -268,6 +292,73 @@ hal_err_t hal_delay_us(uint32_t usec) {
   while(__HAL_TIM_GET_COUNTER(&htim6) < usec) {}
   HAL_TIM_Base_Stop(&htim6);
   return HAL_FAIL;
+}
+
+hal_err_t hal_smartcard_start() {
+  HAL_GPIO_WritePin(GPIO_CARD_ON_GPIO_Port, GPIO_CARD_ON_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_RESET);
+
+  vTaskDelay(pdMS_TO_TICKS(SC_RESET_DELAY));
+  HAL_GPIO_WritePin(GPIO_CARD_ON_GPIO_Port, GPIO_CARD_ON_Pin, GPIO_PIN_RESET);
+  vTaskDelay(pdMS_TO_TICKS(SC_RESET_DELAY));
+  HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_SET);
+  __HAL_SMARTCARD_FLUSH_DRREGISTER(&hsmartcard6);
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_smartcard_stop() {
+  HAL_GPIO_WritePin(GPIO_CARD_ON_GPIO_Port, GPIO_CARD_ON_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_SET);
+
+  hsmartcard6.Init.StopBits = SMARTCARD_STOPBITS_1_5;
+  hsmartcard6.Init.BaudRate = SC_DEFAULT_BAUD_RATE;
+  hsmartcard6.Init.Prescaler = SC_DEFAULT_PSC;
+  hsmartcard6.Init.GuardTime = 0;
+  hsmartcard6.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
+  hsmartcard6.Init.AutoRetryCount = 3;
+
+  return HAL_SMARTCARD_Init(&hsmartcard6);
+}
+
+hal_err_t hal_smartcard_pps(smartcard_protocol_t protocol, uint32_t baud, uint32_t freq, uint8_t guard, uint32_t timeout) {
+  hsmartcard6.Init.BaudRate = baud;
+  hsmartcard6.Init.Prescaler = (SMARTCARD_CLOCK / freq / 2);
+
+  if (protocol == SC_T1) {
+    hsmartcard6.Init.StopBits = SMARTCARD_STOPBITS_1;
+    hsmartcard6.Init.NACKEnable = SMARTCARD_NACK_DISABLE;
+    hsmartcard6.Init.BlockLength = 255;
+    hsmartcard6.Init.AutoRetryCount = 0;
+  } else {
+    hsmartcard6.Init.TimeOutValue = timeout;
+  }
+
+  hsmartcard6.Init.GuardTime = guard;
+
+  return HAL_SMARTCARD_Init(&hsmartcard6);
+}
+
+hal_err_t hal_smartcard_set_timeout(uint32_t timeout) {
+  HAL_SMARTCARDEx_TimeOut_Config(&hsmartcard6, timeout);
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_smartcard_set_blocklen(uint32_t len) {
+  HAL_SMARTCARDEx_BlockLength_Config(&hsmartcard6, len);
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_smartcard_send(const uint8_t* data, size_t len) {
+  configASSERT(g_smartcard_task == NULL);
+  g_smartcard_task = xTaskGetCurrentTaskHandle();
+  return HAL_SMARTCARD_Transmit_IT(&hsmartcard6, data, len);
+}
+
+hal_err_t hal_smarcard_recv(uint8_t* data, size_t len) {
+  configASSERT(g_smartcard_task == NULL);
+  g_smartcard_task = xTaskGetCurrentTaskHandle();
+  __HAL_SMARTCARD_ENABLE_IT(&hsmartcard6, SMARTCARD_IT_RTO);
+  return HAL_SMARTCARD_Receive_IT(&hsmartcard6, data, len);
 }
 
 void vApplicationTickHook(void) {

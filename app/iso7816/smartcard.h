@@ -35,7 +35,7 @@ typedef enum {
 typedef enum {
   SC_T0,
   SC_T1
-} SmartCardProtocol;
+} smartcard_protocol_t;
 
 typedef struct {
   SmartCardState state;

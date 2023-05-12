@@ -160,7 +160,7 @@ app_err_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8
   uint8_t secret[SECP256K1_PUBLEN+3] __attribute__((aligned(4)));
 
   uint8_t res = ecdh_multiply(&secp256k1, priv, sc_pub, &secret[3]);
-  memcpy(secret, &secret[4], AES_256_KEY_SIZE);
+  memmove(secret, &secret[4], AES_256_KEY_SIZE);
 
   uint8_t* apduData = APDU_DATA(apdu);
   apduData[0] = SECP256K1_PUBLEN;

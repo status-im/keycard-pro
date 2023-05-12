@@ -6,8 +6,8 @@
 #include "task.h"
 #include "hal.h"
 
-#define SC_RESET_DELAY 400
 #define SC_DEFAULT_ETU10NS 9300
+#define SC_MAX_TIMEOUT_MS 30000
 
 static inline void SmartCard_State_Reset(SmartCard* sc) {
   sc->send_seq = 0;
@@ -28,7 +28,7 @@ void SmartCard_Delay(SmartCard* sc, uint32_t etu) {
 
 void SmartCard_Init(SmartCard* sc) {
   SmartCard_State_Reset(sc);
-
+  sc->state = SC_OFF;
   /*
   if (HAL_GPIO_ReadPin(SC_NOFF_GPIO_Port, SC_NOFF_Pin)) {
     sc->state = SC_OFF;
@@ -38,13 +38,7 @@ void SmartCard_Init(SmartCard* sc) {
 }
 
 void SmartCard_Activate(SmartCard* sc) {
- // HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_SET);
-  //HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_RESET);
-
-  SmartCard_Delay(sc, SC_RESET_DELAY);
-  //HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_RESET);
-  SmartCard_Delay(sc, SC_RESET_DELAY);
-  //HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
+  hal_smartcard_start();
 
   if (!ATR_Read(sc)) {
     SmartCard_Deactivate(sc);
@@ -67,20 +61,8 @@ void SmartCard_Activate(SmartCard* sc) {
 }
 
 void SmartCard_Deactivate(SmartCard* sc) {
-  /*HAL_GPIO_WritePin(SC_NCMDVCC_GPIO_Port, SC_NCMDVCC_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(SC_RST_GPIO_Port, SC_RST_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(SC_5V3V_GPIO_Port, SC_5V3V_Pin, GPIO_PIN_SET);
-  
-  sc->dev->Init.StopBits = SMARTCARD_STOPBITS_1_5;
-  sc->dev->Init.BaudRate = SC_DEFAULT_BAUD_RATE;
-  sc->dev->Init.Prescaler = SC_DEFAULT_PSC;
-  sc->dev->Init.GuardTime = 0;
-  sc->dev->Init.NACKEnable = SMARTCARD_NACK_ENABLE;
-  sc->dev->Init.AutoRetryCount = 3;
-*/
   SmartCard_State_Reset(sc);
-
-  //HAL_SMARTCARD_Init(sc->dev);
+  hal_smartcard_stop();
   sc->state = SC_DEACTIVATED;
 }
 
@@ -94,18 +76,20 @@ void SmartCard_Out(SmartCard* sc) {
 }
 
 static inline uint8_t SmartCard_Wait(SmartCard* sc) {
- /* while(HAL_SMARTCARD_GetState(sc->dev) != HAL_SMARTCARD_STATE_READY) {}
+  BaseType_t res = pdFAIL;
+  uint32_t err;
+  res = xTaskNotifyWaitIndexed(SMARTCARD_TASK_NOTIFICATION_IDX, 0, UINT32_MAX, &err, pdMS_TO_TICKS(SC_MAX_TIMEOUT_MS));
 
-  if (HAL_SMARTCARD_GetError(sc->dev) != HAL_SMARTCARD_ERROR_NONE) {
+  if (res != pdPASS) {
+    //TODO: abort transfer
     return 0;
   }
-*/
-  return 1;
+
+  return err == HAL_SUCCESS;
 }
 
 uint8_t SmartCard_Transmit(SmartCard* sc, uint8_t* buf, uint32_t len) {
-  //return HAL_SMARTCARD_Transmit_IT(sc->dev, buf, len) == HAL_SUCCESS;
-  return 1;
+  return hal_smartcard_send(buf, len) == HAL_SUCCESS;
 }
 
 uint8_t SmartCard_Transmit_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
@@ -117,9 +101,7 @@ uint8_t SmartCard_Transmit_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
 }
 
 uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len) {
-  //__HAL_SMARTCARD_ENABLE_IT(sc->dev, SMARTCARD_IT_RTO);
-  //return HAL_SMARTCARD_Receive_IT(sc->dev, buf, len) == HAL_SUCCESS;
-  return 1;
+  return hal_smarcard_recv(buf, len) == HAL_SUCCESS;
 }
 
 uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
@@ -138,4 +120,3 @@ uint8_t SmartCard_Send_APDU(SmartCard* sc, APDU* apdu) {
     return 0;
   }
 }
-
