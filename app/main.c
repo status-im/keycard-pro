@@ -3,7 +3,7 @@
 #include "task.h"
 #include "hal.h"
 
-#define CORE_STACK_SIZE 128
+#define CORE_STACK_SIZE 1024
 #define CORE_TASK_PRIO 1
 
 #define UI_STACK_SIZE 6000

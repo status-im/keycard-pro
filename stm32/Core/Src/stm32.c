@@ -82,6 +82,7 @@ void HAL_SMARTCARD_TxCpltCallback(SMARTCARD_HandleTypeDef *hsmartcard) {
 }
 
 void HAL_SMARTCARD_RxCpltCallback(SMARTCARD_HandleTypeDef *hsmartcard) {
+  __HAL_SMARTCARD_DISABLE_IT(&hsmartcard6, SMARTCARD_IT_RTO);
   hal_smartcard_complete(HAL_SMARTCARD_GetError(hsmartcard));
 }
 

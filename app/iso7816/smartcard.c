@@ -88,11 +88,11 @@ static inline uint8_t SmartCard_Wait(SmartCard* sc) {
   return err == HAL_SUCCESS;
 }
 
-uint8_t SmartCard_Transmit(SmartCard* sc, uint8_t* buf, uint32_t len) {
+uint8_t SmartCard_Transmit(SmartCard* sc, const uint8_t* buf, uint32_t len) {
   return hal_smartcard_send(buf, len) == HAL_SUCCESS;
 }
 
-uint8_t SmartCard_Transmit_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
+uint8_t SmartCard_Transmit_Sync(SmartCard* sc, const uint8_t* buf, uint32_t len) {
   if (!SmartCard_Transmit(sc, buf, len)) {
     return 0;
   }
