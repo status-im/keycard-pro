@@ -22,10 +22,8 @@ const static uint8_t cmac_iv[AES_IV_SIZE] __attribute__((aligned(4))) = {
   0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 };
 
-
-static uint8_t round_key[(AES_256_KEYROUND+1)*16];
-
 uint8_t aes_encrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out) {
+  uint8_t round_key[(AES_256_KEYROUND+1)*16] __attribute__((aligned(4)));
   _AES(256_keyschedule_enc(round_key, key));
 
   uint32_t* data_in_p = (uint32_t*) data;
@@ -50,22 +48,25 @@ uint8_t aes_encrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* da
 }
 
 uint8_t aes_decrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out) {
+  uint8_t round_key[(AES_256_KEYROUND+1)*16] __attribute__((aligned(4)));
+  uint32_t iv_tmp[4] __attribute__((aligned(4)));
+
   _AES(256_keyschedule_enc(round_key, key));
   _AES(keyschedule_dec(round_key, AES_256_KEYROUND));
 
   uint32_t* data_out_p = (uint32_t*) out;
-  uint32_t* iv_p = (uint32_t*) iv;
   uint32_t blocks_cnt = len / 16;
 
-  for(uint32_t i = 0; i < blocks_cnt; i++) {
+  memcpy(iv_tmp, iv, 16);
+  while(blocks_cnt--) {
     _AES(decrypt(round_key, (uint8_t *) data, (uint8_t *) data_out_p, AES_256_KEYROUND));
 
-    data_out_p[0] ^= iv_p[0];
-    data_out_p[1] ^= iv_p[1];
-    data_out_p[2] ^= iv_p[2];
-    data_out_p[3] ^= iv_p[3];
+    data_out_p[0] ^= iv_tmp[0];
+    data_out_p[1] ^= iv_tmp[1];
+    data_out_p[2] ^= iv_tmp[2];
+    data_out_p[3] ^= iv_tmp[3];
 
-    iv_p = (uint32_t*)data;
+    memcpy(iv_tmp, data, 16);
     data_out_p += 4;
     data += 16;
   }
@@ -74,6 +75,7 @@ uint8_t aes_decrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* da
 }
 
 uint8_t aes_cmac(const uint8_t* key, const uint8_t* data, uint32_t len, uint8_t* out) {
+  uint8_t round_key[(AES_256_KEYROUND+1)*16] __attribute__((aligned(4)));
   _AES(256_keyschedule_enc(round_key, key));
 
   uint32_t* data_in_p = (uint32_t*) data;

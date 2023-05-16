@@ -45,7 +45,7 @@ CM3_1T_AES_decrypt:
 	uxtb r2, r6
 	uxtb r3, r7
 
-#ifdef __ARM_ARCH_7EM__
+#if __ARM_ARCH_7EM__ || __ARM_ARCH_8M_MAIN__
 	// aggregate loads by source in case it lies in different memory blocks
 	ldr r0, [r14, r0, lsl #2]
 	ldr r1, [r14, r1, lsl #2]
