@@ -6,7 +6,7 @@
 
 uint8_t Keycard_CMD_Select(Keycard* kc, const uint8_t* aid, uint32_t len);
 uint8_t Keycard_CMD_Pair(Keycard* kc, uint8_t step, uint8_t* data);
-app_err_t Keycard_CMD_AutoPair(Keycard* kc, const uint8_t* psk, Pairing* pairing);
+app_err_t Keycard_CMD_AutoPair(Keycard* kc, const uint8_t* psk, pairing_t* pairing);
 uint8_t Keycard_CMD_VerifyPIN(Keycard* kc, uint8_t* pin);
 uint8_t Keycard_CMD_UnblockPIN(Keycard* kc, uint8_t* pin, uint8_t* puk);
 uint8_t Keycard_CMD_GetStatus(Keycard* kc);

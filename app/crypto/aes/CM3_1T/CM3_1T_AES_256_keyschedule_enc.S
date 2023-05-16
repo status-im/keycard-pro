@@ -19,7 +19,7 @@
 .global CM3_1T_AES_256_keyschedule_enc
 .type   CM3_1T_AES_256_keyschedule_enc,%function
 CM3_1T_AES_256_keyschedule_enc:
-#if __ARM_ARCH_7M__ || __ARM_ARCH_7EM__
+#if __ARM_ARCH_7M__ || __ARM_ARCH_7EM__ || __ARM_ARCH_8M_MAIN__
 	push {r4-r11, lr}
 
 	ldmia r1!, {r2-r9} // load key

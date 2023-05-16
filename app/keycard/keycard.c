@@ -43,10 +43,10 @@ app_err_t Keycard_Init_Card(Keycard* kc, uint8_t* sc_key) {
   return ERR_OK;
 }
 
-app_err_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
+app_err_t Keycard_Pair(Keycard* kc, pairing_t* pairing, uint8_t* instance_uid) {
   memcpy(pairing->instance_uid, instance_uid, APP_INFO_INSTANCE_UID_LEN);
   
-  if (Pairing_Read(pairing)) {
+  if (pairing_read(pairing) == ERR_OK) {
     ui_keycard_already_paired();
     return ERR_OK;
   }
@@ -55,7 +55,7 @@ app_err_t Keycard_Pair(Keycard* kc, Pairing* pairing, uint8_t* instance_uid) {
   
   while(1) {
     if (Keycard_CMD_AutoPair(kc, psk, pairing) == ERR_OK) {
-      if (!Pairing_Write(pairing)) {
+      if (pairing_write(pairing) != ERR_OK) {
         ui_keycard_flash_failed();
         return ERR_DATA;
       }
@@ -241,14 +241,14 @@ app_err_t Keycard_Setup(Keycard* kc) {
       return ERR_DATA;
   }
 
-  Pairing pairing;
+  pairing_t pairing;
   err = Keycard_Pair(kc, &pairing, info.instance_uid);
   if (err != ERR_OK) {
     return err;
   }
 
   if (SecureChannel_Open(&kc->ch, &kc->sc, &kc->apdu, &pairing, info.sc_key) != ERR_OK) {
-    Pairing_Erase(&pairing);
+    pairing_erase(&pairing);
     ui_keycard_secure_channel_failed();
     return ERR_RETRY;
   }

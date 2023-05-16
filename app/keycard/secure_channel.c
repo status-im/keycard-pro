@@ -37,7 +37,7 @@ app_err_t SecureChannel_Mutual_Authenticate(SecureChannel* sc, SmartCard* card, 
   return ERR_OK;
 }
 
-app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pairing* pairing, uint8_t* sc_pub) {
+app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, pairing_t* pairing, uint8_t* sc_pub) {
   uint8_t priv[SECP256K1_KEYLEN];
   random_buffer(priv, SECP256K1_KEYLEN);
   APDU_RESET(apdu);

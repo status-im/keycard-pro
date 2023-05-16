@@ -7,15 +7,11 @@
 #include "iso7816/smartcard.h"
 
 #ifdef __MCUXPRESSO
-#include "fsl_dcp.h"
-typedef dcp_hash_ctx_t hal_sha256_ctx_t;
-#define SOFT_CRC32
+#include "nxp.h"
 #elif defined STM32_HAL
-#define SOFT_SHA256
-#define SOFT_CRC32
+#include "stm32.h"
 #else
-#define SOFT_SHA256
-#define SOFT_CRC32
+#error "Unsupported platform"
 #endif
 
 // General
@@ -110,5 +106,14 @@ hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out);
 
 // Timer
 hal_err_t hal_delay_us(uint32_t usec);
+
+// Flash
+#define HAL_FLASH_BLOCK_ADDR(__BLOCK__) (HAL_FLASH_ADDR + (HAL_FLASH_BLOCK_SIZE * __BLOCK__))
+#define HAL_FLASH_ADDR_TO_BLOCK(__ADDR__) ((__ADDR__ - HAL_FLASH_ADDR) / HAL_FLASH_BLOCK_SIZE)
+
+hal_err_t hal_flash_begin_program();
+hal_err_t hal_flash_program(const uint32_t* data, uint32_t* addr);
+hal_err_t hal_flash_erase(uint32_t block);
+hal_err_t hal_flash_end_program();
 
 #endif

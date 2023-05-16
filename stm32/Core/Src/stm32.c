@@ -362,6 +362,35 @@ hal_err_t hal_smarcard_recv(uint8_t* data, size_t len) {
   return HAL_SMARTCARD_Receive_IT(&hsmartcard6, data, len);
 }
 
+hal_err_t hal_flash_begin_program() {
+  return HAL_FLASH_Unlock();
+}
+
+hal_err_t hal_flash_program(const uint32_t* data, uint32_t* addr) {
+  return HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD, (uint32_t) addr, (uint32_t) data);
+}
+
+hal_err_t hal_flash_erase(uint32_t block) {
+  FLASH_EraseInitTypeDef op;
+  op.TypeErase = FLASH_TYPEERASE_SECTORS;
+  op.NbSectors = 1;
+  op.Sector = block;
+
+  if (op.Sector >= FLASH_SECTOR_NB) {
+    op.Sector -= FLASH_SECTOR_NB;
+    op.Banks = FLASH_BANK_2;
+  } else {
+    op.Banks = FLASH_BANK_1;
+  }
+
+  uint32_t err;
+  return HAL_FLASHEx_Erase(&op, &err);
+}
+
+hal_err_t hal_flash_end_program() {
+  return HAL_FLASH_Lock();
+}
+
 void vApplicationTickHook(void) {
   HAL_IncTick();
 }

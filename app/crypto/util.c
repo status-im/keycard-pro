@@ -9,7 +9,7 @@ uint32_t pad_iso9797_m1(uint8_t* data, uint8_t plen, uint32_t size) {
 }
 
 uint32_t unpad_iso9797_m1(uint8_t* data, uint32_t size) {
-  while(data[--size] != 0x80) {}
+  while((size > 0) && data[--size] != 0x80) {}
   return size;
 }
 

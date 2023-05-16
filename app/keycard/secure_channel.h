@@ -17,7 +17,7 @@ typedef struct __attribute__((packed, aligned(4))) {
   uint8_t open;
 } SecureChannel;
 
-app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, Pairing* pairing, uint8_t* sc_pub);
+app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, pairing_t* pairing, uint8_t* sc_pub);
 app_err_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_t* data, uint32_t len);
 app_err_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len);
 app_err_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu);

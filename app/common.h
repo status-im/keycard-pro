@@ -13,25 +13,12 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include "hal.h"
 
 #define APP_ALIGNED(x, a) x __attribute__((aligned(a)))
 #define APP_SECTION(x, s) x __attribute__((section(s)))
 #define APP_ALWAYS_INLINE inline __attribute__((always_inline))
 #define APP_WEAK __attribute__((weak))
-
-#ifdef __MCUXPRESSO
-#include "fsl_common.h"
-#include "cr_section_macros.h"
-#define APP_NOCACHE AT_NONCACHEABLE_SECTION_ALIGN
-#define APP_RAMFUNC __RAMFUNC(SRAM_ITC)
-#define CAMERA_BUFFER_ALIGN 64
-#elif defined STM32_HAL
-#define APP_NOCACHE APP_ALIGNED
-#define APP_RAMFUNC
-#define CAMERA_BUFFER_ALIGN 4
-#else
-#error "Unknown platform"
-#endif
 
 #define OMG_BREAK() __asm__ volatile ("BKPT")
 

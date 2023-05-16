@@ -34,7 +34,7 @@ uint8_t Keycard_CMD_Pair(Keycard* kc, uint8_t step, uint8_t* data) {
   return SmartCard_Send_APDU(&kc->sc, &kc->apdu);
 }
 
-app_err_t Keycard_CMD_AutoPair(Keycard* kc, const uint8_t* psk, Pairing* pairing) {
+app_err_t Keycard_CMD_AutoPair(Keycard* kc, const uint8_t* psk, pairing_t* pairing) {
   uint8_t buf[SHA256_DIGEST_LENGTH];
   random_buffer(buf, SHA256_DIGEST_LENGTH);
 

@@ -20,7 +20,7 @@
 .global CM3_1T_AES_128_keyschedule_enc
 .type   CM3_1T_AES_128_keyschedule_enc,%function
 CM3_1T_AES_128_keyschedule_enc:
-#if __ARM_ARCH_7M__ || __ARM_ARCH_7EM__
+#if __ARM_ARCH_7M__ || __ARM_ARCH_7EM__ || __ARM_ARCH_8M_MAIN__
 	push {r4-r8, lr}
 
 	movw r14, #:lower16:AES_Te2

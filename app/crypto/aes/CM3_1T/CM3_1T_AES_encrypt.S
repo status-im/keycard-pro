@@ -18,7 +18,7 @@
 .global CM3_1T_AES_encrypt
 .type   CM3_1T_AES_encrypt,%function
 CM3_1T_AES_encrypt:
-#if __ARM_ARCH_7M__ || __ARM_ARCH_7EM__
+#if __ARM_ARCH_7M__ || __ARM_ARCH_7EM__ || __ARM_ARCH_8M_MAIN__
 	add r3, r0, r3, lsl #4 //rk_end-16 = rk + rounds * 16
 	push {r2,r3,r4-r11,lr} //stack out, rk_end-16
 
