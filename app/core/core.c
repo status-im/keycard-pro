@@ -44,15 +44,16 @@ static inline uint8_t core_get_tx_v_base() {
 }
 
 static app_err_t core_sign(Keycard* kc, uint8_t* out) {
-  keccak_Final(&g_core.hash_ctx, g_core.digest);
+  uint8_t digest[SHA3_256_DIGEST_LENGTH];
+  keccak_Final(&g_core.hash_ctx, digest);
 
-  if ((Keycard_CMD_Sign(kc, g_core.bip44_path, g_core.bip44_path_len, g_core.digest) != ERR_OK) || (APDU_SW(&kc->apdu) != 0x9000)) {
+  if ((Keycard_CMD_Sign(kc, g_core.bip44_path, g_core.bip44_path_len, digest) != ERR_OK) || (APDU_SW(&kc->apdu) != 0x9000)) {
     return ERR_CRYPTO;
   }
 
   uint8_t* data = APDU_RESP(&kc->apdu);
 
-  if (Keycard_ConvertSignature(data, g_core.digest, out) != ERR_OK) {
+  if (Keycard_ConvertSignature(data, digest, out) != ERR_OK) {
     return ERR_DATA;
   }
 
@@ -61,7 +62,7 @@ static app_err_t core_sign(Keycard* kc, uint8_t* out) {
 
 static inline app_err_t core_wait_tx_confirmation() {
   ui_display_tx(&g_core.data.tx.content);
-  return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_OK;
 }
 
 static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg) {
@@ -383,17 +384,17 @@ void core_usb_run() {
 
 }
 
-app_err_t core_eip4527_init_sign() {
-  g_core.bip44_path_len = g_core.qr_request._eth_sign_request_derivation_path._crypto_keypath_components__path_component_count * 4;
+app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
+  g_core.bip44_path_len = qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component_count * 4;
 
   if (g_core.bip44_path_len > BIP44_MAX_PATH_LEN) {
     g_core.bip44_path_len = 0;
     return ERR_DATA;
   }
 
-  for (int i = 0; i < g_core.qr_request._eth_sign_request_derivation_path._crypto_keypath_components__path_component_count; i++) {
-    uint32_t idx = g_core.qr_request._eth_sign_request_derivation_path._crypto_keypath_components__path_component[0]._path_component__child_index;
-    if (g_core.qr_request._eth_sign_request_derivation_path._crypto_keypath_components__path_component[0]._path_component__is_hardened) {
+  for (int i = 0; i < qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component_count; i++) {
+    uint32_t idx = qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component[0]._path_component__child_index;
+    if (qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component[0]._path_component__is_hardened) {
       idx |= 0x80000000;
     }
 
@@ -407,26 +408,28 @@ app_err_t core_eip4527_init_sign() {
 }
 
 void core_qr_run() {
-  ui_qrscan(&g_core.qr_request);
+  struct eth_sign_request qr_request;
+
+  ui_qrscan(&qr_request);
 
   if (core_wait_event(0) != CORE_EVT_UI_OK) {
     return;
   }
 
-  if (core_eip4527_init_sign() != ERR_OK) {
+  if (core_eip4527_init_sign(&qr_request) != ERR_OK) {
     return;
   }
 
   app_err_t err;
 
-  switch(g_core.qr_request._eth_sign_request_data_type._sign_data_type_choice) {
+  switch(qr_request._eth_sign_request_data_type._sign_data_type_choice) {
     case _sign_data_type__eth_transaction_data:
     case _sign_data_type__eth_typed_transaction:
-      err = core_process_tx(g_core.qr_request._eth_sign_request_sign_data.value, g_core.qr_request._eth_sign_request_sign_data.len, 1);
+      err = core_process_tx(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len, 1);
       break;
     case _sign_data_type__eth_raw_bytes:
-      g_core.data.msg.len = g_core.qr_request._eth_sign_request_sign_data.len;
-      err = core_process_msg(g_core.qr_request._eth_sign_request_sign_data.value, g_core.qr_request._eth_sign_request_sign_data.len, 1);
+      g_core.data.msg.len = qr_request._eth_sign_request_sign_data.len;
+      err = core_process_msg(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len, 1);
       break;
     case _sign_data_type__eth_typed_data:
       err = ERR_UNSUPPORTED;
@@ -445,10 +448,10 @@ void core_qr_run() {
   }
 
   struct eth_signature sig = {0};
-  sig._eth_signature_request_id_present = g_core.qr_request._eth_sign_request_request_id_present;
+  sig._eth_signature_request_id_present = qr_request._eth_sign_request_request_id_present;
   if (sig._eth_signature_request_id_present) {
-    sig._eth_signature_request_id._eth_signature_request_id.value = g_core.qr_request._eth_sign_request_request_id._eth_sign_request_request_id.value;
-    sig._eth_signature_request_id._eth_signature_request_id.len = g_core.qr_request._eth_sign_request_request_id._eth_sign_request_request_id.len;
+    sig._eth_signature_request_id._eth_signature_request_id.value = qr_request._eth_sign_request_request_id._eth_sign_request_request_id.value;
+    sig._eth_signature_request_id._eth_signature_request_id.len = qr_request._eth_sign_request_request_id._eth_sign_request_request_id.len;
   }
   sig._eth_signature_signature.value = g_core.data.sig.plain_sig;
   sig._eth_signature_signature.len = SIGNATURE_LEN;
@@ -458,10 +461,17 @@ void core_qr_run() {
   core_wait_event(0);
 }
 
+void core_display_public() {
+  //Keycard_
+}
+
 void core_action_run(i18n_str_id_t menu) {
   switch(menu) {
   case MENU_QRCODE:
     core_qr_run();
+    break;
+  case MENU_DISPLAY_PUBLIC:
+    core_display_public();
     break;
   default:
     //unhandled commands

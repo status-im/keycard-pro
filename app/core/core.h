@@ -50,9 +50,7 @@ typedef union {
 typedef struct {
   Keycard keycard;
   Command usb_command;
-  struct eth_sign_request qr_request;
 
-  uint8_t digest[SHA3_256_DIGEST_LENGTH];
   uint8_t bip44_path[BIP44_MAX_PATH_LEN];
   uint8_t bip44_path_len;
   SHA3_CTX hash_ctx;
