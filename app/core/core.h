@@ -16,7 +16,10 @@
 #define MAX_MSG_SIZE 512
 
 #define SIGNATURE_LEN 65
+#define PUBKEY_LEN 65
+#define CHAINCODE_LEN 32
 #define CBOR_SIG_MAX_LEN 128
+#define CBOR_KEY_MAX_LEN 128
 
 typedef enum {
   CORE_EVT_USB_CMD,
@@ -41,10 +44,18 @@ typedef struct {
   size_t cbor_len;
 } core_sig_t;
 
+typedef struct {
+  uint8_t pub[PUBKEY_LEN];
+  uint8_t chain[CHAINCODE_LEN];
+  uint8_t cbor_key[CBOR_KEY_MAX_LEN];
+  size_t cbor_len;
+} core_key_t;
+
 typedef union {
   core_tx_t tx;
   core_msg_t msg;
   core_sig_t sig;
+  core_key_t key;
 } core_data_t;
 
 typedef struct {

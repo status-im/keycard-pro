@@ -20,7 +20,47 @@
 const uint8_t* ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
 const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
 
+const uint32_t ETH_DEFAULT_BIP44[] = { 0x8000002c, 0x8000003c, 0x80000000, 0x00000000 };
+const uint32_t ETH_DEFAULT_BIP44_LEN = 4;
+
 core_ctx_t g_core;
+
+static app_err_t core_export_key(Keycard* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain) {
+  uint8_t export_type;
+
+  if (out_chain) {
+    export_type = 2;
+  } else {
+    export_type = 1;
+  }
+
+  if (!Keycard_CMD_ExportKey(kc, export_type, path, len) || (APDU_SW(&kc->apdu) != 0x9000)) {
+    return ERR_CRYPTO;
+  }
+
+  uint8_t* data = APDU_RESP(&kc->apdu);
+
+  uint16_t tag;
+  uint16_t off = tlv_read_tag(data, &tag);
+  if (tag != 0xa1) {
+    return ERR_DATA;
+  }
+
+  off += tlv_read_length(&data[off], &len);
+  len = tlv_read_fixed_primitive(0x80, PUBKEY_LEN, &data[off], out_pub);
+  if (len == TLV_INVALID) {
+    return ERR_DATA;
+  }
+  off += len;
+
+  if (out_chain) {
+    if (tlv_read_fixed_primitive(0x82, CHAINCODE_LEN, &data[off], out_chain) == TLV_INVALID) {
+      return ERR_DATA;
+    }
+  }
+
+  return ERR_OK;
+}
 
 static inline app_err_t core_init_sign() {
   keccak_256_Init(&g_core.hash_ctx);
@@ -158,53 +198,41 @@ static void core_usb_get_address(Keycard* kc, APDU* cmd) {
   }
 
   uint8_t extended = APDU_P2(cmd) == 1;
-  uint8_t export_type = 1 + extended;
 
   SC_BUF(path, BIP44_MAX_PATH_LEN);
   memcpy(path, &data[1], len);
-
-  if (!Keycard_CMD_ExportKey(kc, export_type, path, len) || (APDU_SW(&kc->apdu) != 0x9000)) {
-    core_usb_err_sw(cmd, 0x69, 0x82);
-    return;
-  }
-
-  data = APDU_RESP(&kc->apdu);
   uint8_t* out = APDU_RESP(cmd);
 
-  uint16_t tag;
-  uint16_t off = tlv_read_tag(data, &tag);
-  if (tag != 0xa1) {
+  app_err_t err = core_export_key(kc, path, len, &out[1], (extended ? &out[107] : NULL));
+
+  switch (err) {
+  case ERR_OK:
+    break;
+  case ERR_CRYPTO:
+    core_usb_err_sw(cmd, 0x69, 0x82);
+    return;
+  default:
     core_usb_err_sw(cmd, 0x6f, 0x00);
     return;
   }
-  off += tlv_read_length(&data[off], &len);
-  len = tlv_read_fixed_primitive(0x80, 65, &data[off], &out[1]);
-  if (len == TLV_INVALID) {
-    core_usb_err_sw(cmd, 0x6f, 0x00);
-    return;
-  }
-  off += len;
+
   out[0] = 65;
   out[66] = 40;
 
   ethereum_address(&out[1], path);
   ethereum_address_checksum(path, (char *)&out[67]);
 
-  len = 107;
-
-  if (extended) {
-    if (tlv_read_fixed_primitive(0x82, 32, &data[off], &out[len]) == TLV_INVALID) {
-      core_usb_err_sw(cmd, 0x6f, 0x00);
-      return;
-    }
-    len += 32;
-  }
-
   if (APDU_P1(cmd) == 1) {
     if (!ui_confirm_eth_address((char *)&out[67])) {
       core_usb_err_sw(cmd, 0x69, 0x82);
       return;
     }
+  }
+
+  if (extended) {
+    len = 139;
+  } else {
+    len = 107;
   }
 
   out[len++] = 0x90;
@@ -462,7 +490,42 @@ void core_qr_run() {
 }
 
 void core_display_public() {
-  //Keycard_
+  SC_BUF(path, BIP44_MAX_PATH_LEN);
+  struct hd_key key;
+  uint16_t path_len = 0;
+  key._hd_key_key_data.len = 33;
+  key._hd_key_key_data.value = g_core.data.key.pub;
+  key._hd_key_chain_code._hd_key_chain_code.len = CHAINCODE_LEN;
+  key._hd_key_chain_code._hd_key_chain_code.value = g_core.data.key.chain;
+  key._hd_key_chain_code_present = 1;
+  key._hd_key_origin._hd_key_origin._crypto_keypath_depth_present = 0;
+  key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint_present = 0;
+  key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component_count = ETH_DEFAULT_BIP44_LEN;
+  key._hd_key_origin_present = 1;
+  key._hd_key_name_present = 0;
+  key._hd_key_source_present = 0;
+
+  for (int i = 0; i < ETH_DEFAULT_BIP44_LEN; i++) {
+    uint32_t c = ETH_DEFAULT_BIP44[i];
+    path[path_len++] = c >> 24;
+    path[path_len++] = (c >> 16) & 0xff;
+    path[path_len++] = (c >> 8) & 0xff;
+    path[path_len++] = (c & 0xff);
+    key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component[i]._path_component__child_index = c & 0x7fffffff;
+    key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component[i]._path_component__is_hardened = c > 0x7fffffff;
+  }
+
+  app_err_t err = core_export_key(&g_core.keycard, path, path_len, g_core.data.key.pub, g_core.data.key.chain);
+  g_core.data.key.pub[0] = (0x02 | (g_core.data.key.pub[64] & 1));
+
+  if (err != ERR_OK) {
+    return;
+  }
+
+  cbor_encode_hd_key(g_core.data.key.cbor_key, CBOR_KEY_MAX_LEN, &key, &g_core.data.key.cbor_len);
+  ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
+
+  core_wait_event(0);
 }
 
 void core_action_run(i18n_str_id_t menu) {
