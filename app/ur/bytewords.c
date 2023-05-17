@@ -135,19 +135,20 @@ size_t bytewords_encode(const uint8_t* in, size_t in_len, uint8_t* out, size_t m
   while(in_len--) {
     crc32_update_one(&crc32, *in);
     uint16_t encoded = BW_ENCODE_LUT[*(in++)];
-    *(out++) = (encoded >> 8);
     *(out++) = (encoded & 0xff);
+    *(out++) = (encoded >> 8);
   }
 
   uint32_t checksum;
   crc32_finish(&crc32, &checksum);
+  checksum = rev32(checksum);
 
   in_len = 4;
   while(in_len--) {
     uint16_t encoded = BW_ENCODE_LUT[(checksum & 0xff)];
     checksum >>= 8;
-    *(out++) = (encoded >> 8);
     *(out++) = (encoded & 0xff);
+    *(out++) = (encoded >> 8);
   }
 
   return outlen;
