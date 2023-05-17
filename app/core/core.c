@@ -62,7 +62,7 @@ static app_err_t core_sign(Keycard* kc, uint8_t* out) {
 
 static inline app_err_t core_wait_tx_confirmation() {
   ui_display_tx(&g_core.data.tx.content);
-  return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_OK;
+  return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg) {
