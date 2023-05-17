@@ -1,6 +1,7 @@
 #include "app_tasks.h"
 #include "core.h"
 #include "crypto/address.h"
+#include "crypto/ripemd160.h"
 #include "crypto/util.h"
 #include "log/log.h"
 #include "keycard/secure_channel.h"
@@ -20,8 +21,8 @@
 const uint8_t* ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
 const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
 
-const uint32_t ETH_DEFAULT_BIP44[] = { 0x8000002c, 0x8000003c, 0x80000000, 0x00000000 };
-const uint32_t ETH_DEFAULT_BIP44_LEN = 4;
+const uint32_t ETH_DEFAULT_BIP44[] = { 0x8000002c, 0x8000003c, 0x80000000 };
+const uint32_t ETH_DEFAULT_BIP44_LEN = 3;
 
 core_ctx_t g_core;
 
@@ -468,6 +469,7 @@ void core_qr_run() {
   }
 
   if(err != ERR_OK) {
+    //TODO: handle this
     return;
   }
 
@@ -491,6 +493,7 @@ void core_qr_run() {
 
 void core_display_public() {
   SC_BUF(path, BIP44_MAX_PATH_LEN);
+
   struct hd_key key;
   uint16_t path_len = 0;
   key._hd_key_key_data.len = 33;
@@ -498,8 +501,9 @@ void core_display_public() {
   key._hd_key_chain_code._hd_key_chain_code.len = CHAINCODE_LEN;
   key._hd_key_chain_code._hd_key_chain_code.value = g_core.data.key.chain;
   key._hd_key_chain_code_present = 1;
-  key._hd_key_origin._hd_key_origin._crypto_keypath_depth_present = 0;
-  key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint_present = 0;
+  key._hd_key_origin._hd_key_origin._crypto_keypath_depth_present = 1;
+  key._hd_key_origin._hd_key_origin._crypto_keypath_depth._crypto_keypath_depth = ETH_DEFAULT_BIP44_LEN;
+  key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint_present = 1;
   key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component_count = ETH_DEFAULT_BIP44_LEN;
   key._hd_key_origin_present = 1;
   key._hd_key_name_present = 0;
@@ -515,12 +519,38 @@ void core_display_public() {
     key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component[i]._path_component__is_hardened = c > 0x7fffffff;
   }
 
-  app_err_t err = core_export_key(&g_core.keycard, path, path_len, g_core.data.key.pub, g_core.data.key.chain);
-  g_core.data.key.pub[0] = (0x02 | (g_core.data.key.pub[64] & 1));
+  app_err_t err = core_export_key(&g_core.keycard, path, (path_len - 4), g_core.data.key.pub, NULL);
 
   if (err != ERR_OK) {
+    //TODO: handle this
     return;
   }
+
+  g_core.data.key.pub[0] = (0x02 | (g_core.data.key.pub[64] & 1));
+
+  sha256_Raw(g_core.data.key.pub, 33, g_core.data.key.chain);
+  ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
+
+  uint32_t fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[0] << 16) | (g_core.data.key.pub[0] << 8) | g_core.data.key.pub[0];
+  key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint = fingerprint;
+
+  path_len = 0;
+  for (int i = 0; i < ETH_DEFAULT_BIP44_LEN; i++) {
+    uint32_t c = ETH_DEFAULT_BIP44[i];
+    path[path_len++] = c >> 24;
+    path[path_len++] = (c >> 16) & 0xff;
+    path[path_len++] = (c >> 8) & 0xff;
+    path[path_len++] = (c & 0xff);
+  }
+
+  err = core_export_key(&g_core.keycard, path, path_len, g_core.data.key.pub, g_core.data.key.chain);
+
+  if (err != ERR_OK) {
+    //TODO: handle this
+    return;
+  }
+
+  g_core.data.key.pub[0] = (0x02 | (g_core.data.key.pub[64] & 1));
 
   cbor_encode_hd_key(g_core.data.key.cbor_key, CBOR_KEY_MAX_LEN, &key, &g_core.data.key.cbor_len);
   ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
