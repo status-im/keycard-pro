@@ -425,8 +425,8 @@ app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
   }
 
   for (int i = 0; i < qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component_count; i++) {
-    uint32_t idx = qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component[0]._path_component__child_index;
-    if (qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component[0]._path_component__is_hardened) {
+    uint32_t idx = qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component[i]._path_component__child_index;
+    if (qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component[i]._path_component__is_hardened) {
       idx |= 0x80000000;
     }
 
