@@ -1,4 +1,5 @@
 #include "atr.h"
+#include "hal.h"
 
 #define ATR_T0_DEF_TIMEOUT 9600
 #define ATR_TIMEOUT 110

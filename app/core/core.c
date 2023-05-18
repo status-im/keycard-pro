@@ -496,8 +496,7 @@ void core_qr_run() {
 
 void core_display_public() {
   struct hd_key key;
-  uint16_t path_len = 0;
-  key._hd_key_key_data.len = 33;
+  key._hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
   key._hd_key_key_data.value = g_core.data.key.pub;
   key._hd_key_chain_code._hd_key_chain_code.len = CHAINCODE_LEN;
   key._hd_key_chain_code._hd_key_chain_code.value = g_core.data.key.chain;
@@ -512,6 +511,7 @@ void core_display_public() {
   key._hd_key_name._hd_key_name.value = EIP4527_NAME;
   key._hd_key_source_present = 0;
 
+  uint16_t path_len = 0;
   for (int i = 0; i < ETH_DEFAULT_BIP44_LEN; i++) {
     uint32_t c = ETH_DEFAULT_BIP44[i];
     g_core.bip44_path[path_len++] = c >> 24;
@@ -531,9 +531,9 @@ void core_display_public() {
     return;
   }
 
-  g_core.data.key.pub[0] = (0x02 | (g_core.data.key.pub[64] & 1));
+  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
 
-  sha256_Raw(g_core.data.key.pub, 33, g_core.data.key.chain);
+  sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
   ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
 
   uint32_t fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[0] << 16) | (g_core.data.key.pub[0] << 8) | g_core.data.key.pub[0];
@@ -547,7 +547,7 @@ void core_display_public() {
     return;
   }
 
-  g_core.data.key.pub[0] = (0x02 | (g_core.data.key.pub[64] & 1));
+  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
 
   cbor_encode_hd_key(g_core.data.key.cbor_key, CBOR_KEY_MAX_LEN, &key, &g_core.data.key.cbor_len);
   ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);

@@ -137,18 +137,18 @@ uint8_t ui_read_pin(uint8_t* out, int8_t retries) {
 }
 
 uint8_t ui_read_puk(uint8_t* out, int8_t retries) {
-  out[0] = '1';
-  out[1] = '2';
-  out[2] = '3';
-  out[3] = '4';
-  out[4] = '5';
-  out[5] = '6';
-  out[6] = '1';
-  out[7] = '2';
-  out[8] = '3';
-  out[9] = '4';
-  out[10] = '5';
-  out[11] = '6';
+  out[0] = '0';
+  out[1] = '1';
+  out[2] = '2';
+  out[3] = '3';
+  out[4] = '4';
+  out[5] = '5';
+  out[6] = '6';
+  out[7] = '7';
+  out[8] = '8';
+  out[9] = '9';
+  out[10] = '0';
+  out[11] = '1';
 
   return 1;
 }

@@ -98,6 +98,14 @@ void bn_read_be(const uint8_t *in_number, bignum256 *out_number) {
   out_number->val[BN_LIMBS - 1] = temp;
 }
 
+void bn_read_compact_be(const uint8_t* in_number, size_t len, bignum256 *out_number) {
+  uint8_t tmp[32];
+
+  memset(tmp, 0, sizeof(tmp) - len);
+  memmove(tmp + sizeof(tmp) - len, in_number, len);
+  bn_read_be(tmp, out_number);
+}
+
 // out_number = (256BE) in_number
 // Assumes in_number < 2**256
 // Guarantess out_number is a raw bigendian 256-bit number

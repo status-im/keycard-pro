@@ -68,6 +68,7 @@ static inline void write_le(uint8_t *data, uint32_t x) {
 }
 
 void bn_read_be(const uint8_t *in_number, bignum256 *out_number);
+void bn_read_compact_be(const uint8_t* in_number, size_t len, bignum256 *out_number);
 void bn_write_be(const bignum256 *in_number, uint8_t *out_number);
 void bn_read_le(const uint8_t *in_number, bignum256 *out_number);
 void bn_write_le(const bignum256 *in_number, uint8_t *out_number);
