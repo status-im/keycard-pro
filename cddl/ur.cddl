@@ -1,0 +1,9 @@
+ur-part = [
+	seqNum: uint32,
+	seqLen: uint,
+	messageLen: uint,
+	checksum: uint32,
+	data: bstr
+]
+
+uint32 = uint .size 4

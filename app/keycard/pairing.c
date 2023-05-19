@@ -2,6 +2,7 @@
 
 #include "pairing.h"
 #include "hal.h"
+#include "mem.h"
 
 #define PAIRING_BK_COUNT 1
 #define PAIRING_BK_END HAL_FLASH_BLOCK_COUNT
@@ -46,8 +47,7 @@ static uint32_t* pairing_find(pairing_t *p) {
 }
 
 static app_err_t pairing_compact(uint32_t block) {
-  //TODO: data is too big for the stack, move it
-  uint32_t data[HAL_FLASH_BLOCK_SIZE/4];
+  uint32_t* data = (uint32_t*) g_mem_heap;
   uint32_t data_len = 0;
   uint32_t* p = (uint32_t *) HAL_FLASH_BLOCK_ADDR(block);
 

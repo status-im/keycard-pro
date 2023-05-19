@@ -13,7 +13,6 @@
 #include "ur/eip4527_types.h"
 
 #define BIP44_MAX_PATH_LEN 40
-#define MAX_MSG_SIZE 512
 
 #define SIGNATURE_LEN 65
 #define PUBKEY_LEN 65
@@ -36,7 +35,7 @@ typedef struct {
 typedef struct {
   uint32_t received;
   uint32_t len;
-  uint8_t content[MAX_MSG_SIZE];
+  uint8_t* content;
 } core_msg_t;
 
 typedef struct {

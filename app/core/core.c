@@ -3,6 +3,7 @@
 #include "crypto/address.h"
 #include "crypto/ripemd160.h"
 #include "crypto/util.h"
+#include "mem.h"
 #include "log/log.h"
 #include "keycard/secure_channel.h"
 #include "keycard/keycard_cmdset.h"
@@ -325,6 +326,7 @@ static void core_usb_sign_message(Keycard* kc, APDU* cmd) {
   uint8_t* data = APDU_DATA(cmd);
   uint32_t len = APDU_LC(cmd);
   uint8_t first_segment = APDU_P1(cmd) == 0;
+  g_core.data.msg.content = g_mem_heap;
 
   if (first_segment) {
     if (core_usb_init_sign(data) != ERR_OK) {
@@ -333,15 +335,24 @@ static void core_usb_sign_message(Keycard* kc, APDU* cmd) {
     }
 
     g_core.data.msg.len = (data[1+g_core.bip44_path_len] << 24) | (data[2+g_core.bip44_path_len] << 16) | (data[3+g_core.bip44_path_len] << 8) | data[4+g_core.bip44_path_len];
+
+    if (g_core.data.msg.len > MEM_HEAP_SIZE) {
+      core_usb_err_sw(cmd, 0x6a, 0x80);
+      return;
+    }
+
     g_core.data.msg.received = 0;
     keccak_Update(&g_core.hash_ctx, ETH_MSG_MAGIC, ETH_MSG_MAGIC_LEN);
     len -= g_core.bip44_path_len + 5;
     data = &data[g_core.bip44_path_len + 5];
   }
 
-  //TODO: inform the user that the message has been truncated!
-  int off = MIN((MAX_MSG_SIZE - len), (g_core.data.msg.received + len));
-  uint8_t* buf = &g_core.data.msg.content[off];
+  if ((g_core.data.msg.received + len) > MEM_HEAP_SIZE) {
+    core_usb_err_sw(cmd, 0x6a, 0x80);
+    return;
+  }
+
+  uint8_t* buf = &g_core.data.msg.content[g_core.data.msg.received];
   memcpy(buf, data, len);
 
   switch(core_process_msg(buf, len, first_segment)) {

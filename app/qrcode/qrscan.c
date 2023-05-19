@@ -7,27 +7,28 @@
 #include "ui/theme.h"
 #include "ui/ui_internal.h"
 #include "error.h"
+#include "mem.h"
 
 app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
   struct quirc_code qrcode;
-  struct quirc_data qrdata;
+  struct quirc_data *qrdata = (struct quirc_data *)qrctx;
 
   if (quirc_count(qrctx) != 1) {
     return ERR_RETRY;
   }
 
   quirc_extract(qrctx, 0, &qrcode);
-  quirc_decode_error_t err = quirc_decode(&qrcode, &qrdata);
+  quirc_decode_error_t err = quirc_decode(&qrcode, qrdata);
 
-  return !err ? ur_process_part(ur, qrdata.payload, qrdata.payload_len) : ERR_RETRY;
+  return !err ? ur_process_part(ur, qrdata->payload, qrdata->payload_len) : ERR_RETRY;
 }
 
 app_err_t qrscan_scan() {
   struct quirc qrctx;
   app_err_t res = ERR_OK;
   ur_t ur;
-  ur.data_max_len = sizeof(struct quirc);
-  ur.data = (uint8_t*) &qrctx;
+  ur.data_max_len = MEM_HEAP_SIZE;
+  ur.data = g_mem_heap;
 
   screen_fill_area(&screen_fullarea, TH_COLOR_QR_BG);
 
