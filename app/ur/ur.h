@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "error.h"
 
+#define UR_MAX_PART_COUNT 32
+#define UR_PART_DESC_COUNT (UR_MAX_PART_COUNT + 5)
+
 typedef enum {
   CRYPTO_KEYPATH = 0,
   ETH_SIGN_REQUEST = 1,
@@ -13,8 +16,11 @@ typedef enum {
 
 typedef struct {
   ur_type_t type;
-  uint8_t is_multipart;
-  uint8_t is_complete;
+  uint32_t crc;
+  uint32_t part_desc[UR_PART_DESC_COUNT];
+  uint8_t part_count;
+  double sampler_probs[UR_MAX_PART_COUNT];
+  int sampler_aliases[UR_MAX_PART_COUNT];
   size_t data_max_len;
   size_t data_len;
   uint8_t* data;

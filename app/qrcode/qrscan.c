@@ -29,6 +29,7 @@ app_err_t qrscan_scan() {
   ur_t ur;
   ur.data_max_len = MEM_HEAP_SIZE;
   ur.data = g_mem_heap;
+  ur.crc = 0;
 
   screen_fill_area(&screen_fullarea, TH_COLOR_QR_BG);
 

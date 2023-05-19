@@ -14,8 +14,6 @@ app_err_t qrout_run() {
   ur.data = (uint8_t*) g_ui_cmd.params.qrout.data;
   ur.data_len = g_ui_cmd.params.qrout.len;
   ur.type = g_ui_cmd.params.qrout.type;
-  ur.is_complete = 1;
-  ur.is_multipart = 0;
 
   uint8_t tmpBuf[qrcodegen_BUFFER_LEN_MAX];
   uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
