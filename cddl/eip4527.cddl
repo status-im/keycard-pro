@@ -46,7 +46,7 @@ eth-sign-request = {
     ? request-id: uuid,
     sign-data: sign-data-bytes,
     data-type: sign-data-type,
-    chain-id: int,
+    ? chain-id: int,
     derivation-path: #6.304(crypto-keypath),
     ? address: eth-address-bytes,
     ? request-origin: text

@@ -153,7 +153,7 @@ static app_err_t core_process_tx(const uint8_t* data, uint8_t len, uint8_t first
   }
 }
 
-static app_err_t core_process_msg(const uint8_t* data, uint8_t len, uint8_t first_segment) {
+static app_err_t core_process_msg(const uint8_t* data, uint32_t len, uint8_t first_segment) {
   if (first_segment) {
     g_core.data.msg.received = 0;
     keccak_Update(&g_core.hash_ctx, ETH_MSG_MAGIC, ETH_MSG_MAGIC_LEN);

@@ -62,6 +62,14 @@ struct hd_key_chain_code {
 
 
 
+struct eth_sign_request_chain_id {
+
+	int32_t _eth_sign_request_chain_id;
+
+};
+
+
+
 struct path_component {
 
   uint32_t _path_component__child_index;
@@ -196,25 +204,27 @@ struct eth_sign_request_request_origin {
 
 struct eth_sign_request {
 
-  struct eth_sign_request_request_id _eth_sign_request_request_id;
+	struct eth_sign_request_request_id _eth_sign_request_request_id;
 
-  uint_fast32_t _eth_sign_request_request_id_present;
+	uint_fast32_t _eth_sign_request_request_id_present;
 
-  struct zcbor_string _eth_sign_request_sign_data;
+	struct zcbor_string _eth_sign_request_sign_data;
 
-  struct sign_data_type_ _eth_sign_request_data_type;
+	struct sign_data_type_ _eth_sign_request_data_type;
 
-  int32_t _eth_sign_request_chain_id;
+	struct eth_sign_request_chain_id _eth_sign_request_chain_id;
 
-  struct crypto_keypath _eth_sign_request_derivation_path;
+	uint_fast32_t _eth_sign_request_chain_id_present;
 
-  struct eth_sign_request_address _eth_sign_request_address;
+	struct crypto_keypath _eth_sign_request_derivation_path;
 
-  uint_fast32_t _eth_sign_request_address_present;
+	struct eth_sign_request_address _eth_sign_request_address;
 
-  struct eth_sign_request_request_origin _eth_sign_request_request_origin;
+	uint_fast32_t _eth_sign_request_address_present;
 
-  uint_fast32_t _eth_sign_request_request_origin_present;
+	struct eth_sign_request_request_origin _eth_sign_request_request_origin;
+
+	uint_fast32_t _eth_sign_request_request_origin_present;
 
 };
 

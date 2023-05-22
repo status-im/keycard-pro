@@ -18,6 +18,7 @@
 static bool decode_uuid(zcbor_state_t *state, struct zcbor_string *result);
 static bool decode_repeated_eth_sign_request_request_id(zcbor_state_t *state, struct eth_sign_request_request_id *result);
 static bool decode_sign_data_type(zcbor_state_t *state, struct sign_data_type_ *result);
+static bool decode_repeated_eth_sign_request_chain_id(zcbor_state_t *state, struct eth_sign_request_chain_id *result);
 static bool decode_path_component(zcbor_state_t *state, struct path_component *result);
 static bool decode_repeated_crypto_keypath_source_fingerprint(zcbor_state_t *state, struct crypto_keypath_source_fingerprint *result);
 static bool decode_repeated_crypto_keypath_depth(zcbor_state_t *state, struct crypto_keypath_depth *result);
@@ -64,6 +65,20 @@ static bool decode_sign_data_type(
 	|| (((*result)._sign_data_type_choice == _sign_data_type__eth_typed_data) && ((1)))
 	|| (((*result)._sign_data_type_choice == _sign_data_type__eth_raw_bytes) && ((1)))
 	|| (((*result)._sign_data_type_choice == _sign_data_type__eth_typed_transaction) && ((1)))) || (zcbor_error(state, ZCBOR_ERR_WRONG_VALUE), false))))));
+
+	if (!tmp_result)
+		zcbor_trace();
+
+	return tmp_result;
+}
+
+static bool decode_repeated_eth_sign_request_chain_id(
+		zcbor_state_t *state, struct eth_sign_request_chain_id *result)
+{
+	zcbor_print("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (4))))
+	&& (zcbor_int32_decode(state, (&(*result)._eth_sign_request_chain_id)))));
 
 	if (!tmp_result)
 		zcbor_trace();
@@ -172,8 +187,7 @@ static bool decode_eth_sign_request(
 	&& (zcbor_bstr_decode(state, (&(*result)._eth_sign_request_sign_data))))
 	&& (((zcbor_uint32_expect(state, (3))))
 	&& (decode_sign_data_type(state, (&(*result)._eth_sign_request_data_type))))
-	&& (((zcbor_uint32_expect(state, (4))))
-	&& (zcbor_int32_decode(state, (&(*result)._eth_sign_request_chain_id))))
+	&& zcbor_present_decode(&((*result)._eth_sign_request_chain_id_present), (zcbor_decoder_t *)decode_repeated_eth_sign_request_chain_id, state, (&(*result)._eth_sign_request_chain_id))
 	&& (((zcbor_uint32_expect(state, (5))))
 	&& zcbor_tag_expect(state, 304)
 	&& (decode_crypto_keypath(state, (&(*result)._eth_sign_request_derivation_path))))
