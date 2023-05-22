@@ -13,6 +13,24 @@ const char* ur_type_string[] = {
     "ETH-SIGNATURE",
 };
 
+static app_err_t ur_process_simple(ur_t* ur, uint8_t* parts, uint8_t* part_data, size_t part_len, uint32_t desc_idx, struct ur_part* part) {
+  if (ur->part_desc[desc_idx]) {
+    return ERR_NEED_MORE_DATA;
+  }
+
+  memcpy(&parts[desc_idx * part_len], part_data, part_len);
+  ur->part_desc[desc_idx] = (1 << desc_idx);
+  ur->part_mask |= (1 << desc_idx);
+
+  if (part->_ur_part_seqLen == __builtin_popcount(ur->part_mask)) {
+    ur->data = parts;
+    ur->data_len = part->_ur_part_messageLen;
+    return ERR_OK;
+  }
+
+  return ERR_NEED_MORE_DATA;
+}
+
 app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   if (in_len < 10) {
     return ERR_DATA;
@@ -48,7 +66,6 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
     }
 
     tmp = 0;
-    return ERR_CANCEL;
   } else {
     tmp = 1;
   }
@@ -74,7 +91,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
 
   if (part._ur_part_checksum != ur->crc) {
     ur->crc = part._ur_part_checksum;
-    ur->part_count = 0;
+    ur->part_mask = 0;
     for (int i = 0; i < UR_PART_DESC_COUNT; i++) {
       ur->part_desc[i] = 0;
     }
@@ -87,24 +104,83 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   part_len = part._ur_part_data.len;
 
   if (part._ur_part_seqNum <= part._ur_part_seqLen) {
-    uint32_t desc_idx = part._ur_part_seqNum - 1;
-
-    if (ur->part_desc[desc_idx]) {
-      return ERR_NEED_MORE_DATA;
-    }
-
-    memcpy(&parts[desc_idx * part_len], part_data, part_len);
-    ur->part_desc[desc_idx] = (1 << desc_idx);
-    ur->part_count++;
-  } else {
-    uint32_t indexes = fountain_part_indexes(part._ur_part_seqNum, ur->crc, part._ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
-    return ERR_DATA;
+    return ur_process_simple(ur, parts, part_data, part_len, part._ur_part_seqNum - 1, &part);
   }
 
-  if (part._ur_part_seqLen == ur->part_count) {
-    ur->data = parts;
-    ur->data_len = part._ur_part_messageLen;
-    return ERR_OK;
+  uint32_t indexes = fountain_part_indexes(part._ur_part_seqNum, ur->crc, part._ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
+  if ((indexes & ~ur->part_mask) == 0) {
+    return ERR_NEED_MORE_DATA;
+  }
+
+  int desc_idx = 0;
+  int store_idx = -1;
+
+  // reduce new part by existing
+  while(desc_idx < UR_PART_DESC_COUNT) {
+    if (__builtin_popcount(indexes) == 1) {
+      int target_idx = __builtin_ctz(indexes);
+      if (ur_process_simple(ur, parts, part_data, part_len, target_idx, &part) == ERR_OK) {
+        return ERR_OK;
+      } else {
+        store_idx = target_idx;
+        break;
+      }
+    }
+
+    if (ur->part_desc[desc_idx] == 0) {
+      if (desc_idx >= part._ur_part_seqLen) {
+        store_idx = desc_idx;
+      }
+    } else if ((ur->part_desc[desc_idx] & indexes) == (ur->part_desc[desc_idx])) {
+      indexes = indexes ^ ur->part_desc[desc_idx];
+      if (indexes == 0) {
+        return ERR_NEED_MORE_DATA;
+      }
+
+      uint8_t* xorpart = &parts[desc_idx * part_len];
+      for (int i = 0; i < part_len; i++) {
+        part_data[i] ^= xorpart[i];
+      }
+    }
+
+    desc_idx++;
+  }
+
+  if (store_idx == -1) {
+    return ERR_NEED_MORE_DATA;
+  }
+
+  if (store_idx >= part._ur_part_seqLen) {
+    memcpy(&parts[store_idx * part_len], part_data, part_len);
+    ur->part_desc[store_idx] = indexes;
+  }
+
+  //reduce existing parts by new part
+  desc_idx = part._ur_part_seqLen;
+
+  while(desc_idx < UR_PART_DESC_COUNT) {
+    if ((ur->part_desc[desc_idx] & indexes) == indexes) {
+      ur->part_desc[desc_idx] = indexes ^ ur->part_desc[desc_idx];
+
+      if (ur->part_desc[desc_idx] == 0) {
+        desc_idx++;
+        continue;
+      }
+
+      uint8_t* target_part = &parts[desc_idx * part_len];
+      for (int i = 0; i < part_len; i++) {
+        target_part[i] ^= part_data[i];
+      }
+
+      if (__builtin_popcount(ur->part_desc[desc_idx]) == 1) {
+        int target_idx = __builtin_ctz(ur->part_desc[desc_idx]);
+        if (ur_process_simple(ur, parts, target_part, part_len, target_idx, &part) == ERR_OK) {
+          return ERR_OK;
+        }
+      }
+    }
+
+    desc_idx++;
   }
 
   return ERR_NEED_MORE_DATA;
