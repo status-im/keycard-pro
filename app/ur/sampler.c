@@ -75,7 +75,7 @@ uint32_t fountain_part_indexes(uint32_t seq, uint32_t crc, int len, double* prob
   xoshiro_ctx_t xsr;
   xoshiro256_seed(&xsr, seed);
 
-  int degree = random_sampler_next(&xsr, len, probs, aliases);
+  int degree = random_sampler_next(&xsr, len, probs, aliases) + 1;
   uint32_t indexes = 0;
 
   while(degree--) {
