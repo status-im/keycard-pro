@@ -46,7 +46,8 @@ uint64_t xoshiro256_next(xoshiro_ctx_t* ctx) {
 }
 
 double xoshiro256_next_double(xoshiro_ctx_t* ctx) {
-  return ((double) xoshiro256_next(ctx)) / ((double)(UINT64_MAX + 1));
+  double r = (double) xoshiro256_next(ctx);
+  return r / 18446744073709551616.;
 }
 
 uint32_t xoshiro256_next_int(xoshiro_ctx_t* ctx, uint32_t low, uint32_t high) {
