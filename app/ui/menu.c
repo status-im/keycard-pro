@@ -80,6 +80,7 @@ void menu_render(const menu_t* menu, const char* title, uint8_t selected, enum m
     yOff += (i * TH_MENU_HEIGHT);
     break;
   case MENU_NONE:
+  default:
     return;
   }
 
