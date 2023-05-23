@@ -61,10 +61,12 @@ app_err_t qrscan_scan() {
 
     quirc_end(&qrctx);
 
-    if (qrscan_decode(&qrctx, &ur) == ERR_OK && ur.type == ETH_SIGN_REQUEST) {
-      if (cbor_decode_eth_sign_request(ur.data, ur.data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS) {
+    if (qrscan_decode(&qrctx, &ur) == ERR_OK) {
+      if ((ur.type == ETH_SIGN_REQUEST) && (cbor_decode_eth_sign_request(ur.data, ur.data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS)) {
         screen_wait();
         goto end;
+      } else {
+        ur.crc = 0;
       }
     }
 

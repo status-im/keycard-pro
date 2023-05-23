@@ -18,7 +18,7 @@ typedef struct {
   ur_type_t type;
   uint32_t crc;
   uint32_t part_desc[UR_PART_DESC_COUNT];
-  uint8_t part_mask;
+  uint32_t part_mask;
   double sampler_probs[UR_MAX_PART_COUNT];
   int sampler_aliases[UR_MAX_PART_COUNT];
   size_t data_max_len;
