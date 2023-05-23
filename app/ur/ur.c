@@ -159,7 +159,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   desc_idx = part._ur_part_seqLen;
 
   while(desc_idx < UR_PART_DESC_COUNT) {
-    if ((ur->part_desc[desc_idx] & indexes) == indexes) {
+    if ((desc_idx != store_idx) && (ur->part_desc[desc_idx] & indexes) == indexes) {
       ur->part_desc[desc_idx] = indexes ^ ur->part_desc[desc_idx];
 
       if (ur->part_desc[desc_idx] == 0) {
