@@ -1,5 +1,6 @@
 #include "sampler.h"
 #include "crypto/sha2.h"
+#include "common.h"
 
 double RANDOM_SAMPLER_PROBS[32] = {
     1., 1./2., 1./3., 1./4., 1./5., 1./6., 1./7., 1./8.,
@@ -66,8 +67,8 @@ int random_sampler_next(xoshiro_ctx_t* rng_ctx, int len, double* probs, int* ali
 
 uint32_t fountain_part_indexes(uint32_t seq, uint32_t crc, int len, double* probs, int* aliases) {
   uint32_t tmp[2];
-  tmp[0] = seq;
-  tmp[1] = crc;
+  tmp[0] = rev32(seq);
+  tmp[1] = rev32(crc);
 
   uint8_t seed[XOSHIRO256_SEED_LEN];
   sha256_Raw((uint8_t*) tmp, sizeof(tmp), seed);
@@ -80,7 +81,7 @@ uint32_t fountain_part_indexes(uint32_t seq, uint32_t crc, int len, double* prob
 
   while(degree--) {
     int count = xoshiro256_next_int(&xsr, 1, len--);
-    int i = -1;
+    int i = 0;
 
     while(count) {
       if (!((indexes >> i) & 1)) {
@@ -90,7 +91,7 @@ uint32_t fountain_part_indexes(uint32_t seq, uint32_t crc, int len, double* prob
       i++;
     }
 
-    indexes |= (1 << i);
+    indexes |= (1 << (i - 1));
   }
 
   return indexes;

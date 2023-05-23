@@ -25,7 +25,18 @@ static inline uint64_t rotl(const uint64_t x, int k) {
 }
 
 void xoshiro256_seed(xoshiro_ctx_t* ctx, const uint8_t seed[XOSHIRO256_SEED_LEN]) {
-  memcpy(ctx->s, seed, XOSHIRO256_SEED_LEN);
+  uint8_t* byte_seed = (uint8_t*) ctx->s;
+
+  for(int i = 0; i < XOSHIRO256_SEED_LEN; i += 8) {
+    byte_seed[i + 0] = seed[i + 7];
+    byte_seed[i + 1] = seed[i + 6];
+    byte_seed[i + 2] = seed[i + 5];
+    byte_seed[i + 3] = seed[i + 4];
+    byte_seed[i + 4] = seed[i + 3];
+    byte_seed[i + 5] = seed[i + 2];
+    byte_seed[i + 6] = seed[i + 1];
+    byte_seed[i + 7] = seed[i + 0];
+  }
 }
 
 uint64_t xoshiro256_next(xoshiro_ctx_t* ctx) {
