@@ -7,7 +7,7 @@
 #include "task.h"
 
 #define HAL_TIMEOUT 250
-#define SC_RESET_DELAY 37
+#define SC_RESET_DELAY 10
 #define SMARTCARD_STOPBITS_1 0x00000000U
 
 extern DMA_QListTypeDef Camera_DMA_LL;
@@ -69,7 +69,9 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 }
 
 static void hal_smartcard_complete(uint32_t err) {
-  configASSERT(g_smartcard_task);
+  if (!g_smartcard_task) {
+    return;
+  }
 
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   xTaskNotifyIndexedFromISR(g_smartcard_task, SMARTCARD_TASK_NOTIFICATION_IDX, err, eSetValueWithOverwrite, &xHigherPriorityTaskWoken);
@@ -146,6 +148,7 @@ hal_err_t hal_init() {
   MX_SPI5_Init();
   MX_I2C2_Init();
   MX_USART6_SMARTCARD_Init();
+  __HAL_RCC_USART6_CLK_DISABLE();
   MX_USART3_UART_Init();
   MX_DCMI_Init();
 
@@ -296,20 +299,19 @@ hal_err_t hal_delay_us(uint32_t usec) {
 }
 
 hal_err_t hal_smartcard_start() {
-  HAL_GPIO_WritePin(GPIO_CARD_ON_GPIO_Port, GPIO_CARD_ON_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_RESET);
+  __HAL_RCC_USART6_CLK_ENABLE();
 
-  vTaskDelay(pdMS_TO_TICKS(SC_RESET_DELAY));
-  HAL_GPIO_WritePin(GPIO_CARD_ON_GPIO_Port, GPIO_CARD_ON_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_RESET);
   vTaskDelay(pdMS_TO_TICKS(SC_RESET_DELAY));
   HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_SET);
+
   __HAL_SMARTCARD_FLUSH_DRREGISTER(&hsmartcard6);
+
   return HAL_SUCCESS;
 }
 
 hal_err_t hal_smartcard_stop() {
-  HAL_GPIO_WritePin(GPIO_CARD_ON_GPIO_Port, GPIO_CARD_ON_Pin, GPIO_PIN_SET);
-  HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_RESET);
 
   hsmartcard6.Init.StopBits = SMARTCARD_STOPBITS_1_5;
   hsmartcard6.Init.BaudRate = SC_DEFAULT_BAUD_RATE;
@@ -318,7 +320,9 @@ hal_err_t hal_smartcard_stop() {
   hsmartcard6.Init.NACKEnable = SMARTCARD_NACK_ENABLE;
   hsmartcard6.Init.AutoRetryCount = 3;
 
-  return HAL_SMARTCARD_Init(&hsmartcard6);
+  hal_err_t err = HAL_SMARTCARD_Init(&hsmartcard6);
+  __HAL_RCC_USART6_CLK_DISABLE();
+  return err;
 }
 
 hal_err_t hal_smartcard_pps(smartcard_protocol_t protocol, uint32_t baud, uint32_t freq, uint8_t guard, uint32_t timeout) {

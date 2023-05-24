@@ -29,12 +29,6 @@ void SmartCard_Delay(SmartCard* sc, uint32_t etu) {
 void SmartCard_Init(SmartCard* sc) {
   SmartCard_State_Reset(sc);
   sc->state = SC_OFF;
-  /*
-  if (HAL_GPIO_ReadPin(SC_NOFF_GPIO_Port, SC_NOFF_Pin)) {
-    sc->state = SC_OFF;
-  } else {
-    sc->state = SC_NOT_PRESENT;
-  }*/
 }
 
 void SmartCard_Activate(SmartCard* sc) {

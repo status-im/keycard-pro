@@ -14,6 +14,8 @@ void core_task_entry(void* pvParameters) {
   Keycard_Init(&g_core.keycard);
   Keycard_Activate(&g_core.keycard);
 
+  configASSERT(g_core.keycard.sc.state == SC_READY);
+
   while(1) {
     i18n_str_id_t selected;
     ui_menu(&menu_mainmenu, &selected);
