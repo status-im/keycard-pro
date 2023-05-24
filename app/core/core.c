@@ -115,7 +115,7 @@ static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg) {
   return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
-static app_err_t core_process_tx(const uint8_t* data, uint8_t len, uint8_t first_segment) {
+static app_err_t core_process_tx(const uint8_t* data, uint32_t len, uint8_t first_segment) {
   if (first_segment) {
     // EIP 2718: TransactionType might be present before the TransactionPayload.
     uint8_t txType = data[0];
