@@ -677,10 +677,13 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIO_CAMERA_PWDN_GPIO_Port, GPIO_CAMERA_PWDN_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIO_CAMERA_RST_GPIO_Port, GPIO_CAMERA_RST_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOE, GPIO_CAMERA_RST_Pin|GPIO_KEYPAD_ROW_0_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIO_LED3_RED_GPIO_Port, GPIO_LED3_RED_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOG, GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_3_Pin|GPIO_KEYPAD_ROW_1_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_RESET);
@@ -693,22 +696,26 @@ void MX_GPIO_Init(void)
 
   /*Configure GPIO pins : PC14 PC15 PC0 PC1
                            PC2 PC3 PC4 PC5
-                           PC12 */
+                           PC9 PC12 */
   GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0|GPIO_PIN_1
                           |GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
-                          |GPIO_PIN_12;
+                          |GPIO_PIN_9|GPIO_PIN_12;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PF2 PF3 PF5 PF6
-                           PF8 PF10 PF11 PF12
-                           PF13 PF14 PF15 */
-  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_5|GPIO_PIN_6
-                          |GPIO_PIN_8|GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12
-                          |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15;
+  /*Configure GPIO pins : PF2 PF5 PF6 PF8
+                           PF10 PF12 PF13 PF14 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_8
+                          |GPIO_PIN_10|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : GPIO_KEYPAD_COL_2_Pin GPIO_KEYPAD_COL_0_Pin GPIO_KEYPAD_COL_1_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_COL_2_Pin|GPIO_KEYPAD_COL_0_Pin|GPIO_KEYPAD_COL_1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOF, &GPIO_InitStruct);
 
   /*Configure GPIO pin : GPIO_LED2_YELLOW_Pin */
@@ -762,19 +769,17 @@ void MX_GPIO_Init(void)
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PG0 PG1 PG2 PG3
-                           PG5 PG6 PG8 PG10
-                           PG12 PG13 PG15 */
+                           PG10 PG12 PG13 PG15 */
   GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_2|GPIO_PIN_3
-                          |GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_8|GPIO_PIN_10
-                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_15;
+                          |GPIO_PIN_10|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PE7 PE8 PE9 PE11
-                           PE13 PE14 PE15 PE0 */
-  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_11
-                          |GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0;
+  /*Configure GPIO pins : PE7 PE8 PE9 PE13
+                           PE14 PE15 */
+  GPIO_InitStruct.Pin = GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_13
+                          |GPIO_PIN_14|GPIO_PIN_15;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
@@ -785,6 +790,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : GPIO_KEYPAD_COL_3_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_COL_3_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIO_KEYPAD_COL_3_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PD10 PD11 PD12 PD13
                            PD14 PD15 PD0 PD1
@@ -804,6 +815,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIO_LED3_RED_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : GPIO_KEYPAD_ROW_2_Pin GPIO_KEYPAD_ROW_3_Pin GPIO_KEYPAD_ROW_1_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_3_Pin|GPIO_KEYPAD_ROW_1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /*Configure GPIO pin : UCPD_FLT_Pin */
   GPIO_InitStruct.Pin = UCPD_FLT_Pin;
@@ -825,6 +843,13 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIO_CARD_RST_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : GPIO_KEYPAD_ROW_0_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_0_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIO_KEYPAD_ROW_0_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */

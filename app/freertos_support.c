@@ -2,6 +2,13 @@
 #include "task.h"
 #include "log/log.h"
 #include "common.h"
+#include "hal.h"
+#include "keypad/keypad.h"
+
+void vApplicationTickHook(void) {
+  hal_tick();
+  keypad_scan_tick();
+}
 
 void vApplicationGetIdleTaskMemory(StaticTask_t **ppxIdleTaskTCBBuffer, StackType_t **ppxIdleTaskStackBuffer, uint32_t *pulIdleTaskStackSize) {
   static StaticTask_t xIdleTaskTCBBuffer;

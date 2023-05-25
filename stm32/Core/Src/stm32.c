@@ -36,6 +36,14 @@ const struct gpio_pin_spec STM32_PIN_MAP[] = {
   {GPIO_CAMERA_RST_GPIO_Port, GPIO_CAMERA_RST_Pin},
   {GPIO_LCD_CD_GPIO_Port, GPIO_LCD_CD_Pin},
   {GPIO_LCD_RST_GPIO_Port, GPIO_LCD_RST_Pin},
+  {GPIO_KEYPAD_ROW_0_GPIO_Port, GPIO_KEYPAD_ROW_0_Pin},
+  {GPIO_KEYPAD_ROW_1_GPIO_Port, GPIO_KEYPAD_ROW_1_Pin},
+  {GPIO_KEYPAD_ROW_2_GPIO_Port, GPIO_KEYPAD_ROW_2_Pin},
+  {GPIO_KEYPAD_ROW_3_GPIO_Port, GPIO_KEYPAD_ROW_3_Pin},
+  {GPIO_KEYPAD_COL_0_GPIO_Port, GPIO_KEYPAD_COL_0_Pin},
+  {GPIO_KEYPAD_COL_1_GPIO_Port, GPIO_KEYPAD_COL_1_Pin},
+  {GPIO_KEYPAD_COL_2_GPIO_Port, GPIO_KEYPAD_COL_2_Pin},
+  {GPIO_KEYPAD_COL_3_GPIO_Port, GPIO_KEYPAD_COL_3_Pin},
 };
 
 static void (*g_spi_callback)();
@@ -114,12 +122,14 @@ static void inline _hal_acquire(int8_t idx) {
 
 
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi) {
-  configASSERT(g_dcmi_task);
-
   hdcmi->Instance->CR &= ~(DCMI_CR_CAPTURE);
 
   g_dcmi_bufs[g_acquiring].status = DCMI_ACQUIRED;
   g_acquiring = -1;
+
+  if(g_dcmi_task == NULL) {
+    return;
+  }
 
   for (int i = 0; i < CAMERA_FB_COUNT; i++) {
     if (g_dcmi_bufs[i].status == DCMI_READY) {
@@ -228,13 +238,12 @@ hal_err_t hal_camera_submit(uint8_t* fb) {
   return HAL_FAIL;
 }
 
-hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
-  if (STM32_PIN_MAP[pin].base == NULL) {
-    return HAL_SUCCESS; // unconnected PIN
-  }
-
+void hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state) {
   HAL_GPIO_WritePin(STM32_PIN_MAP[pin].base, STM32_PIN_MAP[pin].pin, state);
-  return HAL_SUCCESS;
+}
+
+hal_gpio_state_t hal_gpio_get(hal_gpio_pin_t pin) {
+  return HAL_GPIO_ReadPin(STM32_PIN_MAP[pin].base, STM32_PIN_MAP[pin].pin);
 }
 
 hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, const uint8_t* data, size_t len) {
@@ -395,6 +404,6 @@ hal_err_t hal_flash_end_program() {
   return HAL_FLASH_Lock();
 }
 
-void vApplicationTickHook(void) {
+void hal_tick() {
   HAL_IncTick();
 }

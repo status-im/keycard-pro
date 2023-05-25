@@ -48,6 +48,14 @@ typedef enum {
   GPIO_CAMERA_RST,
   GPIO_LCD_CMD_DATA,
   GPIO_LCD_RST,
+  GPIO_KEYPAD_ROW_0,
+  GPIO_KEYPAD_ROW_1,
+  GPIO_KEYPAD_ROW_2,
+  GPIO_KEYPAD_ROW_3,
+  GPIO_KEYPAD_COL_0,
+  GPIO_KEYPAD_COL_1,
+  GPIO_KEYPAD_COL_2,
+  GPIO_KEYPAD_COL_3,
 } hal_gpio_pin_t;
 
 typedef enum {
@@ -55,7 +63,8 @@ typedef enum {
   GPIO_SET = 1,
 } hal_gpio_state_t;
 
-hal_err_t hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state);
+void hal_gpio_set(hal_gpio_pin_t pin, hal_gpio_state_t state);
+hal_gpio_state_t hal_gpio_get(hal_gpio_pin_t pin);
 
 // I2C
 typedef enum {
@@ -106,6 +115,7 @@ hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out);
 
 // Timer
 hal_err_t hal_delay_us(uint32_t usec);
+void hal_tick();
 
 // Flash
 #define HAL_FLASH_BLOCK_ADDR(__BLOCK__) (HAL_FLASH_ADDR + (HAL_FLASH_BLOCK_SIZE * __BLOCK__))

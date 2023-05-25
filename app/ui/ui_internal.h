@@ -87,7 +87,7 @@ struct ui_cmd {
 };
 
 struct ui_ctx {
-  keypad_key_t last_key;
+  keypad_t keypad;
 };
 
 static inline uint32_t ui_wait_event(uint32_t timeout) {
@@ -102,7 +102,7 @@ static inline keypad_key_t ui_wait_keypress(uint32_t timeout) {
     g_ui_cmd.received = 1;
     return KEYPAD_KEY_CANCEL;
   } else if (evt & UI_KEY_EVT) {
-    return g_ui_ctx.last_key;
+    return g_ui_ctx.keypad.last_key;
   }
 
   return KEYPAD_KEY_INVALID;

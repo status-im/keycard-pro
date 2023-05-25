@@ -106,6 +106,8 @@ void SystemClock_Config(void);
 #define TRACE_D3_GPIO_Port GPIOE
 #define GPIO_USER_BUTTON_Pin GPIO_PIN_13
 #define GPIO_USER_BUTTON_GPIO_Port GPIOC
+#define GPIO_KEYPAD_COL_2_Pin GPIO_PIN_3
+#define GPIO_KEYPAD_COL_2_GPIO_Port GPIOF
 #define GPIO_LED2_YELLOW_Pin GPIO_PIN_4
 #define GPIO_LED2_YELLOW_GPIO_Port GPIOF
 #define GPIO_LCD_CD_Pin GPIO_PIN_0
@@ -114,8 +116,14 @@ void SystemClock_Config(void);
 #define GPIO_LCD_RST_GPIO_Port GPIOA
 #define GPIO_LED1_GREEN_Pin GPIO_PIN_0
 #define GPIO_LED1_GREEN_GPIO_Port GPIOB
+#define GPIO_KEYPAD_COL_0_Pin GPIO_PIN_11
+#define GPIO_KEYPAD_COL_0_GPIO_Port GPIOF
+#define GPIO_KEYPAD_COL_1_Pin GPIO_PIN_15
+#define GPIO_KEYPAD_COL_1_GPIO_Port GPIOF
 #define GPIO_CAMERA_PWDN_Pin GPIO_PIN_10
 #define GPIO_CAMERA_PWDN_GPIO_Port GPIOE
+#define GPIO_KEYPAD_COL_3_Pin GPIO_PIN_11
+#define GPIO_KEYPAD_COL_3_GPIO_Port GPIOE
 #define GPIO_CAMERA_RST_Pin GPIO_PIN_12
 #define GPIO_CAMERA_RST_GPIO_Port GPIOE
 #define UCPD_CC1_Pin GPIO_PIN_13
@@ -128,8 +136,14 @@ void SystemClock_Config(void);
 #define T_VCP_RX_GPIO_Port GPIOD
 #define GPIO_LED3_RED_Pin GPIO_PIN_4
 #define GPIO_LED3_RED_GPIO_Port GPIOG
+#define GPIO_KEYPAD_ROW_2_Pin GPIO_PIN_5
+#define GPIO_KEYPAD_ROW_2_GPIO_Port GPIOG
+#define GPIO_KEYPAD_ROW_3_Pin GPIO_PIN_6
+#define GPIO_KEYPAD_ROW_3_GPIO_Port GPIOG
 #define UCPD_FLT_Pin GPIO_PIN_7
 #define UCPD_FLT_GPIO_Port GPIOG
+#define GPIO_KEYPAD_ROW_1_Pin GPIO_PIN_8
+#define GPIO_KEYPAD_ROW_1_GPIO_Port GPIOG
 #define UCPD_DBn_Pin GPIO_PIN_9
 #define UCPD_DBn_GPIO_Port GPIOA
 #define USB_FS_N_Pin GPIO_PIN_11
@@ -146,6 +160,8 @@ void SystemClock_Config(void);
 #define GPIO_CARD_RST_GPIO_Port GPIOC
 #define SWO_Pin GPIO_PIN_3
 #define SWO_GPIO_Port GPIOB
+#define GPIO_KEYPAD_ROW_0_Pin GPIO_PIN_0
+#define GPIO_KEYPAD_ROW_0_GPIO_Port GPIOE
 
 /* USER CODE BEGIN Private defines */
 
