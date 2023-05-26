@@ -17,7 +17,7 @@ const static uint32_t F_freq_Table[] = {3906250, 5000000, 5952380, 7812500, 1136
 #error "Frequency table not found"
 #endif
 
-uint8_t PPS_Negotiate(SmartCard* sc) {
+app_err_t pps_negotiate(smartcard_t* sc) {
   if (sc->atr.fi_di != ATR_DEFAULT_FIDI) {
     uint8_t pps[4] = {0xff, 0x10, 0x00, 0x00};
     uint8_t ppsr[4];
@@ -25,16 +25,16 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
     pps[2] = sc->atr.fi_di;
     pps[3] = pps[0] ^ pps[1] ^ pps[2];
 
-    if (!SmartCard_Transmit_Sync(sc, pps, 4)) {
-      return 0;
+    if (smartcard_transmit_sync(sc, pps, 4) != ERR_OK) {
+      return ERR_TXRX;
     }
 
-    if (!SmartCard_Receive_Sync(sc, ppsr, 4)) {
-      return 0;
+    if (smartcard_receive_sync(sc, ppsr, 4) != ERR_OK) {
+      return ERR_TXRX;
     }
 
     if(!((pps[0] == ppsr[0]) && (pps[1] == ppsr[1]) && (pps[2] == ppsr[2]) && (pps[3] == ppsr[3]))) {
-        return 0;
+        return ERR_DATA;
     }
   }
 
@@ -61,5 +61,5 @@ uint8_t PPS_Negotiate(SmartCard* sc) {
 
   uint8_t guard = (sc->atr.n == 0 || sc->atr.n == 255) ? 0 : (fd * sc->atr.n);
 
-  return hal_smartcard_pps(sc->atr.default_protocol, baud, freq, guard, timeout) == HAL_SUCCESS;
+  return hal_smartcard_pps(sc->atr.default_protocol, baud, freq, guard, timeout) == HAL_SUCCESS ? ERR_OK : ERR_HW;
 }

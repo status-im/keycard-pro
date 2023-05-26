@@ -20,19 +20,19 @@ typedef enum {
   COMMAND_INBOUND = 0x01,
   COMMAND_COMPLETE = 0x02,
   COMMAND_OUTBOUND = 0x03
-} CommandStatus;
+} command_status_t;
 
 typedef struct {
-  CommandStatus status;
+  command_status_t status;
   uint16_t to_rxtx;
   uint16_t segment_count;
-  APDU apdu;
-} Command;
+  apdu_t apdu;
+} command_t;
 
-app_err_t Command_Init_Recv(Command* cmd, uint16_t len);
-void Command_Init_Send(Command* cmd);
-void Command_Receive(Command* cmd, uint8_t* data, uint8_t len);
-uint8_t Command_Send(Command* cmd, uint8_t* buf, uint8_t len);
-void Command_Send_ACK(Command* cmd, uint8_t len);
+app_err_t command_init_recv(command_t* cmd, uint16_t len);
+void command_init_send(command_t* cmd);
+void command_receive(command_t* cmd, uint8_t* data, uint8_t len);
+uint8_t command_send(command_t* cmd, uint8_t* buf, uint8_t len);
+void command_send_ack(command_t* cmd, uint8_t len);
 
 #endif

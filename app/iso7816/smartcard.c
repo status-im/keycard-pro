@@ -9,13 +9,13 @@
 #define SC_DEFAULT_ETU10NS 9300
 #define SC_MAX_TIMEOUT_MS 30000
 
-static inline void SmartCard_State_Reset(SmartCard* sc) {
+static inline void smartcard_state_reset(smartcard_t* sc) {
   sc->send_seq = 0;
   sc->recv_seq = 0;
   sc->etu_10ns = SC_DEFAULT_ETU10NS;
 }
 
-void SmartCard_Delay(SmartCard* sc, uint32_t etu) {
+void smartcard_delay(smartcard_t* sc, uint32_t etu) {
   uint32_t usec = (sc->etu_10ns * etu)/100;
 
   if (usec > 4000) {
@@ -26,27 +26,27 @@ void SmartCard_Delay(SmartCard* sc, uint32_t etu) {
 }
 
 
-void SmartCard_Init(SmartCard* sc) {
-  SmartCard_State_Reset(sc);
+void smartcard_init(smartcard_t* sc) {
+  smartcard_state_reset(sc);
   sc->state = SC_OFF;
 }
 
-void SmartCard_Activate(SmartCard* sc) {
+void smartcard_activate(smartcard_t* sc) {
   hal_smartcard_start();
 
-  if (!ATR_Read(sc)) {
-    SmartCard_Deactivate(sc);
+  if (atr_read(sc) != ERR_OK) {
+    smartcard_deactivate(sc);
     return;
   }
 
-  if (!PPS_Negotiate(sc)) {
-    SmartCard_Deactivate(sc);
+  if (pps_negotiate(sc) != ERR_OK) {
+    smartcard_deactivate(sc);
     return;
   }
 
   if (sc->atr.default_protocol == SC_T1) {
-    if (!T1_Negotiate_IFSD(sc, 3)) {
-      SmartCard_Deactivate(sc);
+    if (t1_negotiate_ifsd(sc, 3) != ERR_OK) {
+      smartcard_deactivate(sc);
       return;
     }
   }
@@ -54,63 +54,63 @@ void SmartCard_Activate(SmartCard* sc) {
   sc->state = SC_READY;
 }
 
-void SmartCard_Deactivate(SmartCard* sc) {
-  SmartCard_State_Reset(sc);
+void smartcard_deactivate(smartcard_t* sc) {
+  smartcard_state_reset(sc);
   hal_smartcard_stop();
   sc->state = SC_DEACTIVATED;
 }
 
-void SmartCard_In(SmartCard* sc) {
+void smartcard_in(smartcard_t* sc) {
   sc->state = SC_OFF;
 }
 
-void SmartCard_Out(SmartCard* sc) {
-  SmartCard_Deactivate(sc);
+void smartcard_out(smartcard_t* sc) {
+  smartcard_deactivate(sc);
   sc->state = SC_NOT_PRESENT;
 }
 
-static inline uint8_t SmartCard_Wait(SmartCard* sc) {
+static inline app_err_t smartcard_wait(smartcard_t* sc) {
   BaseType_t res = pdFAIL;
   uint32_t err;
   res = xTaskNotifyWaitIndexed(SMARTCARD_TASK_NOTIFICATION_IDX, 0, UINT32_MAX, &err, pdMS_TO_TICKS(SC_MAX_TIMEOUT_MS));
 
   if (res != pdPASS) {
     //TODO: abort transfer
-    return 0;
+    return ERR_HW;
   }
 
-  return err == HAL_SUCCESS;
+  return err == HAL_SUCCESS ? ERR_OK : ERR_HW;
 }
 
-uint8_t SmartCard_Transmit(SmartCard* sc, const uint8_t* buf, uint32_t len) {
-  return hal_smartcard_send(buf, len) == HAL_SUCCESS;
+app_err_t smartcard_transmit(smartcard_t* sc, const uint8_t* buf, uint32_t len) {
+  return hal_smartcard_send(buf, len) == HAL_SUCCESS ? ERR_OK : ERR_TXRX;
 }
 
-uint8_t SmartCard_Transmit_Sync(SmartCard* sc, const uint8_t* buf, uint32_t len) {
-  if (!SmartCard_Transmit(sc, buf, len)) {
-    return 0;
+app_err_t smartcard_transmit_sync(smartcard_t* sc, const uint8_t* buf, uint32_t len) {
+  if (smartcard_transmit(sc, buf, len) != ERR_OK) {
+    return ERR_TXRX;
   }
 
-  return SmartCard_Wait(sc);
+  return smartcard_wait(sc);
 }
 
-uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len) {
-  return hal_smarcard_recv(buf, len) == HAL_SUCCESS;
+app_err_t smartcard_receive(smartcard_t* sc, uint8_t* buf, uint32_t len) {
+  return hal_smarcard_recv(buf, len) == HAL_SUCCESS ? ERR_OK : ERR_TXRX;
 }
 
-uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len) {
-  if (!SmartCard_Receive(sc, buf, len)) {
-    return 0;
+app_err_t smartcard_receive_sync(smartcard_t* sc, uint8_t* buf, uint32_t len) {
+  if (smartcard_receive(sc, buf, len) != ERR_OK) {
+    return ERR_TXRX;
   }
 
-  return SmartCard_Wait(sc);
+  return smartcard_wait(sc);
 }
 
-uint8_t SmartCard_Send_APDU(SmartCard* sc, APDU* apdu) {
+app_err_t smartcard_send_apdu(smartcard_t* sc, apdu_t* apdu) {
   if (sc->atr.default_protocol == SC_T1) {
-    return T1_Transmit(sc, apdu);
+    return t1_transmit(sc, apdu);
   } else {
     // T0 not implemented
-    return 0;
+    return ERR_UNSUPPORTED;
   }
 }

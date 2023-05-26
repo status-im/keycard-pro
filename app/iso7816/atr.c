@@ -8,11 +8,11 @@
 
 #define ATR_READ_BYTE(v, mask, td, def) ((mask & td) ? v : def)
 
-uint8_t ATR_Read_Bytes(SmartCard* sc, uint8_t* buf, uint8_t td, uint8_t *ck) {
+static app_err_t atr_read_bytes(smartcard_t* sc, uint8_t* buf, uint8_t td, uint8_t *ck) {
   for (int i = 0; i < 4; i++) {
     if (td & 0x10) {
-      if (!SmartCard_Receive_Sync(sc, &buf[i], 1)) {
-        return 0;
+      if (smartcard_receive_sync(sc, &buf[i], 1) != ERR_OK) {
+        return ERR_TXRX;
       }
 
       *ck ^= buf[i];
@@ -23,10 +23,10 @@ uint8_t ATR_Read_Bytes(SmartCard* sc, uint8_t* buf, uint8_t td, uint8_t *ck) {
     td >>= 1;
   }
 
-  return 1;
+  return ERR_OK;
 }
 
-void ATR_Parse_Bytes(SmartCard* sc, uint8_t* buf, uint8_t td, uint8_t i) {
+static void atr_parse_bytes(smartcard_t* sc, uint8_t* buf, uint8_t td, uint8_t i) {
   if (i == 1) {
     sc->atr.fi_di = ATR_READ_BYTE(buf[0], 0x10, td, ATR_DEFAULT_FIDI);
     sc->atr.n = ATR_READ_BYTE(buf[2], 0x40, td, ATR_DEFAULT_N);
@@ -54,7 +54,7 @@ void ATR_Parse_Bytes(SmartCard* sc, uint8_t* buf, uint8_t td, uint8_t i) {
   }
 }
 
-void ATR_Reset(SmartCard* sc) {
+static void atr_reset(smartcard_t* sc) {
   sc->atr.valid = 0;
   sc->atr.t15_present = 0;
   sc->atr.default_protocol = SC_T0;
@@ -72,20 +72,20 @@ void ATR_Reset(SmartCard* sc) {
   sc->atr.hist_len = 0;
 }
 
-uint8_t ATR_Read(SmartCard* sc) {
-  ATR_Reset(sc);
+app_err_t atr_read(smartcard_t* sc) {
+  atr_reset(sc);
 
   uint8_t buf[4];
 
   hal_smartcard_set_timeout(ATR_TIMEOUT);
-  if (!SmartCard_Receive_Sync(sc, buf, 2)) {
-    return 0;
+  if (smartcard_receive_sync(sc, buf, 2) != ERR_OK) {
+    return ERR_TXRX;
   }
   
   hal_smartcard_set_timeout(ATR_T0_DEF_TIMEOUT);
 
   if (buf[0] != ATR_DIRECT_CONVENTION) {
-    return 0;
+    return ERR_DATA;
   }
 
   uint8_t td = buf[1];
@@ -96,16 +96,16 @@ uint8_t ATR_Read(SmartCard* sc) {
   int i = 1;
 
   while(td) {
-    if (!ATR_Read_Bytes(sc, buf, td, &ck)) {
-      return 0;
+    if (atr_read_bytes(sc, buf, td, &ck) != ERR_OK) {
+      return ERR_TXRX;
     }
 
-    ATR_Parse_Bytes(sc, buf, td, i++);
+    atr_parse_bytes(sc, buf, td, i++);
     td = buf[3];
   }
 
-  if (!SmartCard_Receive_Sync(sc, sc->atr.hist, sc->atr.hist_len)) {
-    return 0;
+  if (smartcard_receive_sync(sc, sc->atr.hist, sc->atr.hist_len) != ERR_OK) {
+    return ERR_TXRX;
   }
   
   for (int i = 0; i < sc->atr.hist_len; i++) {
@@ -113,8 +113,8 @@ uint8_t ATR_Read(SmartCard* sc) {
   }
 
   if ((sc->atr.protocols & ATR_PROTOCOLS_T1) || sc->atr.t15_present) {
-    if (!SmartCard_Receive_Sync(sc, buf, 1)) {
-      return 0;
+    if (smartcard_receive_sync(sc, buf, 1) != ERR_OK) {
+      return ERR_TXRX;
     }
     
     sc->atr.valid = (buf[0] ^ ck) == 0;
@@ -122,5 +122,5 @@ uint8_t ATR_Read(SmartCard* sc) {
     sc->atr.valid = 1;
   }
 
-  return sc->atr.valid;
+  return sc->atr.valid ? ERR_OK : ERR_DATA;
 }

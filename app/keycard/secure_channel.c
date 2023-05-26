@@ -11,7 +11,7 @@
 #define SECP256K1_KEYLEN 32
 #define SECP256K1_PUBLEN 65
 
-app_err_t SecureChannel_Mutual_Authenticate(SecureChannel* sc, SmartCard* card, APDU* apdu) {
+static app_err_t securechannel_mutual_authenticate(secure_channel_t* sc, smartcard_t* card, apdu_t* apdu) {
   SC_BUF(data, 32);
   random_buffer(data, 32);
   APDU_RESET(apdu);
@@ -20,15 +20,15 @@ app_err_t SecureChannel_Mutual_Authenticate(SecureChannel* sc, SmartCard* card, 
   APDU_P1(apdu) = 0;
   APDU_P2(apdu) = 0;
   
-  if (SecureChannel_Protect_APDU(sc, apdu, data, 32) != ERR_OK) {
+  if (securechannel_protect_apdu(sc, apdu, data, 32) != ERR_OK) {
     return ERR_CRYPTO;
   }
 
-  if (!SmartCard_Send_APDU(card, apdu)) {
+  if (smartcard_send_apdu(card, apdu) != ERR_OK) {
     return ERR_TXRX;
   }
 
-  if (SecureChannel_Decrypt_APDU(sc, apdu) != ERR_OK) {
+  if (securechannel_decrypt_apdu(sc, apdu) != ERR_OK) {
     return ERR_CRYPTO;
   }
 
@@ -37,7 +37,7 @@ app_err_t SecureChannel_Mutual_Authenticate(SecureChannel* sc, SmartCard* card, 
   return ERR_OK;
 }
 
-app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, pairing_t* pairing, uint8_t* sc_pub) {
+app_err_t securechannel_open(secure_channel_t* sc, smartcard_t* card, apdu_t* apdu, pairing_t* pairing, uint8_t* sc_pub) {
   uint8_t priv[SECP256K1_KEYLEN];
   random_buffer(priv, SECP256K1_KEYLEN);
   APDU_RESET(apdu);
@@ -52,7 +52,7 @@ app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, pai
   APDU_SET_LC(apdu, SECP256K1_PUBLEN);
   APDU_SET_LE(apdu, 0);
   
-  if (!SmartCard_Send_APDU(card, apdu)) {
+  if (smartcard_send_apdu(card, apdu) != ERR_OK) {
     return ERR_TXRX;
   }
 
@@ -74,20 +74,20 @@ app_err_t SecureChannel_Open(SecureChannel* sc, SmartCard* card, APDU* apdu, pai
   sha512_Update(&sha512, &secret[1], SHA256_DIGEST_LENGTH);
   sha512_Update(&sha512, pairing->key, SHA256_DIGEST_LENGTH);
   sha512_Update(&sha512, apduData, SHA256_DIGEST_LENGTH);
-  sha512_Final(&sha512, sc->encKey);
+  sha512_Final(&sha512, sc->enc_key);
 
   memcpy(sc->iv, &apduData[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
   sc->open = 1;
 
   memset(secret, 0, SECP256K1_PUBLEN);
-  return SecureChannel_Mutual_Authenticate(sc, card, apdu);
+  return securechannel_mutual_authenticate(sc, card, apdu);
 }
 
-app_err_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len) {
+app_err_t securechannel_protect_apdu(secure_channel_t *sc, apdu_t* apdu, uint8_t* data, uint32_t len) {
   len = pad_iso9797_m1(data, SC_PAD, len);
   uint8_t* apduData = APDU_DATA(apdu);
 
-  if (!aes_encrypt_cbc(sc->encKey, sc->iv, data, len, &apduData[AES_IV_SIZE])) {
+  if (!aes_encrypt_cbc(sc->enc_key, sc->iv, data, len, &apduData[AES_IV_SIZE])) {
     memset(data, 0, len);
     return ERR_CRYPTO;
   }
@@ -105,7 +105,7 @@ app_err_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* dat
   apduData[3] = APDU_P2(apdu);
   apduData[4] = len;
 
-  if (!aes_cmac(sc->macKey, apduData, len, apduData)) {
+  if (!aes_cmac(sc->mac_key, apduData, len, apduData)) {
     return ERR_CRYPTO;
   }
 
@@ -113,7 +113,7 @@ app_err_t SecureChannel_Protect_APDU(SecureChannel *sc, APDU* apdu, uint8_t* dat
   return ERR_OK;
 }
 
-app_err_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
+app_err_t securechannel_decrypt_apdu(secure_channel_t *sc, apdu_t* apdu) {
   if (APDU_SW(apdu) == 0x6982) {
     sc->open = 0;
     return ERR_CRYPTO;
@@ -131,7 +131,7 @@ app_err_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
   memset(data, 0, AES_IV_SIZE);
   data[0] = apdu->lr;
 
-  if (!aes_cmac(sc->macKey, data, apdu->lr, new_iv)) {
+  if (!aes_cmac(sc->mac_key, data, apdu->lr, new_iv)) {
     sc->open = 0;
     return ERR_CRYPTO;    
   }
@@ -141,7 +141,7 @@ app_err_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
     return ERR_CRYPTO;
   }
 
-  if (!aes_decrypt_cbc(sc->encKey, sc->iv, &data[AES_IV_SIZE], (apdu->lr - AES_IV_SIZE), data)) {
+  if (!aes_decrypt_cbc(sc->enc_key, sc->iv, &data[AES_IV_SIZE], (apdu->lr - AES_IV_SIZE), data)) {
     sc->open = 0;
     return ERR_CRYPTO;
   }
@@ -153,7 +153,7 @@ app_err_t SecureChannel_Decrypt_APDU(SecureChannel *sc, APDU* apdu) {
   return ERR_OK;
 }
 
-app_err_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8_t* data, uint32_t len) {
+app_err_t securechannel_init(smartcard_t* card, apdu_t* apdu, uint8_t* sc_pub, uint8_t* data, uint32_t len) {
   uint8_t priv[SECP256K1_KEYLEN];
   random_buffer(priv, SECP256K1_KEYLEN);
 
@@ -196,7 +196,7 @@ app_err_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8
   APDU_SET_LC(apdu, (1 + SECP256K1_PUBLEN + AES_IV_SIZE + len));
   APDU_SET_LE(apdu, 0);
 
-  if(!SmartCard_Send_APDU(card, apdu)) {
+  if(smartcard_send_apdu(card, apdu) != ERR_OK) {
     return ERR_TXRX;
   }
 
@@ -205,22 +205,22 @@ app_err_t SecureChannel_Init(SmartCard* card, APDU* apdu, uint8_t* sc_pub, uint8
   return ERR_OK;
 }
 
-app_err_t SecureChannel_Send_APDU(SmartCard* card, SecureChannel *sc, APDU* apdu, uint8_t* data, uint32_t len) {
+app_err_t securechannel_send_apdu(smartcard_t* card, secure_channel_t *sc, apdu_t* apdu, uint8_t* data, uint32_t len) {
   uint16_t err;
-  if ((err = SecureChannel_Protect_APDU(sc, apdu, data, len)) != ERR_OK) {
+  if ((err = securechannel_protect_apdu(sc, apdu, data, len)) != ERR_OK) {
     return err;
   }
 
-  if (!SmartCard_Send_APDU(card, apdu)) {
+  if (smartcard_send_apdu(card, apdu) != ERR_OK) {
     return ERR_TXRX;
   }
 
-  return SecureChannel_Decrypt_APDU(sc, apdu);
+  return securechannel_decrypt_apdu(sc, apdu);
 }
 
-void SecureChannel_Close(SecureChannel* sc) {
-  memset(sc->encKey, 0, AES_256_KEY_SIZE);
-  memset(sc->macKey, 0, AES_256_KEY_SIZE);
+void securechannel_close(secure_channel_t* sc) {
+  memset(sc->enc_key, 0, AES_256_KEY_SIZE);
+  memset(sc->mac_key, 0, AES_256_KEY_SIZE);
   memset(sc->iv, 0, AES_IV_SIZE);
   sc->open = 0;
 }

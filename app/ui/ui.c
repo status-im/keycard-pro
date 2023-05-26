@@ -121,11 +121,11 @@ void ui_keycard_wrong_puk() {
  // BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Wrong PUK");
 }
 
-uint8_t ui_prompt_try_puk() {
-  return 1;
+app_err_t ui_prompt_try_puk() {
+  return ERR_OK;
 }
 
-uint8_t ui_read_pin(uint8_t* out, int8_t retries) {
+app_err_t ui_read_pin(uint8_t* out, int8_t retries) {
   out[0] = '1';
   out[1] = '2';
   out[2] = '3';
@@ -133,10 +133,10 @@ uint8_t ui_read_pin(uint8_t* out, int8_t retries) {
   out[4] = '5';
   out[5] = '6';
 
-  return 1;
+  return ERR_OK;
 }
 
-uint8_t ui_read_puk(uint8_t* out, int8_t retries) {
+app_err_t ui_read_puk(uint8_t* out, int8_t retries) {
   out[0] = '0';
   out[1] = '1';
   out[2] = '2';
@@ -150,27 +150,27 @@ uint8_t ui_read_puk(uint8_t* out, int8_t retries) {
   out[10] = '0';
   out[11] = '1';
 
-  return 1;
+  return ERR_OK;
 }
 
-uint8_t ui_read_pairing(uint8_t* pairing, uint32_t *len) {
-  return 0;
+app_err_t ui_read_pairing(uint8_t* pairing, uint32_t *len) {
+  return ERR_OK;
 }
 
 void ui_seed_loaded() {
   //BSP_LCD_DisplayStringAtLine(6, (uint8_t*) "Seed loaded");
 }
 
-uint8_t ui_backup_mnemonic(const char* mnemonic) {
+app_err_t ui_backup_mnemonic(const char* mnemonic) {
  // BSP_LCD_DisplayStringAtLine(7, (uint8_t*) mnemonic);
-  return 1;
+  return ERR_OK;
 }
 
-uint16_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len) {
+app_err_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len) {
   *len = 12;
   return ERR_DATA;
 }
 
-uint8_t ui_confirm_eth_address(const char* address) {
-  return 1;
+app_err_t ui_confirm_eth_address(const char* address) {
+  return ERR_OK;
 }

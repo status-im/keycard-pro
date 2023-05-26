@@ -2,6 +2,7 @@
 #define __T1
 
 #include "smartcard.h"
+#include "error.h"
 
 #define T1_NAD 0x12
 #define T1_IFSD 254
@@ -31,7 +32,7 @@
 #define T1_S_RES 0x20
 
 
-uint8_t T1_Transmit(SmartCard* sc, APDU* apdu);
-uint8_t T1_Negotiate_IFSD(SmartCard* sc, int retry);
+app_err_t t1_transmit(smartcard_t* sc, apdu_t* apdu);
+app_err_t t1_negotiate_ifsd(smartcard_t* sc, int retry);
 
 #endif

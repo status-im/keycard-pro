@@ -30,7 +30,7 @@ const uint32_t EIP4527_NAME_LEN = 11;
 
 core_ctx_t g_core;
 
-static app_err_t core_export_key(Keycard* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain) {
+static app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain) {
   uint8_t export_type;
 
   if (out_chain) {
@@ -39,7 +39,7 @@ static app_err_t core_export_key(Keycard* kc, uint8_t* path, uint16_t len, uint8
     export_type = 1;
   }
 
-  if (!Keycard_CMD_ExportKey(kc, export_type, path, len) || (APDU_SW(&kc->apdu) != 0x9000)) {
+  if ((keycard_cmd_export_key(kc, export_type, path, len) != ERR_OK) || (APDU_SW(&kc->apdu) != 0x9000)) {
     return ERR_CRYPTO;
   }
 
@@ -88,17 +88,17 @@ static inline uint8_t core_get_tx_v_base() {
   return v_base;
 }
 
-static app_err_t core_sign(Keycard* kc, uint8_t* out) {
+static app_err_t core_sign(keycard_t* kc, uint8_t* out) {
   uint8_t digest[SHA3_256_DIGEST_LENGTH];
   keccak_Final(&g_core.hash_ctx, digest);
 
-  if ((Keycard_CMD_Sign(kc, g_core.bip44_path, g_core.bip44_path_len, digest) != ERR_OK) || (APDU_SW(&kc->apdu) != 0x9000)) {
+  if ((keycard_cmd_sign(kc, g_core.bip44_path, g_core.bip44_path_len, digest) != ERR_OK) || (APDU_SW(&kc->apdu) != 0x9000)) {
     return ERR_CRYPTO;
   }
 
   uint8_t* data = APDU_RESP(&kc->apdu);
 
-  if (Keycard_ConvertSignature(data, digest, out) != ERR_OK) {
+  if (keycard_read_signature(data, digest, out) != ERR_OK) {
     return ERR_DATA;
   }
 
@@ -176,14 +176,14 @@ static app_err_t core_process_msg(const uint8_t* data, uint32_t len, uint8_t fir
   }
 }
 
-static void core_usb_err_sw(APDU* cmd, uint8_t sw1, uint8_t sw2) {
+static void core_usb_err_sw(apdu_t* cmd, uint8_t sw1, uint8_t sw2) {
   uint8_t* data = APDU_RESP(cmd);
   data[0] = sw1;
   data[1] = sw2;
   cmd->lr = 2;
 }
 
-static void core_usb_get_app_config(APDU* cmd) {
+static void core_usb_get_app_config(apdu_t* cmd) {
   uint8_t* data = APDU_RESP(cmd);
   data[0] = 0x03;
   data[1] = APP_MAJOR;
@@ -194,7 +194,7 @@ static void core_usb_get_app_config(APDU* cmd) {
   cmd->lr = 6;
 }
 
-static void core_usb_get_address(Keycard* kc, APDU* cmd) {
+static void core_usb_get_address(keycard_t* kc, apdu_t* cmd) {
   uint8_t* data = APDU_DATA(cmd);
   uint16_t len = data[0] * 4;
   if (len > BIP44_MAX_PATH_LEN) {
@@ -228,7 +228,7 @@ static void core_usb_get_address(Keycard* kc, APDU* cmd) {
   ethereum_address_checksum(path, (char *)&out[67]);
 
   if (APDU_P1(cmd) == 1) {
-    if (!ui_confirm_eth_address((char *)&out[67])) {
+    if (ui_confirm_eth_address((char *)&out[67]) != ERR_OK) {
       core_usb_err_sw(cmd, 0x69, 0x82);
       return;
     }
@@ -259,7 +259,7 @@ static app_err_t core_usb_init_sign(uint8_t* data) {
   return core_init_sign();
 }
 
-static void core_usb_sign(Keycard* kc, APDU* cmd, uint8_t v_base) {
+static void core_usb_sign(keycard_t* kc, apdu_t* cmd, uint8_t v_base) {
   uint8_t* out = APDU_RESP(cmd);
 
   switch (core_sign(kc, &out[1])) {
@@ -278,7 +278,7 @@ static void core_usb_sign(Keycard* kc, APDU* cmd, uint8_t v_base) {
   }
 }
 
-static void core_usb_sign_tx(Keycard* kc, APDU* cmd) {
+static void core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
   cmd->has_lc = 1;
   uint8_t* data = APDU_DATA(cmd);
   uint32_t len = APDU_LC(cmd);
@@ -321,7 +321,7 @@ static void core_usb_sign_tx(Keycard* kc, APDU* cmd) {
   }
 }
 
-static void core_usb_sign_message(Keycard* kc, APDU* cmd) {
+static void core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
   cmd->has_lc = 1;
   uint8_t* data = APDU_DATA(cmd);
   uint32_t len = APDU_LC(cmd);
@@ -374,7 +374,7 @@ static void core_usb_sign_message(Keycard* kc, APDU* cmd) {
   }
 }
 
-static void core_usb_sign_eip712(Keycard* kc, APDU* cmd) {
+static void core_usb_sign_eip712(keycard_t* kc, apdu_t* cmd) {
   uint8_t* data = APDU_DATA(cmd);
 
   if (core_usb_init_sign(data) != ERR_OK) {
@@ -388,8 +388,8 @@ static void core_usb_sign_eip712(Keycard* kc, APDU* cmd) {
   core_usb_sign(kc, cmd, 27);
 }
 
-static void core_usb_command(Keycard* kc, Command* cmd) {
-  APDU* apdu = &cmd->apdu;
+static void core_usb_command(keycard_t* kc, command_t* cmd) {
+  apdu_t* apdu = &cmd->apdu;
 
   if (APDU_CLA(apdu) == 0xe0) {
     switch(APDU_INS(apdu)) {
@@ -416,7 +416,7 @@ static void core_usb_command(Keycard* kc, Command* cmd) {
     core_usb_err_sw(apdu, 0x6e, 0x00);
   }
 
-  Command_Init_Send(cmd);
+  command_init_send(cmd);
 }
 
 void core_usb_cancel() {

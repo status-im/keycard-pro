@@ -2,7 +2,8 @@
 #define _PPS_H
 
 #include "smartcard.h"
+#include "error.h"
 
-uint8_t PPS_Negotiate(SmartCard* sc);
+app_err_t pps_negotiate(smartcard_t* sc);
 
 #endif

@@ -12,23 +12,23 @@ typedef enum {
   NOT_INITIALIZED,
   INIT_NO_KEYS,
   INIT_WITH_KEYS
-} ApplicationInfoStatus;
+} app_info_status_t;
 
 typedef struct {
-  ApplicationInfoStatus status;
+  app_info_status_t status;
   uint8_t instance_uid[APP_INFO_INSTANCE_UID_LEN];
   uint8_t sc_key[APP_INFO_PUBKEY_LEN];
   uint16_t version;
   uint8_t free_pairing;
   uint8_t key_uid[APP_INFO_KEY_UID_LEN];
-} ApplicationInfo;
+} app_info_t;
 
 typedef struct {
   uint8_t pin_retries;
   uint8_t puk_retries;
   uint8_t has_key;
-} ApplicationStatus;
+} app_status_t;
 
-app_err_t ApplicationInfo_Parse(uint8_t* buf, ApplicationInfo* info);
-app_err_t ApplicationStatus_Parse(uint8_t* buf, ApplicationStatus* status);
+app_err_t application_info_parse(uint8_t* buf, app_info_t* info);
+app_err_t application_status_parse(uint8_t* buf, app_status_t* status);
 #endif

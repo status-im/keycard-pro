@@ -11,7 +11,7 @@
 #define TLV_BOOL 0x01
 #define TLV_INT 0x02
 
-app_err_t ApplicationInfo_Parse(uint8_t* buf, ApplicationInfo* info) {
+app_err_t application_info_parse(uint8_t* buf, app_info_t* info) {
   uint16_t tag;
   uint16_t off = tlv_read_tag(buf, &tag);
 
@@ -64,7 +64,7 @@ app_err_t ApplicationInfo_Parse(uint8_t* buf, ApplicationInfo* info) {
   return ERR_OK;
 }
 
-app_err_t ApplicationStatus_Parse(uint8_t* buf, ApplicationStatus* status) {
+app_err_t application_status_parse(uint8_t* buf, app_status_t* status) {
   uint16_t tag;
   uint16_t off = tlv_read_tag(buf, &tag);
 

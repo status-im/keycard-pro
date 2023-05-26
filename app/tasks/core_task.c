@@ -2,8 +2,8 @@
 #include "keycard/keycard.h"
 
 void core_task_entry(void* pvParameters) {
-  Keycard_Init(&g_core.keycard);
-  Keycard_Activate(&g_core.keycard);
+  keycard_init(&g_core.keycard);
+  keycard_activate(&g_core.keycard);
 
   configASSERT(g_core.keycard.sc.state == SC_READY);
 

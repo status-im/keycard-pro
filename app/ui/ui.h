@@ -34,14 +34,14 @@ void ui_keycard_puk_ok();
 void ui_keycard_wrong_puk();
 void ui_seed_loaded();
 
-uint8_t ui_prompt_try_puk();
-uint8_t ui_read_pin(uint8_t* out, int8_t retries);
-uint8_t ui_read_puk(uint8_t* out, int8_t retries);
-uint8_t ui_read_pairing(uint8_t* pairing, uint32_t *len);
+app_err_t ui_prompt_try_puk();
+app_err_t ui_read_pin(uint8_t* out, int8_t retries);
+app_err_t ui_read_puk(uint8_t* out, int8_t retries);
+app_err_t ui_read_pairing(uint8_t* pairing, uint32_t *len);
 
-uint8_t ui_backup_mnemonic(const char* mnemonic);
-uint16_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len);
+app_err_t ui_backup_mnemonic(const char* mnemonic);
+app_err_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len);
 
-uint8_t ui_confirm_eth_address(const char* address);
+app_err_t ui_confirm_eth_address(const char* address);
 
 #endif

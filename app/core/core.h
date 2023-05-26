@@ -59,8 +59,8 @@ typedef union {
 } core_data_t;
 
 typedef struct {
-  Keycard keycard;
-  Command usb_command;
+  keycard_t keycard;
+  command_t usb_command;
 
   uint8_t bip44_path[BIP44_MAX_PATH_LEN];
   uint8_t bip44_path_len;

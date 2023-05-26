@@ -2,6 +2,7 @@
 #define __SMARTCARD_H
 
 #include "atr_types.h"
+#include "error.h"
 
 #define SW_OK 0x9000
 
@@ -30,7 +31,7 @@ typedef enum {
   SC_OFF,
   SC_DEACTIVATED,
   SC_READY
-} SmartCardState;
+} smartcard_state_t;
 
 typedef enum {
   SC_T0,
@@ -38,35 +39,35 @@ typedef enum {
 } smartcard_protocol_t;
 
 typedef struct {
-  SmartCardState state;
-  ATR atr;
+  smartcard_state_t state;
+  atr_t atr;
   uint8_t send_seq;
   uint8_t recv_seq;
   uint32_t t1_bwt;
   uint32_t t1_cwt;
   uint8_t t1_bwt_factor;
   uint32_t etu_10ns;
-} SmartCard;
+} smartcard_t;
 
 typedef struct __attribute__((packed,aligned(4))) {
   uint8_t has_lc;
   uint8_t has_le;
   uint8_t lr;
   uint8_t data[APDU_BUF_LEN];
-} APDU;
+} apdu_t;
 
 #define SC_TRANSMIT_TO 25
 
-void SmartCard_Delay(SmartCard* sc, uint32_t etu);
-void SmartCard_Init(SmartCard* sc);
-void SmartCard_Activate(SmartCard* sc);
-void SmartCard_Deactivate(SmartCard* sc);
-void SmartCard_In(SmartCard* sc);
-void SmartCard_Out(SmartCard* sc);
-uint8_t SmartCard_Transmit(SmartCard* sc, const uint8_t* buf, uint32_t len);
-uint8_t SmartCard_Transmit_Sync(SmartCard* sc, const uint8_t* buf, uint32_t len);
-uint8_t SmartCard_Receive(SmartCard* sc, uint8_t* buf, uint32_t len);
-uint8_t SmartCard_Receive_Sync(SmartCard* sc, uint8_t* buf, uint32_t len);
-uint8_t SmartCard_Send_APDU(SmartCard* sc, APDU* apdu);
+void smartcard_delay(smartcard_t* sc, uint32_t etu);
+void smartcard_init(smartcard_t* sc);
+void smartcard_activate(smartcard_t* sc);
+void smartcard_deactivate(smartcard_t* sc);
+void smartcard_in(smartcard_t* sc);
+void smartcard_out(smartcard_t* sc);
+app_err_t smartcard_transmit(smartcard_t* sc, const uint8_t* buf, uint32_t len);
+app_err_t smartcard_transmit_sync(smartcard_t* sc, const uint8_t* buf, uint32_t len);
+app_err_t smartcard_receive(smartcard_t* sc, uint8_t* buf, uint32_t len);
+app_err_t smartcard_receive_sync(smartcard_t* sc, uint8_t* buf, uint32_t len);
+app_err_t smartcard_send_apdu(smartcard_t* sc, apdu_t* apdu);
 
 #endif

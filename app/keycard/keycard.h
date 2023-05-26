@@ -9,17 +9,17 @@
 #define KEYCARD_PUK_LEN 12
 
 typedef struct {
-  SmartCard sc;
-  SecureChannel ch;
-  APDU apdu;
-} Keycard;
+  smartcard_t sc;
+  secure_channel_t ch;
+  apdu_t apdu;
+} keycard_t;
 
-void Keycard_Init(Keycard* kc);
-void Keycard_Activate(Keycard* kc);
-void Keycard_Run(Keycard* kc, Command* cmd);
-void Keycard_In(Keycard* kc);
-void Keycard_Out(Keycard* kc);
+void keycard_init(keycard_t* kc);
+void keycard_activate(keycard_t* kc);
+void Keycard_Run(keycard_t* kc, command_t* cmd);
+void keycard_in(keycard_t* kc);
+void keycard_out(keycard_t* kc);
 
-app_err_t Keycard_ConvertSignature(uint8_t* data, uint8_t* digest, uint8_t* out_sig);
+app_err_t keycard_read_signature(uint8_t* data, uint8_t* digest, uint8_t* out_sig);
 
 #endif

@@ -3,6 +3,7 @@
 
 #include "atr_types.h"
 #include "smartcard.h"
+#include "error.h"
 
 #define ATR_DEFAULT_FIDI 0x11
 #define ATR_DEFAULT_N 0
@@ -16,6 +17,6 @@
 #define ATR_DEFAULT_CLOCKSTOP 0
 #define ATR_DEFAULT_CLASSES 0
 
-uint8_t ATR_Read(SmartCard* sc);
+app_err_t atr_read(smartcard_t* sc);
 
 #endif

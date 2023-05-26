@@ -16,14 +16,14 @@
 typedef enum {
   ATR_T1_LRC,
   ATR_T1_CRC
-} ATR_T1_RC;
+} atr_t1_rc_t;
 
 typedef enum {
   ATR_CS_NOT_SUPPORTED = 0,
   ATR_CS_L = 0x40,
   ATR_CS_H = 0x80,
   ATR_CS_BOTH = 0xC0
-} ATR_ClockStop;
+} atr_clockstop_t;
 
 typedef struct {
   uint8_t valid;
@@ -42,6 +42,6 @@ typedef struct {
   uint8_t protocols;
   uint8_t default_protocol;
   uint8_t hist[ATR_HIST_BYTE_MAX];
-} ATR;
+} atr_t;
 
 #endif
