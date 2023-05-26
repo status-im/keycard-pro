@@ -152,6 +152,7 @@ hal_err_t hal_init() {
 
   MX_GPIO_Init();
   MX_TIM6_Init();
+  MX_TIM2_Init();
   MX_GPDMA2_Init();
   MX_GPDMA1_Init();
 
@@ -171,6 +172,8 @@ hal_err_t hal_init() {
   HAL_DMAEx_List_LinkQ(&handle_GPDMA2_Channel5, &Camera_DMA_LL);
 
   MX_ICACHE_Init();
+
+  HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
   return HAL_SUCCESS;
 }
@@ -406,4 +409,11 @@ hal_err_t hal_flash_end_program() {
 
 void hal_tick() {
   HAL_IncTick();
+}
+
+hal_err_t hal_pwm_set_dutycycle(hal_pwm_output_t out, uint8_t cycle) {
+  assert(out == PWM_BACKLIGHT);
+  assert(cycle <= 100);
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (cycle * 10));
+  return HAL_SUCCESS;
 }

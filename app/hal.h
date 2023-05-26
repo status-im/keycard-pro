@@ -126,4 +126,10 @@ hal_err_t hal_flash_program(const uint32_t* data, uint32_t* addr);
 hal_err_t hal_flash_erase(uint32_t block);
 hal_err_t hal_flash_end_program();
 
+// PWM
+typedef enum {
+  PWM_BACKLIGHT,
+} hal_pwm_output_t;
+
+hal_err_t hal_pwm_set_dutycycle(hal_pwm_output_t out, uint8_t cycle);
 #endif

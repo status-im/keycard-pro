@@ -61,6 +61,7 @@ extern SMARTCARD_HandleTypeDef hsmartcard6;
 extern UART_HandleTypeDef huart3;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim6;
+extern TIM_HandleTypeDef htim2;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 
 /* USER CODE END EC */
@@ -69,6 +70,8 @@ extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 /* USER CODE BEGIN EM */
 
 /* USER CODE END EM */
+
+void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(void);
@@ -86,6 +89,7 @@ void MX_USART3_UART_Init(void);
 void MX_TIM6_Init(void);
 void MX_SPI5_Init(void);
 void MX_USART6_SMARTCARD_Init(void);
+void MX_TIM2_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);

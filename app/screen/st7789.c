@@ -6,6 +6,8 @@
 
 #if (_SCREEN_MODEL == ST7789)
 
+#define LCD_BL_DEFAULT 75
+
 static hal_err_t st7789_write_cmd(uint8_t cmd) {
   hal_gpio_set(GPIO_LCD_CMD_DATA, GPIO_RESET);
   return hal_spi_send(SPI_LCD, &cmd, 1);
@@ -51,6 +53,8 @@ hal_err_t screen_init() {
   if (st7789_write_cmd(ST7789_NORON) != HAL_SUCCESS) {
     return HAL_FAIL;
   }
+
+  hal_pwm_set_dutycycle(PWM_BACKLIGHT, LCD_BL_DEFAULT);
 
   return st7789_write_cmd(ST7789_DISPON);
 }
