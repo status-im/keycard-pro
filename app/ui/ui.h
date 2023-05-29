@@ -7,6 +7,9 @@
 #include "ur/eip4527_types.h"
 #include "ur/ur.h"
 
+#define PIN_NEW_CODE -1
+#define PUK_NEW_CODE PIN_NEW_CODE
+
 typedef enum {
   CORE_EVT_USB_CMD,
   CORE_EVT_UI_CANCELLED,

@@ -16,7 +16,6 @@ typedef struct {
 
 void keycard_init(keycard_t* kc);
 void keycard_activate(keycard_t* kc);
-void Keycard_Run(keycard_t* kc, command_t* cmd);
 void keycard_in(keycard_t* kc);
 void keycard_out(keycard_t* kc);
 

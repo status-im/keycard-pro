@@ -19,21 +19,20 @@
 const uint8_t KEYCARD_AID[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t KEYCARD_DEFAULT_PSK[] = {0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72, 0x4b, 0x4a, 0x36, 0xca, 0xad, 0x0e, 0x28, 0x08, 0x26, 0x15, 0x9e, 0x89, 0x88, 0x6f, 0x70, 0x82, 0x53, 0x5d, 0x43, 0x1e, 0x92, 0x48, 0x48, 0xbc, 0xf1};
 
-void keycard_init(keycard_t* kc) {
-  smartcard_init(&kc->sc);
-  kc->ch.open = 0;
+static void keycard_random_puk(uint8_t puk[KEYCARD_PUK_LEN]) {
+  for (int i = 0; i < KEYCARD_PUK_LEN; i++) {
+    puk[i] = '0' + random_uniform(9);
+  }
 }
 
-app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key) {
-  uint8_t pin[6];
-  uint8_t puk[12];
-  if (ui_read_pin(pin, -1) != CORE_EVT_UI_OK) {
+static app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key) {
+  uint8_t pin[KEYCARD_PIN_LEN];
+  uint8_t puk[KEYCARD_PUK_LEN];
+  if (ui_read_pin(pin, PIN_NEW_CODE) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
 
-  if (ui_read_puk(puk, -1) != CORE_EVT_UI_OK) {
-    return ERR_CANCEL;
-  }
+  keycard_random_puk(puk);
 
   if (keycard_cmd_init(kc, sc_key, pin, puk, (uint8_t*)KEYCARD_DEFAULT_PSK) != ERR_OK) {
     ui_keycard_init_failed();
@@ -43,7 +42,7 @@ app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key) {
   return ERR_OK;
 }
 
-app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instance_uid) {
+static app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instance_uid) {
   memcpy(pairing->instance_uid, instance_uid, APP_INFO_INSTANCE_UID_LEN);
   
   if (pairing_read(pairing) == ERR_OK) {
@@ -79,18 +78,18 @@ app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instance_uid)
   }
 }
 
-app_err_t keycard_factoryreset(keycard_t* kc) {
+static app_err_t keycard_factoryreset(keycard_t* kc) {
   //TODO: implement global platform
   return ERR_CANCEL;
 }
 
-app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {
+static app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {
   uint8_t pin[KEYCARD_PIN_LEN];
 
   if (pukRetries) {
     if (ui_prompt_try_puk() != CORE_EVT_UI_OK) {
       pukRetries = 0;
-    } else if (ui_read_pin(pin, -1) != CORE_EVT_UI_OK) {
+    } else if (ui_read_pin(pin, PIN_NEW_CODE) != CORE_EVT_UI_OK) {
       return ERR_CANCEL;
     }
   }
@@ -121,7 +120,7 @@ app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {
   return keycard_factoryreset(kc);
 }
 
-app_err_t keycard_authenticate(keycard_t* kc) {
+static app_err_t keycard_authenticate(keycard_t* kc) {
   if (keycard_cmd_get_status(kc) != ERR_OK) {
     return ERR_TXRX;
   }
@@ -156,7 +155,7 @@ app_err_t keycard_authenticate(keycard_t* kc) {
   return keycard_unblock(kc, pinStatus.puk_retries);
 }
 
-app_err_t keycard_init_keys(keycard_t* kc) {
+static app_err_t keycard_init_keys(keycard_t* kc) {
   uint16_t indexes[24];
   uint32_t len;
 
@@ -200,7 +199,7 @@ app_err_t keycard_init_keys(keycard_t* kc) {
   return ERR_OK;
 }
 
-app_err_t keycard_setup(keycard_t* kc) {
+static app_err_t keycard_setup(keycard_t* kc) {
   if (keycard_cmd_select(kc, KEYCARD_AID, KEYCARD_AID_LEN) != ERR_OK) {
     return ERR_TXRX;
   }  
@@ -263,6 +262,11 @@ app_err_t keycard_setup(keycard_t* kc) {
   } else {
     return ERR_OK;
   }
+}
+
+void keycard_init(keycard_t* kc) {
+  smartcard_init(&kc->sc);
+  kc->ch.open = 0;
 }
 
 void keycard_activate(keycard_t* kc) {
