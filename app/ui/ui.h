@@ -7,11 +7,17 @@
 #include "ur/eip4527_types.h"
 #include "ur/ur.h"
 
-void ui_qrscan(struct eth_sign_request* sign_request);
-void ui_menu(const menu_t* menu, i18n_str_id_t* selected);
-void ui_display_tx(const txContent_t* tx);
-void ui_display_msg(const uint8_t* msg, uint32_t len);
-void ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type);
+typedef enum {
+  CORE_EVT_USB_CMD,
+  CORE_EVT_UI_CANCELLED,
+  CORE_EVT_UI_OK
+} core_evt_t;
+
+core_evt_t ui_qrscan(struct eth_sign_request* sign_request);
+core_evt_t ui_menu(const menu_t* menu, i18n_str_id_t* selected);
+core_evt_t ui_display_tx(const txContent_t* tx);
+core_evt_t ui_display_msg(const uint8_t* msg, uint32_t len);
+core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type);
 
 void ui_card_inserted();
 void ui_card_removed();
@@ -21,7 +27,7 @@ void ui_keycard_wrong_card();
 void ui_keycard_not_initialized();
 void ui_keycard_init_failed();
 void ui_keycard_no_keys();
-void ui_keycarrd_ready();
+void ui_keycard_ready();
 void ui_keyard_paired();
 void ui_keycard_already_paired();
 void ui_keycard_pairing_failed();
@@ -34,14 +40,14 @@ void ui_keycard_puk_ok();
 void ui_keycard_wrong_puk();
 void ui_seed_loaded();
 
-app_err_t ui_prompt_try_puk();
-app_err_t ui_read_pin(uint8_t* out, int8_t retries);
-app_err_t ui_read_puk(uint8_t* out, int8_t retries);
-app_err_t ui_read_pairing(uint8_t* pairing, uint32_t *len);
+core_evt_t ui_prompt_try_puk();
+core_evt_t ui_read_pin(uint8_t* out, int8_t retries);
+core_evt_t ui_read_puk(uint8_t* out, int8_t retries);
+core_evt_t ui_read_pairing(uint8_t* pairing, uint32_t *len);
 
-app_err_t ui_backup_mnemonic(const char* mnemonic);
-app_err_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len);
+core_evt_t ui_backup_mnemonic(const char* mnemonic);
+core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len);
 
-app_err_t ui_confirm_eth_address(const char* address);
+core_evt_t ui_confirm_eth_address(const char* address);
 
 #endif

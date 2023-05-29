@@ -106,13 +106,11 @@ static app_err_t core_sign(keycard_t* kc, uint8_t* out) {
 }
 
 static inline app_err_t core_wait_tx_confirmation() {
-  ui_display_tx(&g_core.data.tx.content);
-  return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  return ui_display_tx(&g_core.data.tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg) {
-  ui_display_msg(msg, g_core.data.msg.len);
-  return core_wait_event(0) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  return ui_display_msg(msg, g_core.data.msg.len) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static app_err_t core_process_tx(const uint8_t* data, uint32_t len, uint8_t first_segment) {
@@ -228,7 +226,7 @@ static void core_usb_get_address(keycard_t* kc, apdu_t* cmd) {
   ethereum_address_checksum(path, (char *)&out[67]);
 
   if (APDU_P1(cmd) == 1) {
-    if (ui_confirm_eth_address((char *)&out[67]) != ERR_OK) {
+    if (ui_confirm_eth_address((char *)&out[67]) != CORE_EVT_UI_OK) {
       core_usb_err_sw(cmd, 0x69, 0x82);
       return;
     }
@@ -453,9 +451,7 @@ app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
 void core_qr_run() {
   struct eth_sign_request qr_request;
 
-  ui_qrscan(&qr_request);
-
-  if (core_wait_event(0) != CORE_EVT_UI_OK) {
+  if (ui_qrscan(&qr_request) != CORE_EVT_UI_OK) {
     return;
   }
 
@@ -501,8 +497,6 @@ void core_qr_run() {
   sig._eth_signature_signature.len = SIGNATURE_LEN;
   cbor_encode_eth_signature(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &sig, &g_core.data.sig.cbor_len);
   ui_display_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGNATURE);
-
-  core_wait_event(0);
 }
 
 void core_display_public() {
@@ -562,8 +556,6 @@ void core_display_public() {
 
   cbor_encode_hd_key(g_core.data.key.cbor_key, CBOR_KEY_MAX_LEN, &key, &g_core.data.key.cbor_len);
   ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
-
-  core_wait_event(0);
 }
 
 void core_action_run(i18n_str_id_t menu) {
@@ -604,4 +596,3 @@ core_evt_t core_wait_event(uint8_t accept_usb) {
     }
   }
 }
-

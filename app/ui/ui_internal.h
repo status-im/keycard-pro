@@ -59,7 +59,7 @@ struct cmd_qrscan {
 };
 
 struct cmd_input_pin {
-  const char* prompt;
+  int8_t retries;
   uint8_t len;
   uint8_t* out;
 };

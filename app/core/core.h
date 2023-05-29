@@ -21,12 +21,6 @@
 #define CBOR_SIG_MAX_LEN 128
 #define CBOR_KEY_MAX_LEN 128
 
-typedef enum {
-  CORE_EVT_USB_CMD,
-  CORE_EVT_UI_CANCELLED,
-  CORE_EVT_UI_OK
-} core_evt_t;
-
 typedef struct {
   txContext_t ctx;
   txContent_t content;

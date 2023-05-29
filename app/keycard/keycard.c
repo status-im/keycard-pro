@@ -27,11 +27,11 @@ void keycard_init(keycard_t* kc) {
 app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key) {
   uint8_t pin[6];
   uint8_t puk[12];
-  if (ui_read_pin(pin, -1) != ERR_OK) {
+  if (ui_read_pin(pin, -1) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
 
-  if (ui_read_puk(puk, -1) != ERR_OK) {
+  if (ui_read_puk(puk, -1) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
 
@@ -71,7 +71,7 @@ app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instance_uid)
 
     ui_keycard_pairing_failed();
 
-    if (ui_read_pairing(pairing, &len) != ERR_OK) {
+    if (ui_read_pairing(pairing, &len) != CORE_EVT_UI_OK) {
       return ERR_CANCEL;
     }
 
@@ -88,16 +88,16 @@ app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {
   uint8_t pin[KEYCARD_PIN_LEN];
 
   if (pukRetries) {
-    if (ui_prompt_try_puk() != ERR_OK) {
+    if (ui_prompt_try_puk() != CORE_EVT_UI_OK) {
       pukRetries = 0;
-    } else if (ui_read_pin(pin, -1) != ERR_OK) {
+    } else if (ui_read_pin(pin, -1) != CORE_EVT_UI_OK) {
       return ERR_CANCEL;
     }
   }
 
   while(pukRetries) {
     uint8_t puk[KEYCARD_PUK_LEN];
-    if (ui_read_puk(puk, pukRetries) != ERR_OK) {
+    if (ui_read_puk(puk, pukRetries) != CORE_EVT_UI_OK) {
       return ERR_CANCEL;
     }
 
@@ -132,7 +132,7 @@ app_err_t keycard_authenticate(keycard_t* kc) {
 
   while(pinStatus.pin_retries) {
     SC_BUF(pin, KEYCARD_PIN_LEN);
-    if (ui_read_pin(pin, pinStatus.pin_retries) != ERR_OK) {
+    if (ui_read_pin(pin, pinStatus.pin_retries) != CORE_EVT_UI_OK) {
       return ERR_CANCEL;
     }
 
@@ -160,11 +160,9 @@ app_err_t keycard_init_keys(keycard_t* kc) {
   uint16_t indexes[24];
   uint32_t len;
 
-  app_err_t err = ui_read_mnemonic(indexes, &len);
+  core_evt_t err = ui_read_mnemonic(indexes, &len);
 
-  if (err == ERR_CANCEL) {
-    return err;
-  } else if (err == ERR_DATA) {
+  if (err == CORE_EVT_UI_CANCELLED) {
     if (keycard_cmd_generate_mnemonic(kc, len) != ERR_OK) {
       return ERR_TXRX;
     }
@@ -181,8 +179,8 @@ app_err_t keycard_init_keys(keycard_t* kc) {
 
   const char* mnemonic = mnemonic_from_indexes(indexes, len);
 
-  if (err == ERR_DATA) {
-    if (ui_backup_mnemonic(mnemonic) != ERR_OK) {
+  if (err == CORE_EVT_UI_CANCELLED) {
+    if (ui_backup_mnemonic(mnemonic) != CORE_EVT_UI_OK) {
       mnemonic_clear();
       return ERR_CANCEL;
     }
@@ -235,7 +233,7 @@ app_err_t keycard_setup(keycard_t* kc) {
       break;
     case INIT_WITH_KEYS:
       initKeys = 0;
-      ui_keycarrd_ready();
+      ui_keycard_ready();
       break;
     default:
       return ERR_DATA;
