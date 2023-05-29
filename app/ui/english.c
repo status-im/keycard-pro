@@ -25,4 +25,8 @@ const char* i18n_english_strings[] = {
 
     // QR output
     "Scan with your wallet",
+
+    // PIN input
+    "Insert your PIN",
+    "Remaining attempts: "
 };

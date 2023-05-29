@@ -29,6 +29,10 @@ typedef enum {
 
   // QR output
   QR_OUTPUT_TITLE,
+
+  // PIN input
+  PIN_INPUT_TITLE,
+  PIN_LABEL_REMAINING_ATTEMPTS,
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

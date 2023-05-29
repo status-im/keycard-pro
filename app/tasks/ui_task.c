@@ -7,6 +7,7 @@
 #include "qrcode/qrscan.h"
 #include "screen/screen.h"
 #include "ui/dialog.h"
+#include "ui/input.h"
 #include "ui/menu.h"
 #include "ui/ui_internal.h"
 
@@ -44,6 +45,10 @@ void ui_task_entry(void* pvParameters) {
       break;
     case UI_CMD_DISPLAY_QR:
       g_ui_cmd.result = qrout_run();
+      break;
+    case UI_CMD_INPUT_PIN:
+      g_ui_cmd.result = input_pin();
+      break;
     default:
       break;
     }

@@ -60,7 +60,6 @@ struct cmd_qrscan {
 
 struct cmd_input_pin {
   int8_t retries;
-  uint8_t len;
   uint8_t* out;
 };
 

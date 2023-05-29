@@ -106,31 +106,15 @@ core_evt_t ui_prompt_try_puk() {
 }
 
 core_evt_t ui_read_pin(uint8_t* out, int8_t retries) {
-  out[0] = '1';
-  out[1] = '2';
-  out[2] = '3';
-  out[3] = '4';
-  out[4] = '5';
-  out[5] = '6';
+  g_ui_cmd.type = UI_CMD_INPUT_PIN;
+  g_ui_cmd.params.input_pin.retries = retries;
+  g_ui_cmd.params.input_pin.out = out;
 
-  return CORE_EVT_UI_OK;
+  return ui_signal_wait(0);
 }
 
 core_evt_t ui_read_puk(uint8_t* out, int8_t retries) {
-  out[0] = '0';
-  out[1] = '1';
-  out[2] = '2';
-  out[3] = '3';
-  out[4] = '4';
-  out[5] = '5';
-  out[6] = '6';
-  out[7] = '7';
-  out[8] = '8';
-  out[9] = '9';
-  out[10] = '0';
-  out[11] = '1';
-
-  return ERR_OK;
+  return CORE_EVT_UI_CANCELLED;
 }
 
 core_evt_t ui_read_pairing(uint8_t* pairing, uint32_t *len) {
