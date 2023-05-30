@@ -75,7 +75,7 @@ static inline app_err_t smartcard_wait(smartcard_t* sc) {
   res = xTaskNotifyWaitIndexed(SMARTCARD_TASK_NOTIFICATION_IDX, 0, UINT32_MAX, &err, pdMS_TO_TICKS(SC_MAX_TIMEOUT_MS));
 
   if (res != pdPASS) {
-    //TODO: abort transfer
+    hal_smartcard_abort();
     return ERR_HW;
   }
 

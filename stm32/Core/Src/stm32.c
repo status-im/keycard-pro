@@ -379,6 +379,10 @@ hal_err_t hal_smarcard_recv(uint8_t* data, size_t len) {
   return HAL_SMARTCARD_Receive_IT(&hsmartcard6, data, len);
 }
 
+void hal_smartcard_abort() {
+  HAL_SMARTCARD_Abort_IT(&hsmartcard6);
+}
+
 hal_err_t hal_flash_begin_program() {
   return HAL_FLASH_Unlock();
 }
