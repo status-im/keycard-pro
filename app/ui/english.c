@@ -28,5 +28,10 @@ const char* i18n_english_strings[] = {
 
     // PIN input
     "Insert your PIN",
-    "Remaining attempts: "
+    "Remaining attempts: ",
+
+    // Info messages
+    "Error",
+    "Communication with the card lost.\n\nPlease remove it and insert it again",
+    "The inserted card does not appear to be a Keycard. Please replace it with a Keycard",
 };

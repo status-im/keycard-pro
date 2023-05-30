@@ -15,7 +15,7 @@ typedef enum {
   // Keycard menu
   MENU_CHANGE_PIN,
 
-  // Settings meu
+  // Settings menu
   MENU_INFO,
 
   // TX Confirmation
@@ -33,6 +33,11 @@ typedef enum {
   // PIN input
   PIN_INPUT_TITLE,
   PIN_LABEL_REMAINING_ATTEMPTS,
+
+  // Info messages
+  INFO_ERROR_TITLE,
+  INFO_CARD_ERROR_MSG,
+  INFO_NOT_KEYCARD,
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

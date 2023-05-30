@@ -51,15 +51,30 @@ void ui_card_removed() {
 }
 
 void ui_card_transport_error() {
+  g_ui_cmd.type = UI_CMD_INFO;
+  g_ui_cmd.params.info.dismissable = 0;
+  g_ui_cmd.params.info.title = INFO_ERROR_TITLE;
+  g_ui_cmd.params.info.msg = LSTR(INFO_CARD_ERROR_MSG);
+  ui_signal_wait(0);
 }
 
 void ui_card_accepted() {
 }
 
 void ui_keycard_wrong_card() {
+  g_ui_cmd.type = UI_CMD_INFO;
+  g_ui_cmd.params.info.dismissable = 0;
+  g_ui_cmd.params.info.title = INFO_ERROR_TITLE;
+  g_ui_cmd.params.info.msg = LSTR(INFO_NOT_KEYCARD);
+  ui_signal_wait(0);
 }
 
 void ui_keycard_not_initialized() {
+  g_ui_cmd.type = UI_CMD_INFO;
+  g_ui_cmd.params.info.dismissable = 0;
+  g_ui_cmd.params.info.title = INFO_ERROR_TITLE;
+  g_ui_cmd.params.info.msg = LSTR(INFO_NOT_KEYCARD);
+  ui_signal_wait(0);
 }
 
 void ui_keycard_init_failed() {

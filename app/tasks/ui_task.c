@@ -31,11 +31,11 @@ void ui_task_entry(void* pvParameters) {
     g_ui_cmd.received = 0;
 
     switch(g_ui_cmd.type) {
+    case UI_CMD_INFO:
+      g_ui_cmd.result = dialog_info();
+      break;
     case UI_CMD_MENU:
       g_ui_cmd.result = menu_run();
-      break;
-    case UI_CMD_QRSCAN:
-      g_ui_cmd.result = qrscan_scan();
       break;
     case UI_CMD_DISPLAY_TXN:
       g_ui_cmd.result = dialog_confirm_tx();
@@ -45,6 +45,9 @@ void ui_task_entry(void* pvParameters) {
       break;
     case UI_CMD_DISPLAY_QR:
       g_ui_cmd.result = qrout_run();
+      break;
+    case UI_CMD_QRSCAN:
+      g_ui_cmd.result = qrscan_scan();
       break;
     case UI_CMD_INPUT_PIN:
       g_ui_cmd.result = input_pin();

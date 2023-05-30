@@ -374,6 +374,7 @@ hal_err_t hal_smartcard_send(const uint8_t* data, size_t len) {
 hal_err_t hal_smarcard_recv(uint8_t* data, size_t len) {
   configASSERT(g_smartcard_task == NULL);
   g_smartcard_task = xTaskGetCurrentTaskHandle();
+  __HAL_SMARTCARD_CLEAR_FLAG(&hsmartcard6, SMARTCARD_CLEAR_RTOF);
   __HAL_SMARTCARD_ENABLE_IT(&hsmartcard6, SMARTCARD_IT_RTO);
   return HAL_SMARTCARD_Receive_IT(&hsmartcard6, data, len);
 }

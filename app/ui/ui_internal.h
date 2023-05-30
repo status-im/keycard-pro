@@ -20,7 +20,7 @@ extern struct ui_cmd g_ui_cmd;
 extern struct ui_ctx g_ui_ctx;
 
 enum cmd_type {
-  UI_CMD_DIALOG,
+  UI_CMD_INFO,
   UI_CMD_MENU,
   UI_CMD_DISPLAY_TXN,
   UI_CMD_DISPLAY_MSG,
@@ -30,8 +30,10 @@ enum cmd_type {
   UI_CMD_INPUT_MNEMO
 };
 
-struct cmd_dialog {
+struct cmd_info {
   const char* msg;
+  i18n_str_id_t title;
+  uint8_t dismissable;
 };
 
 struct cmd_txn {
@@ -68,7 +70,7 @@ struct cmd_input_mnemo {
 };
 
 union cmd_params {
-  struct cmd_dialog dialog;
+  struct cmd_info info;
   struct cmd_txn txn;
   struct cmd_msg msg;
   struct cmd_qrout qrout;

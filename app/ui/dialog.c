@@ -108,8 +108,8 @@ app_err_t dialog_confirm_tx() {
   }
 }
 
-app_err_t dialog_confirm_msg() {
-  dialog_title(LSTR(MSG_CONFIRM_TITLE));
+static void dialog_draw_message(i18n_str_id_t title, const uint8_t* txt, size_t len) {
+  dialog_title(LSTR(title));
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
   dialog_footer(ctx.y);
@@ -120,7 +120,11 @@ app_err_t dialog_confirm_msg() {
   ctx.bg = TH_COLOR_TEXT_BG;
   ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
 
-  screen_draw_text(&ctx, (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN), (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN), g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len);
+  screen_draw_text(&ctx, (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN), (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN), txt, len);
+}
+
+app_err_t dialog_confirm_msg() {
+  dialog_draw_message(MSG_CONFIRM_TITLE, g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len);
 
   //TODO: implement scrolling
   while(1) {
@@ -129,6 +133,27 @@ app_err_t dialog_confirm_msg() {
     case KEYPAD_KEY_BACK:
     case KEYPAD_KEY_INVALID:
       return ERR_CANCEL;
+    case KEYPAD_KEY_CONFIRM:
+      return ERR_OK;
+    default:
+      break;
+    }
+  }
+}
+
+app_err_t dialog_info() {
+  dialog_draw_message(g_ui_cmd.params.info.title, (uint8_t*) g_ui_cmd.params.info.msg, strlen(g_ui_cmd.params.info.msg));
+
+  if (!g_ui_cmd.params.info.dismissable) {
+    vTaskSuspend(NULL);
+    return;
+  }
+
+  while(1) {
+    switch(ui_wait_keypress(portMAX_DELAY)) {
+    case KEYPAD_KEY_CANCEL:
+      return ERR_CANCEL;
+    case KEYPAD_KEY_BACK:
     case KEYPAD_KEY_CONFIRM:
       return ERR_OK;
     default:
