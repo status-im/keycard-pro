@@ -296,6 +296,8 @@ hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_
       if (c == '\n') {
         line_len = i;
         wrapped = 1;
+        text++;
+        len--;
         break;
       } else if (c == ' ') {
         line_len = i;

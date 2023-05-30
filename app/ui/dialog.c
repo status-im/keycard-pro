@@ -146,7 +146,7 @@ app_err_t dialog_info() {
 
   if (!g_ui_cmd.params.info.dismissable) {
     vTaskSuspend(NULL);
-    return;
+    return ERR_CANCEL;
   }
 
   while(1) {
