@@ -276,8 +276,7 @@ hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_
   uint16_t start_x = ctx->x;
 
   while(len) {
-    // TODO: improve support for carriage return, for now since we break on newline we support skipping it at the beginning of a line only.
-    if (text[0] == '\r') {
+    if (text[0] == '\r' || text[0] == ' ') {
       text++;
       if (!--len) {
         break;

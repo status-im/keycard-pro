@@ -21,6 +21,8 @@ void ui_task_entry(void* pvParameters) {
     LOG_MSG("Failed to init screen");
   }
 
+  screen_fill_area(&screen_fullarea, SCREEN_COLOR_BLACK);
+
   g_ui_cmd.received = 0;
 
   while(1) {

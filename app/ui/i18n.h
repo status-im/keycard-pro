@@ -32,12 +32,17 @@ typedef enum {
 
   // PIN input
   PIN_INPUT_TITLE,
+  PIN_CREATE_TITLE,
   PIN_LABEL_REMAINING_ATTEMPTS,
+  PIN_LABEL_REPEAT,
+  PIN_LABEL_MISMATCH,
 
   // Info messages
   INFO_ERROR_TITLE,
   INFO_CARD_ERROR_MSG,
   INFO_NOT_KEYCARD,
+  INFO_NEW_CARD_TITLE,
+  INFO_NEW_CARD,
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup
