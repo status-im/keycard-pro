@@ -68,6 +68,7 @@ app_err_t input_new_pin() {
       }
     } else if (key == KEYPAD_KEY_CONFIRM) {
       if ((position == (PIN_LEN * 2)) && matches) {
+        memset(repeat, 0, PIN_LEN);
         return ERR_OK;
       }
     } else if (position < (PIN_LEN * 2)) {
@@ -89,9 +90,7 @@ app_err_t input_new_pin() {
       screen_draw_string(&ctx, LSTR(PIN_LABEL_MISMATCH));
     }
   }
-
 }
-
 
 app_err_t input_pin() {
   if (g_ui_cmd.params.input_pin.retries == PIN_NEW_CODE) {
