@@ -63,7 +63,7 @@ extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim2;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
-
+extern CRC_HandleTypeDef hcrc;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -90,6 +90,7 @@ void MX_TIM6_Init(void);
 void MX_SPI5_Init(void);
 void MX_USART6_SMARTCARD_Init(void);
 void MX_TIM2_Init(void);
+void MX_CRC_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);

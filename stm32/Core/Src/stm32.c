@@ -149,6 +149,7 @@ hal_err_t hal_init() {
 
   MX_RNG_Init();
   MX_HASH_Init();
+  MX_CRC_Init();
 
   MX_GPIO_Init();
   MX_TIM6_Init();
@@ -420,5 +421,20 @@ hal_err_t hal_pwm_set_dutycycle(hal_pwm_output_t out, uint8_t cycle) {
   assert(out == PWM_BACKLIGHT);
   assert(cycle <= 100);
   __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (cycle * 10));
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_crc32_init(hal_crc32_ctx_t* ctx) {
+  __HAL_CRC_DR_RESET(&hcrc);
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_crc32_update(hal_crc32_ctx_t* ctx, uint8_t b) {
+  *(__IO uint8_t *)(__IO void *)(&hcrc.Instance->DR) = b;
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out) {
+  *out = ~hcrc.Instance->DR;
   return HAL_SUCCESS;
 }

@@ -47,13 +47,14 @@ void crc32_update_one(crc32_ctx_t* ctx, uint8_t b) {
   *ctx = ((*ctx) >> 8) ^ crc32_lut[((*ctx) & 0xFF) ^ b];
 }
 
+void crc32_finish(crc32_ctx_t* ctx, uint32_t* out) {
+  *out = ~(*ctx);
+}
+#endif
+
 void crc32_update(crc32_ctx_t* ctx, const uint8_t* data, size_t len) {
   for (size_t i = 0; i < len; i++) {
     crc32_update_one(ctx, data[i]);
   }
 }
 
-void crc32_finish(crc32_ctx_t* ctx, uint32_t* out) {
-  *out = ~(*ctx);
-}
-#endif

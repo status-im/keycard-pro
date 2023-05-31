@@ -110,7 +110,7 @@ hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LEN
 
 #ifndef SOFT_CRC32
 hal_err_t hal_crc32_init(hal_crc32_ctx_t* ctx);
-hal_err_t hal_crc32_update(hal_crc32_ctx_t* ctx, const uint8_t* data, size_t len);
+hal_err_t hal_crc32_update(hal_crc32_ctx_t* ctx, uint8_t data);
 hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out);
 #endif
 

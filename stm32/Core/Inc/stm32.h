@@ -4,7 +4,8 @@
 #include "stm32h563xx.h"
 
 #define SOFT_SHA256
-#define SOFT_CRC32
+
+typedef uint32_t hal_crc32_ctx_t;
 
 #define APP_NOCACHE APP_ALIGNED
 #define APP_RAMFUNC
