@@ -438,3 +438,50 @@ hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out) {
   *out = ~hcrc.Instance->DR;
   return HAL_SUCCESS;
 }
+
+hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx) {
+  *ctx = 0;
+  CLEAR_BIT(hhash.Instance->CR, HASH_CR_MODE);
+  MODIFY_REG(hhash.Instance->CR, HASH_CR_INIT, HASH_CR_INIT);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t len) {
+  *ctx += len;
+
+  __IO uint32_t data32 = (uint32_t) data;
+
+  for (int i = 0; i < len ; i += 4) {
+    hhash.Instance->DIN = *(uint32_t *)data32;
+    data32 += 4;
+  }
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
+  while (__HAL_HASH_GET_FLAG(&hhash, HASH_FLAG_BUSY) == SET) {
+    vTaskDelay(0);
+  }
+
+  MODIFY_REG(hhash.Instance->STR, HASH_STR_NBLW, 8 * (*ctx & 3));
+  SET_BIT(hhash.Instance->STR, HASH_STR_DCAL);
+
+  while (__HAL_HASH_GET_FLAG(&hhash, HASH_FLAG_DCIS) == RESET) {
+    vTaskDelay(0);
+  }
+
+  __IO uint32_t* out32 = (uint32_t *) out;
+
+  *(out32++) = __REV(hhash.Instance->HR[0]);
+  *(out32++) = __REV(hhash.Instance->HR[1]);
+  *(out32++) = __REV(hhash.Instance->HR[2]);
+  *(out32++) = __REV(hhash.Instance->HR[3]);
+  *(out32++) = __REV(hhash.Instance->HR[4]);
+  *(out32++) = __REV(HASH_DIGEST->HR[5]);
+  *(out32++) = __REV(HASH_DIGEST->HR[6]);
+  *(out32++) = __REV(HASH_DIGEST->HR[7]);
+
+  return HAL_SUCCESS;
+}

@@ -3,8 +3,7 @@
 
 #include "stm32h563xx.h"
 
-#define SOFT_SHA256
-
+typedef uint32_t hal_sha256_ctx_t;
 typedef uint32_t hal_crc32_ctx_t;
 
 #define APP_NOCACHE APP_ALIGNED
