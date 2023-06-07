@@ -180,3 +180,13 @@ app_err_t keycard_cmd_sign(keycard_t* kc, uint8_t* path, uint8_t path_len, uint8
 
   return securechannel_send_apdu(&kc->sc, &kc->ch, &kc->apdu, data, (32 + path_len));
 }
+
+app_err_t keycard_cmd_factoy_reset(keycard_t* kc) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0xfd;
+  APDU_P1(&kc->apdu) = 0xaa;
+  APDU_P2(&kc->apdu) = 0x55;
+
+  return smartcard_send_apdu(&kc->sc, &kc->apdu);
+}

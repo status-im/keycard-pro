@@ -79,8 +79,11 @@ static app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instan
 }
 
 static app_err_t keycard_factoryreset(keycard_t* kc) {
-  //TODO: implement global platform
-  return ERR_CANCEL;
+  if (ui_confirm_factory_reset() != CORE_EVT_UI_OK) {
+    return ERR_CANCEL;
+  }
+
+  return keycard_cmd_factoy_reset(kc);
 }
 
 static app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {

@@ -120,6 +120,10 @@ core_evt_t ui_prompt_try_puk() {
   return CORE_EVT_UI_OK;
 }
 
+core_evt_t ui_confirm_factory_reset() {
+  return CORE_EVT_UI_OK;
+}
+
 core_evt_t ui_read_pin(uint8_t* out, int8_t retries) {
   g_ui_cmd.type = UI_CMD_INPUT_PIN;
   g_ui_cmd.params.input_pin.retries = retries;

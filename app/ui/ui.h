@@ -44,6 +44,7 @@ void ui_keycard_wrong_puk();
 void ui_seed_loaded();
 
 core_evt_t ui_prompt_try_puk();
+core_evt_t ui_confirm_factory_reset();
 core_evt_t ui_read_pin(uint8_t* out, int8_t retries);
 core_evt_t ui_read_puk(uint8_t* out, int8_t retries);
 core_evt_t ui_read_pairing(uint8_t* pairing, uint32_t *len);
