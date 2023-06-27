@@ -11,6 +11,7 @@ typedef enum {
   ERR_HW,
   ERR_UNSUPPORTED,
   ERR_NEED_MORE_DATA,
+  ERR_FULL
 } app_err_t;
 
 #endif
