@@ -20,6 +20,7 @@ struct fs_erase_ctx {
   uint32_t block;
   size_t off;
   uint8_t* data;
+  uint8_t pending_erase;
   uint8_t stop;
   fs_predicate_t predicate;
   void* ctx;
@@ -125,12 +126,19 @@ static enum fs_iterator_action _fs_write_entries(void* ctx, fs_entry_t* entry) {
 }
 
 static void _fs_commit_block(struct fs_erase_ctx* erase_ctx) {
-  if (erase_ctx->off == 0) {
+  if (!erase_ctx->pending_erase) {
+    erase_ctx->off = 0;
     return;
   }
 
+  erase_ctx->pending_erase = 0;
+
   if (hal_flash_erase(erase_ctx->block) != HAL_SUCCESS) {
     erase_ctx->err = ERR_HW;
+    return;
+  }
+
+  if (erase_ctx->off == 0) {
     return;
   }
 
@@ -169,6 +177,7 @@ static enum fs_iterator_action _fs_erase_entries(void* ctx, fs_entry_t* entry) {
 
   switch(action) {
   case FS_REJECT:
+    erase_ctx->pending_erase = 1;
     break;
   case FS_ACCEPT:
     memcpy(&erase_ctx->data[erase_ctx->off], entry, (entry->len + 4));
@@ -199,8 +208,7 @@ static enum fs_iterator_action _fs_iterate_page(uint8_t* p, fs_iterator_cb_t cb,
       off += entry->len;
       break;
     case FS_ITER_SKIP_PAGE:
-      off = HAL_FLASH_BLOCK_SIZE;
-      break;
+      return FS_ITER_NEXT;
     }
 
     break;
@@ -249,7 +257,7 @@ app_err_t fs_erase_all(fs_predicate_t predicate, void* ctx) {
     return ERR_HW;
   }
 
-  struct fs_erase_ctx erase_ctx = { .block = 0, .data = g_mem_heap, .predicate = predicate, .ctx = ctx, .err = ERR_DATA, .stop = 0 };
+  struct fs_erase_ctx erase_ctx = { .block = 0, .data = g_mem_heap, .predicate = predicate, .ctx = ctx, .err = ERR_DATA, .stop = 0, .pending_erase = 0 };
   _fs_iterate(_fs_erase_entries, &erase_ctx);
   _fs_commit_block(&erase_ctx);
 
