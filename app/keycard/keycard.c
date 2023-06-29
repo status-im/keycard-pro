@@ -241,7 +241,7 @@ static app_err_t keycard_setup(keycard_t* kc) {
       return ERR_DATA;
   }
 
-  pairing_t pairing;
+  APP_ALIGNED(pairing_t pairing, 4);
   err = keycard_pair(kc, &pairing, info.instance_uid);
   if (err != ERR_OK) {
     return err;

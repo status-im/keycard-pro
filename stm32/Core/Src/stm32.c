@@ -384,12 +384,28 @@ void hal_smartcard_abort() {
   HAL_SMARTCARD_Abort_IT(&hsmartcard6);
 }
 
-hal_err_t hal_flash_begin_program() {
-  return HAL_FLASH_Unlock();
+const hal_flash_data_segment_t hal_flash_data_map[] = {
+    { .addr = HAL_FLASH_BLOCK_ADDR(80), .count = 48},
+    { .addr = HAL_FLASH_BLOCK_ADDR(208), .count = 48},
+};
+
+const hal_flash_data_segment_t* hal_flash_get_data_segments() {
+  //TODO: take into account flash bank swap
+  return hal_flash_data_map;
 }
 
-hal_err_t hal_flash_program(const uint32_t* data, uint32_t* addr) {
-  return HAL_FLASH_Program(FLASH_TYPEPROGRAM_QUADWORD, (uint32_t) addr, (uint32_t) data);
+hal_err_t hal_flash_begin_program() {
+  if (HAL_FLASH_Unlock() != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  SET_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_flash_program(const uint8_t* data, uint8_t* addr, size_t len) {
+  memcpy(addr, data, len);
+  return HAL_SUCCESS;
 }
 
 hal_err_t hal_flash_erase(uint32_t block) {
@@ -398,6 +414,7 @@ hal_err_t hal_flash_erase(uint32_t block) {
   op.NbSectors = 1;
   op.Sector = block;
 
+  //TODO: take into account flash bank swap
   if (op.Sector >= FLASH_SECTOR_NB) {
     op.Sector -= FLASH_SECTOR_NB;
     op.Banks = FLASH_BANK_2;
