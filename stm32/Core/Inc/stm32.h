@@ -16,4 +16,6 @@ typedef uint32_t hal_crc32_ctx_t;
 #define HAL_FLASH_BLOCK_COUNT (FLASH_SECTOR_NB << 1)
 #define HAL_FLASH_ADDR FLASH_BASE
 
+#define HAL_FLASH_DATA_BLOCK_COUNT 96
+
 #endif

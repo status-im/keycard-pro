@@ -122,10 +122,16 @@ void hal_tick();
 #define HAL_FLASH_BLOCK_ADDR(__BLOCK__) (HAL_FLASH_ADDR + (HAL_FLASH_BLOCK_SIZE * __BLOCK__))
 #define HAL_FLASH_ADDR_TO_BLOCK(__ADDR__) ((__ADDR__ - HAL_FLASH_ADDR) / HAL_FLASH_BLOCK_SIZE)
 
+typedef struct {
+  uint32_t addr;
+  uint32_t count;
+} hal_flash_data_segment_t;
+
 hal_err_t hal_flash_begin_program();
-hal_err_t hal_flash_program(const uint32_t* data, uint32_t* addr);
+hal_err_t hal_flash_program(const uint8_t* data, uint8_t* addr, size_t len);
 hal_err_t hal_flash_erase(uint32_t block);
 hal_err_t hal_flash_end_program();
+const hal_flash_data_segment_t* hal_flash_get_data_segments();
 
 // PWM
 typedef enum {
