@@ -289,20 +289,6 @@ hal_err_t hal_rng_next(uint8_t *buf, size_t len) {
   return HAL_SUCCESS;
 }
 
-/*
-hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx) {
-  return HAL_FAIL;
-}
-
-hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t len) {
-  return HAL_FAIL;
-}
-
-hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
-  return HAL_FAIL;
-}
-*/
-
 hal_err_t hal_delay_us(uint32_t usec) {
   __HAL_TIM_SET_COUNTER(&htim6, 0);
   HAL_TIM_Base_Start(&htim6);
