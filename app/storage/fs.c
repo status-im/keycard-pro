@@ -34,8 +34,8 @@ enum fs_iterator_action {
 };
 
 #define FS_MAGIC_FREE 0xffff
-#define FS_MAGIC_PAD_MASK 0xc000
-#define FS_MAGIC_PAD 0x8000
+#define FS_MAGIC_PAD_MASK 0x00c0
+#define FS_MAGIC_PAD 0x0080
 
 typedef enum fs_iterator_action (*fs_iterator_cb_t)(void* ctx, fs_entry_t* entry);
 
@@ -87,7 +87,7 @@ static hal_err_t _fs_pad(uint8_t* addr) {
   uint8_t padding[padlen];
 
   for (int i = 0; i < padlen; i++) {
-    padding[i] = (FS_MAGIC_PAD >> 8) | (padlen - i);
+    padding[i] = FS_MAGIC_PAD | (padlen - i);
   }
 
   return hal_flash_program(padding, addr, padlen);
@@ -197,7 +197,7 @@ static enum fs_iterator_action _fs_iterate_page(uint8_t* p, fs_iterator_cb_t cb,
   while (off < HAL_FLASH_BLOCK_SIZE) {
     fs_entry_t* entry = (fs_entry_t*)&p[off];
     if ((entry->magic & FS_MAGIC_PAD_MASK) == FS_MAGIC_PAD) {
-      off += (entry->magic & ~FS_MAGIC_PAD_MASK) >> 8;
+      off += (entry->magic & (~FS_MAGIC_PAD_MASK & 0xff));
       continue;
     }
 
@@ -205,7 +205,7 @@ static enum fs_iterator_action _fs_iterate_page(uint8_t* p, fs_iterator_cb_t cb,
     case FS_ITER_END:
       return FS_ITER_END;
     case FS_ITER_NEXT:
-      off += entry->len;
+      off += (entry->len + 4);
       break;
     case FS_ITER_SKIP_PAGE:
       return FS_ITER_NEXT;
