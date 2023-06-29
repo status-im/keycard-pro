@@ -210,8 +210,6 @@ static enum fs_iterator_action _fs_iterate_page(uint8_t* p, fs_iterator_cb_t cb,
     case FS_ITER_SKIP_PAGE:
       return FS_ITER_NEXT;
     }
-
-    break;
   }
 
   return FS_ITER_NEXT;
