@@ -10,6 +10,8 @@
 #define SC_RESET_DELAY 10
 #define SMARTCARD_STOPBITS_1 0x00000000U
 
+#define FLASH_BANK_SWAPPED() (FLASH->OPTSR_CUR & FLASH_OPTSR_SWAP_BANK)
+
 extern DMA_QListTypeDef Camera_DMA_LL;
 extern DMA_NodeTypeDef Camera_DMA_Node1;
 extern DMA_NodeTypeDef Camera_DMA_Node2;
@@ -375,9 +377,13 @@ const hal_flash_data_segment_t hal_flash_data_map[] = {
     { .addr = HAL_FLASH_BLOCK_ADDR(208), .count = 48},
 };
 
+const hal_flash_data_segment_t hal_flash_data_map_swap[] = {
+    { .addr = HAL_FLASH_BLOCK_ADDR(208), .count = 48},
+    { .addr = HAL_FLASH_BLOCK_ADDR(80), .count = 48},
+};
+
 const hal_flash_data_segment_t* hal_flash_get_data_segments() {
-  //TODO: take into account flash bank swap
-  return hal_flash_data_map;
+  return FLASH_BANK_SWAPPED() ? hal_flash_data_map_swap : hal_flash_data_map ;
 }
 
 hal_err_t hal_flash_begin_program() {
@@ -400,12 +406,11 @@ hal_err_t hal_flash_erase(uint32_t block) {
   op.NbSectors = 1;
   op.Sector = block;
 
-  //TODO: take into account flash bank swap
   if (op.Sector >= FLASH_SECTOR_NB) {
     op.Sector -= FLASH_SECTOR_NB;
-    op.Banks = FLASH_BANK_2;
+    op.Banks = FLASH_BANK_SWAPPED() ? FLASH_BANK_1 : FLASH_BANK_2;
   } else {
-    op.Banks = FLASH_BANK_1;
+    op.Banks = FLASH_BANK_SWAPPED() ? FLASH_BANK_2 : FLASH_BANK_1;
   }
 
   uint32_t err;
