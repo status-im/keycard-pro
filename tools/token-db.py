@@ -8,14 +8,16 @@ ERC20_MAGIC = 0x3020
 def serialize_addresses(addresses):
     res = b''
     for id, address in addresses.items():
-        res = res + struct.pack("<B20s", id, bytes.fromhex(address[2:]))
+        if len(address) != 42:
+            assert "Unexpected address format"
+        res = res + struct.pack("<I20s", id, bytes.fromhex(address[2:]))
 
     return res
         
 def serialize_db(f, chains, tokens):
     for chain in chains.values():
-        chain_len = 4 + 1 + len(chain["ticker"]) + 1 + len(chain["name"]) + 1
-        f.write(struct.pack("<HHIB", CHAIN_MAGIC, chain_len, chain["chainId"], chain["id"]))
+        chain_len = 4 + len(chain["ticker"]) + 1 + len(chain["name"]) + 1
+        f.write(struct.pack("<HHI", CHAIN_MAGIC, chain_len, chain["id"]))
         f.write(bytes(chain["ticker"], "ascii") + b'\0')
         f.write(bytes(chain["name"], "ascii") + b'\0')
     
@@ -40,14 +42,12 @@ def process_token(tokens, chains, token_json, chains_json):
     if chain is None:
         chain_json = lookup_chain(chains_json, chain_id)
         chain = {
-            "id": process_token.inner_chain_id,
+            "id": chain_id,
             "name": chain_json["name"],
             "ticker": chain_json["nativeCurrency"]["symbol"],
             "decimals": chain_json["nativeCurrency"]["decimals"],
-            "chainId": chain_id,
         }
         
-        process_token.inner_chain_id = process_token.inner_chain_id + 1
         chains[chain_id] = chain
 
     symbol = token_json["symbol"]
@@ -61,7 +61,7 @@ def process_token(tokens, chains, token_json, chains_json):
         }
         tokens[symbol] = token
 
-    token["addresses"][chain["id"]] = token_json["address"]
+    token["addresses"][chain_id] = token_json["address"]
 
 def main():
     parser = argparse.ArgumentParser(description='Create a database from a token and chain list')
@@ -83,5 +83,4 @@ def main():
         serialize_db(f, chains, tokens)
 
 if __name__ == "__main__":
-    process_token.inner_chain_id = 0
     main()
