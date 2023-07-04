@@ -38,6 +38,7 @@ struct cmd_info {
 
 struct cmd_txn {
   const txContent_t* tx;
+  uint32_t chain_id;
 };
 
 struct cmd_msg {

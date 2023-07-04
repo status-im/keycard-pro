@@ -80,7 +80,7 @@ static inline uint8_t core_get_tx_v_base() {
     if (g_core.data.tx.content.vLength == 0) {
       v_base = 27;
     } else {
-      uint32_t v = (uint32_t) u64_from_BE(g_core.data.tx.content.v, APP_MIN(4, g_core.data.tx.content.vLength));
+      uint32_t v = u32_from_BE(g_core.data.tx.content.v, APP_MIN(4, g_core.data.tx.content.vLength));
       v_base = (v * 2) + 35;
     }
   }
@@ -106,7 +106,8 @@ static app_err_t core_sign(keycard_t* kc, uint8_t* out) {
 }
 
 static inline app_err_t core_wait_tx_confirmation() {
-  return ui_display_tx(&g_core.data.tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  uint32_t chain_id = eth_tx_chain_id(&g_core.data.tx.ctx);
+  return ui_display_tx(&g_core.data.tx.content, chain_id) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg) {

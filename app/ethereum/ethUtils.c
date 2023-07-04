@@ -179,9 +179,9 @@ bool adjustDecimals(const char *src, size_t srcLength, char *target, size_t targ
 	return true;
 }
 
-uint64_t u64_from_BE(const uint8_t *in, uint8_t size) {
+uint32_t u32_from_BE(const uint8_t *in, uint8_t size) {
     uint8_t i = 0;
-    uint64_t res = 0;
+    uint32_t res = 0;
 
     while (i < size && i < sizeof(res)) {
         res <<= 8;
@@ -190,4 +190,22 @@ uint64_t u64_from_BE(const uint8_t *in, uint8_t size) {
     }
 
     return res;
+}
+
+uint32_t eth_tx_chain_id(txContext_t* txContext) {
+    uint32_t chain_id = 0;
+
+    switch (txContext->txType) {
+        case LEGACY:
+            chain_id = u32_from_BE(txContext->content->v, txContext->content->vLength);
+            break;
+        case EIP2930:
+        case EIP1559:
+            chain_id = u32_from_BE(txContext->content->chainID.value, txContext->content->chainID.length);
+            break;
+        default:
+            break;
+    }
+
+    return chain_id;
 }
