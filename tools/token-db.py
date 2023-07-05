@@ -16,10 +16,11 @@ def serialize_addresses(addresses):
         
 def serialize_db(f, chains, tokens):
     for chain in chains.values():
-        chain_len = 4 + len(chain["ticker"]) + 1 + len(chain["name"]) + 1
+        chain_len = 4 + len(chain["ticker"]) + 1 + len(chain["name"]) + 1 + len(chain["shortName"]) + 1
         f.write(struct.pack("<HHI", CHAIN_MAGIC, chain_len, chain["id"]))
         f.write(bytes(chain["ticker"], "ascii") + b'\0')
         f.write(bytes(chain["name"], "ascii") + b'\0')
+        f.write(bytes(chain["shortName"], "ascii") + b'\0')
     
     for token in tokens.values():
         addresses = serialize_addresses(token["addresses"])
@@ -44,6 +45,7 @@ def process_token(tokens, chains, token_json, chains_json):
         chain = {
             "id": chain_id,
             "name": chain_json["name"],
+            "shortName": chain_json["shortName"],
             "ticker": chain_json["nativeCurrency"]["symbol"],
             "decimals": chain_json["nativeCurrency"]["decimals"],
         }
