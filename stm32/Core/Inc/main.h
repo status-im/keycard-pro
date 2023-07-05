@@ -28,17 +28,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h5xx_hal.h"
-#include "stm32h5xx_ll_ucpd.h"
-#include "stm32h5xx_ll_bus.h"
-#include "stm32h5xx_ll_cortex.h"
-#include "stm32h5xx_ll_rcc.h"
-#include "stm32h5xx_ll_system.h"
-#include "stm32h5xx_ll_utils.h"
-#include "stm32h5xx_ll_pwr.h"
-#include "stm32h5xx_ll_gpio.h"
-#include "stm32h5xx_ll_dma.h"
-
-#include "stm32h5xx_ll_exti.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
@@ -78,7 +67,6 @@ void Error_Handler(void);
 void MX_GPIO_Init(void);
 void MX_GPDMA1_Init(void);
 void MX_GPDMA2_Init(void);
-void MX_UCPD1_Init(void);
 void MX_USB_PCD_Init(void);
 void MX_DCMI_Init(void);
 void MX_RNG_Init(void);
@@ -127,14 +115,8 @@ void SystemClock_Config(void);
 #define GPIO_KEYPAD_COL_1_GPIO_Port GPIOF
 #define GPIO_CAMERA_PWDN_Pin GPIO_PIN_10
 #define GPIO_CAMERA_PWDN_GPIO_Port GPIOE
-#define GPIO_KEYPAD_COL_3_Pin GPIO_PIN_11
-#define GPIO_KEYPAD_COL_3_GPIO_Port GPIOE
 #define GPIO_CAMERA_RST_Pin GPIO_PIN_12
 #define GPIO_CAMERA_RST_GPIO_Port GPIOE
-#define UCPD_CC1_Pin GPIO_PIN_13
-#define UCPD_CC1_GPIO_Port GPIOB
-#define UCPD_CC2_Pin GPIO_PIN_14
-#define UCPD_CC2_GPIO_Port GPIOB
 #define T_VCP_TX_Pin GPIO_PIN_8
 #define T_VCP_TX_GPIO_Port GPIOD
 #define T_VCP_RX_Pin GPIO_PIN_9

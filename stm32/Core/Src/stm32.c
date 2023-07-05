@@ -45,7 +45,6 @@ const struct gpio_pin_spec STM32_PIN_MAP[] = {
   {GPIO_KEYPAD_COL_0_GPIO_Port, GPIO_KEYPAD_COL_0_Pin},
   {GPIO_KEYPAD_COL_1_GPIO_Port, GPIO_KEYPAD_COL_1_Pin},
   {GPIO_KEYPAD_COL_2_GPIO_Port, GPIO_KEYPAD_COL_2_Pin},
-  {GPIO_KEYPAD_COL_3_GPIO_Port, GPIO_KEYPAD_COL_3_Pin},
 };
 
 static void (*g_spi_callback)();

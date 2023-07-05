@@ -10,7 +10,7 @@
 #define PIN_LEN 6
 #define DIG_INV ' '
 
-const char KEYPAD_TO_DIGIT[] = {'1', '2', '3', DIG_INV, '4', '5', '6', DIG_INV, '7', '8', '9', DIG_INV, DIG_INV, '0', DIG_INV, DIG_INV, DIG_INV, DIG_INV};
+const char KEYPAD_TO_DIGIT[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', DIG_INV, '0', DIG_INV, DIG_INV, DIG_INV};
 
 static app_err_t input_render_secret(uint16_t yOff, int len, int pos) {
   uint16_t width = (len * (TH_PIN_FIELD_WIDTH + TH_PIN_FIELD_DIGIT_MARGIN)) - TH_PIN_FIELD_DIGIT_MARGIN;

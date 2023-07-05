@@ -55,7 +55,6 @@ typedef enum {
   GPIO_KEYPAD_COL_0,
   GPIO_KEYPAD_COL_1,
   GPIO_KEYPAD_COL_2,
-  GPIO_KEYPAD_COL_3,
 } hal_gpio_pin_t;
 
 typedef enum {
