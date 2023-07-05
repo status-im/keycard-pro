@@ -59,8 +59,8 @@ app_err_t eth_db_lookup_chain(chain_desc_t* chain) {
   }
 
   chain->ticker = chain_data->data;
-  chain->name = chain->ticker + strlen(chain->ticker);
-  chain->short_name = chain->name + strlen(chain->name);
+  chain->name = chain->ticker + strlen(chain->ticker) + 1;
+  chain->short_name = chain->name + strlen(chain->name) + 1;
 
   return ERR_OK;
 }
