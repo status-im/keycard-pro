@@ -29,9 +29,9 @@ def serialize_token(token):
     token_len = 1 + len(addresses) + 1 + len(token["ticker"]) + 1
     
     return struct.pack("<HHB", ERC20_MAGIC, token_len, len(token["addresses"])) + \
-    addresses + \
-    struct.pack("B", token["decimals"]) + \
-    bytes(token["ticker"], "ascii") + b'\0'
+        addresses + \
+        struct.pack("B", token["decimals"]) + \
+        bytes(token["ticker"], "ascii") + b'\0'
 
 def pad_write(f, buf, page_limit):
     f.write(buf)
