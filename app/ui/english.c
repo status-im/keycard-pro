@@ -15,7 +15,9 @@ const char* i18n_english_strings[] = {
     // Settings menu
     "Info",
 
+    // TX
     "Sign transaction",
+    "Chain",
     "To",
     "Amount",
     "Fee",

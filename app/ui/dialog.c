@@ -2,13 +2,14 @@
 #include "crypto/address.h"
 #include "crypto/bignum.h"
 #include "crypto/secp256k1.h"
+#include "crypto/util.h"
+#include "ethereum/eth_db.h"
 #include "ethereum/ethUstream.h"
 #include "ethereum/ethUtils.h"
 #include "theme.h"
 #include "ui/ui_internal.h"
 
 #define TX_CONFIRM_TIMEOUT 30000
-#define TICKER_LEN 4
 #define BIGNUM_STRING_LEN 84
 
 app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_height) {
@@ -53,6 +54,11 @@ static inline void dialog_data(screen_text_ctx_t *ctx, const char* data) {
   dialog_line(ctx, data, TH_DATA_HEIGHT);
 }
 
+static void dialog_chain(screen_text_ctx_t *ctx, const char* name) {
+  dialog_label(ctx, LSTR(TX_CHAIN));
+  dialog_data(ctx, name);
+}
+
 static void dialog_tx_address(screen_text_ctx_t *ctx) {
   char address[41];
   ethereum_address_checksum(g_ui_cmd.params.txn.tx->destination, address);
@@ -69,8 +75,8 @@ static void dialog_calculate_fees(bignum256* fees) {
   bn_multiply(&gas_amount, fees, &secp256k1.prime);
 }
 
-static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const bignum256* amount, int decimals, const char ticker[TICKER_LEN]) {
-  char tmp[BIGNUM_STRING_LEN+TICKER_LEN+2];
+static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const bignum256* amount, int decimals, const char* ticker) {
+  char tmp[BIGNUM_STRING_LEN+strlen(ticker)+2];
   bn_format(amount, NULL, ticker, decimals, 0, 0, ',', tmp, sizeof(tmp));
 
   dialog_label(ctx, LSTR(prompt));
@@ -78,19 +84,30 @@ static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const bi
 }
 
 app_err_t dialog_confirm_tx() {
+  chain_desc_t chain;
+  chain.chain_id = g_ui_cmd.params.txn.chain_id;
+
+  if (eth_db_lookup_chain(&chain) != ERR_OK) {
+    uint8_t num[11];
+    chain.name = (char*) u32toa(chain.chain_id, num, 11);
+    chain.ticker = "";
+  }
+
   dialog_title(LSTR(TX_CONFIRM_TITLE));
 
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
 
+  dialog_chain(&ctx, chain.name);
+
   dialog_tx_address(&ctx);
 
   bignum256 data;
   bn_read_compact_be(g_ui_cmd.params.txn.tx->value.value, g_ui_cmd.params.txn.tx->value.length, &data);
-  dialog_amount(&ctx, TX_AMOUNT, &data, 18, " ETH");
+  dialog_amount(&ctx, TX_AMOUNT, &data, 18, chain.ticker);
 
   dialog_calculate_fees(&data);
-  dialog_amount(&ctx, TX_FEE, &data, 18, " ETH");
+  dialog_amount(&ctx, TX_FEE, &data, 18, chain.ticker);
 
   dialog_footer(ctx.y);
 

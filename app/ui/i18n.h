@@ -20,6 +20,7 @@ typedef enum {
 
   // TX Confirmation
   TX_CONFIRM_TITLE,
+  TX_CHAIN,
   TX_ADDRESS,
   TX_AMOUNT,
   TX_FEE,
