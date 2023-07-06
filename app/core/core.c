@@ -463,6 +463,7 @@ void core_qr_run() {
   switch(qr_request._eth_sign_request_data_type._sign_data_type_choice) {
     case _sign_data_type__eth_transaction_data:
     case _sign_data_type__eth_typed_transaction:
+      g_core.data.tx.content.chainID = qr_request._eth_sign_request_chain_id_present ? (uint32_t) qr_request._eth_sign_request_chain_id._eth_sign_request_chain_id : 1;
       err = core_process_tx(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len, 1);
       break;
     case _sign_data_type__eth_raw_bytes:
