@@ -18,7 +18,7 @@ typedef enum {
 
 core_evt_t ui_qrscan(struct eth_sign_request* sign_request);
 core_evt_t ui_menu(const menu_t* menu, i18n_str_id_t* selected);
-core_evt_t ui_display_tx(const txContent_t* tx, uint32_t chain_id);
+core_evt_t ui_display_tx(const txContent_t* tx);
 core_evt_t ui_display_msg(const uint8_t* msg, uint32_t len);
 core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type);
 

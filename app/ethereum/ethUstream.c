@@ -131,18 +131,20 @@ static uint16_t processChainID(txContext_t *context) {
     return EXCEPTION;
   }
 
-  if (context->currentFieldLength > MAX_INT256) {
+  if (context->currentFieldLength > sizeof(context->content->chainID)) {
     return EXCEPTION;
   }
 
+  const uint8_t* chainBuf = context->workBuffer;
+
   if (context->currentFieldPos < context->currentFieldLength) {
     uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
-    if (copyTxData(context, context->content->chainID.value, copySize) == EXCEPTION) {
+    if (copyTxData(context, NULL, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
   }
   if (context->currentFieldPos == context->currentFieldLength) {
-    context->content->chainID.length = context->currentFieldLength;
+    context->content->chainID = u32_from_BE(chainBuf, context->currentFieldLength);
     context->currentField++;
     context->processingField = false;
   }
@@ -159,12 +161,11 @@ static uint16_t processNonce(txContext_t *context) {
   }
   if (context->currentFieldPos < context->currentFieldLength) {
     uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
-    if (copyTxData(context, context->content->nonce.value, copySize) == EXCEPTION) {
+    if (copyTxData(context, NULL, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
   }
   if (context->currentFieldPos == context->currentFieldLength) {
-    context->content->nonce.length = context->currentFieldLength;
     context->currentField++;
     context->processingField = false;
   }
@@ -324,17 +325,24 @@ static uint16_t processV(txContext_t *context) {
     return EXCEPTION;
   }
 
+  const uint8_t* vBuf = context->workBuffer;
+
   if (context->currentFieldPos < context->currentFieldLength) {
     uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     // Make sure we do not copy more than the size of v.
     copySize = APP_MIN(copySize, sizeof(context->content->v));
-    if (copyTxData(context, context->content->v + context->currentFieldPos, copySize) == EXCEPTION) {
+    if (copyTxData(context, NULL, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
   }
 
   if (context->currentFieldPos == context->currentFieldLength) {
-    context->content->vLength = context->currentFieldLength;
+    context->content->v = u32_from_BE(vBuf, context->currentFieldLength);
+
+    if (context->txType == LEGACY) {
+      context->content->chainID = context->content->v;
+    }
+
     context->currentField++;
     context->processingField = false;
   }
@@ -537,7 +545,7 @@ parserStatus_e continueTx(txContext_t *context) {
     // `ledgerjs` to correctly decrease the size of the APDU (`commandLength`) so that this
     // situation doesn't happen.
     if ((context->txType == LEGACY && context->currentField == LEGACY_RLP_V) && (context->commandLength == 0)) {
-      context->content->vLength = 0;
+      context->content->v = V_NONE;
       return USTREAM_FINISHED;
     }
 

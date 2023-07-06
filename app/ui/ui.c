@@ -22,10 +22,9 @@ core_evt_t ui_menu(const menu_t* menu, i18n_str_id_t* selected) {
   return ui_signal_wait(1);
 }
 
-core_evt_t ui_display_tx(const txContent_t* tx, uint32_t chain_id) {
+core_evt_t ui_display_tx(const txContent_t* tx) {
   g_ui_cmd.type = UI_CMD_DISPLAY_TXN;
   g_ui_cmd.params.txn.tx = tx;
-  g_ui_cmd.params.txn.chain_id = chain_id;
   return ui_signal_wait(0);
 }
 

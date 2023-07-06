@@ -57,6 +57,5 @@ static __attribute__((no_instrument_function)) inline int ismaxint(uint8_t *buf,
 }
 
 uint32_t u32_from_BE(const uint8_t *in, uint8_t size);
-uint32_t eth_tx_chain_id(txContext_t* txContext);
 
 #endif  // _ETHUTILS_H_

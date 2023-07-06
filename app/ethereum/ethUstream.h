@@ -29,6 +29,8 @@ struct txContext_t;
 #define ADDRESS_LENGTH 20
 #define INT128_LENGTH  16
 #define INT256_LENGTH  32
+#define V_NONE UINT32_MAX
+
 
 // First variant of every Tx enum.
 #define RLP_NONE 0
@@ -113,12 +115,10 @@ typedef struct txContent_t {
   txInt256_t gasprice;  // Used as MaxFeePerGas when dealing with EIP1559 transactions.
   txInt256_t startgas;  // Also known as `gasLimit`.
   txInt256_t value;
-  txInt256_t nonce;
-  txInt256_t chainID;
+  uint32_t chainID;
   uint8_t destination[ADDRESS_LENGTH];
   uint8_t destinationLength;
-  uint8_t v[8];
-  uint8_t vLength;
+  uint32_t v;
   bool dataPresent;
 } txContent_t;
 

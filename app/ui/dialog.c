@@ -85,7 +85,7 @@ static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const bi
 
 app_err_t dialog_confirm_tx() {
   chain_desc_t chain;
-  chain.chain_id = g_ui_cmd.params.txn.chain_id;
+  chain.chain_id = g_ui_cmd.params.txn.tx->chainID;
 
   if (eth_db_lookup_chain(&chain) != ERR_OK) {
     uint8_t num[11];
