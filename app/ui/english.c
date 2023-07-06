@@ -17,6 +17,7 @@ const char* i18n_english_strings[] = {
 
     // TX
     "Sign transaction",
+    "Sign ERC20 transfer",
     "Chain",
     "To",
     "Amount",

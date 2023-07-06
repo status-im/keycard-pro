@@ -27,6 +27,8 @@
 
 #define EXCEPTION 0x100
 
+const uint8_t ETH_ERC20_SIGNATURE[] = { 0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
 void initTx(txContext_t *context, SHA3_CTX *sha3, txContent_t *content) {
   memset(context, 0, sizeof(txContext_t));
   context->sha3 = sha3;
@@ -277,11 +279,13 @@ static uint16_t processData(txContext_t *context) {
     return EXCEPTION;
   }
 
+  const uint8_t* dataBuf = context->workBuffer;
+
   if (context->currentFieldPos < context->currentFieldLength) {
     uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
     // If there is no data, set dataPresent to false.
     if (copySize == 1 && *context->workBuffer == 0x00) {
-      context->content->dataPresent = false;
+      context->content->dataType = DATA_NONE;
     }
     
     if (copyTxData(context, NULL, copySize) == EXCEPTION) {
@@ -290,6 +294,15 @@ static uint16_t processData(txContext_t *context) {
   }
 
   if (context->currentFieldPos == context->currentFieldLength) {
+    if (!context->content->value.length && (context->currentFieldLength == 68) && !memcmp(dataBuf, ETH_ERC20_SIGNATURE, 16)) {
+      context->content->dataType = DATA_ERC20;
+      memmove(context->content->finalRecipient, &dataBuf[16], MAX_ADDRESS);
+      memmove(context->content->value.value, &dataBuf[36], MAX_INT256);
+      context->content->value.length = MAX_INT256;
+    } else {
+      context->content->dataType = DATA_UNKNOWN;
+    }
+
     context->currentField++;
     context->processingField = false;
   }
