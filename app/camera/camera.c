@@ -83,7 +83,7 @@ hal_err_t camera_start() {
 }
 
 hal_err_t camera_stop() {
-  hal_gpio_set(GPIO_CAMERA_PWDN, GPIO_SET);
+  hal_gpio_set(GPIO_CAMERA_PWDN, _CAM_PWR_OFF);
   hal_err_t err = hal_camera_stop();
   ulTaskNotifyTakeIndexed(CAMERA_TASK_NOTIFICATION_IDX, pdTRUE, 0);
 

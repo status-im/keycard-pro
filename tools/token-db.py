@@ -35,6 +35,9 @@ def serialize_token(token):
 
 def pad_write(f, buf, page_limit):
     f.write(buf)
+
+    if page_limit != PAGE_SIZE:
+        return
     
     size = len(buf)
     padlen = WORD_SIZE - (size % WORD_SIZE)
@@ -44,10 +47,9 @@ def pad_write(f, buf, page_limit):
         padlen = padlen - 1
         size = size + 1
 
-    if page_limit == PAGE_SIZE:
-        while size < PAGE_SIZE:
-            f.write(0xff.to_bytes(1))
-            size = size + 1
+    while size < PAGE_SIZE:
+        f.write(0xff.to_bytes(1))
+        size = size + 1
 
 def serialize_db(f, page_align, chains, tokens):
     page_limit = PAGE_SIZE if page_align else 0xffffffff
