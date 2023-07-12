@@ -74,7 +74,7 @@ app_err_t securechannel_open(secure_channel_t* sc, smartcard_t* card, apdu_t* ap
   sha512_Update(&sha512, &secret[1], SHA256_DIGEST_LENGTH);
   sha512_Update(&sha512, pairing->key, SHA256_DIGEST_LENGTH);
   sha512_Update(&sha512, apduData, SHA256_DIGEST_LENGTH);
-  sha512_Final(&sha512, sc->enc_key);
+  sha512_Final(&sha512, (uint8_t*) sc);
 
   memcpy(sc->iv, &apduData[SHA256_DIGEST_LENGTH], AES_IV_SIZE);
   sc->open = 1;

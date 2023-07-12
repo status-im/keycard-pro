@@ -1,4 +1,3 @@
-#include "log/log.h"
 #include "qrcodegen.h"
 #include "qrout.h"
 #include "screen/screen.h"

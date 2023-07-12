@@ -1,6 +1,5 @@
 #include "FreeRTOS.h"
 #include "task.h"
-#include "log/log.h"
 #include "common.h"
 #include "hal.h"
 #include "keypad/keypad.h"
@@ -31,7 +30,6 @@ void vApplicationGetTimerTaskMemory(StaticTask_t **ppxTimerTaskTCBBuffer, StackT
 #if defined(__REDLIB__)
 void __assertion_failed(char *failedExpr)
 {
-    LOG_MSG(failedExpr);
     for (;;)
     {
         OMG_BREAK();
@@ -40,7 +38,6 @@ void __assertion_failed(char *failedExpr)
 #else
 void __assert_func(const char *file, int line, const char *func, const char *failedExpr)
 {
-    LOG_MSG(failedExpr);
     for (;;)
     {
       OMG_BREAK();

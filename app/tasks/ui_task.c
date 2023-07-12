@@ -2,7 +2,6 @@
 #include "task.h"
 
 #include "app_tasks.h"
-#include "log/log.h"
 #include "qrcode/qrout.h"
 #include "qrcode/qrscan.h"
 #include "screen/screen.h"
@@ -15,10 +14,9 @@ struct ui_cmd g_ui_cmd;
 struct ui_ctx g_ui_ctx;
 
 void ui_task_entry(void* pvParameters) {
-  LOG_MSG("Starting UI task");
 
   if (screen_init() != HAL_SUCCESS) {
-    LOG_MSG("Failed to init screen");
+    vTaskSuspend(NULL);
   }
 
   screen_fill_area(&screen_fullarea, SCREEN_COLOR_BLACK);
@@ -53,6 +51,9 @@ void ui_task_entry(void* pvParameters) {
       break;
     case UI_CMD_INPUT_PIN:
       g_ui_cmd.result = input_pin();
+      break;
+    case UI_CMD_INPUT_MNEMO:
+      g_ui_cmd.result = input_mnemonic();
       break;
     default:
       break;

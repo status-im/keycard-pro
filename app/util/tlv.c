@@ -68,6 +68,7 @@ uint16_t tlv_read_primitive(uint16_t tag, uint16_t max_len, uint8_t *buf, uint8_
   uint16_t off = tlv_read_tag(buf, &_tag);
 
   if (tag != _tag) {
+    *len = TLV_INVALID;
     return TLV_INVALID;
   }
 

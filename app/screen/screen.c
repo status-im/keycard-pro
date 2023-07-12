@@ -1,7 +1,6 @@
 #include "app_tasks.h"
 #include "screen.h"
 #include "common.h"
-#include "log/log.h"
 #include "qrcode/qrcodegen.h"
 #include "FreeRTOS.h"
 #include "task.h"

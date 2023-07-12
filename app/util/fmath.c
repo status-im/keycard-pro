@@ -101,6 +101,7 @@ float APP_ALWAYS_INLINE fast_fabsf(float x)
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wstrict-aliasing"
+#pragma GCC diagnostic ignored "-Wuninitialized"
 typedef union{
     uint32_t l;
     struct {

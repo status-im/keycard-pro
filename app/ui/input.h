@@ -5,5 +5,6 @@
 #include "error.h"
 
 app_err_t input_pin();
+app_err_t input_mnemonic();
 
 #endif

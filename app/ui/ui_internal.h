@@ -66,7 +66,8 @@ struct cmd_input_pin {
 };
 
 struct cmd_input_mnemo {
-
+  uint16_t* indexes;
+  uint32_t* len;
 };
 
 union cmd_params {

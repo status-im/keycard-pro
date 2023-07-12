@@ -72,13 +72,6 @@ typedef enum {
 
 hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, const uint8_t* data, size_t len);
 
-// UART
-typedef enum {
-  UART_LOG,
-} hal_uart_port_t;
-
-hal_err_t hal_uart_send(hal_uart_port_t port, const uint8_t* data, size_t len);
-
 // SPI
 typedef enum {
   SPI_LCD
@@ -96,7 +89,6 @@ hal_err_t hal_smartcard_set_blocklen(uint32_t len);
 hal_err_t hal_smartcard_send(const uint8_t* data, size_t len);
 hal_err_t hal_smarcard_recv(uint8_t* data, size_t len);
 void hal_smartcard_abort();
-
 
 // Crypto (only use in crypto library)
 hal_err_t hal_rng_next(uint8_t *buf, size_t len);

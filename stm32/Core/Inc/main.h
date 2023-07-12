@@ -47,7 +47,6 @@ extern I2C_HandleTypeDef hi2c2;
 extern RNG_HandleTypeDef hrng;
 extern SPI_HandleTypeDef hspi5;
 extern SMARTCARD_HandleTypeDef hsmartcard6;
-extern UART_HandleTypeDef huart3;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim2;
@@ -73,7 +72,6 @@ void MX_RNG_Init(void);
 void MX_ICACHE_Init(void);
 void MX_HASH_Init(void);
 void MX_I2C2_Init(void);
-void MX_USART3_UART_Init(void);
 void MX_TIM6_Init(void);
 void MX_SPI5_Init(void);
 void MX_USART6_SMARTCARD_Init(void);
@@ -117,10 +115,6 @@ void SystemClock_Config(void);
 #define GPIO_CAMERA_PWDN_GPIO_Port GPIOE
 #define GPIO_CAMERA_RST_Pin GPIO_PIN_12
 #define GPIO_CAMERA_RST_GPIO_Port GPIOE
-#define T_VCP_TX_Pin GPIO_PIN_8
-#define T_VCP_TX_GPIO_Port GPIOD
-#define T_VCP_RX_Pin GPIO_PIN_9
-#define T_VCP_RX_GPIO_Port GPIOD
 #define GPIO_LED3_RED_Pin GPIO_PIN_4
 #define GPIO_LED3_RED_GPIO_Port GPIOG
 #define GPIO_KEYPAD_ROW_2_Pin GPIO_PIN_5

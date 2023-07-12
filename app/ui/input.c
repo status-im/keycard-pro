@@ -133,3 +133,8 @@ app_err_t input_pin() {
     }
   }
 }
+
+app_err_t input_mnemonic() {
+  *g_ui_cmd.params.input_mnemo.len = 12;
+  return ERR_CANCEL;
+}

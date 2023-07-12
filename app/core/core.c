@@ -4,7 +4,6 @@
 #include "crypto/ripemd160.h"
 #include "crypto/util.h"
 #include "mem.h"
-#include "log/log.h"
 #include "keycard/secure_channel.h"
 #include "keycard/keycard_cmdset.h"
 #include "keycard/keycard.h"
