@@ -45,6 +45,14 @@ typedef enum {
   INFO_NOT_KEYCARD,
   INFO_NEW_CARD_TITLE,
   INFO_NEW_CARD,
+
+  // Mnemonic input
+  MNEMO_TITLE,
+  MENU_MNEMO_12WORDS,
+  MENU_MNEMO_18WORDS,
+  MENU_MNEMO_24WORDS,
+  MENU_MNEMO_GENERATE,
+  MNEMO_WORD_TITLE,
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

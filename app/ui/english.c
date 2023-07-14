@@ -42,4 +42,12 @@ const char* i18n_english_strings[] = {
     "The inserted card does not appear to be a Keycard. Please replace it with a Keycard",
     "Initialize your Keycard",
     "We will now proceed initializing your Keycard.\n\nYou will be required to choose a PIN for your card.\n\nPress OK to continue.",
+
+    // Mnemonic input
+    "Seed loading",
+    "I have a 12 word seed",
+    "I have a 18 word seed",
+    "I have a 24 word seed",
+    "I want a new seed",
+    "Enter word #",
 };

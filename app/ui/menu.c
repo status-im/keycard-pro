@@ -30,6 +30,15 @@ const menu_t menu_mainmenu = {
   }
 };
 
+const menu_t menu_mnemonic = {
+  4, {
+    {MENU_MNEMO_12WORDS, NULL},
+    {MENU_MNEMO_18WORDS, NULL},
+    {MENU_MNEMO_24WORDS, NULL},
+    {MENU_MNEMO_GENERATE, NULL},
+  }
+};
+
 #define MENU_MAX_DEPTH 3
 
 void menu_render_entry(const menu_entry_t* entry, uint8_t is_selected, uint16_t yOff) {
