@@ -7,6 +7,16 @@
 #define KEYPAD_GPIO_COL_OFF GPIO_KEYPAD_COL_0
 
 #define KEYPAD_DEBOUNCE_THRESHOLD 10
+#define KEYPAD_LONG_PRESS_THRESHOLD 100
+
+static inline void keypad_report_key(keypad_key_t key, bool is_long) {
+  g_ui_ctx.keypad.last_key = key;
+  g_ui_ctx.keypad.last_key_long = is_long;
+
+  BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+  xTaskNotifyIndexedFromISR(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_KEY_EVT, eSetBits, &xHigherPriorityTaskWoken);
+  portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
 
 void keypad_scan_tick() {
   for (int i = 0; i < KEYPAD_COLS; i++) {
@@ -16,17 +26,17 @@ void keypad_scan_tick() {
       uint32_t duration = g_ui_ctx.keypad.matrix_state[key];
       g_ui_ctx.keypad.matrix_state[key] = 0;
 
-      if (duration > KEYPAD_DEBOUNCE_THRESHOLD) {
-        g_ui_ctx.keypad.last_key = key;
-        g_ui_ctx.keypad.last_key_duration = duration;
-
-        BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-        xTaskNotifyIndexedFromISR(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_KEY_EVT, eSetBits, &xHigherPriorityTaskWoken);
-        portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+      if (duration > KEYPAD_DEBOUNCE_THRESHOLD && duration < KEYPAD_LONG_PRESS_THRESHOLD) {
+        keypad_report_key(key, false);
         break;
       }
     } else {
       g_ui_ctx.keypad.matrix_state[key]++;
+      if (g_ui_ctx.keypad.matrix_state[key] >= KEYPAD_LONG_PRESS_THRESHOLD && g_ui_ctx.keypad.matrix_state[key] < (KEYPAD_LONG_PRESS_THRESHOLD * 2)) {
+        g_ui_ctx.keypad.matrix_state[key] = KEYPAD_LONG_PRESS_THRESHOLD * 2;
+        keypad_report_key(key, true);
+        break;
+      }
     }
   }
 

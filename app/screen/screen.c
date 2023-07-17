@@ -243,6 +243,20 @@ hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, char c) {
   return screen_draw_glyph(ctx, screen_lookup_glyph(ctx->font, c));
 }
 
+hal_err_t screen_draw_chars(screen_text_ctx_t* ctx, const char* str, int len) {
+  while(len--) {
+    const glyph_t* glyph = screen_lookup_glyph(ctx->font, *(str++));
+
+    if (screen_draw_glyph(ctx, glyph) != HAL_SUCCESS) {
+      return HAL_FAIL;
+    }
+
+    ctx->x += glyph->xAdvance;
+  }
+
+  return HAL_SUCCESS;
+}
+
 hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
   char c;
 

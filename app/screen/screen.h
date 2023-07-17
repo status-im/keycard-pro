@@ -69,6 +69,7 @@ hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph);
 
 // High level API
 hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, char c);
+hal_err_t screen_draw_chars(screen_text_ctx_t* ctx, const char* str, int len);
 hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str);
 hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, const uint8_t* text, size_t len);
 hal_err_t screen_fill_area(const screen_area_t* area, uint16_t color);

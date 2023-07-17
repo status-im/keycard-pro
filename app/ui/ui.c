@@ -172,7 +172,7 @@ core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len) {
     return CORE_EVT_UI_CANCELLED;
   }
 
-  g_ui_cmd.type = UI_CMD_INPUT_PIN;
+  g_ui_cmd.type = UI_CMD_INPUT_MNEMO;
   g_ui_cmd.params.input_mnemo.indexes = indexes;
   g_ui_cmd.params.input_mnemo.len = *len;
 
