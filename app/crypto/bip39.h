@@ -29,14 +29,15 @@
 
 #include "options.h"
 
+#define BIP39_MAX_MNEMONIC_LEN 24
 #define BIP39_WORD_COUNT 2048
 #define BIP39_PBKDF2_ROUNDS 2048
 
 extern const char *const BIP39_WORDLIST_ENGLISH[BIP39_WORD_COUNT];
 
 bool mnemonic_generate(char* mnemo, int strength);  // strength in bits
-bool mnemonic_from_data(const uint8_t *data, char* mnemo, int len);
-void mnemonic_from_indexes(const uint16_t *indexes, char* mnemo, int len);
+bool mnemonic_from_data(char* mnemo, const uint8_t *data, int len);
+void mnemonic_from_indexes( char* mnemo, const uint16_t *indexes, int len);
 
 int mnemonic_check(const char *mnemonic);
 

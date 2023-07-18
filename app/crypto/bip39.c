@@ -39,7 +39,7 @@ bool mnemonic_generate(char* mnemo, int strength) {
   }
   uint8_t data[32] = {0};
   random_buffer(data, 32);
-  if (!mnemonic_from_data(data, mnemo, strength / 8)) {
+  if (!mnemonic_from_data(mnemo, data, strength / 8)) {
     return false;
   }
 
@@ -47,7 +47,7 @@ bool mnemonic_generate(char* mnemo, int strength) {
   return true;
 }
 
-bool mnemonic_from_data(const uint8_t *data, char* mnemo, int len) {
+bool mnemonic_from_data(char* mnemo, const uint8_t *data, int len) {
   if (len % 4 || len < 16 || len > 32) {
     return false;
   }
@@ -80,7 +80,7 @@ bool mnemonic_from_data(const uint8_t *data, char* mnemo, int len) {
   return true;
 }
 
-void mnemonic_from_indexes(const uint16_t *indexes, char* mnemo, int len) {
+void mnemonic_from_indexes(char* mnemo, const uint16_t *indexes, int len) {
   char *p = mnemo;
   for (int i = 0; i < len; i++) {
     uint16_t idx = indexes[i];

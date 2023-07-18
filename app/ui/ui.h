@@ -49,8 +49,9 @@ core_evt_t ui_read_pin(uint8_t* out, int8_t retries);
 core_evt_t ui_read_puk(uint8_t* out, int8_t retries);
 core_evt_t ui_read_pairing(uint8_t* pairing, uint32_t *len);
 
-core_evt_t ui_backup_mnemonic(const char* mnemonic);
-core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len);
+core_evt_t ui_read_mnemonic_len(uint32_t* len);
+core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len);
+core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t len);
 
 core_evt_t ui_confirm_eth_address(const char* address);
 

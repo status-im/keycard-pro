@@ -158,39 +158,53 @@ static app_err_t keycard_authenticate(keycard_t* kc) {
   return keycard_unblock(kc, pinStatus.puk_retries);
 }
 
-static app_err_t keycard_init_keys(keycard_t* kc) {
-  uint16_t indexes[24];
-  uint32_t len;
+static void keycard_generate_seed(const uint16_t* indexes, uint32_t len, uint8_t* seed) {
+  char mnemonic[BIP39_MAX_MNEMONIC_LEN * 10];
+  mnemonic_from_indexes(mnemonic, indexes, len);
+  mnemonic_to_seed(mnemonic, "\0", seed, NULL);
+  memset(mnemonic, 0, sizeof(mnemonic));
+}
 
-  core_evt_t err = ui_read_mnemonic(indexes, &len);
+static app_err_t keycard_read_mnemonic(keycard_t* kc, uint16_t indexes[BIP39_MAX_MNEMONIC_LEN], uint32_t* len) {
+  core_evt_t err = ui_read_mnemonic_len(len);
 
   if (err == CORE_EVT_UI_CANCELLED) {
-    if (keycard_cmd_generate_mnemonic(kc, len) != ERR_OK) {
+    if (keycard_cmd_generate_mnemonic(kc, *len) != ERR_OK) {
       return ERR_TXRX;
     }
 
     APDU_ASSERT_OK(&kc->apdu);
     uint8_t* data = APDU_RESP(&kc->apdu);
 
-    for (int i = 0; i < (len << 1); i += 2) {
+    for (int i = 0; i < ((*len) << 1); i += 2) {
       indexes[(i >> 1)] = ((data[i] << 8) | data[i+1]);
     }
 
-    memset(data, 0, (len << 1));
+    memset(data, 0, ((*len) << 1));
+
+    err = ui_backup_mnemonic(indexes, *len);
+  } else {
+    err = ui_read_mnemonic(indexes, *len);
   }
 
-  const char* mnemonic = mnemonic_from_indexes(indexes, len);
+  return err == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+}
 
-  if (err == CORE_EVT_UI_CANCELLED) {
-    if (ui_backup_mnemonic(mnemonic) != CORE_EVT_UI_OK) {
-      mnemonic_clear();
-      return ERR_CANCEL;
+static app_err_t keycard_init_keys(keycard_t* kc) {
+  uint16_t indexes[BIP39_MAX_MNEMONIC_LEN];
+  uint32_t len;
+  app_err_t err;
+
+  do {
+    err = keycard_read_mnemonic(kc, indexes, &len);
+
+    if (err == ERR_TXRX) {
+      return ERR_TXRX;
     }
-  }
+  } while(err != ERR_OK);
 
   SC_BUF(seed, 64);
-  mnemonic_to_seed(mnemonic, "\0", seed, NULL);
-  mnemonic_clear();
+  keycard_generate_seed(indexes, len, seed);
 
   if(keycard_cmd_load_seed(kc, seed) != ERR_OK) {
     return ERR_TXRX;
