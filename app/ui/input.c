@@ -6,6 +6,7 @@
 #include "theme.h"
 #include "crypto/bip39.h"
 #include "crypto/util.h"
+#include "crypto/rand.h"
 #include "keypad/keypad.h"
 #include "ui/ui.h"
 #include "ui/ui_internal.h"
@@ -18,6 +19,7 @@
 #define KEY_ESCAPE 0x1b
 
 #define WORD_MAX_LEN 8
+#define WORDS_TO_CONFIRM 4
 
 #define KEYBOARD_TOP_Y (SCREEN_HEIGHT - (TH_KEYBOARD_KEY_SIZE * 3))
 
@@ -28,8 +30,6 @@
 #define KEYBOARD_ROW1_LIMIT KEYBOARD_ROW1_LEN
 #define KEYBOARD_ROW2_LIMIT (KEYBOARD_ROW1_LIMIT + KEYBOARD_ROW2_LEN)
 #define KEYBOARD_ROW3_LIMIT (KEYBOARD_ROW2_LIMIT + KEYBOARD_ROW3_LEN)
-
-
 
 const char KEYPAD_TO_DIGIT[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', DIG_INV, '0', DIG_INV, DIG_INV, DIG_INV};
 const char KEYBOARD_MAP[] = {
@@ -248,23 +248,16 @@ static char input_keyboard(int *idx) {
   }
 }
 
-static void input_render_text_field(const char* str, uint16_t y, int len, int suggestion_len) {
+static void input_render_text_field(const char* str, screen_area_t* field_area, int len, int suggestion_len) {
   screen_text_ctx_t ctx = {
       .font = TH_FONT_TEXT,
       .fg = TH_TEXT_FIELD_FG,
       .bg = TH_TEXT_FIELD_BG,
-      .x = TH_TEXT_FIELD_MARGIN,
-      .y = y
+      .x = field_area->x + TH_TEXT_FIELD_INNER_LEFT_MARGIN,
+      .y = field_area->y
   };
 
-  screen_area_t field_area = {
-      .x = TH_TEXT_FIELD_MARGIN,
-      .y = y,
-      .width = SCREEN_WIDTH - (TH_TEXT_FIELD_MARGIN * 2),
-      .height = TH_TEXT_FIELD_HEIGHT
-  };
-
-  screen_fill_area(&field_area, ctx.bg);
+  screen_fill_area(field_area, ctx.bg);
 
   screen_draw_chars(&ctx, str, len);
   ctx.fg = TH_TEXT_FIELD_SUGGESTION_FG;
@@ -282,6 +275,17 @@ static void input_mnemonic_title(uint8_t i) {
   dialog_title(title);
 }
 
+static void input_render_editable_text_field(const char* str, int len, int suggestion_len) {
+  screen_area_t field_area = {
+      .x = TH_TEXT_FIELD_MARGIN,
+      .y = TH_TITLE_HEIGHT + TH_TEXT_FIELD_MARGIN,
+      .width = SCREEN_WIDTH - (TH_TEXT_FIELD_MARGIN * 2),
+      .height = TH_TEXT_FIELD_HEIGHT
+  };
+
+  input_render_text_field(str, &field_area, len, suggestion_len);
+}
+
 static void input_mnemonic_render(const char* word, int len, uint16_t idx) {
   int suggestion_len;
 
@@ -292,7 +296,7 @@ static void input_mnemonic_render(const char* word, int len, uint16_t idx) {
     suggestion_len = 0;
   }
 
-  input_render_text_field(word, TH_TITLE_HEIGHT + TH_TEXT_FIELD_MARGIN, len, suggestion_len);
+  input_render_editable_text_field(word, len, suggestion_len);
 }
 
 static uint16_t input_mnemonic_lookup(char* word, int len, uint16_t idx) {
@@ -347,12 +351,12 @@ static app_err_t input_mnemonic_get_word(int i, uint16_t* idx) {
 app_err_t input_mnemonic() {
   dialog_footer(TH_TITLE_HEIGHT);
 
-  memset(g_ui_cmd.params.input_mnemo.indexes, 0xff, (sizeof(uint16_t) * g_ui_cmd.params.input_mnemo.len));
+  memset(g_ui_cmd.params.mnemo.indexes, 0xff, (sizeof(uint16_t) * g_ui_cmd.params.mnemo.len));
 
   int i = 0;
 
-  while (i < g_ui_cmd.params.input_mnemo.len) {
-    app_err_t err = input_mnemonic_get_word(i, &g_ui_cmd.params.input_mnemo.indexes[i]);
+  while (i < g_ui_cmd.params.mnemo.len) {
+    app_err_t err = input_mnemonic_get_word(i, &g_ui_cmd.params.mnemo.indexes[i]);
 
     if (err == ERR_OK) {
       i++;
@@ -362,6 +366,91 @@ app_err_t input_mnemonic() {
       return ERR_CANCEL;
     }
   }
+
+  return ERR_OK;
+}
+
+static app_err_t input_backup_show_mnemonic() {
+  dialog_title(LSTR(MNEMO_BACKUP_TITLE));
+  dialog_footer(TH_TITLE_HEIGHT);
+
+  //TODO: change if we need to support different lengths
+  if (g_ui_cmd.params.mnemo.len != 12) {
+    return ERR_CANCEL;
+  }
+
+  screen_area_t field_area = {
+      .y = TH_TITLE_HEIGHT + TH_MNEMONIC_TOP_MARGIN,
+      .width = TH_MNEMONIC_FIELD_WIDTH,
+      .height = TH_TEXT_FIELD_HEIGHT
+  };
+
+  for (int i = 0; i < 4; i++) {
+    field_area.x = TH_MNEMONIC_LEFT_MARGIN;
+
+    for (int j = 0; j < 3; j++) {
+      const char* word = BIP39_WORDLIST_ENGLISH[g_ui_cmd.params.mnemo.indexes[(i * 3) + j]];
+      input_render_text_field(word, &field_area, strlen(word), 0);
+      field_area.x += TH_MNEMONIC_FIELD_WIDTH + TH_MNEMONIC_LEFT_MARGIN;
+    }
+
+    field_area.y += TH_TEXT_FIELD_HEIGHT + TH_MNEMONIC_TOP_MARGIN;
+  }
+
+  while(1) {
+    switch(ui_wait_keypress(portMAX_DELAY)) {
+    case KEYPAD_KEY_CANCEL:
+      return ERR_CANCEL;
+    case KEYPAD_KEY_BACK:
+      if (g_ui_ctx.keypad.last_key_long) {
+        return ERR_CANCEL;
+      }
+      break;
+    case KEYPAD_KEY_CONFIRM:
+      return ERR_OK;
+    default:
+      break;
+    }
+  }
+}
+
+static app_err_t input_backup_confirm_mnemonic(uint8_t positions[WORDS_TO_CONFIRM]) {
+  dialog_footer(TH_TITLE_HEIGHT);
+
+  int i = 0;
+
+  while (i < WORDS_TO_CONFIRM) {
+    uint16_t idx = UINT16_MAX;
+    app_err_t err = input_mnemonic_get_word(positions[i], &idx);
+
+    if (err == ERR_OK) {
+      if (idx == g_ui_cmd.params.mnemo.indexes[positions[i]]) {
+        i++;
+      } else {
+        //TODO: show error
+      }
+    } else if (i > 0) {
+      i--;
+    } else {
+      return ERR_CANCEL;
+    }
+  }
+
+  return ERR_OK;
+}
+
+app_err_t input_backup_mnemonic() {
+  uint8_t positions[WORDS_TO_CONFIRM];
+
+  do {
+    if (input_backup_show_mnemonic() == ERR_CANCEL) {
+      return ERR_CANCEL;
+    }
+
+    for (int i = 0; i < WORDS_TO_CONFIRM; i++) {
+      positions[i] = random_uniform(g_ui_cmd.params.mnemo.len);
+    }
+  } while(input_backup_confirm_mnemonic(positions) != ERR_OK);
 
   return ERR_OK;
 }

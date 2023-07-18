@@ -53,6 +53,7 @@ typedef enum {
   MENU_MNEMO_24WORDS,
   MENU_MNEMO_GENERATE,
   MNEMO_WORD_TITLE,
+  MNEMO_BACKUP_TITLE,
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

@@ -50,4 +50,5 @@ const char *const i18n_english_strings[] = {
     "I have a 24 word seed",
     "I want a new seed",
     "Enter word #",
+    "Write down and keep safe!",
 };

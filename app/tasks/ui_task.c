@@ -55,6 +55,9 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_INPUT_MNEMO:
       g_ui_cmd.result = input_mnemonic();
       break;
+    case UI_CMD_BACKUP_MNEMO:
+      g_ui_cmd.result = input_backup_mnemonic();
+      break;
     default:
       break;
     }

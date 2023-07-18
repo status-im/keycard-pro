@@ -172,13 +172,17 @@ core_evt_t ui_read_mnemonic_len(uint32_t* len) {
 }
 
 core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len) {
-  return CORE_EVT_UI_OK;
+  g_ui_cmd.type = UI_CMD_BACKUP_MNEMO;
+  g_ui_cmd.params.mnemo.indexes = indexes;
+  g_ui_cmd.params.mnemo.len = len;
+
+  return ui_signal_wait(0);
 }
 
 core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t len) {
   g_ui_cmd.type = UI_CMD_INPUT_MNEMO;
-  g_ui_cmd.params.input_mnemo.indexes = indexes;
-  g_ui_cmd.params.input_mnemo.len = len;
+  g_ui_cmd.params.mnemo.indexes = indexes;
+  g_ui_cmd.params.mnemo.len = len;
 
   return ui_signal_wait(0);
 }
