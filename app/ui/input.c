@@ -248,7 +248,7 @@ static char input_keyboard(int *idx) {
   }
 }
 
-static void input_render_text_field(char* str, uint16_t y, int len, int suggestion_len) {
+static void input_render_text_field(const char* str, uint16_t y, int len, int suggestion_len) {
   screen_text_ctx_t ctx = {
       .font = TH_FONT_TEXT,
       .fg = TH_TEXT_FIELD_FG,
@@ -315,32 +315,31 @@ static uint16_t input_mnemonic_lookup(char* word, int len, uint16_t idx) {
   return UINT16_MAX;
 }
 
-static uint16_t input_mnemonic_get_word(int i) {
+static app_err_t input_mnemonic_get_word(int i, uint16_t* idx) {
   input_mnemonic_title(i);
 
   char word[WORD_MAX_LEN];
   int len = 0;
-  uint16_t idx = UINT16_MAX;
   int key_idx = 0;
 
   while(1) {
-    input_mnemonic_render(word, len, idx);
+    input_mnemonic_render(word, len, *idx);
     char c = input_keyboard(&key_idx);
 
     if (c == KEY_RETURN) {
-      if (idx != UINT16_MAX) {
-        return idx;
+      if (*idx != UINT16_MAX) {
+        return ERR_OK;
       }
     } else if (c == KEY_BACKSPACE) {
       if (len > 0) {
         len--;
-        idx = input_mnemonic_lookup(word, len, 0);
+        *idx = input_mnemonic_lookup(word, len, 0);
       }
     } else if (c == KEY_ESCAPE) {
-      //TODO: implement backtracking
+      return ERR_CANCEL;
     } else if (len < WORD_MAX_LEN) {
       word[len++] = c;
-      idx = input_mnemonic_lookup(word, len, (idx == UINT16_MAX ? 0 : idx));
+      *idx = input_mnemonic_lookup(word, len, ((*idx) == UINT16_MAX ? 0 : *idx));
     }
   }
 }
@@ -348,8 +347,20 @@ static uint16_t input_mnemonic_get_word(int i) {
 app_err_t input_mnemonic() {
   dialog_footer(TH_TITLE_HEIGHT);
 
-  for (int i = 0; i < g_ui_cmd.params.input_mnemo.len; i++) {
-    g_ui_cmd.params.input_mnemo.indexes[i] = input_mnemonic_get_word(i);
+  memset(g_ui_cmd.params.input_mnemo.indexes, 0xff, (sizeof(uint16_t) * g_ui_cmd.params.input_mnemo.len));
+
+  int i = 0;
+
+  while (i < g_ui_cmd.params.input_mnemo.len) {
+    app_err_t err = input_mnemonic_get_word(i, &g_ui_cmd.params.input_mnemo.indexes[i]);
+
+    if (err == ERR_OK) {
+      i++;
+    } else if (i > 0){
+      i--;
+    } else {
+      return ERR_CANCEL;
+    }
   }
 
   return ERR_OK;

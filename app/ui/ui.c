@@ -148,35 +148,37 @@ core_evt_t ui_backup_mnemonic(const char* mnemonic) {
 }
 
 core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t* len) {
-  i18n_str_id_t selected;
+  do {
+    i18n_str_id_t selected;
 
-  do  {
-    g_ui_cmd.type = UI_CMD_MENU;
-    g_ui_cmd.params.menu.menu = &menu_mnemonic;
-    g_ui_cmd.params.menu.selected = &selected;
+    do  {
+      g_ui_cmd.type = UI_CMD_MENU;
+      g_ui_cmd.params.menu.menu = &menu_mnemonic;
+      g_ui_cmd.params.menu.selected = &selected;
+    } while (ui_signal_wait(0) != CORE_EVT_UI_OK);
+
+    switch(selected) {
+    case MENU_MNEMO_12WORDS:
+      *len = 12;
+      break;
+    case MENU_MNEMO_18WORDS:
+      *len = 18;
+      break;
+    case MENU_MNEMO_24WORDS:
+      *len = 24;
+      break;
+    case MENU_MNEMO_GENERATE:
+    default:
+      *len = 12;
+      return CORE_EVT_UI_CANCELLED;
+    }
+
+    g_ui_cmd.type = UI_CMD_INPUT_MNEMO;
+    g_ui_cmd.params.input_mnemo.indexes = indexes;
+    g_ui_cmd.params.input_mnemo.len = *len;
   } while (ui_signal_wait(0) != CORE_EVT_UI_OK);
 
-  switch(selected) {
-  case MENU_MNEMO_12WORDS:
-    *len = 12;
-    break;
-  case MENU_MNEMO_18WORDS:
-    *len = 18;
-    break;
-  case MENU_MNEMO_24WORDS:
-    *len = 24;
-    break;
-  case MENU_MNEMO_GENERATE:
-  default:
-    *len = 12;
-    return CORE_EVT_UI_CANCELLED;
-  }
-
-  g_ui_cmd.type = UI_CMD_INPUT_MNEMO;
-  g_ui_cmd.params.input_mnemo.indexes = indexes;
-  g_ui_cmd.params.input_mnemo.len = *len;
-
-  return ui_signal_wait(0);
+  return CORE_EVT_UI_OK;
 }
 
 core_evt_t ui_confirm_eth_address(const char* address) {
