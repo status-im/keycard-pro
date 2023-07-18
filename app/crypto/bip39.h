@@ -32,16 +32,11 @@
 #define BIP39_WORD_COUNT 2048
 #define BIP39_PBKDF2_ROUNDS 2048
 
-#if USE_BIP39_CACHE
-void bip39_cache_clear(void);
-#endif
-
 extern const char *const BIP39_WORDLIST_ENGLISH[BIP39_WORD_COUNT];
 
-const char *mnemonic_generate(int strength);  // strength in bits
-const char *mnemonic_from_data(const uint8_t *data, int len);
-const char *mnemonic_from_indexes(const uint16_t *indexes, int len);
-void mnemonic_clear(void);
+bool mnemonic_generate(char* mnemo, int strength);  // strength in bits
+bool mnemonic_from_data(const uint8_t *data, char* mnemo, int len);
+void mnemonic_from_indexes(const uint16_t *indexes, char* mnemo, int len);
 
 int mnemonic_check(const char *mnemonic);
 

@@ -6,7 +6,7 @@
 
 #define MIN_ENCODED_LEN 22
 
-const char* ur_type_string[] = {
+const char *const ur_type_string[] = {
     "CRYPTO-KEYPATH",
     "ETH-SIGN-REQUEST",
     "CRYPTO-HDKEY",

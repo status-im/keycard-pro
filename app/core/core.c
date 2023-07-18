@@ -18,13 +18,13 @@
 #define ETH_MSG_MAGIC_LEN 26
 #define ETH_EIP712_MAGIC_LEN 2
 
-const uint8_t* ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
+const uint8_t *const ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
 const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
 
 const uint32_t ETH_DEFAULT_BIP44[] = { 0x8000002c, 0x8000003c, 0x80000000 };
 const uint32_t ETH_DEFAULT_BIP44_LEN = 3;
 
-const uint8_t* EIP4527_NAME = (uint8_t*) "Keycard Pro";
+const uint8_t *const EIP4527_NAME = (uint8_t*) "Keycard Pro";
 const uint32_t EIP4527_NAME_LEN = 11;
 
 core_ctx_t g_core;

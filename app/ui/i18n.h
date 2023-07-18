@@ -1,7 +1,7 @@
 #ifndef __I18N__
 #define __I18N__
 
-extern const char* i18n_english_strings[];
+extern const char *const i18n_english_strings[];
 
 typedef enum {
   // Main menu

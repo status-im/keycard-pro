@@ -33,40 +33,23 @@
 #include "sha2.h"
 #include "util.h"
 
-#if USE_BIP39_CACHE
-
-static int bip39_cache_index = 0;
-
-static CONFIDENTIAL struct {
-  bool set;
-  char mnemonic[256];
-  char passphrase[64];
-  uint8_t seed[512 / 8];
-} bip39_cache[BIP39_CACHE_SIZE];
-
-void bip39_cache_clear(void) {
-  memzero(bip39_cache, sizeof(bip39_cache));
-  bip39_cache_index = 0;
-}
-
-#endif
-
-const char *mnemonic_generate(int strength) {
+bool mnemonic_generate(char* mnemo, int strength) {
   if (strength % 32 || strength < 128 || strength > 256) {
-    return 0;
+    return false;
   }
   uint8_t data[32] = {0};
   random_buffer(data, 32);
-  const char *r = mnemonic_from_data(data, strength / 8);
+  if (!mnemonic_from_data(data, mnemo, strength / 8)) {
+    return false;
+  }
+
   memzero(data, sizeof(data));
-  return r;
+  return true;
 }
 
-static CONFIDENTIAL char mnemo[24 * 10];
-
-const char *mnemonic_from_data(const uint8_t *data, int len) {
+bool mnemonic_from_data(const uint8_t *data, char* mnemo, int len) {
   if (len % 4 || len < 16 || len > 32) {
-    return 0;
+    return false;
   }
 
   uint8_t bits[32 + 1] = {0};
@@ -94,10 +77,10 @@ const char *mnemonic_from_data(const uint8_t *data, int len) {
   }
   memzero(bits, sizeof(bits));
 
-  return mnemo;
+  return true;
 }
 
-const char *mnemonic_from_indexes(const uint16_t *indexes, int len) {
+void mnemonic_from_indexes(const uint16_t *indexes, char* mnemo, int len) {
   char *p = mnemo;
   for (int i = 0; i < len; i++) {
     uint16_t idx = indexes[i];
@@ -107,11 +90,7 @@ const char *mnemonic_from_indexes(const uint16_t *indexes, int len) {
   }
 
   *(--p) = '\0';
-
-  return mnemo;
 }
-
-void mnemonic_clear(void) { memzero(mnemo, sizeof(mnemo)); }
 
 int mnemonic_to_bits(const char *mnemonic, uint8_t *bits) {
   if (!mnemonic) {

@@ -1,6 +1,6 @@
 #include "i18n.h"
 
-const char* i18n_english_strings[] = {
+const char *const i18n_english_strings[] = {
     // Main menu
     "Keycard Pro",
     "Scan QR Code",
