@@ -124,9 +124,6 @@ app_err_t keycard_cmd_init(keycard_t* kc, uint8_t* sc_pub, uint8_t* pin, uint8_t
   memcpy(&data[KEYCARD_PIN_LEN], puk, KEYCARD_PUK_LEN);
   memcpy(&data[KEYCARD_PIN_LEN+KEYCARD_PUK_LEN], psk, SHA256_DIGEST_LENGTH);
 
-  memset(pin, 0, KEYCARD_PIN_LEN);
-  memset(puk, 0, KEYCARD_PUK_LEN);
-
   if (psk != KEYCARD_DEFAULT_PSK) {
     memset(psk, 0, SHA256_DIGEST_LENGTH);
   }

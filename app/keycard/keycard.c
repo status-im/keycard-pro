@@ -25,8 +25,7 @@ static void keycard_random_puk(uint8_t puk[KEYCARD_PUK_LEN]) {
   }
 }
 
-static app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key) {
-  uint8_t pin[KEYCARD_PIN_LEN];
+static app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key, uint8_t* pin) {
   uint8_t puk[KEYCARD_PUK_LEN];
   if (ui_read_pin(pin, PIN_NEW_CODE) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
@@ -35,9 +34,12 @@ static app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key) {
   keycard_random_puk(puk);
 
   if (keycard_cmd_init(kc, sc_key, pin, puk, (uint8_t*)KEYCARD_DEFAULT_PSK) != ERR_OK) {
+    memset(puk, 0, KEYCARD_PUK_LEN);
     ui_keycard_init_failed();
     return ERR_CRYPTO;
   }
+
+  memset(puk, 0, KEYCARD_PUK_LEN);
 
   return ERR_OK;
 }
@@ -123,7 +125,7 @@ static app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {
   return keycard_factoryreset(kc);
 }
 
-static app_err_t keycard_authenticate(keycard_t* kc) {
+static app_err_t keycard_authenticate(keycard_t* kc, uint8_t* pin, uint8_t* cached_pin) {
   if (keycard_cmd_get_status(kc) != ERR_OK) {
     return ERR_TXRX;
   }
@@ -133,10 +135,11 @@ static app_err_t keycard_authenticate(keycard_t* kc) {
   application_status_parse(APDU_RESP(&kc->apdu), &pinStatus);
 
   while(pinStatus.pin_retries) {
-    SC_BUF(pin, KEYCARD_PIN_LEN);
-    if (ui_read_pin(pin, pinStatus.pin_retries) != CORE_EVT_UI_OK) {
+    if (!(*cached_pin) && (ui_read_pin(pin, pinStatus.pin_retries) != CORE_EVT_UI_OK)) {
       return ERR_CANCEL;
     }
+
+    *cached_pin = 0;
 
     if (keycard_cmd_verify_pin(kc, pin) != ERR_OK) {
       return ERR_TXRX;
@@ -216,7 +219,7 @@ static app_err_t keycard_init_keys(keycard_t* kc) {
   return ERR_OK;
 }
 
-static app_err_t keycard_setup(keycard_t* kc) {
+static app_err_t keycard_setup(keycard_t* kc, uint8_t* pin, uint8_t* cached_pin) {
   if (keycard_cmd_select(kc, KEYCARD_AID, KEYCARD_AID_LEN) != ERR_OK) {
     return ERR_TXRX;
   }  
@@ -232,23 +235,25 @@ static app_err_t keycard_setup(keycard_t* kc) {
     return ERR_DATA;
   }
 
-  uint8_t initKeys;
-  uint16_t err;
+  uint8_t init_keys;
+  app_err_t err;
 
   switch (info.status) {
     case NOT_INITIALIZED:
       ui_keycard_not_initialized();
-      err = keycard_init_card(kc, info.sc_key);
+      err = keycard_init_card(kc, info.sc_key, pin);
       if (err != ERR_OK) {
         return err;
       }
+
+      *cached_pin = 1;
       return ERR_RETRY;
     case INIT_NO_KEYS:
-      initKeys = 1;
+      init_keys = 1;
       ui_keycard_no_keys();
       break;
     case INIT_WITH_KEYS:
-      initKeys = 0;
+      init_keys = 0;
       ui_keycard_ready();
       break;
     default:
@@ -269,12 +274,12 @@ static app_err_t keycard_setup(keycard_t* kc) {
 
   ui_keycard_secure_channel_ok();
 
-  err = keycard_authenticate(kc);
+  err = keycard_authenticate(kc, pin, cached_pin);
   if (err != ERR_OK) {
     return err;
   }
 
-  if (initKeys) {
+  if (init_keys) {
     return keycard_init_keys(kc);
   } else {
     return ERR_OK;
@@ -296,10 +301,15 @@ void keycard_activate(keycard_t* kc) {
     return;
   }
 
-  uint16_t res;
+  app_err_t res;
+  SC_BUF(pin, KEYCARD_PIN_LEN);
+  uint8_t cached_pin = 0;
+
   do {
-    res = keycard_setup(kc);
+    res = keycard_setup(kc, pin, &cached_pin);
   } while(res == ERR_RETRY);
+
+  memset(pin, 0, sizeof(pin));
 
   if (res != ERR_OK) {
     ui_card_transport_error();
