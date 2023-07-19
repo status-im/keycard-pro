@@ -16,8 +16,9 @@ core_evt_t ui_qrscan(ur_type_t type, void* out) {
   return ui_signal_wait(0);
 }
 
-core_evt_t ui_menu(const menu_t* menu, i18n_str_id_t* selected) {
+core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selected) {
   g_ui_cmd.type = UI_CMD_MENU;
+  g_ui_cmd.params.menu.title = title;
   g_ui_cmd.params.menu.menu = menu;
   g_ui_cmd.params.menu.selected = selected;
   return ui_signal_wait(1);
@@ -149,6 +150,7 @@ core_evt_t ui_read_mnemonic_len(uint32_t* len) {
 
   do  {
     g_ui_cmd.type = UI_CMD_MENU;
+    g_ui_cmd.params.menu.title = LSTR(MNEMO_TITLE);
     g_ui_cmd.params.menu.menu = &menu_mnemonic;
     g_ui_cmd.params.menu.selected = &selected;
   } while (ui_signal_wait(0) != CORE_EVT_UI_OK);

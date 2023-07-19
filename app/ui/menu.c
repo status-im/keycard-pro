@@ -105,17 +105,17 @@ void menu_render(const menu_t* menu, const char* title, uint8_t selected, enum m
 
 app_err_t menu_run() {
   const menu_t* menus[MENU_MAX_DEPTH];
-  i18n_str_id_t titles[MENU_MAX_DEPTH];
+  const char* titles[MENU_MAX_DEPTH];
 
   uint8_t selected = 0;
   uint8_t depth = 0;
   enum menu_draw_mode draw = MENU_ALL;
   menus[depth] = g_ui_cmd.params.menu.menu;
-  titles[depth] = MENU_TITLE;
+  titles[depth] = g_ui_cmd.params.menu.title;
 
   while(1) {
     const menu_t* menu = menus[depth];
-    menu_render(menu, LSTR(titles[depth]), selected, draw);
+    menu_render(menu, titles[depth], selected, draw);
 
     switch(ui_wait_keypress(portMAX_DELAY)) {
       case KEYPAD_KEY_CANCEL:
@@ -143,7 +143,7 @@ app_err_t menu_run() {
         if (menu->entries[selected].submenu) {
           assert(depth < (MENU_MAX_DEPTH - 1));
           menus[++depth] = menu->entries[selected].submenu;
-          titles[depth] = menu->entries[selected].label_id;
+          titles[depth] = LSTR(menu->entries[selected].label_id);
           selected = 0;
           draw = MENU_ALL;
         } else {

@@ -10,7 +10,7 @@ void core_task_entry(void* pvParameters) {
   while(1) {
     i18n_str_id_t selected;
 
-    switch(ui_menu(&menu_mainmenu, &selected)) {
+    switch(ui_menu(LSTR(MENU_TITLE), &menu_mainmenu, &selected)) {
     case CORE_EVT_USB_CMD:
       core_usb_run();
       break;

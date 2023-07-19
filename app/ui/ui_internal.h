@@ -53,6 +53,7 @@ struct cmd_qrout {
 };
 
 struct cmd_menu {
+  const char* title;
   const menu_t* menu;
   i18n_str_id_t* selected;
 };
