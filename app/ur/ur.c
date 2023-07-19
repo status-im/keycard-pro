@@ -7,10 +7,14 @@
 #define MIN_ENCODED_LEN 22
 
 const char *const ur_type_string[] = {
-    "CRYPTO-KEYPATH",
+    "BYTES",
     "ETH-SIGN-REQUEST",
+    "FS-DATA",
     "CRYPTO-HDKEY",
+    "DEV-AUTH",
     "ETH-SIGNATURE",
+    "FW-UPDATE",
+    "CRYPTO-KEYPATH",
 };
 
 static app_err_t ur_process_simple(ur_t* ur, uint8_t* parts, uint8_t* part_data, size_t part_len, uint32_t desc_idx, struct ur_part* part) {
@@ -57,7 +61,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
 
   // we assume we are dealing with a supported type and moving the
   // case where we are not to actual payload validation
-  ur->type = (ur_type_t)(((tmp * 8238429) >> 30) & 0x3);
+  ur->type = (ur_type_t)(((tmp * 11744052) >> 29) & 0x7);
 
   if (isdigit(in[++offset])) {
     while((offset < in_len) && in[offset++] != '/') { /*we don't need this*/}
