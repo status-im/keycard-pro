@@ -9,14 +9,23 @@
 #include "ui_internal.h"
 
 const menu_t menu_keycard = {
-  1, {
-    {MENU_CHANGE_PIN, NULL}
+  5, {
+    {MENU_CARD_NAME, NULL},
+    {MENU_CHANGE_PIN, NULL},
+    {MENU_CHANGE_PUK, NULL},
+    {MENU_CHANGE_PAIRING, NULL},
+    {MENU_RESET_CARD, NULL},
   }
 };
 
 const menu_t menu_settings = {
-  1, {
-    {MENU_INFO, NULL}
+  6, {
+    {MENU_INFO, NULL},
+    {MENU_VERIFY_FW, NULL},
+    {MENU_FW_UPGRADE, NULL},
+    {MENU_DB_UPGRADE, NULL},
+    {MENU_BRIGHTNESS, NULL},
+    {MENU_SET_LANG, NULL},
   }
 };
 

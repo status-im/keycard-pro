@@ -3,17 +3,26 @@
 const char *const i18n_english_strings[] = {
     // Main menu
     "Keycard Pro",
-    "Scan QR Code",
+    "Scan QR transaction",
     "Display public QR",
     "Keycard",
     "Settings",
     "Power off",
 
     // Keycard menu
+    "Set card name",
     "Change PIN",
+    "Change PUK",
+    "Change pairing pass",
+    "Factory reset card",
 
     // Settings menu
-    "Info",
+    "Device info",
+    "Verify firmware",
+    "Upgrade firmware",
+    "Update ERC20 db",
+    "Set brightness",
+    "Set language",
 
     // TX
     "Sign transaction",

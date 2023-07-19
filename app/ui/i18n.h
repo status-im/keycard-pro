@@ -13,10 +13,19 @@ typedef enum {
   MENU_OFF,
 
   // Keycard menu
+  MENU_CARD_NAME,
   MENU_CHANGE_PIN,
+  MENU_CHANGE_PUK,
+  MENU_CHANGE_PAIRING,
+  MENU_RESET_CARD,
 
   // Settings menu
   MENU_INFO,
+  MENU_VERIFY_FW,
+  MENU_FW_UPGRADE,
+  MENU_DB_UPGRADE,
+  MENU_BRIGHTNESS,
+  MENU_SET_LANG,
 
   // TX Confirmation
   TX_CONFIRM_TITLE,
