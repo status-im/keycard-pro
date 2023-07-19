@@ -449,7 +449,7 @@ app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
 void core_qr_run() {
   struct eth_sign_request qr_request;
 
-  if (ui_qrscan(&qr_request) != CORE_EVT_UI_OK) {
+  if (ui_qrscan(ETH_SIGN_REQUEST, &qr_request) != CORE_EVT_UI_OK) {
     return;
   }
 

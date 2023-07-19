@@ -81,6 +81,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   }
 
   if (tmp == 1) {
+    ur->crc = 0;
     ur->data_len = part_len;
     return ERR_OK;
   }

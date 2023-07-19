@@ -29,4 +29,6 @@ static inline void crc32_finish(crc32_ctx_t* ctx, uint32_t* out) {
 
 void crc32_update(crc32_ctx_t* ctx, const uint8_t* data, size_t len);
 
+uint32_t crc32(const uint8_t* data, size_t len);
+
 #endif

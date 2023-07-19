@@ -1,12 +1,14 @@
-#include "camera/camera.h"
+#include "common.h"
+#include "error.h"
+#include "mem.h"
 #include "qrcode.h"
-#include "ur/ur.h"
-#include "ur/eip4527_decode.h"
+#include "camera/camera.h"
+#include "crypto/crc32.h"
 #include "screen/screen.h"
 #include "ui/theme.h"
 #include "ui/ui_internal.h"
-#include "error.h"
-#include "mem.h"
+#include "ur/ur.h"
+#include "ur/eip4527_decode.h"
 
 app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
   struct quirc_code qrcode;
@@ -20,6 +22,29 @@ app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
   quirc_decode_error_t err = quirc_decode(&qrcode, qrdata);
 
   return !err ? ur_process_part(ur, qrdata->payload, qrdata->payload_len) : ERR_RETRY;
+}
+
+app_err_t qrscan_deserialize(ur_t* ur) {
+  if (ur->type != g_ui_cmd.params.qrscan.type) {
+    return ERR_DATA;
+  }
+
+  if ((ur->crc != 0) && (crc32(ur->data, ur->data_len) != ur->crc)) {
+    return ERR_DATA;
+  }
+
+  app_err_t err;
+
+  switch(ur->type) {
+  case ETH_SIGN_REQUEST:
+    err = cbor_decode_eth_sign_request(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
+    break;
+  default:
+    err = ERR_DATA;
+    break;
+  }
+
+  return err;
 }
 
 app_err_t qrscan_scan() {
@@ -53,7 +78,7 @@ app_err_t qrscan_scan() {
     quirc_end(&qrctx);
 
     if (qrscan_decode(&qrctx, &ur) == ERR_OK) {
-      if ((ur.type == ETH_SIGN_REQUEST) && (cbor_decode_eth_sign_request(ur.data, ur.data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS)) {
+      if (qrscan_deserialize(&ur) == ERR_OK) {
         screen_wait();
         goto end;
       } else {

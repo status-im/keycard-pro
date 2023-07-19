@@ -9,9 +9,10 @@ static inline core_evt_t ui_signal_wait(uint8_t allow_usb) {
   return core_wait_event(allow_usb);
 }
 
-core_evt_t ui_qrscan(struct eth_sign_request* sign_request) {
+core_evt_t ui_qrscan(ur_type_t type, void* out) {
   g_ui_cmd.type = UI_CMD_QRSCAN;
-  g_ui_cmd.params.qrscan.out = sign_request;
+  g_ui_cmd.params.qrscan.out = out;
+  g_ui_cmd.params.qrscan.type = type;
   return ui_signal_wait(0);
 }
 

@@ -58,3 +58,12 @@ void crc32_update(crc32_ctx_t* ctx, const uint8_t* data, size_t len) {
   }
 }
 
+uint32_t crc32(const uint8_t* data, size_t len) {
+  crc32_ctx_t ctx;
+  uint32_t out;
+  crc32_init(&ctx);
+  crc32_update(&ctx, data, len);
+  crc32_finish(&ctx, &out);
+  return out;
+}
+

@@ -58,7 +58,8 @@ struct cmd_menu {
 };
 
 struct cmd_qrscan {
-  struct eth_sign_request* out;
+  void* out;
+  ur_type_t type;
 };
 
 struct cmd_input_pin {
