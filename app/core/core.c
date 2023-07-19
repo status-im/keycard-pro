@@ -557,20 +557,6 @@ void core_display_public() {
   ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
 }
 
-void core_action_run(i18n_str_id_t menu) {
-  switch(menu) {
-  case MENU_QRCODE:
-    core_qr_run();
-    break;
-  case MENU_DISPLAY_PUBLIC:
-    core_display_public();
-    break;
-  default:
-    //unhandled commands
-    break;
-  }
-}
-
 core_evt_t core_wait_event(uint8_t accept_usb) {
   uint32_t events;
 

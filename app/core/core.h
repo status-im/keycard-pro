@@ -66,6 +66,7 @@ extern core_ctx_t g_core;
 
 core_evt_t core_wait_event(uint8_t accept_usb);
 void core_usb_run();
-void core_action_run(i18n_str_id_t menu);
+void core_qr_run();
+void core_display_public();
 
 #endif

@@ -1,6 +1,20 @@
 #include "core/core.h"
 #include "keycard/keycard.h"
 
+static inline void core_action_run(i18n_str_id_t menu) {
+  switch(menu) {
+  case MENU_QRCODE:
+    core_qr_run();
+    break;
+  case MENU_DISPLAY_PUBLIC:
+    core_display_public();
+    break;
+  default:
+    //unhandled commands
+    break;
+  }
+}
+
 void core_task_entry(void* pvParameters) {
   keycard_init(&g_core.keycard);
   keycard_activate(&g_core.keycard);
