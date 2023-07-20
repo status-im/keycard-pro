@@ -39,6 +39,12 @@ app_err_t qrscan_deserialize(ur_t* ur) {
   case ETH_SIGN_REQUEST:
     err = cbor_decode_eth_sign_request(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
     break;
+  case FS_DATA:
+    data_t* data = g_ui_cmd.params.qrscan.out;
+    data->data = ur->data;
+    data->len = ur->data_len;
+    err = ERR_OK;
+    break;
   default:
     err = ERR_DATA;
     break;

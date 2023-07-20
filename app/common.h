@@ -15,6 +15,11 @@
 #include <stddef.h>
 #include "hal.h"
 
+typedef struct {
+  uint8_t* data;
+  size_t len;
+} data_t;
+
 #define APP_ALIGNED(x, a) x __attribute__((aligned(a)))
 #define APP_SECTION(x, s) x __attribute__((section(s)))
 #define APP_ALWAYS_INLINE inline __attribute__((always_inline))

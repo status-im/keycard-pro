@@ -47,10 +47,14 @@ const char *const i18n_english_strings[] = {
 
     // Info messages
     "Error",
+    "Success",
     "Communication with the card lost.\n\nPlease remove it and insert it again",
     "The inserted card does not appear to be a Keycard. Please replace it with a Keycard",
     "Initialize your Keycard",
     "We will now proceed initializing your Keycard.\n\nYou will be required to choose a PIN for your card.\n\nPress OK to continue.",
+    "The database update was successful.",
+    "The new database data seems to be invalid.\n Check that you are using the correct site and try again.",
+    "Internal error while writing the new data, please try again.",
 
     // Mnemonic input
     "Seed loading",

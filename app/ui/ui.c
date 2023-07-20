@@ -45,6 +45,14 @@ core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type) {
   return ui_signal_wait(0);
 }
 
+core_evt_t ui_info(i18n_str_id_t title, const char* msg, uint8_t dismissable) {
+  g_ui_cmd.type = UI_CMD_INFO;
+  g_ui_cmd.params.info.dismissable = 0;
+  g_ui_cmd.params.info.title = title;
+  g_ui_cmd.params.info.msg = msg;
+  return ui_signal_wait(0);
+}
+
 void ui_card_inserted() {
 
 }
@@ -53,30 +61,18 @@ void ui_card_removed() {
 }
 
 void ui_card_transport_error() {
-  g_ui_cmd.type = UI_CMD_INFO;
-  g_ui_cmd.params.info.dismissable = 0;
-  g_ui_cmd.params.info.title = INFO_ERROR_TITLE;
-  g_ui_cmd.params.info.msg = LSTR(INFO_CARD_ERROR_MSG);
-  ui_signal_wait(0);
+  ui_info(INFO_ERROR_TITLE, LSTR(INFO_CARD_ERROR_MSG), 0);
 }
 
 void ui_card_accepted() {
 }
 
 void ui_keycard_wrong_card() {
-  g_ui_cmd.type = UI_CMD_INFO;
-  g_ui_cmd.params.info.dismissable = 0;
-  g_ui_cmd.params.info.title = INFO_ERROR_TITLE;
-  g_ui_cmd.params.info.msg = LSTR(INFO_NOT_KEYCARD);
-  ui_signal_wait(0);
+  ui_info(INFO_ERROR_TITLE, LSTR(INFO_NOT_KEYCARD), 0);
 }
 
 void ui_keycard_not_initialized() {
-  g_ui_cmd.type = UI_CMD_INFO;
-  g_ui_cmd.params.info.dismissable = 1;
-  g_ui_cmd.params.info.title = INFO_NEW_CARD_TITLE;
-  g_ui_cmd.params.info.msg = LSTR(INFO_NEW_CARD);
-  ui_signal_wait(0);
+  ui_info(INFO_NEW_CARD_TITLE, LSTR(INFO_NEW_CARD), 1);
 }
 
 void ui_keycard_init_failed() {

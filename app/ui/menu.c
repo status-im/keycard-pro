@@ -23,7 +23,7 @@ const menu_t menu_settings = {
     {MENU_INFO, NULL},
     {MENU_VERIFY_FW, NULL},
     {MENU_FW_UPGRADE, NULL},
-    {MENU_DB_UPGRADE, NULL},
+    {MENU_DB_UPDATE, NULL},
     {MENU_BRIGHTNESS, NULL},
     {MENU_SET_LANG, NULL},
   }
