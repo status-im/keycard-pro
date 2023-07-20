@@ -10,7 +10,7 @@ struct fs_find_ctx {
 };
 
 struct fs_write_ctx {
-  size_t count;
+  size_t total_length;
   uint8_t* last_write;
   fs_entry_t* next_entry;
   app_err_t err;
@@ -110,8 +110,9 @@ static enum fs_iterator_action _fs_write_entries(void* ctx, fs_entry_t* entry) {
     }
 
     write_ctx->last_write = ((uint8_t*) entry) + total_entry_len;
+    write_ctx->total_length -= total_entry_len;
 
-    if (--write_ctx->count == 0) {
+    if (write_ctx->total_length == 0) {
       if (_fs_pad(write_ctx->last_write) != HAL_SUCCESS) {
         write_ctx->err = ERR_HW;
       }
@@ -229,17 +230,17 @@ fs_entry_t* fs_find(fs_predicate_t predicate, void* ctx) {
   return finder_ctx.found;
 }
 
-app_err_t fs_write(fs_entry_t* first_entry, size_t count) {
+app_err_t fs_write(fs_entry_t* first_entry, size_t total_length) {
   if (hal_flash_begin_program() != HAL_SUCCESS) {
     return ERR_HW;
   }
 
-  struct fs_write_ctx write_ctx = { .count = count, .last_write = NULL, .next_entry = first_entry, .err = ERR_OK };
+  struct fs_write_ctx write_ctx = { .total_length = total_length, .last_write = NULL, .next_entry = first_entry, .err = ERR_OK };
   _fs_iterate(_fs_write_entries, &write_ctx);
 
   hal_flash_end_program();
 
-  return write_ctx.count ? ERR_FULL : write_ctx.err;
+  return write_ctx.total_length ? ERR_FULL : write_ctx.err;
 }
 
 app_err_t fs_erase(fs_entry_t* entry) {

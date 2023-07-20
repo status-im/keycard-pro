@@ -37,7 +37,7 @@ app_err_t pairing_read(pairing_t* out) {
 app_err_t pairing_write(pairing_t* in) {
   in->_fs_data.magic = FS_PAIRING_MAGIC;
   in->_fs_data.len = APP_INFO_INSTANCE_UID_LEN + SHA256_DIGEST_LENGTH + 1;
-  return fs_write((fs_entry_t*) in, 1);
+  return fs_write((fs_entry_t*) in, sizeof(pairing_t));
 }
 
 app_err_t pairing_erase(pairing_t* in) {
