@@ -5,6 +5,7 @@
 #include "ur_part_decode.h"
 
 #define MIN_ENCODED_LEN 22
+#define MAX_CBOR_HEADER_LEN 32
 
 const char *const ur_type_string[] = {
     "BYTES",
@@ -104,16 +105,16 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
     random_sampler_init(part._ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
   }
 
-  uint8_t* parts = &ur->data[part_len];
-  uint8_t* part_data = (uint8_t*) part._ur_part_data.value;
   part_len = part._ur_part_data.len;
+  uint8_t* parts = &ur->data[part_len + MAX_CBOR_HEADER_LEN];
+  uint8_t* part_data = (uint8_t*) part._ur_part_data.value;
 
   if (part._ur_part_seqNum <= part._ur_part_seqLen) {
     return ur_process_simple(ur, parts, part_data, part_len, part._ur_part_seqNum - 1, &part);
   }
 
   uint32_t indexes = fountain_part_indexes(part._ur_part_seqNum, ur->crc, part._ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
-  if ((indexes & ~ur->part_mask) == 0) {
+  if ((indexes & (~ur->part_mask)) == 0) {
     return ERR_NEED_MORE_DATA;
   }
 
@@ -164,7 +165,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   desc_idx = part._ur_part_seqLen;
 
   while(desc_idx < UR_PART_DESC_COUNT) {
-    if ((desc_idx != store_idx) && (ur->part_desc[desc_idx] & indexes) == indexes) {
+    if ((desc_idx != store_idx) && ((ur->part_desc[desc_idx] & indexes) == indexes)) {
       ur->part_desc[desc_idx] = indexes ^ ur->part_desc[desc_idx];
 
       if (ur->part_desc[desc_idx] == 0) {
@@ -182,6 +183,8 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
         if (ur_process_simple(ur, parts, target_part, part_len, target_idx, &part) == ERR_OK) {
           return ERR_OK;
         }
+
+        ur->part_desc[desc_idx] = 0;
       }
     }
 
