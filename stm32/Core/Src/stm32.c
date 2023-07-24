@@ -383,11 +383,49 @@ hal_err_t hal_flash_begin_program() {
   return HAL_FLASH_Unlock();
 }
 
-hal_err_t hal_flash_program(const uint8_t* data, uint8_t* addr, size_t len) {
-  SET_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
-  memcpy(addr, data, len);
-  CLEAR_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
+hal_err_t hal_flash_wait_program() {
+  uint32_t timeout = UINT32_MAX;
+  while (FLASH_NS->NSSR & FLASH_FLAG_BSY) {
+    if ((--timeout) == 0) {
+      return HAL_FAIL;
+    }
+  }
+
   return HAL_SUCCESS;
+}
+
+hal_err_t hal_flash_program(const uint8_t* data, uint8_t* addr, size_t len) {
+  size_t write_remainder = (16 - (((uint32_t) addr) & 0xf)) & 0xf;
+
+  app_err_t err = HAL_SUCCESS;
+
+  if (!write_remainder) {
+    SET_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
+  } else {
+    memcpy(addr, data, write_remainder);
+    err = hal_flash_wait_program();
+
+    data += write_remainder;
+    addr += write_remainder;
+    len -= write_remainder;
+  }
+
+  size_t write_len = (len & ~0xf);
+
+  if (write_len) {
+    memcpy(addr, data, write_len);
+    err = hal_flash_wait_program();
+  }
+
+  write_remainder = len - write_len;
+
+  if (!write_remainder) {
+    CLEAR_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
+  } else {
+    memcpy(&addr[write_len], &data[write_len], write_remainder);
+  }
+
+  return err;
 }
 
 hal_err_t hal_flash_erase(uint32_t block) {
@@ -408,6 +446,7 @@ hal_err_t hal_flash_erase(uint32_t block) {
 }
 
 hal_err_t hal_flash_end_program() {
+  CLEAR_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
   return HAL_FLASH_Lock();
 }
 

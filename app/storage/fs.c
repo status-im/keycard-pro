@@ -30,6 +30,7 @@ struct fs_erase_ctx {
 enum fs_iterator_action {
   FS_ITER_END,
   FS_ITER_NEXT,
+  FS_ITER_SKIP_BYTES,
   FS_ITER_SKIP_PAGE
 };
 
@@ -37,7 +38,7 @@ enum fs_iterator_action {
 #define FS_MAGIC_PAD_MASK 0x00c0
 #define FS_MAGIC_PAD 0x0080
 
-typedef enum fs_iterator_action (*fs_iterator_cb_t)(void* ctx, fs_entry_t* entry);
+typedef enum fs_iterator_action (*fs_iterator_cb_t)(void* ctx, fs_entry_t* entry, size_t* to_skip);
 
 static fs_action_t _fs_erase_one(void* ctx, fs_entry_t* entry) {
   return ((uint32_t) ctx) == ((uint32_t) entry) ? FS_STOP : FS_ACCEPT;
@@ -59,7 +60,7 @@ static uint8_t* _fs_get_page(uint32_t idx) {
   return (uint8_t*) (map[off].addr + (HAL_FLASH_BLOCK_SIZE * idx));
 }
 
-static enum fs_iterator_action _fs_get_entry(void* ctx, fs_entry_t* entry) {
+static enum fs_iterator_action _fs_get_entry(void* ctx, fs_entry_t* entry, size_t* to_skip) {
   struct fs_find_ctx* find_ctx = (struct fs_find_ctx *) ctx;
 
   if (entry->magic == FS_MAGIC_FREE) {
@@ -93,7 +94,7 @@ static hal_err_t _fs_pad(uint8_t* addr) {
   return hal_flash_program(padding, addr, padlen);
 }
 
-static enum fs_iterator_action _fs_write_entries(void* ctx, fs_entry_t* entry) {
+static enum fs_iterator_action _fs_write_entries(void* ctx, fs_entry_t* entry, size_t* to_skip) {
   struct fs_write_ctx* write_ctx = (struct fs_write_ctx *) ctx;
 
   if (entry->magic == FS_MAGIC_FREE) {
@@ -119,7 +120,9 @@ static enum fs_iterator_action _fs_write_entries(void* ctx, fs_entry_t* entry) {
 
       return FS_ITER_END;
     } else {
-      write_ctx->next_entry = (fs_entry_t*) (((uint8_t*) write_ctx->next_entry) + total_entry_len);
+      write_ctx->next_entry = (fs_entry_t*) (((uint32_t) write_ctx->next_entry) + total_entry_len);
+      *to_skip = total_entry_len;
+      return FS_ITER_SKIP_BYTES;
     }
   }
 
@@ -146,7 +149,7 @@ static void _fs_commit_block(struct fs_erase_ctx* erase_ctx) {
   size_t padlen = HAL_FLASH_WORD_SIZE - (erase_ctx->off & (HAL_FLASH_WORD_SIZE - 1));
 
   while (padlen) {
-    erase_ctx->data[erase_ctx->off++] = (FS_MAGIC_PAD >> 8) | padlen--;
+    erase_ctx->data[erase_ctx->off++] = FS_MAGIC_PAD | padlen--;
   }
 
   if (hal_flash_program(erase_ctx->data, (uint8_t*) HAL_FLASH_BLOCK_ADDR(erase_ctx->block), erase_ctx->off) != HAL_SUCCESS) {
@@ -156,7 +159,7 @@ static void _fs_commit_block(struct fs_erase_ctx* erase_ctx) {
   erase_ctx->off = 0;
 }
 
-static enum fs_iterator_action _fs_erase_entries(void* ctx, fs_entry_t* entry) {
+static enum fs_iterator_action _fs_erase_entries(void* ctx, fs_entry_t* entry, size_t* to_skip) {
   struct fs_erase_ctx* erase_ctx = (struct fs_erase_ctx *) ctx;
   int block = HAL_FLASH_ADDR_TO_BLOCK((uint32_t)entry);
 
@@ -181,7 +184,9 @@ static enum fs_iterator_action _fs_erase_entries(void* ctx, fs_entry_t* entry) {
     erase_ctx->pending_erase = 1;
     break;
   case FS_ACCEPT:
-    memcpy(&erase_ctx->data[erase_ctx->off], entry, (entry->len + 4));
+    int copy_len = entry->len + 4;
+    memcpy(&erase_ctx->data[erase_ctx->off], (uint8_t*) entry, copy_len);
+    erase_ctx->off += copy_len;
     break;
   case FS_STOP:
     erase_ctx->err = ERR_OK;
@@ -202,11 +207,16 @@ static enum fs_iterator_action _fs_iterate_page(uint8_t* p, fs_iterator_cb_t cb,
       continue;
     }
 
-    switch(cb(ctx, entry)) {
+    size_t to_skip;
+
+    switch(cb(ctx, entry, &to_skip)) {
     case FS_ITER_END:
       return FS_ITER_END;
     case FS_ITER_NEXT:
-      off += (entry->len + 4);
+      off += entry->len + 4;
+      break;
+    case FS_ITER_SKIP_BYTES:
+      off += to_skip;
       break;
     case FS_ITER_SKIP_PAGE:
       return FS_ITER_NEXT;
