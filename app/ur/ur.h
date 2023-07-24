@@ -5,7 +5,7 @@
 #include "error.h"
 
 #define UR_MAX_PART_COUNT 32
-#define UR_PART_DESC_COUNT (UR_MAX_PART_COUNT + 5)
+#define UR_PART_DESC_COUNT (UR_MAX_PART_COUNT + 10)
 
 typedef enum {
   BYTES = 0,

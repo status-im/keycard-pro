@@ -86,7 +86,10 @@ app_err_t eth_db_lookup_erc20(erc20_desc_t* erc20) {
 app_err_t eth_db_update(fs_entry_t* entries, size_t len) {
   app_err_t err = fs_erase_all(_eth_db_match_all, NULL);
 
-  if (err != ERR_OK) {
+  // since our matcher doesn't know when it has reached
+  // completion, if everything went OK the error code
+  // will be ERR_DATA on success.
+  if (err != ERR_DATA) {
     return err;
   }
 
