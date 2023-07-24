@@ -152,8 +152,27 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
     desc_idx++;
   }
 
+  // all buffers are full, but we don't give up yet. If one of the buffered parts is more mixed
+  // then the current part, we overwrite it since parts easier to reduce are better for us
   if (store_idx == -1) {
-    return ERR_NEED_MORE_DATA;
+    int worst_count = __builtin_popcount(indexes);
+
+    desc_idx = part._ur_part_seqLen;
+
+    while(desc_idx < UR_PART_DESC_COUNT) {
+      int count = __builtin_popcount(ur->part_desc[desc_idx]);
+
+      if (count > worst_count) {
+        store_idx = desc_idx;
+        worst_count = count;
+      }
+
+      desc_idx++;
+    }
+
+    if (store_idx == -1) {
+      return ERR_NEED_MORE_DATA;
+    }
   }
 
   if (store_idx >= part._ur_part_seqLen) {
