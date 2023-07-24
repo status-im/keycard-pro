@@ -47,7 +47,7 @@ core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type) {
 
 core_evt_t ui_info(i18n_str_id_t title, const char* msg, uint8_t dismissable) {
   g_ui_cmd.type = UI_CMD_INFO;
-  g_ui_cmd.params.info.dismissable = 0;
+  g_ui_cmd.params.info.dismissable = dismissable;
   g_ui_cmd.params.info.title = title;
   g_ui_cmd.params.info.msg = msg;
   return ui_signal_wait(0);
