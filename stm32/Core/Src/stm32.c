@@ -380,16 +380,13 @@ const hal_flash_data_segment_t* hal_flash_get_data_segments() {
 }
 
 hal_err_t hal_flash_begin_program() {
-  if (HAL_FLASH_Unlock() != HAL_OK) {
-    return HAL_FAIL;
-  }
-
-  SET_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
-  return HAL_SUCCESS;
+  return HAL_FLASH_Unlock();
 }
 
 hal_err_t hal_flash_program(const uint8_t* data, uint8_t* addr, size_t len) {
+  SET_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
   memcpy(addr, data, len);
+  CLEAR_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
   return HAL_SUCCESS;
 }
 
