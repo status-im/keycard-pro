@@ -179,6 +179,12 @@ hal_err_t hal_init() {
   return HAL_SUCCESS;
 }
 
+hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]) {
+  // Copies UID, Flash size, package info
+  memcpy(out, (void*) UID_BASE, HAL_DEVICE_UID_LEN);
+  return HAL_SUCCESS;
+}
+
 hal_err_t hal_camera_init() {
   mco_on();
   return HAL_SUCCESS;

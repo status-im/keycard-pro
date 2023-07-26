@@ -9,6 +9,7 @@
 #include "ui/ui_internal.h"
 #include "ur/ur.h"
 #include "ur/eip4527_decode.h"
+#include "ur/auth_decode.h"
 
 app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
   struct quirc_code qrcode;
@@ -44,6 +45,9 @@ app_err_t qrscan_deserialize(ur_t* ur) {
     data->data = ur->data;
     data->len = ur->data_len;
     err = ERR_OK;
+    break;
+  case DEV_AUTH:
+    err = cbor_decode_dev_auth(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
     break;
   default:
     err = ERR_DATA;

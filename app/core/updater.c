@@ -1,7 +1,5 @@
 #include "common.h"
-#include "updater.h"
 #include "ethereum/eth_db.h"
-#include "keycard/keycard.h"
 #include "ui/ui.h"
 #include "ur/ur.h"
 

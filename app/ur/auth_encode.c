@@ -32,7 +32,7 @@ static bool encode_dev_auth_step_type(
 	zcbor_print("%s\r\n", __func__);
 
 	bool tmp_result = (((((*input)._dev_auth_step_type_choice == _dev_auth_step_type__dev_auth_init) ? ((zcbor_uint32_put(state, (1))))
-	: (((*input)._dev_auth_step_type_choice == _dev_auth_step_type__dev_auth_kpro) ? ((zcbor_uint32_put(state, (2))))
+	: (((*input)._dev_auth_step_type_choice == _dev_auth_step_type__dev_auth_device) ? ((zcbor_uint32_put(state, (2))))
 	: (((*input)._dev_auth_step_type_choice == _dev_auth_step_type__dev_auth_server) ? ((zcbor_uint32_put(state, (3))))
 	: false)))));
 
@@ -110,7 +110,8 @@ static bool encode_repeated_dev_auth_auth_count(
 	zcbor_print("%s\r\n", __func__);
 
 	bool tmp_result = ((((zcbor_uint32_put(state, (5))))
-	&& (zcbor_int32_encode(state, (&(*input)._dev_auth_auth_count)))));
+	&& ((((((*input)._dev_auth_auth_count <= 4294967295)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))
+	&& (zcbor_uint32_encode(state, (&(*input)._dev_auth_auth_count)))));
 
 	if (!tmp_result)
 		zcbor_trace();

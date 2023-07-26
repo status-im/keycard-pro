@@ -18,7 +18,7 @@ const char *const i18n_english_strings[] = {
 
     // Settings menu
     "Device info",
-    "Verify firmware",
+    "Device authentication",
     "Upgrade firmware",
     "Update ERC20 db",
     "Set brightness",

@@ -21,7 +21,7 @@ const menu_t menu_keycard = {
 const menu_t menu_settings = {
   6, {
     {MENU_INFO, NULL},
-    {MENU_VERIFY_FW, NULL},
+    {MENU_DEV_AUTH, NULL},
     {MENU_FW_UPGRADE, NULL},
     {MENU_DB_UPDATE, NULL},
     {MENU_BRIGHTNESS, NULL},

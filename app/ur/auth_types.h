@@ -25,7 +25,7 @@
 struct dev_auth_step_type_ {
 	enum {
 		_dev_auth_step_type__dev_auth_init = 1,
-		_dev_auth_step_type__dev_auth_kpro = 2,
+		_dev_auth_step_type__dev_auth_device = 2,
 		_dev_auth_step_type__dev_auth_server = 3,
 	} _dev_auth_step_type_choice;
 };
@@ -43,7 +43,7 @@ struct dev_auth_auth_time {
 };
 
 struct dev_auth_auth_count {
-	int32_t _dev_auth_auth_count;
+	uint32_t _dev_auth_auth_count;
 };
 
 struct dev_auth_challenge {

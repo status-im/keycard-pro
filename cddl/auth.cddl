@@ -1,15 +1,15 @@
 dev-auth-init = 1
-dev-auth-kpro = 2
+dev-auth-device = 2
 dev-auth-server = 3
 
-dev-auth-step-type = dev-auth-init / dev-auth-kpro / dev-auth-server
+dev-auth-step-type = dev-auth-init / dev-auth-device / dev-auth-server
 
 dev-auth = {
     dev-auth-step: dev-auth-step-type,
     ? device-id: uuid,
     ? first-auth: timestamp,
     ? auth-time: timestamp,
-    ? auth-count: int,
+    ? auth-count: uint32,
     ? challenge: bstr .size 32,
     ? signature: bstr .size 64,
 }
@@ -24,3 +24,4 @@ signature = 7
 
 uuid = #6.37(bstr .size 16)
 timestamp = uint .size 4
+uint32 = uint .size 4

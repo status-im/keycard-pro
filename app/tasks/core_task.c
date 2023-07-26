@@ -1,5 +1,4 @@
 #include "core/core.h"
-#include "core/updater.h"
 #include "keycard/keycard.h"
 
 static inline void core_action_run(i18n_str_id_t menu) {
@@ -12,6 +11,9 @@ static inline void core_action_run(i18n_str_id_t menu) {
     break;
   case MENU_DB_UPDATE:
     updater_database_run();
+    break;
+  case MENU_DEV_AUTH:
+    device_auth_run();
     break;
   default:
     //unhandled commands

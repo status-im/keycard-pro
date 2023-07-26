@@ -21,7 +21,7 @@ typedef enum {
 
   // Settings menu
   MENU_INFO,
-  MENU_VERIFY_FW,
+  MENU_DEV_AUTH,
   MENU_FW_UPGRADE,
   MENU_DB_UPDATE,
   MENU_BRIGHTNESS,

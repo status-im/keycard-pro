@@ -20,7 +20,10 @@ typedef enum {
 	HAL_FAIL,
 } hal_err_t;
 
+#define HAL_DEVICE_UID_LEN 16
+
 hal_err_t hal_init();
+hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]);
 
 // Camera
 #define CAMERA_WIDTH 480
