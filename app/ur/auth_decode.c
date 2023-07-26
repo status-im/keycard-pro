@@ -19,6 +19,7 @@ static bool decode_dev_auth_step_type(zcbor_state_t *state, struct dev_auth_step
 static bool decode_uuid(zcbor_state_t *state, struct zcbor_string *result);
 static bool decode_repeated_dev_auth_device_id(zcbor_state_t *state, struct dev_auth_device_id *result);
 static bool decode_repeated_dev_auth_first_auth(zcbor_state_t *state, struct dev_auth_first_auth *result);
+static bool decode_repeated_dev_auth_auth_time(zcbor_state_t *state, struct dev_auth_auth_time *result);
 static bool decode_repeated_dev_auth_auth_count(zcbor_state_t *state, struct dev_auth_auth_count *result);
 static bool decode_repeated_dev_auth_challenge(zcbor_state_t *state, struct dev_auth_challenge *result);
 static bool decode_repeated_dev_auth_signature(zcbor_state_t *state, struct dev_auth_signature *result);
@@ -87,12 +88,27 @@ static bool decode_repeated_dev_auth_first_auth(
 	return tmp_result;
 }
 
+static bool decode_repeated_dev_auth_auth_time(
+		zcbor_state_t *state, struct dev_auth_auth_time *result)
+{
+	zcbor_print("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (4))))
+	&& (zcbor_uint32_decode(state, (&(*result)._dev_auth_auth_time)))
+	&& ((((((*result)._dev_auth_auth_time <= 4294967295)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
+
+	if (!tmp_result)
+		zcbor_trace();
+
+	return tmp_result;
+}
+
 static bool decode_repeated_dev_auth_auth_count(
 		zcbor_state_t *state, struct dev_auth_auth_count *result)
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = ((((zcbor_uint32_expect(state, (4))))
+	bool tmp_result = ((((zcbor_uint32_expect(state, (5))))
 	&& (zcbor_int32_decode(state, (&(*result)._dev_auth_auth_count)))));
 
 	if (!tmp_result)
@@ -106,7 +122,7 @@ static bool decode_repeated_dev_auth_challenge(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = ((((zcbor_uint32_expect(state, (5))))
+	bool tmp_result = ((((zcbor_uint32_expect(state, (6))))
 	&& (zcbor_bstr_decode(state, (&(*result)._dev_auth_challenge)))
 	&& ((((*result)._dev_auth_challenge.len >= 32)
 	&& ((*result)._dev_auth_challenge.len <= 32)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
@@ -122,7 +138,7 @@ static bool decode_repeated_dev_auth_signature(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = ((((zcbor_uint32_expect(state, (6))))
+	bool tmp_result = ((((zcbor_uint32_expect(state, (7))))
 	&& (zcbor_bstr_decode(state, (&(*result)._dev_auth_signature)))
 	&& ((((*result)._dev_auth_signature.len >= 64)
 	&& ((*result)._dev_auth_signature.len <= 64)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
@@ -142,6 +158,7 @@ static bool decode_dev_auth(
 	&& (decode_dev_auth_step_type(state, (&(*result)._dev_auth_step))))
 	&& zcbor_present_decode(&((*result)._dev_auth_device_id_present), (zcbor_decoder_t *)decode_repeated_dev_auth_device_id, state, (&(*result)._dev_auth_device_id))
 	&& zcbor_present_decode(&((*result)._dev_auth_first_auth_present), (zcbor_decoder_t *)decode_repeated_dev_auth_first_auth, state, (&(*result)._dev_auth_first_auth))
+	&& zcbor_present_decode(&((*result)._dev_auth_auth_time_present), (zcbor_decoder_t *)decode_repeated_dev_auth_auth_time, state, (&(*result)._dev_auth_auth_time))
 	&& zcbor_present_decode(&((*result)._dev_auth_auth_count_present), (zcbor_decoder_t *)decode_repeated_dev_auth_auth_count, state, (&(*result)._dev_auth_auth_count))
 	&& zcbor_present_decode(&((*result)._dev_auth_challenge_present), (zcbor_decoder_t *)decode_repeated_dev_auth_challenge, state, (&(*result)._dev_auth_challenge))
 	&& zcbor_present_decode(&((*result)._dev_auth_signature_present), (zcbor_decoder_t *)decode_repeated_dev_auth_signature, state, (&(*result)._dev_auth_signature))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_map_end_decode(state))));

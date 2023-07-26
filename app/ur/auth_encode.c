@@ -19,6 +19,7 @@ static bool encode_dev_auth_step_type(zcbor_state_t *state, const struct dev_aut
 static bool encode_uuid(zcbor_state_t *state, const struct zcbor_string *input);
 static bool encode_repeated_dev_auth_device_id(zcbor_state_t *state, const struct dev_auth_device_id *input);
 static bool encode_repeated_dev_auth_first_auth(zcbor_state_t *state, const struct dev_auth_first_auth *input);
+static bool encode_repeated_dev_auth_auth_time(zcbor_state_t *state, const struct dev_auth_auth_time *input);
 static bool encode_repeated_dev_auth_auth_count(zcbor_state_t *state, const struct dev_auth_auth_count *input);
 static bool encode_repeated_dev_auth_challenge(zcbor_state_t *state, const struct dev_auth_challenge *input);
 static bool encode_repeated_dev_auth_signature(zcbor_state_t *state, const struct dev_auth_signature *input);
@@ -88,12 +89,27 @@ static bool encode_repeated_dev_auth_first_auth(
 	return tmp_result;
 }
 
+static bool encode_repeated_dev_auth_auth_time(
+		zcbor_state_t *state, const struct dev_auth_auth_time *input)
+{
+	zcbor_print("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_put(state, (4))))
+	&& ((((((*input)._dev_auth_auth_time <= 4294967295)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))
+	&& (zcbor_uint32_encode(state, (&(*input)._dev_auth_auth_time)))));
+
+	if (!tmp_result)
+		zcbor_trace();
+
+	return tmp_result;
+}
+
 static bool encode_repeated_dev_auth_auth_count(
 		zcbor_state_t *state, const struct dev_auth_auth_count *input)
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = ((((zcbor_uint32_put(state, (4))))
+	bool tmp_result = ((((zcbor_uint32_put(state, (5))))
 	&& (zcbor_int32_encode(state, (&(*input)._dev_auth_auth_count)))));
 
 	if (!tmp_result)
@@ -107,7 +123,7 @@ static bool encode_repeated_dev_auth_challenge(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = ((((zcbor_uint32_put(state, (5))))
+	bool tmp_result = ((((zcbor_uint32_put(state, (6))))
 	&& ((((*input)._dev_auth_challenge.len >= 32)
 	&& ((*input)._dev_auth_challenge.len <= 32)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))
 	&& (zcbor_bstr_encode(state, (&(*input)._dev_auth_challenge)))));
@@ -123,7 +139,7 @@ static bool encode_repeated_dev_auth_signature(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = ((((zcbor_uint32_put(state, (6))))
+	bool tmp_result = ((((zcbor_uint32_put(state, (7))))
 	&& ((((*input)._dev_auth_signature.len >= 64)
 	&& ((*input)._dev_auth_signature.len <= 64)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))
 	&& (zcbor_bstr_encode(state, (&(*input)._dev_auth_signature)))));
@@ -139,13 +155,14 @@ static bool encode_dev_auth(
 {
 	zcbor_print("%s\r\n", __func__);
 
-	bool tmp_result = (((zcbor_map_start_encode(state, 6) && (((((zcbor_uint32_put(state, (1))))
+	bool tmp_result = (((zcbor_map_start_encode(state, 7) && (((((zcbor_uint32_put(state, (1))))
 	&& (encode_dev_auth_step_type(state, (&(*input)._dev_auth_step))))
 	&& zcbor_present_encode(&((*input)._dev_auth_device_id_present), (zcbor_encoder_t *)encode_repeated_dev_auth_device_id, state, (&(*input)._dev_auth_device_id))
 	&& zcbor_present_encode(&((*input)._dev_auth_first_auth_present), (zcbor_encoder_t *)encode_repeated_dev_auth_first_auth, state, (&(*input)._dev_auth_first_auth))
+	&& zcbor_present_encode(&((*input)._dev_auth_auth_time_present), (zcbor_encoder_t *)encode_repeated_dev_auth_auth_time, state, (&(*input)._dev_auth_auth_time))
 	&& zcbor_present_encode(&((*input)._dev_auth_auth_count_present), (zcbor_encoder_t *)encode_repeated_dev_auth_auth_count, state, (&(*input)._dev_auth_auth_count))
 	&& zcbor_present_encode(&((*input)._dev_auth_challenge_present), (zcbor_encoder_t *)encode_repeated_dev_auth_challenge, state, (&(*input)._dev_auth_challenge))
-	&& zcbor_present_encode(&((*input)._dev_auth_signature_present), (zcbor_encoder_t *)encode_repeated_dev_auth_signature, state, (&(*input)._dev_auth_signature))) || (zcbor_list_map_end_force_encode(state), false)) && zcbor_map_end_encode(state, 6))));
+	&& zcbor_present_encode(&((*input)._dev_auth_signature_present), (zcbor_encoder_t *)encode_repeated_dev_auth_signature, state, (&(*input)._dev_auth_signature))) || (zcbor_list_map_end_force_encode(state), false)) && zcbor_map_end_encode(state, 7))));
 
 	if (!tmp_result)
 		zcbor_trace();

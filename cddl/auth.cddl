@@ -8,6 +8,7 @@ dev-auth = {
     dev-auth-step: dev-auth-step-type,
     ? device-id: uuid,
     ? first-auth: timestamp,
+    ? auth-time: timestamp,
     ? auth-count: int,
     ? challenge: bstr .size 32,
     ? signature: bstr .size 64,
@@ -16,9 +17,10 @@ dev-auth = {
 dev-auth-step = 1
 device-id = 2
 first-auth = 3
-auth-count = 4
-challenge = 5
-signature = 6
+auth-time = 4
+auth-count = 5
+challenge = 6
+signature = 7
 
 uuid = #6.37(bstr .size 16)
 timestamp = uint .size 4

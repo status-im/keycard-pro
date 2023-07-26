@@ -38,6 +38,10 @@ struct dev_auth_first_auth {
 	uint32_t _dev_auth_first_auth;
 };
 
+struct dev_auth_auth_time {
+	uint32_t _dev_auth_auth_time;
+};
+
 struct dev_auth_auth_count {
 	int32_t _dev_auth_auth_count;
 };
@@ -56,6 +60,8 @@ struct dev_auth {
 	uint_fast32_t _dev_auth_device_id_present;
 	struct dev_auth_first_auth _dev_auth_first_auth;
 	uint_fast32_t _dev_auth_first_auth_present;
+	struct dev_auth_auth_time _dev_auth_auth_time;
+	uint_fast32_t _dev_auth_auth_time_present;
 	struct dev_auth_auth_count _dev_auth_auth_count;
 	uint_fast32_t _dev_auth_auth_count_present;
 	struct dev_auth_challenge _dev_auth_challenge;
