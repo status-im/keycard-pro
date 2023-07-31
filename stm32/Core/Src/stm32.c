@@ -52,6 +52,7 @@ static TaskHandle_t g_dcmi_task = NULL;
 static TaskHandle_t g_smartcard_task = NULL;
 static int8_t g_acquiring;
 static struct dcmi_buf g_dcmi_bufs[CAMERA_FB_COUNT];
+static uint8_t g_uid[HAL_DEVICE_UID_LEN] __attribute__((aligned(4)));
 
 static inline void mco_off() {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -145,6 +146,9 @@ void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi) {
 }
 
 hal_err_t hal_init() {
+  // Copies UID, Flash size, package info before it becomes privileged
+  memcpy(g_uid, (uint32_t*) UID_BASE, HAL_DEVICE_UID_LEN);
+
   HAL_Init();
   SystemClock_Config();
 
@@ -180,8 +184,7 @@ hal_err_t hal_init() {
 }
 
 hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]) {
-  // Copies UID, Flash size, package info
-  memcpy(out, (void*) UID_BASE, HAL_DEVICE_UID_LEN);
+  memcpy(out, g_uid, HAL_DEVICE_UID_LEN);
   return HAL_SUCCESS;
 }
 
