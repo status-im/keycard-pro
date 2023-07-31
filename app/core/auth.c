@@ -5,6 +5,7 @@
 #include "crypto/secp256k1.h"
 #include "crypto/rand.h"
 #include "hal.h"
+#include "storage/keys.h"
 #include "ui/ui.h"
 #include "ur/ur.h"
 #include "ur/auth_types.h"
@@ -36,6 +37,7 @@ void device_auth_run() {
 
   uint8_t uid[HAL_DEVICE_UID_LEN];
   uint8_t digest[SHA256_DIGEST_LENGTH];
+  const uint8_t* key;
 
   hal_device_uid(uid);
 
@@ -44,8 +46,8 @@ void device_auth_run() {
   sha256_Update(&sha256, auth._dev_auth_challenge._dev_auth_challenge.value, auth._dev_auth_challenge._dev_auth_challenge.len);
   sha256_Final(&sha256, digest);
 
-  //TODO: fetch the private key!
-  ecdsa_sign_digest(&secp256k1, NULL, digest, g_core.data.sig.plain_sig, NULL, NULL);
+  key_read(DEV_AUTH_PRIV_KEY, &key);
+  ecdsa_sign_digest(&secp256k1, key, digest, g_core.data.sig.plain_sig, NULL, NULL);
 
   // Response
   random_buffer((uint8_t*) auth._dev_auth_challenge._dev_auth_challenge.value, AUTH_CHALLENGE_LEN);
@@ -89,8 +91,8 @@ void device_auth_run() {
   sha256_Update(&sha256, (uint8_t*) &auth._dev_auth_auth_count._dev_auth_auth_count, 4);
   sha256_Final(&sha256, digest);
 
-  //TODO: fetch the public key!
-  if (!ecdsa_verify_digest(&secp256k1, NULL, auth._dev_auth_signature._dev_auth_signature.value, digest)) {
+  key_read(DEV_AUTH_SERVER_KEY, &key);
+  if (!ecdsa_verify_digest(&secp256k1, key, auth._dev_auth_signature._dev_auth_signature.value, digest)) {
     //TODO: display
   } else {
     //TODO: error
