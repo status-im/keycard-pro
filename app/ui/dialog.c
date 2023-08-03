@@ -180,14 +180,7 @@ app_err_t dialog_confirm_msg() {
   }
 }
 
-app_err_t dialog_info() {
-  dialog_draw_message(g_ui_cmd.params.info.title, (uint8_t*) g_ui_cmd.params.info.msg, strlen(g_ui_cmd.params.info.msg));
-
-  if (!g_ui_cmd.params.info.dismissable) {
-    vTaskSuspend(NULL);
-    return ERR_CANCEL;
-  }
-
+static app_err_t dialog_wait_dismiss() {
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {
     case KEYPAD_KEY_CANCEL:
@@ -199,4 +192,25 @@ app_err_t dialog_info() {
       break;
     }
   }
+}
+
+app_err_t dialog_info() {
+  dialog_draw_message(g_ui_cmd.params.info.title, (uint8_t*) g_ui_cmd.params.info.msg, strlen(g_ui_cmd.params.info.msg));
+
+  if (!g_ui_cmd.params.info.dismissable) {
+    vTaskSuspend(NULL);
+    return ERR_CANCEL;
+  }
+
+  return dialog_wait_dismiss();
+}
+
+app_err_t dialog_dev_auth() {
+  if (g_ui_cmd.params.auth.auth_count > 1) {
+    dialog_draw_message(DEV_AUTH_TITLE_WARNING, (uint8_t*) LSTR(DEV_AUTH_INFO_SUCCESS), strlen(LSTR(DEV_AUTH_INFO_SUCCESS)));
+  } else {
+    dialog_draw_message(DEV_AUTH_TITLE_SUCCESS, (uint8_t*) LSTR(DEV_AUTH_INFO_WARNING), strlen(LSTR(DEV_AUTH_INFO_WARNING)));
+  }
+
+  return dialog_wait_dismiss();
 }

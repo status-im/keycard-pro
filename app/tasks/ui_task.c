@@ -58,6 +58,9 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_BACKUP_MNEMO:
       g_ui_cmd.result = input_backup_mnemonic();
       break;
+    case UI_CMD_DEV_AUTH:
+      g_ui_cmd.result = dialog_dev_auth();
+      break;
     default:
       break;
     }

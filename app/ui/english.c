@@ -64,4 +64,12 @@ const char *const i18n_english_strings[] = {
     "I want a new seed",
     "Enter word #",
     "Write down and keep safe!",
+
+    // Device authentication
+    "Invalid verification QR. Please check the website you are on and try again.",
+    "The response from the server is invalid. Ignore the verification results, make sure you go on the correct site and try again.",
+    "Verification successful!",
+    "Verification warning",
+    "The verification was successful and this was the first time this unit has been verified. You can safely use the device.",
+    "The verification succeeded, however this wasn't the first time the unit has been verified. If you remember already verifying this device before, then there is nothing to worry about. Otherwise please contact us."
 };

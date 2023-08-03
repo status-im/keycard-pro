@@ -29,6 +29,7 @@ enum cmd_type {
   UI_CMD_INPUT_PIN,
   UI_CMD_INPUT_MNEMO,
   UI_CMD_BACKUP_MNEMO,
+  UI_CMD_DEV_AUTH,
 };
 
 struct cmd_info {
@@ -73,6 +74,12 @@ struct cmd_mnemo {
   uint32_t len;
 };
 
+struct cmd_auth {
+  uint32_t first_auth;
+  uint32_t auth_time;
+  uint32_t auth_count;
+};
+
 union cmd_params {
   struct cmd_info info;
   struct cmd_txn txn;
@@ -82,6 +89,7 @@ union cmd_params {
   struct cmd_qrscan qrscan;
   struct cmd_input_pin input_pin;
   struct cmd_mnemo mnemo;
+  struct cmd_auth auth;
 };
 
 struct ui_cmd {

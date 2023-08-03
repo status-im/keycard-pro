@@ -189,3 +189,12 @@ core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t len) {
 core_evt_t ui_confirm_eth_address(const char* address) {
   return CORE_EVT_UI_OK;
 }
+
+core_evt_t ui_device_auth(uint32_t first_auth, uint32_t auth_time, uint32_t auth_count) {
+  g_ui_cmd.type = UI_CMD_DEV_AUTH;
+  g_ui_cmd.params.auth.first_auth = first_auth;
+  g_ui_cmd.params.auth.auth_time = auth_time;
+  g_ui_cmd.params.auth.auth_count = auth_count;
+
+  return ui_signal_wait(0);
+}

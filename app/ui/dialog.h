@@ -15,5 +15,6 @@ app_err_t dialog_confirm_tx();
 app_err_t dialog_confirm_msg();
 
 app_err_t dialog_info();
+app_err_t dialog_dev_auth();
 
 #endif
