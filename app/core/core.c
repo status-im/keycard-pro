@@ -3,6 +3,7 @@
 #include "crypto/address.h"
 #include "crypto/ripemd160.h"
 #include "crypto/util.h"
+#include "ethereum/eip712.h"
 #include "mem.h"
 #include "keycard/secure_channel.h"
 #include "keycard/keycard_cmdset.h"
@@ -107,8 +108,8 @@ static inline app_err_t core_wait_tx_confirmation() {
   return ui_display_tx(&g_core.data.tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
-static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg) {
-  return ui_display_msg(msg, g_core.data.msg.len) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg, size_t msg_len) {
+  return ui_display_msg(msg, msg_len) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static app_err_t core_process_tx(const uint8_t* data, uint32_t len, uint8_t first_segment) {
@@ -166,10 +167,25 @@ static app_err_t core_process_msg(const uint8_t* data, uint32_t len, uint8_t fir
   g_core.data.msg.received += len;
 
   if (g_core.data.msg.received == g_core.data.msg.len) {
-    return core_wait_msg_confirmation(data);
+    return core_wait_msg_confirmation(data, g_core.data.msg.len);
   } else {
     return ERR_NEED_MORE_DATA;
   }
+}
+
+static app_err_t core_process_eip712(const uint8_t* data, uint32_t len) {
+  uint8_t* heap = (uint8_t*) &data[len];
+  size_t heap_size = MEM_HEAP_SIZE - ((size_t) (heap - g_mem_heap));
+  app_err_t err;
+
+  err = eip712_hash(&g_core.hash_ctx, heap, heap_size, (const char*) data, len);
+
+  if (err != ERR_OK) {
+    return err;
+  }
+
+  // TODO: replace with proper visualization
+  return core_wait_msg_confirmation(data, len);
 }
 
 static void core_usb_err_sw(apdu_t* cmd, uint8_t sw1, uint8_t sw2) {
@@ -470,7 +486,7 @@ void core_qr_run() {
       err = core_process_msg(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len, 1);
       break;
     case _sign_data_type__eth_typed_data:
-      err = ERR_UNSUPPORTED;
+      err = core_process_eip712(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len);
       break;
     default:
       err = ERR_UNSUPPORTED;
