@@ -207,9 +207,9 @@ app_err_t dialog_info() {
 
 app_err_t dialog_dev_auth() {
   if (g_ui_cmd.params.auth.auth_count > 1) {
-    dialog_draw_message(DEV_AUTH_TITLE_WARNING, (uint8_t*) LSTR(DEV_AUTH_INFO_SUCCESS), strlen(LSTR(DEV_AUTH_INFO_SUCCESS)));
+    dialog_draw_message(DEV_AUTH_TITLE_WARNING, (uint8_t*) LSTR(DEV_AUTH_INFO_WARNING), strlen(LSTR(DEV_AUTH_INFO_WARNING)));
   } else {
-    dialog_draw_message(DEV_AUTH_TITLE_SUCCESS, (uint8_t*) LSTR(DEV_AUTH_INFO_WARNING), strlen(LSTR(DEV_AUTH_INFO_WARNING)));
+    dialog_draw_message(DEV_AUTH_TITLE_SUCCESS, (uint8_t*) LSTR(DEV_AUTH_INFO_SUCCESS), strlen(LSTR(DEV_AUTH_INFO_SUCCESS)));
   }
 
   return dialog_wait_dismiss();
