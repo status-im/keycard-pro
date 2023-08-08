@@ -1,5 +1,7 @@
 #include <string.h>
+#include <ctype.h>
 
+#include "common.h"
 #include "eip712.h"
 #include "json/jsmn.h"
 
@@ -141,6 +143,91 @@ static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, 
   return fields_size;
 }
 
+static inline int eip712_strcmp(struct eip712_string* a, struct eip712_string* b) {
+  return strncmp(a->str, b->str, APP_MIN(a->len, b->len));
+}
+
+static int eip712_find_type(struct eip712_type types[], int types_count, struct eip712_string* type) {
+  for (int i = 0; i < types_count; i++) {
+    if ((type->len == types[i].name.len) && !eip712_strcmp(type, &types[i].name)) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+static void eip712_hash_type(SHA3_CTX* sha3, struct eip712_type* type) {
+  uint8_t sep;
+
+  sha3_Update(sha3, (const uint8_t*) type->name.str, type->name.len);
+  sep = '(';
+
+  for(int j = 0; j < type->field_count; j++) {
+    sha3_Update(sha3, &sep, 1);
+
+    sha3_Update(sha3, (const uint8_t*) type->fields[j].type.str, type->fields[j].type.len);
+    sep = ' ';
+    sha3_Update(sha3, &sep, 1);
+    sha3_Update(sha3, (const uint8_t*) type->fields[j].name.str, type->fields[j].name.len);
+
+    sep = ',';
+  }
+
+  sep = ')';
+  sha3_Update(sha3, &sep, 1);
+}
+
+static int eip712_insert(int insert, struct eip712_type types[], int types_count, int references[], int *references_count) {
+  return 0;
+}
+
+static app_err_t eip712_collect_references(int main_type, int current_type, struct eip712_type types[], int types_count, int references[], int *references_count) {
+  for (int j = 0; j < types[current_type].field_count; j++) {
+    if (isupper((int) types[current_type].fields[j].type.str[0])) {
+      int found = eip712_find_type(types, types_count, &types[current_type].fields[j].type);
+      if (found == -1 || (main_type == found)) {
+        return ERR_DATA;
+      }
+
+      if (eip712_insert(found, types, types_count, references, references_count)) {
+        eip712_collect_references(main_type, found, types, types_count, references, references_count);
+      }
+    }
+  }
+
+  return ERR_OK;
+}
+
+static app_err_t eip712_hash_types(uint8_t* heap, size_t heap_size, struct eip712_type types[], int types_count) {
+  if (heap_size < sizeof(SHA3_CTX)) {
+    return ERR_DATA;
+  }
+
+  SHA3_CTX* sha3 = (SHA3_CTX*) heap;
+
+  for (int i = 0; i < types_count; i++) {
+    sha3_256_Init(sha3);
+
+    eip712_hash_type(sha3, &types[i]);
+
+    int references[types_count];
+    int reference_count = 0;
+
+    if (eip712_collect_references(i, i, types, types_count, references, &reference_count) != ERR_OK) {
+      return ERR_DATA;
+    }
+
+    for (int j = 0; j < reference_count; j++) {
+      eip712_hash_type(sha3, &types[references[j]]);
+    }
+
+    sha3_Final(sha3, types[i].type_hash);
+  }
+
+  return ERR_OK;
+}
+
 app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len) {
   sha3_Update(sha3, EIP712_MAGIC, sizeof(EIP712_MAGIC));
 
@@ -186,6 +273,10 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
 
   heap += fields_size;
   heap_size -= fields_size;
+
+  if (eip712_hash_types(heap, heap_size, types, types_count) != ERR_OK) {
+    return ERR_DATA;
+  }
 
   return ERR_DATA;
 }
