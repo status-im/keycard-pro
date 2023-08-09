@@ -29,6 +29,8 @@ struct eip712_type {
   uint8_t type_hash[SHA3_256_DIGEST_LENGTH];
 };
 
+static app_err_t eip712_hash_struct(SHA3_CTX* sha3, uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json);
+
 static app_err_t eip712_top_level(struct eip712_tokens* eip712, const jsmntok_t tokens[], int token_count, const char* json) {
   int found = 0;
 
@@ -72,7 +74,7 @@ static app_err_t eip712_top_level(struct eip712_tokens* eip712, const jsmntok_t 
   return found == 0xf ? ERR_OK : ERR_DATA;
 }
 
-static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, struct eip712_type types[], int types_count, jsmntok_t tokens[], int token_count, const char* json) {
+static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
   int current_type = 0;
   int fields_size = 0;
 
@@ -154,6 +156,10 @@ static inline int eip712_streq(const struct eip712_string* a, const struct eip71
   return 0;
 }
 
+static inline int eip712_is_struct(const struct eip712_string* type) {
+  return isupper((int) type->str[0]) || type->str[0] == '_';
+}
+
 static int eip712_find_type(const struct eip712_type types[], int types_count, const struct eip712_string* type) {
   for (int i = 0; i < types_count; i++) {
     if (eip712_streq(type, &types[i].name)) {
@@ -211,7 +217,7 @@ static int eip712_insert(int insert, const struct eip712_type types[], int types
 
 static app_err_t eip712_collect_references(int main_type, int current_type, const struct eip712_type types[], int types_count, int references[], int *references_count) {
   for (int j = 0; j < types[current_type].field_count; j++) {
-    if (isupper((int) types[current_type].fields[j].type.str[0])) {
+    if (eip712_is_struct(&types[current_type].fields[j].type)) {
       int found = eip712_find_type(types, types_count, &types[current_type].fields[j].type);
       if (found == -1 || (main_type == found)) {
         return ERR_DATA;
@@ -249,7 +255,123 @@ static app_err_t eip712_hash_types(uint8_t* heap, size_t heap_size, struct eip71
       eip712_hash_type(sha3, &types[references[j]]);
     }
 
-    sha3_Final(sha3, types[i].type_hash);
+    keccak_Final(sha3, types[i].type_hash);
+  }
+
+  return ERR_OK;
+}
+
+static int eip712_hash_find_data(const struct eip712_string* name, int start, const jsmntok_t tokens[], int token_count, const char* json) {
+  int key = 1;
+
+  for (int i = start + 1; i < token_count; i++) {
+    if (tokens[i].parent == start) {
+      if (key) {
+        if (tokens[i].type != JSMN_STRING) {
+          return -1;
+        }
+
+        struct eip712_string key_name;
+        key_name.str = &json[tokens[i].start];
+        key_name.len = tokens[i].end - tokens[i].start;
+
+        if (eip712_streq(name, &key_name)) {
+          return i + 1;
+        }
+
+        key = 0;
+      } else {
+        key = 1;
+      }
+    }
+  }
+
+  return -1;
+}
+
+static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
+  if (field_type->str[field_type->len - 1] == ']') {
+    if (tokens[field_val].type != JSMN_ARRAY) {
+      return ERR_DATA;
+    }
+
+    uint8_t tmp[32];
+
+    if (heap_size < sizeof(SHA3_CTX)) {
+      return ERR_DATA;
+    }
+
+    SHA3_CTX* sha3 = (SHA3_CTX*) heap;
+    heap += sizeof(SHA3_CTX);
+    heap_size -= sizeof(SHA3_CTX);
+
+    sha3_256_Init(sha3);
+
+    struct eip712_string inner_type;
+    inner_type.str = field_type->str;
+    inner_type.len = field_type->len;
+
+    while(inner_type.str[--inner_type.len] != '[') {
+      if (inner_type.len == 0) {
+        return ERR_DATA;
+      }
+    }
+
+    int inner_field = field_val + 1;
+
+    for (int i = 0; i < tokens[field_val].size; i++) {
+      eip712_encode_field(tmp, heap, heap_size, &inner_type, inner_field, types, types_count, tokens, token_count, json);
+      sha3_Update(sha3, tmp, 32);
+      while(tokens[++inner_field].parent != field_val) {
+        if (inner_field == token_count) {
+          return ERR_DATA;
+        }
+      }
+    }
+
+    keccak_Final(sha3, out);
+  } else if (eip712_is_struct(field_type)) {
+    if (heap_size < sizeof(SHA3_CTX)) {
+      return ERR_DATA;
+    }
+
+    SHA3_CTX* sha3 = (SHA3_CTX*) heap;
+    heap += sizeof(SHA3_CTX);
+    heap_size -= sizeof(SHA3_CTX);
+
+    int type = eip712_find_type(types, types_count, field_type);
+
+    if (type == -1) {
+      return ERR_DATA;
+    }
+
+    sha3_256_Init(sha3);
+    eip712_hash_struct(sha3, heap, heap_size, type, types, types_count, field_val, tokens, token_count, json);
+    keccak_Final(sha3, out);
+  } else {
+    return ERR_DATA;
+  }
+
+  return ERR_OK;
+}
+
+static app_err_t eip712_hash_struct(SHA3_CTX* sha3, uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json) {
+  const struct eip712_type *t = &types[type];
+
+  sha3_Update(sha3, t->type_hash, SHA3_256_DIGEST_LENGTH);
+
+  for (int i = 0; i < t->field_count; i++) {
+    int field_val = eip712_hash_find_data(&t->fields[i].name, data, tokens, token_count, json);
+    if (field_val == -1) {
+      return ERR_DATA;
+    }
+
+    uint8_t field[32];
+    if (eip712_encode_field(field, heap, heap_size, &t->fields[i].type, field_val, types, types_count, tokens, token_count, json) != ERR_OK) {
+      return ERR_DATA;
+    }
+
+    sha3_Update(sha3, field, 32);
   }
 
   return ERR_OK;
@@ -303,5 +425,25 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
     return ERR_DATA;
   }
 
-  return ERR_DATA;
+  struct eip712_string tmpstr;
+  tmpstr.str = "EIP712Domain";
+  tmpstr.len = 12;
+
+  int struct_idx = eip712_find_type(types, types_count, &tmpstr);
+
+  if (struct_idx == -1) {
+    return ERR_DATA;
+  }
+
+  eip712_hash_struct(sha3, heap, heap_size, struct_idx, types, types_count, eip712.domain, tokens, token_count, json);
+
+  tmpstr.str = &json[tokens[eip712.primary_type].start];
+  tmpstr.len = (tokens[eip712.primary_type].end - tokens[eip712.primary_type].start);
+  struct_idx = eip712_find_type(types, types_count, &tmpstr);
+
+  if (struct_idx == -1) {
+    return ERR_DATA;
+  }
+
+  return eip712_hash_struct(sha3, heap, heap_size, struct_idx, types, types_count, eip712.message, tokens, token_count, json);
 }
