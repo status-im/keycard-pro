@@ -178,6 +178,7 @@ static app_err_t core_process_eip712(const uint8_t* data, uint32_t len) {
   size_t heap_size = MEM_HEAP_SIZE - ((size_t) (heap - g_mem_heap));
   app_err_t err;
 
+  keccak_Update(&g_core.hash_ctx, ETH_EIP712_MAGIC, ETH_EIP712_MAGIC_LEN);
   err = eip712_hash(&g_core.hash_ctx, heap, heap_size, (const char*) data, len);
 
   if (err != ERR_OK) {

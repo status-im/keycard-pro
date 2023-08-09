@@ -5,8 +5,6 @@
 #include "eip712.h"
 #include "json/jsmn.h"
 
-static const uint8_t EIP712_MAGIC[] = { 0x19, 0x01 };
-
 struct eip712_tokens {
   int types;
   int primary_type;
@@ -31,7 +29,7 @@ struct eip712_type {
   uint8_t type_hash[SHA3_256_DIGEST_LENGTH];
 };
 
-static app_err_t eip712_top_level(struct eip712_tokens* eip712, jsmntok_t tokens[], int token_count, const char* json) {
+static app_err_t eip712_top_level(struct eip712_tokens* eip712, const jsmntok_t tokens[], int token_count, const char* json) {
   int found = 0;
 
   for (int i = 1; (i < (token_count - 1)) && (found != 0xf); i++) {
@@ -143,13 +141,22 @@ static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, 
   return fields_size;
 }
 
-static inline int eip712_strcmp(struct eip712_string* a, struct eip712_string* b) {
-  return strncmp(a->str, b->str, APP_MIN(a->len, b->len));
+static inline int eip712_strcmp(const struct eip712_string* a, const struct eip712_string* b) {
+  int res = memcmp(a->str, b->str, APP_MIN(a->len, b->len));
+  return res != 0 ? res : a->len - b->len;
 }
 
-static int eip712_find_type(struct eip712_type types[], int types_count, struct eip712_string* type) {
+static inline int eip712_streq(const struct eip712_string* a, const struct eip712_string* b) {
+  if (a->len == b->len) {
+    return memcmp(a->str, b->str, a->len) == 0;
+  }
+
+  return 0;
+}
+
+static int eip712_find_type(const struct eip712_type types[], int types_count, const struct eip712_string* type) {
   for (int i = 0; i < types_count; i++) {
-    if ((type->len == types[i].name.len) && !eip712_strcmp(type, &types[i].name)) {
+    if (eip712_streq(type, &types[i].name)) {
       return i;
     }
   }
@@ -157,7 +164,7 @@ static int eip712_find_type(struct eip712_type types[], int types_count, struct 
   return -1;
 }
 
-static void eip712_hash_type(SHA3_CTX* sha3, struct eip712_type* type) {
+static void eip712_hash_type(SHA3_CTX* sha3, const struct eip712_type* type) {
   uint8_t sep;
 
   sha3_Update(sha3, (const uint8_t*) type->name.str, type->name.len);
@@ -178,11 +185,31 @@ static void eip712_hash_type(SHA3_CTX* sha3, struct eip712_type* type) {
   sha3_Update(sha3, &sep, 1);
 }
 
-static int eip712_insert(int insert, struct eip712_type types[], int types_count, int references[], int *references_count) {
-  return 0;
+static int eip712_insert(int insert, const struct eip712_type types[], int types_count, int references[], int *references_count) {
+  for(int i = 0; i < *references_count; i++) {
+    if (insert == references[i]) {
+      return 0;
+    }
+
+    int cmp = eip712_strcmp(&types[insert].name, &types[references[i]].name);
+
+    if (cmp < 0) {
+      for (int j = (*references_count)++; j > i; j--) {
+        references[j] = references[j-1];
+      }
+
+      references[i] = insert;
+
+      return 1;
+    }
+  }
+
+  references[(*references_count)++] = insert;
+
+  return 1;
 }
 
-static app_err_t eip712_collect_references(int main_type, int current_type, struct eip712_type types[], int types_count, int references[], int *references_count) {
+static app_err_t eip712_collect_references(int main_type, int current_type, const struct eip712_type types[], int types_count, int references[], int *references_count) {
   for (int j = 0; j < types[current_type].field_count; j++) {
     if (isupper((int) types[current_type].fields[j].type.str[0])) {
       int found = eip712_find_type(types, types_count, &types[current_type].fields[j].type);
@@ -229,8 +256,6 @@ static app_err_t eip712_hash_types(uint8_t* heap, size_t heap_size, struct eip71
 }
 
 app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len) {
-  sha3_Update(sha3, EIP712_MAGIC, sizeof(EIP712_MAGIC));
-
   jsmntok_t* tokens = (jsmntok_t *) heap;
   jsmn_parser parser;
   jsmn_init(&parser);
