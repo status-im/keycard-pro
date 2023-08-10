@@ -2,6 +2,7 @@
 #include <ctype.h>
 
 #include "common.h"
+#include "crypto/util.h"
 #include "eip712.h"
 #include "json/jsmn.h"
 
@@ -289,6 +290,16 @@ static int eip712_hash_find_data(const struct eip712_string* name, int start, co
   return -1;
 }
 
+// This macro must only be used in the below function
+#define __DECL_SHA3_CTX() \
+  if (heap_size < sizeof(SHA3_CTX)) { \
+    return ERR_DATA; \
+  } \
+  SHA3_CTX* sha3 = (SHA3_CTX*) heap; \
+  heap += sizeof(SHA3_CTX); \
+  heap_size -= sizeof(SHA3_CTX); \
+  sha3_256_Init(sha3)
+
 static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
   if (field_type->str[field_type->len - 1] == ']') {
     if (tokens[field_val].type != JSMN_ARRAY) {
@@ -301,11 +312,7 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
       return ERR_DATA;
     }
 
-    SHA3_CTX* sha3 = (SHA3_CTX*) heap;
-    heap += sizeof(SHA3_CTX);
-    heap_size -= sizeof(SHA3_CTX);
-
-    sha3_256_Init(sha3);
+    __DECL_SHA3_CTX();
 
     struct eip712_string inner_type;
     inner_type.str = field_type->str;
@@ -331,13 +338,7 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
 
     keccak_Final(sha3, out);
   } else if (eip712_is_struct(field_type)) {
-    if (heap_size < sizeof(SHA3_CTX)) {
-      return ERR_DATA;
-    }
-
-    SHA3_CTX* sha3 = (SHA3_CTX*) heap;
-    heap += sizeof(SHA3_CTX);
-    heap_size -= sizeof(SHA3_CTX);
+    __DECL_SHA3_CTX();
 
     int type = eip712_find_type(types, types_count, field_type);
 
@@ -345,11 +346,82 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
       return ERR_DATA;
     }
 
-    sha3_256_Init(sha3);
     eip712_hash_struct(sha3, heap, heap_size, type, types, types_count, field_val, tokens, token_count, json);
     keccak_Final(sha3, out);
+  } else if (field_type->len == 6 && !strncmp(field_type->str, "string", 6)) {
+    if (tokens[field_val].type != JSMN_STRING) {
+      return ERR_DATA;
+    }
+
+    __DECL_SHA3_CTX();
+
+    sha3_Update(sha3, (uint8_t*) &json[tokens[field_val].start], tokens[field_val].end - tokens[field_val].start);
+    sha3_Final(sha3, out);
+  } else if (field_type->len == 5 && !strncmp(field_type->str, "bytes", 5)) {
+    if (tokens[field_val].type != JSMN_STRING) {
+      return ERR_DATA;
+    }
+
+    struct eip712_string tmpstr;
+    tmpstr.str = &json[tokens[field_val].start];
+    tmpstr.len = tokens[field_val].end - tokens[field_val].start;
+
+    __DECL_SHA3_CTX();
+
+    if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
+      tmpstr.str += 2;
+      tmpstr.len -= 2;
+
+      while(tmpstr.len) {
+        int len = APP_MIN(tmpstr.len, (64 - (tmpstr.len & 1)));
+        if (!base16_decode(tmpstr.str, out, len)) {
+          return ERR_DATA;
+        }
+        tmpstr.len -= len;
+        tmpstr.str += len;
+
+        sha3_Update(sha3, out, (len >> 1));
+      }
+
+      sha3_Final(sha3, out);
+    } else {
+      __DECL_SHA3_CTX();
+      sha3_Update(sha3, (uint8_t*) tmpstr.str, tmpstr.len);
+      sha3_Final(sha3, out);
+    }
+  } else if (field_type->len == 4 && !strncmp(field_type->str, "bool", 4)) {
+    if (tokens[field_val].type != JSMN_PRIMITIVE) {
+      return ERR_DATA;
+    }
+
+    memset(out, 0, 32);
+    out[31] = json[tokens[field_val].start] == 't';
+  } else if (field_type->str[0] == 'b') {
+    if (tokens[field_val].type != JSMN_STRING) {
+      return ERR_DATA;
+    }
+
+    struct eip712_string tmpstr;
+    tmpstr.str = &json[tokens[field_val].start];
+    tmpstr.len = tokens[field_val].end - tokens[field_val].start;
+
+    if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
+      memset(out, 0, 32);
+
+      if (!base16_decode(&tmpstr.str[2], out, (tmpstr.len - 2))) {
+        return ERR_DATA;
+      }
+    } else {
+      return ERR_DATA;
+    }
   } else {
-    return ERR_DATA;
+    if (tokens[field_val].type != JSMN_STRING) {
+      return ERR_DATA;
+    } else if (tokens[field_val].type != JSMN_PRIMITIVE) {
+
+    } else {
+      return ERR_DATA;
+    }
   }
 
   return ERR_OK;

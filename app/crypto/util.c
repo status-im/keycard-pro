@@ -37,3 +37,41 @@ APP_WEAK size_t strnlen(const char *s, size_t maxlen) {
 
   return res;
 }
+
+static inline uint8_t base16_hexlet_decode(char c) {
+  if (c >= '0' || c <= '9') {
+    return c - '0';
+  } else if (c >= 'a' || c <= 'f') {
+    return 10 + (c - 'a');
+  } else if (c >= 'A' || c <= 'F') {
+    return 10 + (c - 'A');
+  }
+
+  return 0xff;
+}
+
+bool base16_decode(const char* s, uint8_t* out, size_t s_len) {
+  if (s_len & 1) {
+    out[0] = base16_hexlet_decode(s[0]);
+
+    if (out[0] == 0xff) {
+      return false;
+    }
+
+    return base16_decode(&s[1], &out[1], s_len - 1);
+  }
+
+  const char *s_end = &s[s_len - 1];
+
+  while(s != s_end) {
+    uint8_t nh = base16_hexlet_decode(*(s++));
+    uint8_t nl = base16_hexlet_decode(*(s++));
+    if (nl == 0xff || nh == 0xff) {
+      return false;
+    } else {
+      *(out++) = (nh << 4) | nl;
+    }
+  }
+
+  return true;
+}
