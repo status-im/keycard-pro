@@ -75,3 +75,29 @@ bool base16_decode(const char* s, uint8_t* out, size_t s_len) {
 
   return true;
 }
+
+bool atoi64(const char* str, size_t len, int64_t* res) {
+  int i;
+  int sign;
+
+  if (str[0] == '-') {
+    sign = -1;
+    i = 1;
+  } else if (str[0] == '+') {
+    i = 1;
+  } else {
+    i = 0;
+  }
+
+  while(i < len) {
+    if (!(str[i] >= '0' && str[i] <= '9')) {
+      return false;
+    }
+
+    *res = (10 * (*res)) + (str[i++] - '0');
+  }
+
+  *res = (*res) * sign;
+
+  return true;
+}

@@ -11,6 +11,7 @@ uint8_t* u32toa(uint32_t value, uint8_t* buf, uint32_t len);
 
 size_t strnlen(const char *s, size_t maxlen);
 bool base16_decode(const char* s, uint8_t* out, size_t s_len);
+bool atoi64(const char* str, size_t len, int64_t* res);
 
 static inline int memcmp_ct(const uint8_t* a, const uint8_t* b, size_t length) {
   int compareSum = 0;

@@ -396,32 +396,40 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
 
     memset(out, 0, 32);
     out[31] = json[tokens[field_val].start] == 't';
-  } else if (field_type->str[0] == 'b') {
-    if (tokens[field_val].type != JSMN_STRING) {
-      return ERR_DATA;
-    }
-
+  } else if (tokens[field_val].type == JSMN_STRING) {
     struct eip712_string tmpstr;
     tmpstr.str = &json[tokens[field_val].start];
     tmpstr.len = tokens[field_val].end - tokens[field_val].start;
 
     if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
-      memset(out, 0, 32);
+      int out_len = ((tmpstr.len - 1) >> 1);
+      int padding = 32 - out_len;
+      int offset;
 
-      if (!base16_decode(&tmpstr.str[2], out, (tmpstr.len - 2))) {
+      // bytesX are right padded, others are left padded
+      if (field_type->str[0] == 'b') {
+        offset = 0;
+        memset(&out[offset], 0, padding);
+      } else {
+        offset = padding;
+        memset(out, 0, padding);
+      }
+
+      if (!base16_decode(&tmpstr.str[2], &out[offset], (tmpstr.len - 2))) {
         return ERR_DATA;
       }
     } else {
       return ERR_DATA;
     }
-  } else {
-    if (tokens[field_val].type != JSMN_STRING) {
-      return ERR_DATA;
-    } else if (tokens[field_val].type != JSMN_PRIMITIVE) {
-
-    } else {
+  } else if (tokens[field_val].type == JSMN_PRIMITIVE) {
+    int64_t res;
+    if (!atoi64(&json[tokens[field_val].start], (tokens[field_val].end - tokens[field_val].start), &res)) {
       return ERR_DATA;
     }
+
+    memset(out, res < 0 ? 0xff : 0x00, 24);
+  } else {
+    return ERR_DATA;
   }
 
   return ERR_OK;
