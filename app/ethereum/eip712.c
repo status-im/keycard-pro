@@ -66,7 +66,7 @@ static app_err_t eip712_top_level(struct eip712_tokens* eip712, const jsmntok_t 
         if (tokens[++i].type != JSMN_OBJECT) {
           return ERR_DATA;
         }
-        eip712->domain = i;
+        eip712->message = i;
         found |= 8;
         break;
       default:
@@ -393,7 +393,7 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
 
     memset(out, 0, 32);
     out[31] = json[tokens[field_val].start] == 't';
-  } else if (tokens[field_val].type == JSMN_STRING) {
+  } else {
     struct eip712_string tmpstr;
     tmpstr.str = &json[tokens[field_val].start];
     tmpstr.len = tokens[field_val].end - tokens[field_val].start;
@@ -416,17 +416,13 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
         return ERR_DATA;
       }
     } else {
-      return ERR_DATA;
-    }
-  } else if (tokens[field_val].type == JSMN_PRIMITIVE) {
-    int64_t res;
-    if (!atoi64(&json[tokens[field_val].start], (tokens[field_val].end - tokens[field_val].start), &res)) {
-      return ERR_DATA;
-    }
+      int64_t res;
+      if (!atoi64(&json[tokens[field_val].start], (tokens[field_val].end - tokens[field_val].start), &res)) {
+        return ERR_DATA;
+      }
 
-    memset(out, res < 0 ? 0xff : 0x00, 24);
-  } else {
-    return ERR_DATA;
+      memset(out, res < 0 ? 0xff : 0x00, 24);
+    }
   }
 
   return ERR_OK;

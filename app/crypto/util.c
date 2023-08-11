@@ -39,11 +39,11 @@ APP_WEAK size_t strnlen(const char *s, size_t maxlen) {
 }
 
 static inline uint8_t base16_hexlet_decode(char c) {
-  if (c >= '0' || c <= '9') {
+  if ((c >= '0') && (c <= '9')) {
     return c - '0';
-  } else if (c >= 'a' || c <= 'f') {
+  } else if ((c >= 'a') && (c <= 'f')) {
     return 10 + (c - 'a');
-  } else if (c >= 'A' || c <= 'F') {
+  } else if ((c >= 'A') && (c <= 'F')) {
     return 10 + (c - 'A');
   }
 
@@ -61,9 +61,9 @@ bool base16_decode(const char* s, uint8_t* out, size_t s_len) {
     return base16_decode(&s[1], &out[1], s_len - 1);
   }
 
-  const char *s_end = &s[s_len - 1];
+  const char *s_end = &s[s_len];
 
-  while(s != s_end) {
+  while(s < s_end) {
     uint8_t nh = base16_hexlet_decode(*(s++));
     uint8_t nl = base16_hexlet_decode(*(s++));
     if (nl == 0xff || nh == 0xff) {
@@ -84,10 +84,14 @@ bool atoi64(const char* str, size_t len, int64_t* res) {
     sign = -1;
     i = 1;
   } else if (str[0] == '+') {
+    sign = 1;
     i = 1;
   } else {
+    sign = 1;
     i = 0;
   }
+
+  *res = 0;
 
   while(i < len) {
     if (!(str[i] >= '0' && str[i] <= '9')) {
