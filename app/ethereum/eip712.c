@@ -30,6 +30,9 @@ struct eip712_type {
   uint8_t type_hash[SHA3_256_DIGEST_LENGTH];
 };
 
+// ugly stuff
+#define ALIGN_HEAP(__HEAP__, __HEAP_SIZE__) __HEAP__ = (uint8_t*) (((uint32_t)(__HEAP__ + 3)) & ~0x3); __HEAP_SIZE__ &= ~0x3
+
 static app_err_t eip712_hash_struct(SHA3_CTX* sha3, uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json);
 
 static app_err_t eip712_top_level(struct eip712_tokens* eip712, const jsmntok_t tokens[], int token_count, const char* json) {
@@ -95,6 +98,8 @@ static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, 
     types[current_type].field_count = tokens[i].size;
     size_t field_size = types[current_type].field_count * sizeof(struct eip712_field);
     fields_size += field_size;
+
+    ALIGN_HEAP(heap, heap_size);
 
     if (field_size > heap_size) {
       return -1;
@@ -234,6 +239,8 @@ static app_err_t eip712_collect_references(int main_type, int current_type, cons
 }
 
 static app_err_t eip712_hash_types(uint8_t* heap, size_t heap_size, struct eip712_type types[], int types_count) {
+  ALIGN_HEAP(heap, heap_size);
+
   if (heap_size < sizeof(SHA3_CTX)) {
     return ERR_DATA;
   }
@@ -285,6 +292,7 @@ static int eip712_hash_find_data(const struct eip712_string* name, int start, co
 
 // This macro must only be used in the below function
 #define __DECL_SHA3_CTX() \
+  ALIGN_HEAP(heap, heap_size); \
   if (heap_size < sizeof(SHA3_CTX)) { \
     return ERR_DATA; \
   } \
@@ -300,10 +308,6 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
     }
 
     uint8_t tmp[32];
-
-    if (heap_size < sizeof(SHA3_CTX)) {
-      return ERR_DATA;
-    }
 
     __DECL_SHA3_CTX();
 
@@ -451,6 +455,7 @@ static app_err_t eip712_hash_struct(SHA3_CTX* sha3, uint8_t* heap, size_t heap_s
 }
 
 app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len) {
+  ALIGN_HEAP(heap, heap_size);
   jsmntok_t* tokens = (jsmntok_t *) heap;
   jsmn_parser parser;
   jsmn_init(&parser);
@@ -474,6 +479,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   }
 
   size_t types_len = tokens[eip712.types].size * sizeof(struct eip712_type);
+  ALIGN_HEAP(heap, heap_size);
 
   if (heap_size < types_len) {
     return ERR_DATA;
