@@ -422,6 +422,10 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
       }
 
       memset(out, res < 0 ? 0xff : 0x00, 24);
+      for (int i = 31; i >= 24; i--) {
+        out[i] = res & 0xff;
+        res >>= 8;
+      }
     }
   }
 
