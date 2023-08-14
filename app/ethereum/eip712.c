@@ -179,22 +179,22 @@ static int eip712_find_type(const struct eip712_type types[], int types_count, c
 static void eip712_hash_type(SHA3_CTX* sha3, const struct eip712_type* type) {
   uint8_t sep;
 
-  sha3_Update(sha3, (const uint8_t*) type->name.str, type->name.len);
+  keccak_Update(sha3, (const uint8_t*) type->name.str, type->name.len);
   sep = '(';
 
   for(int j = 0; j < type->field_count; j++) {
-    sha3_Update(sha3, &sep, 1);
+    keccak_Update(sha3, &sep, 1);
 
-    sha3_Update(sha3, (const uint8_t*) type->fields[j].type.str, type->fields[j].type.len);
+    keccak_Update(sha3, (const uint8_t*) type->fields[j].type.str, type->fields[j].type.len);
     sep = ' ';
-    sha3_Update(sha3, &sep, 1);
-    sha3_Update(sha3, (const uint8_t*) type->fields[j].name.str, type->fields[j].name.len);
+    keccak_Update(sha3, &sep, 1);
+    keccak_Update(sha3, (const uint8_t*) type->fields[j].name.str, type->fields[j].name.len);
 
     sep = ',';
   }
 
   sep = ')';
-  sha3_Update(sha3, &sep, 1);
+  keccak_Update(sha3, &sep, 1);
 }
 
 static int eip712_insert(int insert, const struct eip712_type types[], int types_count, int references[], int *references_count) {
@@ -248,7 +248,7 @@ static app_err_t eip712_hash_types(uint8_t* heap, size_t heap_size, struct eip71
   SHA3_CTX* sha3 = (SHA3_CTX*) heap;
 
   for (int i = 0; i < types_count; i++) {
-    sha3_256_Init(sha3);
+    keccak_256_Init(sha3);
 
     eip712_hash_type(sha3, &types[i]);
 
@@ -299,7 +299,7 @@ static int eip712_hash_find_data(const struct eip712_string* name, int start, co
   SHA3_CTX* sha3 = (SHA3_CTX*) heap; \
   heap += sizeof(SHA3_CTX); \
   heap_size -= sizeof(SHA3_CTX); \
-  sha3_256_Init(sha3)
+  keccak_256_Init(sha3)
 
 static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
   if (field_type->str[field_type->len - 1] == ']') {
@@ -325,7 +325,7 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
 
     for (int i = 0; i < tokens[field_val].size; i++) {
       eip712_encode_field(tmp, heap, heap_size, &inner_type, inner_field, types, types_count, tokens, token_count, json);
-      sha3_Update(sha3, tmp, 32);
+      keccak_Update(sha3, tmp, 32);
       while(tokens[++inner_field].parent != field_val) {
         if (inner_field == token_count) {
           return ERR_DATA;
@@ -349,8 +349,8 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
 
     __DECL_SHA3_CTX();
 
-    sha3_Update(sha3, (uint8_t*) &json[tokens[field_val].start], tokens[field_val].end - tokens[field_val].start);
-    sha3_Final(sha3, out);
+    keccak_Update(sha3, (uint8_t*) &json[tokens[field_val].start], tokens[field_val].end - tokens[field_val].start);
+    keccak_Final(sha3, out);
   } else if (field_type->len == 5 && !strncmp(field_type->str, "bytes", 5)) {
     if (tokens[field_val].type != JSMN_STRING) {
       return ERR_DATA;
@@ -374,14 +374,14 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
         tmpstr.len -= len;
         tmpstr.str += len;
 
-        sha3_Update(sha3, out, (len >> 1));
+        keccak_Update(sha3, out, (len >> 1));
       }
 
-      sha3_Final(sha3, out);
+      keccak_Final(sha3, out);
     } else {
       __DECL_SHA3_CTX();
-      sha3_Update(sha3, (uint8_t*) tmpstr.str, tmpstr.len);
-      sha3_Final(sha3, out);
+      keccak_Update(sha3, (uint8_t*) tmpstr.str, tmpstr.len);
+      keccak_Final(sha3, out);
     }
   } else if (field_type->len == 4 && !strncmp(field_type->str, "bool", 4)) {
     if (tokens[field_val].type != JSMN_PRIMITIVE) {
@@ -427,7 +427,7 @@ static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_
 
   __DECL_SHA3_CTX();
 
-  sha3_Update(sha3, t->type_hash, SHA3_256_DIGEST_LENGTH);
+  keccak_Update(sha3, t->type_hash, SHA3_256_DIGEST_LENGTH);
 
   for (int i = 0; i < t->field_count; i++) {
     int field_val = eip712_hash_find_data(&t->fields[i].name, data, tokens, token_count, json);
@@ -440,10 +440,10 @@ static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_
       return ERR_DATA;
     }
 
-    sha3_Update(sha3, field, 32);
+    keccak_Update(sha3, field, 32);
   }
 
-  sha3_Final(sha3, out);
+  keccak_Final(sha3, out);
 
   return ERR_OK;
 }
@@ -510,7 +510,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   uint8_t tmp[32];
 
   eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, tokens[eip712.types].size, eip712.domain, tokens, token_count, json);
-  sha3_Update(sha3, tmp, 32);
+  keccak_Update(sha3, tmp, 32);
 
   tmpstr.str = &json[tokens[eip712.primary_type].start];
   tmpstr.len = (tokens[eip712.primary_type].end - tokens[eip712.primary_type].start);
@@ -521,7 +521,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   }
 
   app_err_t err = eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, tokens[eip712.types].size, eip712.message, tokens, token_count, json);
-  sha3_Update(sha3, tmp, 32);
+  keccak_Update(sha3, tmp, 32);
 
   return err;
 }
