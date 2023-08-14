@@ -416,15 +416,8 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
         return ERR_DATA;
       }
     } else {
-      int64_t res;
-      if (!atoi64(&json[tokens[field_val].start], (tokens[field_val].end - tokens[field_val].start), &res)) {
+      if (!atoi256BE(&json[tokens[field_val].start], (tokens[field_val].end - tokens[field_val].start), out)) {
         return ERR_DATA;
-      }
-
-      memset(out, res < 0 ? 0xff : 0x00, 24);
-      for (int i = 31; i >= 24; i--) {
-        out[i] = res & 0xff;
-        res >>= 8;
       }
     }
   }
@@ -443,7 +436,7 @@ static app_err_t eip712_hash_struct(SHA3_CTX* sha3, uint8_t* heap, size_t heap_s
       return ERR_DATA;
     }
 
-    uint8_t field[32];
+    APP_ALIGNED(uint8_t field[32], 4);
     if (eip712_encode_field(field, heap, heap_size, &t->fields[i].type, field_val, types, types_count, tokens, token_count, json) != ERR_OK) {
       return ERR_DATA;
     }
