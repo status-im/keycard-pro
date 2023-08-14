@@ -33,7 +33,7 @@ struct eip712_type {
 // ugly stuff
 #define ALIGN_HEAP(__HEAP__, __HEAP_SIZE__) __HEAP__ = (uint8_t*) (((uint32_t)(__HEAP__ + 3)) & ~0x3); __HEAP_SIZE__ &= ~0x3
 
-static app_err_t eip712_hash_struct(SHA3_CTX* sha3, uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json);
+static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json);
 
 static app_err_t eip712_top_level(struct eip712_tokens* eip712, const jsmntok_t tokens[], int token_count, const char* json) {
   int found = 0;
@@ -290,7 +290,7 @@ static int eip712_hash_find_data(const struct eip712_string* name, int start, co
   return -1;
 }
 
-// This macro must only be used in the below function
+// This macro must only be used in the below functions
 #define __DECL_SHA3_CTX() \
   ALIGN_HEAP(heap, heap_size); \
   if (heap_size < sizeof(SHA3_CTX)) { \
@@ -335,16 +335,13 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
 
     keccak_Final(sha3, out);
   } else if (eip712_is_struct(field_type)) {
-    __DECL_SHA3_CTX();
-
     int type = eip712_find_type(types, types_count, field_type);
 
     if (type == -1) {
       return ERR_DATA;
     }
 
-    eip712_hash_struct(sha3, heap, heap_size, type, types, types_count, field_val, tokens, token_count, json);
-    keccak_Final(sha3, out);
+    eip712_hash_struct(out, heap, heap_size, type, types, types_count, field_val, tokens, token_count, json);
   } else if (field_type->len == 6 && !strncmp(field_type->str, "string", 6)) {
     if (tokens[field_val].type != JSMN_STRING) {
       return ERR_DATA;
@@ -416,7 +413,7 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
         return ERR_DATA;
       }
     } else {
-      if (!atoi256BE(&json[tokens[field_val].start], (tokens[field_val].end - tokens[field_val].start), out)) {
+      if (!atoi256BE(tmpstr.str, tmpstr.len, out)) {
         return ERR_DATA;
       }
     }
@@ -425,8 +422,10 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
   return ERR_OK;
 }
 
-static app_err_t eip712_hash_struct(SHA3_CTX* sha3, uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json) {
+static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json) {
   const struct eip712_type *t = &types[type];
+
+  __DECL_SHA3_CTX();
 
   sha3_Update(sha3, t->type_hash, SHA3_256_DIGEST_LENGTH);
 
@@ -443,6 +442,8 @@ static app_err_t eip712_hash_struct(SHA3_CTX* sha3, uint8_t* heap, size_t heap_s
 
     sha3_Update(sha3, field, 32);
   }
+
+  sha3_Final(sha3, out);
 
   return ERR_OK;
 }
@@ -506,7 +507,10 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
     return ERR_DATA;
   }
 
-  eip712_hash_struct(sha3, heap, heap_size, struct_idx, types, tokens[eip712.types].size, eip712.domain, tokens, token_count, json);
+  uint8_t tmp[32];
+
+  eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, tokens[eip712.types].size, eip712.domain, tokens, token_count, json);
+  sha3_Update(sha3, tmp, 32);
 
   tmpstr.str = &json[tokens[eip712.primary_type].start];
   tmpstr.len = (tokens[eip712.primary_type].end - tokens[eip712.primary_type].start);
@@ -516,5 +520,8 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
     return ERR_DATA;
   }
 
-  return eip712_hash_struct(sha3, heap, heap_size, struct_idx, types, tokens[eip712.types].size, eip712.message, tokens, token_count, json);
+  app_err_t err = eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, tokens[eip712.types].size, eip712.message, tokens, token_count, json);
+  sha3_Update(sha3, tmp, 32);
+
+  return err;
 }
