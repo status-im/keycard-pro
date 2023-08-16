@@ -285,7 +285,7 @@ hal_err_t screen_draw_glyphs(screen_text_ctx_t* ctx, const glyph_t* glyphs[], si
   return HAL_SUCCESS;
 }
 
-hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, const uint8_t* text, size_t len) {
+size_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, const uint8_t* text, size_t len) {
   uint16_t start_x = ctx->x;
 
   while(len) {
@@ -332,7 +332,7 @@ hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_
     }
 
     if (screen_draw_glyphs(ctx, line, line_len) != HAL_SUCCESS) {
-      return HAL_FAIL;
+      return UINT32_MAX;
     }
 
     text += line_len;
@@ -342,11 +342,11 @@ hal_err_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_
     ctx->y += ctx->font->yAdvance;
 
     if (ctx->y > max_y) {
-      break;
+      return len;
     }
   }
 
-  return HAL_SUCCESS;
+  return 0;
 }
 
 hal_err_t screen_wait() {

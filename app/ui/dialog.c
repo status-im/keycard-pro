@@ -11,6 +11,7 @@
 
 #define TX_CONFIRM_TIMEOUT 30000
 #define BIGNUM_STRING_LEN 84
+#define MAX_PAGE_COUNT 50
 
 app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_height) {
   screen_area_t fillarea = { 0, ctx->y, SCREEN_WIDTH, line_height };
@@ -147,7 +148,7 @@ app_err_t dialog_confirm_tx() {
   }
 }
 
-static void dialog_draw_message(i18n_str_id_t title, const uint8_t* txt, size_t len) {
+static size_t dialog_draw_message(i18n_str_id_t title, const uint8_t* txt, size_t len) {
   dialog_title(LSTR(title));
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
@@ -159,15 +160,30 @@ static void dialog_draw_message(i18n_str_id_t title, const uint8_t* txt, size_t 
   ctx.bg = TH_COLOR_TEXT_BG;
   ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
 
-  screen_draw_text(&ctx, (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN), (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN), txt, len);
+  return screen_draw_text(&ctx, (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN), (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN), txt, len);
 }
 
 app_err_t dialog_confirm_msg() {
-  dialog_draw_message(MSG_CONFIRM_TITLE, g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len);
+  size_t pages[MAX_PAGE_COUNT];
+  int page = 0;
+  pages[0] = 0;
 
-  //TODO: implement scrolling
   while(1) {
+    size_t offset = pages[page];
+    size_t to_display = g_ui_cmd.params.msg.len - offset;
+    size_t remaining = dialog_draw_message(MSG_CONFIRM_TITLE, &g_ui_cmd.params.msg.data[offset], to_display);
+
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
+    case KEYPAD_KEY_LEFT:
+      if (page > 0) {
+        page--;
+      }
+      break;
+    case KEYPAD_KEY_RIGHT:
+      if (remaining && (page < MAX_PAGE_COUNT)) {
+        pages[++page] = offset + (to_display - remaining);
+      }
+      break;
     case KEYPAD_KEY_CANCEL:
     case KEYPAD_KEY_BACK:
     case KEYPAD_KEY_INVALID:
