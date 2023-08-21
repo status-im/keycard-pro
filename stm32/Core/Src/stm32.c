@@ -166,6 +166,7 @@ hal_err_t hal_init() {
   MX_I2C2_Init();
   MX_USART6_SMARTCARD_Init();
   __HAL_RCC_USART6_CLK_DISABLE();
+  MX_USB_PCD_Init();
   MX_DCMI_Init();
 
   mco_off();

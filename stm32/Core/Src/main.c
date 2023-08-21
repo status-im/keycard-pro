@@ -69,6 +69,7 @@ PCD_HandleTypeDef hpcd_USB_DRD_FS;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+static void MX_MEMORYMAP_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -378,6 +379,27 @@ void MX_ICACHE_Init(void)
   /* USER CODE BEGIN ICACHE_Init 2 */
 
   /* USER CODE END ICACHE_Init 2 */
+
+}
+
+/**
+  * @brief MEMORYMAP Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_MEMORYMAP_Init(void)
+{
+
+  /* USER CODE BEGIN MEMORYMAP_Init 0 */
+
+  /* USER CODE END MEMORYMAP_Init 0 */
+
+  /* USER CODE BEGIN MEMORYMAP_Init 1 */
+
+  /* USER CODE END MEMORYMAP_Init 1 */
+  /* USER CODE BEGIN MEMORYMAP_Init 2 */
+
+  /* USER CODE END MEMORYMAP_Init 2 */
 
 }
 
