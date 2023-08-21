@@ -1,7 +1,7 @@
 #ifndef __HAL_STM32__
 #define __HAL_STM32__
 
-#include "stm32h563xx.h"
+#include "stm32h573xx.h"
 
 typedef uint32_t hal_sha256_ctx_t;
 typedef uint32_t hal_crc32_ctx_t;

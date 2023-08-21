@@ -162,7 +162,7 @@ hal_err_t hal_init() {
   MX_GPDMA2_Init();
   MX_GPDMA1_Init();
 
-  MX_SPI5_Init();
+  MX_SPI6_Init();
   MX_I2C2_Init();
   MX_USART6_SMARTCARD_Init();
   __HAL_RCC_USART6_CLK_DISABLE();
@@ -267,13 +267,13 @@ hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, const uint8_t* data, s
 
 hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
   assert(port == SPI_LCD);
-  return HAL_SPI_Transmit(&hspi5, (uint8_t*) data, len, HAL_TIMEOUT);
+  return HAL_SPI_Transmit(&hspi6, (uint8_t*) data, len, HAL_TIMEOUT);
 }
 
 hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len, void (*cb)()) {
   assert(port == SPI_LCD);
   g_spi_callback = cb;
-  return HAL_SPI_Transmit_DMA(&hspi5, (uint8_t*) data, len);
+  return HAL_SPI_Transmit_DMA(&hspi6, (uint8_t*) data, len);
 }
 
 hal_err_t hal_rng_next(uint8_t *buf, size_t len) {

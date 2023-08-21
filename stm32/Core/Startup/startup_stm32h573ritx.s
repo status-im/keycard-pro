@@ -1,8 +1,8 @@
 /**
   ******************************************************************************
-  * @file      startup_stm32h563xx.s
+  * @file      startup_stm32h573xx.s
   * @author    MCD Application Team
-  * @brief     STM32H563xx devices vector table GCC toolchain.
+  * @brief     STM32H573xx devices vector table GCC toolchain.
   *            This module performs:
   *                - Set the initial SP
   *                - Set the initial PC == Reset_Handler,
@@ -10,6 +10,8 @@
   *                - Configure the clock system
   *                - Branches to main in the C library (which eventually
   *                  calls main()).
+  *            After Reset the Cortex-M33 processor is in Thread mode,
+  *            priority is Privileged, and the Stack is set to Main.
   ******************************************************************************
   * @attention
   *
@@ -28,21 +30,22 @@
 	.fpu softvfp
 	.thumb
 
-.global g_pfnVectors
-.global Default_Handler
+.global	g_pfnVectors
+.global	Default_Handler
 
 /* start address for the initialization values of the .data section.
 defined in linker script */
-.word _sidata
+.word	_sidata
 /* start address for the .data section. defined in linker script */
-.word _sdata
+.word	_sdata
 /* end address for the .data section. defined in linker script */
-.word _edata
+.word	_edata
 /* start address for the .bss section. defined in linker script */
-.word _sbss
+.word	_sbss
 /* end address for the .bss section. defined in linker script */
-.word _ebss
+.word	_ebss
 
+.equ  BootRAM,        0xF1E0F85F
 /**
   * @brief  This is the code that gets called when the processor first
   *          starts execution following a reset event. Only the absolutely
@@ -118,14 +121,15 @@ Infinite_Loop:
 
 /******************************************************************************
 *
-* The STM32H563xx vector table.  Note that the proper constructs
+* The STM32H573xx vector table.  Note that the proper constructs
 * must be placed on this to ensure that it ends up at physical address
 * 0x0000.0000.
 *
 ******************************************************************************/
-  .section .isr_vector,"a",%progbits
-  .type g_pfnVectors, %object
-  .size g_pfnVectors, .-g_pfnVectors
+ 	.section	.isr_vector,"a",%progbits
+	.type	g_pfnVectors, %object
+	.size	g_pfnVectors, .-g_pfnVectors
+
 
 g_pfnVectors:
 	.word	_estack
@@ -180,7 +184,7 @@ g_pfnVectors:
 	.word	GPDMA1_Channel6_IRQHandler
 	.word	GPDMA1_Channel7_IRQHandler
 	.word	IWDG_IRQHandler
-	.word	0
+	.word	SAES_IRQHandler
 	.word	ADC1_IRQHandler
 	.word	DAC1_IRQHandler
 	.word	FDCAN1_IT0_IRQHandler
@@ -209,11 +213,11 @@ g_pfnVectors:
 	.word	UART5_IRQHandler
 	.word	LPUART1_IRQHandler
 	.word	LPTIM1_IRQHandler
-    .word	TIM8_BRK_IRQHandler
-    .word	TIM8_UP_IRQHandler
-    .word	TIM8_TRG_COM_IRQHandler
-    .word	TIM8_CC_IRQHandler
-    .word	ADC2_IRQHandler
+	.word	TIM8_BRK_IRQHandler
+	.word	TIM8_UP_IRQHandler
+	.word	TIM8_TRG_COM_IRQHandler
+	.word	TIM8_CC_IRQHandler
+	.word	ADC2_IRQHandler
 	.word	LPTIM2_IRQHandler
 	.word	TIM15_IRQHandler
 	.word	TIM16_IRQHandler
@@ -259,10 +263,10 @@ g_pfnVectors:
  	.word   FMAC_IRQHandler
 	.word	DTS_IRQHandler
 	.word	RNG_IRQHandler
-	.word	0
-	.word	0
+	.word	OTFDEC1_IRQHandler
+	.word	AES_IRQHandler
 	.word	HASH_IRQHandler
-	.word	0
+	.word	PKA_IRQHandler
 	.word	CEC_IRQHandler
 	.word	TIM12_IRQHandler
 	.word	TIM13_IRQHandler
@@ -421,6 +425,9 @@ g_pfnVectors:
 
 	.weak	IWDG_IRQHandler
 	.thumb_set IWDG_IRQHandler,Default_Handler
+
+	.weak	SAES_IRQHandler
+	.thumb_set SAES_IRQHandler,Default_Handler
 
 	.weak	ADC1_IRQHandler
 	.thumb_set ADC1_IRQHandler,Default_Handler
@@ -656,8 +663,17 @@ g_pfnVectors:
 	.weak	RNG_IRQHandler
 	.thumb_set RNG_IRQHandler,Default_Handler
 
+	.weak	OTFDEC1_IRQHandler
+	.thumb_set OTFDEC1_IRQHandler,Default_Handler
+
+	.weak	AES_IRQHandler
+	.thumb_set AES_IRQHandler,Default_Handler
+
 	.weak	HASH_IRQHandler
 	.thumb_set HASH_IRQHandler,Default_Handler
+
+	.weak	PKA_IRQHandler
+	.thumb_set PKA_IRQHandler,Default_Handler
 
 	.weak	CEC_IRQHandler
 	.thumb_set CEC_IRQHandler,Default_Handler
