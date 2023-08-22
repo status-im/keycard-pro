@@ -52,6 +52,7 @@ extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim2;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 extern CRC_HandleTypeDef hcrc;
+extern ADC_HandleTypeDef hadc2;
 /* USER CODE END EC */
 
 /* Exported macro ------------------------------------------------------------*/
@@ -78,6 +79,7 @@ void MX_HASH_Init(void);
 void MX_USB_PCD_Init(void);
 void MX_ICACHE_Init(void);
 void MX_MEMORYMAP_Init(void);
+void MX_ADC2_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);
@@ -88,6 +90,7 @@ void SystemClock_Config(void);
 #define SC_DEFAULT_BAUD_RATE 10752
 #define GPIO_VUSB_OK_Pin GPIO_PIN_13
 #define GPIO_VUSB_OK_GPIO_Port GPIOC
+#define GPIO_VUSB_OK_EXTI_IRQn EXTI13_IRQn
 #define GPIO_KEYPAD_COL_0_Pin GPIO_PIN_0
 #define GPIO_KEYPAD_COL_0_GPIO_Port GPIOC
 #define GPIO_KEYPAD_COL_1_Pin GPIO_PIN_1
@@ -106,6 +109,7 @@ void SystemClock_Config(void);
 #define PWM_LCD_BL_GPIO_Port GPIOA
 #define GPIO_HALT_REQ_Pin GPIO_PIN_4
 #define GPIO_HALT_REQ_GPIO_Port GPIOC
+#define GPIO_HALT_REQ_EXTI_IRQn EXTI4_IRQn
 #define GPIO_KEYPAD_ROW_0_Pin GPIO_PIN_5
 #define GPIO_KEYPAD_ROW_0_GPIO_Port GPIOC
 #define GPIO_KEYPAD_ROW_1_Pin GPIO_PIN_0
@@ -130,6 +134,7 @@ void SystemClock_Config(void);
 #define SWCLK_GPIO_Port GPIOA
 #define GPIO_SC_PRES_Pin GPIO_PIN_10
 #define GPIO_SC_PRES_GPIO_Port GPIOC
+#define GPIO_SC_PRES_EXTI_IRQn EXTI10_IRQn
 #define GPIO_CAM_EN_Pin GPIO_PIN_2
 #define GPIO_CAM_EN_GPIO_Port GPIOD
 #define SWO_Pin GPIO_PIN_3

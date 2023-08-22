@@ -40,6 +40,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+ADC_HandleTypeDef hadc2;
 
 CRC_HandleTypeDef hcrc;
 
@@ -153,6 +154,65 @@ void SystemClock_Config(void)
 
   HAL_RCCEx_CRSConfig(&RCC_CRSInitStruct);
   HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSI48, RCC_MCODIV_2);
+}
+
+/**
+  * @brief ADC2 Initialization Function
+  * @param None
+  * @retval None
+  */
+void MX_ADC2_Init(void)
+{
+
+  /* USER CODE BEGIN ADC2_Init 0 */
+
+  /* USER CODE END ADC2_Init 0 */
+
+  ADC_ChannelConfTypeDef sConfig = {0};
+
+  /* USER CODE BEGIN ADC2_Init 1 */
+
+  /* USER CODE END ADC2_Init 1 */
+
+  /** Common config
+  */
+  hadc2.Instance = ADC2;
+  hadc2.Init.ClockPrescaler = ADC_CLOCK_ASYNC_DIV2;
+  hadc2.Init.Resolution = ADC_RESOLUTION_12B;
+  hadc2.Init.DataAlign = ADC_DATAALIGN_RIGHT;
+  hadc2.Init.ScanConvMode = ADC_SCAN_DISABLE;
+  hadc2.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
+  hadc2.Init.LowPowerAutoWait = DISABLE;
+  hadc2.Init.ContinuousConvMode = DISABLE;
+  hadc2.Init.NbrOfConversion = 1;
+  hadc2.Init.DiscontinuousConvMode = DISABLE;
+  hadc2.Init.ExternalTrigConv = ADC_SOFTWARE_START;
+  hadc2.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_NONE;
+  hadc2.Init.DMAContinuousRequests = DISABLE;
+  hadc2.Init.SamplingMode = ADC_SAMPLING_MODE_NORMAL;
+  hadc2.Init.Overrun = ADC_OVR_DATA_PRESERVED;
+  hadc2.Init.OversamplingMode = DISABLE;
+  if (HAL_ADC_Init(&hadc2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Configure Regular Channel
+  */
+  sConfig.Channel = ADC_CHANNEL_VBAT;
+  sConfig.Rank = ADC_REGULAR_RANK_1;
+  sConfig.SamplingTime = ADC_SAMPLETIME_2CYCLES_5;
+  sConfig.SingleDiff = ADC_SINGLE_ENDED;
+  sConfig.OffsetNumber = ADC_OFFSET_NONE;
+  sConfig.Offset = 0;
+  if (HAL_ADC_ConfigChannel(&hadc2, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN ADC2_Init 2 */
+
+  /* USER CODE END ADC2_Init 2 */
+
 }
 
 /**
@@ -394,6 +454,27 @@ void MX_ICACHE_Init(void)
   /* USER CODE BEGIN ICACHE_Init 2 */
 
   /* USER CODE END ICACHE_Init 2 */
+
+}
+
+/**
+  * @brief MEMORYMAP Initialization Function
+  * @param None
+  * @retval None
+  */
+void MX_MEMORYMAP_Init(void)
+{
+
+  /* USER CODE BEGIN MEMORYMAP_Init 0 */
+
+  /* USER CODE END MEMORYMAP_Init 0 */
+
+  /* USER CODE BEGIN MEMORYMAP_Init 1 */
+
+  /* USER CODE END MEMORYMAP_Init 1 */
+  /* USER CODE BEGIN MEMORYMAP_Init 2 */
+
+  /* USER CODE END MEMORYMAP_Init 2 */
 
 }
 
@@ -698,11 +779,11 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIO_CAM_EN_GPIO_Port, GPIO_CAM_EN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : GPIO_VUSB_OK_Pin */
-  GPIO_InitStruct.Pin = GPIO_VUSB_OK_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  /*Configure GPIO pins : GPIO_VUSB_OK_Pin GPIO_SC_PRES_Pin */
+  GPIO_InitStruct.Pin = GPIO_VUSB_OK_Pin|GPIO_SC_PRES_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIO_VUSB_OK_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PC14 PC15 PC3 */
   GPIO_InitStruct.Pin = GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_3;
@@ -778,18 +859,22 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : GPIO_SC_PRES_Pin */
-  GPIO_InitStruct.Pin = GPIO_SC_PRES_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  HAL_GPIO_Init(GPIO_SC_PRES_GPIO_Port, &GPIO_InitStruct);
-
   /*Configure GPIO pin : GPIO_CAM_EN_Pin */
   GPIO_InitStruct.Pin = GPIO_CAM_EN_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIO_CAM_EN_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI4_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI4_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI10_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI10_IRQn);
+
+  HAL_NVIC_SetPriority(EXTI13_IRQn, 2, 0);
+  HAL_NVIC_EnableIRQ(EXTI13_IRQn);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
