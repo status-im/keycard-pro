@@ -18,4 +18,8 @@ typedef uint32_t hal_crc32_ctx_t;
 
 #define HAL_FLASH_DATA_BLOCK_COUNT 96
 
+static inline void hal_reboot() {
+  NVIC_SystemReset();
+}
+
 #endif
