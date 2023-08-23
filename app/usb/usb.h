@@ -52,4 +52,22 @@ typedef struct __attribute__((packed)) {
   uint8_t poll_interval;
 } usb_ep_desc_t;
 
+typedef struct __attribute__((packed)) {
+  uint8_t len;
+  uint8_t type;
+  uint16_t hid_version;
+  uint8_t country_code;
+  uint8_t desc_count;
+  uint8_t desc_type;
+  uint16_t desc_len;
+} usb_hid_desc_t;
+
+typedef struct __attribute__((packed)) {
+  usb_conf_desc_t confd;
+  usb_if_desc_t ifd;
+  usb_hid_desc_t hidd;
+  usb_ep_desc_t epoutd;
+  usb_ep_desc_t epind;
+} usb_hid_inout_desc_t;
+
 #endif
