@@ -397,7 +397,7 @@ void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x10707DBC;
+  hi2c2.Init.Timing = 0x40303DFF;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -528,7 +528,7 @@ void MX_SPI6_Init(void)
   hspi6.Init.CLKPolarity = SPI_POLARITY_HIGH;
   hspi6.Init.CLKPhase = SPI_PHASE_1EDGE;
   hspi6.Init.NSS = SPI_NSS_SOFT;
-  hspi6.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_8;
+  hspi6.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
   hspi6.Init.FirstBit = SPI_FIRSTBIT_MSB;
   hspi6.Init.TIMode = SPI_TIMODE_DISABLE;
   hspi6.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
@@ -768,10 +768,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_LCD_RST_Pin|GPIO_CAMERA_RST_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIO_KEYPAD_ROW_0_GPIO_Port, GPIO_KEYPAD_ROW_0_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIO_KEYPAD_ROW_3_GPIO_Port, GPIO_KEYPAD_ROW_3_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_KEYPAD_ROW_1_Pin|GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_3_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_1_Pin|GPIO_KEYPAD_ROW_0_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIO_PWR_KILL_GPIO_Port, GPIO_PWR_KILL_Pin, GPIO_PIN_RESET);
@@ -797,8 +797,8 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO_KEYPAD_COL_0_Pin GPIO_KEYPAD_COL_1_Pin GPIO_KEYPAD_COL_2_Pin */
-  GPIO_InitStruct.Pin = GPIO_KEYPAD_COL_0_Pin|GPIO_KEYPAD_COL_1_Pin|GPIO_KEYPAD_COL_2_Pin;
+  /*Configure GPIO pins : GPIO_KEYPAD_COL_2_Pin GPIO_KEYPAD_COL_1_Pin GPIO_KEYPAD_COL_0_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_COL_2_Pin|GPIO_KEYPAD_COL_1_Pin|GPIO_KEYPAD_COL_0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
@@ -818,15 +818,15 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIO_HALT_REQ_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : GPIO_KEYPAD_ROW_0_Pin */
-  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_0_Pin;
+  /*Configure GPIO pin : GPIO_KEYPAD_ROW_3_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIO_KEYPAD_ROW_0_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIO_KEYPAD_ROW_3_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO_KEYPAD_ROW_1_Pin GPIO_KEYPAD_ROW_2_Pin GPIO_KEYPAD_ROW_3_Pin */
-  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_1_Pin|GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_3_Pin;
+  /*Configure GPIO pins : GPIO_KEYPAD_ROW_2_Pin GPIO_KEYPAD_ROW_1_Pin GPIO_KEYPAD_ROW_0_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_1_Pin|GPIO_KEYPAD_ROW_0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
