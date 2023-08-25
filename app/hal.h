@@ -24,6 +24,7 @@ typedef enum {
 
 hal_err_t hal_init();
 hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]);
+void hal_reset();
 
 // Camera
 #define CAMERA_WIDTH 480
@@ -48,6 +49,7 @@ hal_err_t hal_camera_submit(uint8_t* fb);
 // GPIO
 typedef enum {
   GPIO_CAMERA_PWDN = 0,
+  GPIO_CAMERA_PWR,
   GPIO_CAMERA_RST,
   GPIO_LCD_CMD_DATA,
   GPIO_LCD_RST,
@@ -58,6 +60,10 @@ typedef enum {
   GPIO_KEYPAD_COL_0,
   GPIO_KEYPAD_COL_1,
   GPIO_KEYPAD_COL_2,
+  GPIO_VUSB_OK,
+  GPIO_SMARTCARD_PRESENT,
+  GPIO_HALT_REQ,
+  GPIO_PWR_KILL
 } hal_gpio_pin_t;
 
 typedef enum {

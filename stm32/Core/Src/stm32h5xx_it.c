@@ -58,7 +58,7 @@
 extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
-extern SPI_HandleTypeDef hspi5;
+extern SPI_HandleTypeDef hspi6;
 extern SMARTCARD_HandleTypeDef hsmartcard6;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 /* USER CODE BEGIN EV */
@@ -164,6 +164,48 @@ void DebugMon_Handler(void)
 /******************************************************************************/
 
 /**
+  * @brief This function handles EXTI Line4 interrupt.
+  */
+void EXTI4_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI4_IRQn 0 */
+
+  /* USER CODE END EXTI4_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_HALT_REQ_Pin);
+  /* USER CODE BEGIN EXTI4_IRQn 1 */
+
+  /* USER CODE END EXTI4_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI Line10 interrupt.
+  */
+void EXTI10_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI10_IRQn 0 */
+
+  /* USER CODE END EXTI10_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_SC_PRES_Pin);
+  /* USER CODE BEGIN EXTI10_IRQn 1 */
+
+  /* USER CODE END EXTI10_IRQn 1 */
+}
+
+/**
+  * @brief This function handles EXTI Line13 interrupt.
+  */
+void EXTI13_IRQHandler(void)
+{
+  /* USER CODE BEGIN EXTI13_IRQn 0 */
+
+  /* USER CODE END EXTI13_IRQn 0 */
+  HAL_GPIO_EXTI_IRQHandler(GPIO_VUSB_OK_Pin);
+  /* USER CODE BEGIN EXTI13_IRQn 1 */
+
+  /* USER CODE END EXTI13_IRQn 1 */
+}
+
+/**
   * @brief This function handles GPDMA1 Channel 0 global interrupt.
   */
 void GPDMA1_Channel0_IRQHandler(void)
@@ -192,17 +234,17 @@ void USB_DRD_FS_IRQHandler(void)
 }
 
 /**
-  * @brief This function handles SPI5 global interrupt.
+  * @brief This function handles SPI6 global interrupt.
   */
-void SPI5_IRQHandler(void)
+void SPI6_IRQHandler(void)
 {
-  /* USER CODE BEGIN SPI5_IRQn 0 */
+  /* USER CODE BEGIN SPI6_IRQn 0 */
 
-  /* USER CODE END SPI5_IRQn 0 */
-  HAL_SPI_IRQHandler(&hspi5);
-  /* USER CODE BEGIN SPI5_IRQn 1 */
+  /* USER CODE END SPI6_IRQn 0 */
+  HAL_SPI_IRQHandler(&hspi6);
+  /* USER CODE BEGIN SPI6_IRQn 1 */
 
-  /* USER CODE END SPI5_IRQn 1 */
+  /* USER CODE END SPI6_IRQn 1 */
 }
 
 /**

@@ -15,13 +15,12 @@ APP_NOCACHE(uint8_t g_camera_fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE], CAMERA_BUFFER_
 #define CAMERA_FRAME_TIMEOUT 100
 
 hal_err_t _camera_reset() {
-  hal_gpio_set(GPIO_CAMERA_PWDN, _CAM_PWR_OFF);
+  hal_gpio_set(GPIO_CAMERA_PWR, GPIO_SET);
   vTaskDelay(pdMS_TO_TICKS(CAMERA_SETTLE_MS));
+
   hal_gpio_set(GPIO_CAMERA_PWDN, _CAM_PWR_ON);
   vTaskDelay(pdMS_TO_TICKS(CAMERA_SETTLE_MS));
 
-  hal_gpio_set(GPIO_CAMERA_RST, GPIO_RESET);
-  vTaskDelay(pdMS_TO_TICKS(CAMERA_SETTLE_MS));
   hal_gpio_set(GPIO_CAMERA_RST, GPIO_SET);
   vTaskDelay(pdMS_TO_TICKS(CAMERA_SETTLE_MS));
 
@@ -83,7 +82,10 @@ hal_err_t camera_start() {
 }
 
 hal_err_t camera_stop() {
+  hal_gpio_set(GPIO_CAMERA_RST, GPIO_RESET);
   hal_gpio_set(GPIO_CAMERA_PWDN, _CAM_PWR_OFF);
+  hal_gpio_set(GPIO_CAMERA_PWR, GPIO_RESET);
+
   hal_err_t err = hal_camera_stop();
   ulTaskNotifyTakeIndexed(CAMERA_TASK_NOTIFICATION_IDX, pdTRUE, 0);
 

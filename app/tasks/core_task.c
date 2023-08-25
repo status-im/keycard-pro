@@ -1,5 +1,6 @@
 #include "core/core.h"
 #include "keycard/keycard.h"
+#include "pwr.h"
 
 static inline void core_action_run(i18n_str_id_t menu) {
   switch(menu) {
@@ -22,10 +23,16 @@ static inline void core_action_run(i18n_str_id_t menu) {
 }
 
 void core_task_entry(void* pvParameters) {
+  if (hal_gpio_get(GPIO_SMARTCARD_PRESENT) == GPIO_RESET) {
+    pwr_shutdown();
+  }
+
   keycard_init(&g_core.keycard);
   keycard_activate(&g_core.keycard);
 
-  configASSERT(g_core.keycard.sc.state == SC_READY);
+  if (g_core.keycard.sc.state != SC_READY) {
+    pwr_reboot();
+  }
 
   while(1) {
     i18n_str_id_t selected;

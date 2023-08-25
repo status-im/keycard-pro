@@ -5,9 +5,11 @@
 #include "linked_list.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include "pwr.h"
 
 #define HAL_TIMEOUT 250
 #define SC_RESET_DELAY 10
+#define CLOCK_STABLE_DELAY 5
 #define SMARTCARD_STOPBITS_1 0x00000000U
 
 #define FLASH_BANK_SWAPPED() (FLASH->OPTSR_CUR & FLASH_OPTSR_SWAP_BANK)
@@ -35,6 +37,7 @@ struct dcmi_buf {
 
 const struct gpio_pin_spec STM32_PIN_MAP[] = {
   {GPIO_CAMERA_PWDN_GPIO_Port, GPIO_CAMERA_PWDN_Pin},
+  {GPIO_CAM_EN_GPIO_Port, GPIO_CAM_EN_Pin},
   {GPIO_CAMERA_RST_GPIO_Port, GPIO_CAMERA_RST_Pin},
   {GPIO_LCD_CD_GPIO_Port, GPIO_LCD_CD_Pin},
   {GPIO_LCD_RST_GPIO_Port, GPIO_LCD_RST_Pin},
@@ -45,6 +48,10 @@ const struct gpio_pin_spec STM32_PIN_MAP[] = {
   {GPIO_KEYPAD_COL_0_GPIO_Port, GPIO_KEYPAD_COL_0_Pin},
   {GPIO_KEYPAD_COL_1_GPIO_Port, GPIO_KEYPAD_COL_1_Pin},
   {GPIO_KEYPAD_COL_2_GPIO_Port, GPIO_KEYPAD_COL_2_Pin},
+  {GPIO_VUSB_OK_GPIO_Port, GPIO_VUSB_OK_Pin},
+  {GPIO_SC_PRES_GPIO_Port, GPIO_SC_PRES_Pin},
+  {GPIO_HALT_REQ_GPIO_Port, GPIO_HALT_REQ_Pin},
+  {GPIO_PWR_KILL_GPIO_Port, GPIO_PWR_KILL_Pin},
 };
 
 static void (*g_spi_callback)();
@@ -75,6 +82,31 @@ static inline void mco_on() {
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
   if (g_spi_callback) {
     g_spi_callback();
+  }
+}
+
+void HAL_GPIO_EXTI_Rising_Callback(uint16_t gpio_pin) {
+  switch(gpio_pin) {
+  case GPIO_SC_PRES_Pin:
+    pwr_smartcard_inserted();
+    break;
+  case GPIO_VUSB_OK_Pin:
+    pwr_usb_unplugged();
+    break;
+  }
+}
+
+void HAL_GPIO_EXTI_Falling_Callback(uint16_t gpio_pin) {
+  switch(gpio_pin) {
+  case GPIO_HALT_REQ_Pin:
+    pwr_shutdown();
+    break;
+  case GPIO_SC_PRES_Pin:
+    pwr_smartcard_removed();
+    break;
+  case GPIO_VUSB_OK_Pin:
+    pwr_usb_plugged();
+    break;
   }
 }
 
@@ -162,7 +194,7 @@ hal_err_t hal_init() {
   MX_GPDMA2_Init();
   MX_GPDMA1_Init();
 
-  MX_SPI5_Init();
+  MX_SPI6_Init();
   MX_I2C2_Init();
   MX_USART6_SMARTCARD_Init();
   __HAL_RCC_USART6_CLK_DISABLE();
@@ -191,6 +223,7 @@ hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]) {
 
 hal_err_t hal_camera_init() {
   mco_on();
+  vTaskDelay(pdMS_TO_TICKS(CLOCK_STABLE_DELAY));
   return HAL_SUCCESS;
 }
 
@@ -267,13 +300,13 @@ hal_err_t hal_i2c_send(hal_i2c_port_t port, uint8_t addr, const uint8_t* data, s
 
 hal_err_t hal_spi_send(hal_spi_port_t port, const uint8_t* data, size_t len) {
   assert(port == SPI_LCD);
-  return HAL_SPI_Transmit(&hspi5, (uint8_t*) data, len, HAL_TIMEOUT);
+  return HAL_SPI_Transmit(&hspi6, (uint8_t*) data, len, HAL_TIMEOUT);
 }
 
 hal_err_t hal_spi_send_dma(hal_spi_port_t port, const uint8_t* data, size_t len, void (*cb)()) {
   assert(port == SPI_LCD);
   g_spi_callback = cb;
-  return HAL_SPI_Transmit_DMA(&hspi5, (uint8_t*) data, len);
+  return HAL_SPI_Transmit_DMA(&hspi6, (uint8_t*) data, len);
 }
 
 hal_err_t hal_rng_next(uint8_t *buf, size_t len) {
@@ -304,6 +337,7 @@ hal_err_t hal_delay_us(uint32_t usec) {
 
 hal_err_t hal_smartcard_start() {
   __HAL_RCC_USART6_CLK_ENABLE();
+  vTaskDelay(pdMS_TO_TICKS(CLOCK_STABLE_DELAY));
 
   HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_RESET);
   vTaskDelay(pdMS_TO_TICKS(SC_RESET_DELAY));
