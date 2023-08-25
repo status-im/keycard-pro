@@ -178,13 +178,14 @@ static enum fs_iterator_action _fs_erase_entries(void* ctx, fs_entry_t* entry, s
   }
 
   fs_action_t action = erase_ctx->stop ? FS_ACCEPT : erase_ctx->predicate(erase_ctx->ctx, entry);
+  int copy_len;
 
   switch(action) {
   case FS_REJECT:
     erase_ctx->pending_erase = 1;
     break;
   case FS_ACCEPT:
-    int copy_len = entry->len + 4;
+    copy_len = entry->len + 4;
     memcpy(&erase_ctx->data[erase_ctx->off], (uint8_t*) entry, copy_len);
     erase_ctx->off += copy_len;
     break;
