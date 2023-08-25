@@ -32,7 +32,7 @@ void updater_database_run() {
     return;
   }
 
-  if (eth_db_update((fs_entry_t *) data.data, data.len) != ERR_OK) {
+  if (eth_db_update((fs_entry_t *) data.data, data.len - DB_SIG_LEN) != ERR_OK) {
     ui_info(INFO_ERROR_TITLE, LSTR(INFO_DB_UPDATE_ERROR), 1);
   } else {
     ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_DB_UPDATE_OK), 1);
