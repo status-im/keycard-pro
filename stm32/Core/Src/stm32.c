@@ -9,6 +9,7 @@
 
 #define HAL_TIMEOUT 250
 #define SC_RESET_DELAY 10
+#define CLOCK_STABLE_DELAY 5
 #define SMARTCARD_STOPBITS_1 0x00000000U
 
 #define FLASH_BANK_SWAPPED() (FLASH->OPTSR_CUR & FLASH_OPTSR_SWAP_BANK)
@@ -222,6 +223,7 @@ hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]) {
 
 hal_err_t hal_camera_init() {
   mco_on();
+  vTaskDelay(pdMS_TO_TICKS(CLOCK_STABLE_DELAY));
   return HAL_SUCCESS;
 }
 
@@ -335,6 +337,7 @@ hal_err_t hal_delay_us(uint32_t usec) {
 
 hal_err_t hal_smartcard_start() {
   __HAL_RCC_USART6_CLK_ENABLE();
+  vTaskDelay(pdMS_TO_TICKS(CLOCK_STABLE_DELAY));
 
   HAL_GPIO_WritePin(GPIO_CARD_RST_GPIO_Port, GPIO_CARD_RST_Pin, GPIO_PIN_RESET);
   vTaskDelay(pdMS_TO_TICKS(SC_RESET_DELAY));
