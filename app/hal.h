@@ -139,4 +139,17 @@ typedef enum {
 } hal_pwm_output_t;
 
 hal_err_t hal_pwm_set_dutycycle(hal_pwm_output_t out, uint8_t cycle);
+
+// USB
+#define HAL_USB_EPOUT_ADDR 0x01
+#define HAL_USB_EPIN_ADDR 0x81
+#define HAL_USB_MPS 64
+
+hal_err_t hal_usb_start();
+hal_err_t hal_usb_stop();
+hal_err_t hal_usb_send(const uint8_t* data, size_t len);
+hal_err_t hal_usb_send_ctrl(const uint8_t* data, size_t len);
+hal_err_t hal_usb_recv_cb(const uint8_t* data, size_t len);
+hal_err_t hal_usb_recv_ctrl_cb(const uint8_t* data, size_t len);
+
 #endif

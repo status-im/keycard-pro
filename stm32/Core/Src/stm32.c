@@ -177,6 +177,35 @@ void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi) {
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
+void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
+}
+
+void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
+}
+
+void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
+}
+
+static void _hal_usb_close_ep() {
+  HAL_PCD_EP_Close(&hpcd_USB_DRD_FS, HAL_USB_EPIN_ADDR);
+  HAL_PCD_EP_Close(&hpcd_USB_DRD_FS, HAL_USB_EPOUT_ADDR);
+}
+
+static void _hal_usb_open_ep() {
+  HAL_PCD_EP_Open(&hpcd_USB_DRD_FS, HAL_USB_EPIN_ADDR, HAL_USB_MPS, EP_TYPE_INTR);
+  HAL_PCD_EP_Open(&hpcd_USB_DRD_FS, HAL_USB_EPOUT_ADDR, HAL_USB_MPS, EP_TYPE_INTR);
+}
+
+void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
+  _hal_usb_close_ep();
+
+  HAL_PCD_EP_Open(&hpcd_USB_DRD_FS, 0x00, HAL_USB_MPS, EP_TYPE_CTRL);
+  HAL_PCD_EP_Open(&hpcd_USB_DRD_FS, 0x80, HAL_USB_MPS, EP_TYPE_CTRL);
+
+  _hal_usb_open_ep();
+}
+
+
 hal_err_t hal_init() {
   // Copies UID, Flash size, package info before it becomes privileged
   memcpy(g_uid, (uint32_t*) UID_BASE, HAL_DEVICE_UID_LEN);
@@ -198,7 +227,7 @@ hal_err_t hal_init() {
   MX_I2C2_Init();
   MX_USART6_SMARTCARD_Init();
   __HAL_RCC_USART6_CLK_DISABLE();
-  MX_USB_PCD_Init();
+
   MX_DCMI_Init();
 
   mco_off();
@@ -568,4 +597,37 @@ hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LEN
   *(out32++) = __REV(HASH_DIGEST->HR[7]);
 
   return HAL_SUCCESS;
+}
+
+hal_err_t hal_usb_start() {
+  HAL_PWREx_EnableVddUSB();
+
+  MX_USB_PCD_Init();
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x00, PCD_SNG_BUF, 0x18);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, 0x80, PCD_SNG_BUF, 0x58);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, HAL_USB_EPIN_ADDR, PCD_SNG_BUF, 0x98);
+  HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, HAL_USB_EPOUT_ADDR, PCD_SNG_BUF, 0xD8);
+
+  if (HAL_PCD_Start(&hpcd_USB_DRD_FS) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  return HAL_OK;
+}
+
+hal_err_t hal_usb_stop() {
+  _hal_usb_close_ep();
+  HAL_PCD_Stop(&hpcd_USB_DRD_FS);
+  HAL_PCD_DeInit(&hpcd_USB_DRD_FS);
+  HAL_PWREx_DisableVddUSB();
+
+  return HAL_OK;
+}
+
+hal_err_t hal_usb_send(const uint8_t* data, size_t len) {
+  return HAL_PCD_EP_Transmit(&hpcd_USB_DRD_FS, 0x81, (uint8_t *) data, len);
+}
+
+hal_err_t hal_usb_send_ctrl(const uint8_t* data, size_t len) {
+  return HAL_PCD_EP_Transmit(&hpcd_USB_DRD_FS, 0x1, (uint8_t *) data, len);
 }

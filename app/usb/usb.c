@@ -64,14 +64,6 @@ APP_ALIGNED(usb_hid_inout_desc_t kpro_conf_desc, 4) = {
         .desc_type = 0x22, // HID Report
         .desc_len = sizeof(kpro_hid_report_desc),
     },
-    .epoutd = {
-        .len = 7,
-        .type = 0x05, // Endpoint descriptor
-        .addr = 0x01, // EP1 OUT
-        .attr = 0x3, // Interrupt transfer type
-        .max_packet_size = 64,
-        .poll_interval = 20 // in ms
-    },
     .epind = {
         .len = 7,
         .type = 0x05, // Endpoint descriptor
@@ -79,5 +71,13 @@ APP_ALIGNED(usb_hid_inout_desc_t kpro_conf_desc, 4) = {
         .attr = 0x3, // Interrupt transfer type
         .max_packet_size = 64,
         .poll_interval = 20, // in ms
+    },
+    .epoutd = {
+        .len = 7,
+        .type = 0x05, // Endpoint descriptor
+        .addr = 0x01, // EP1 OUT
+        .attr = 0x3, // Interrupt transfer type
+        .max_packet_size = 64,
+        .poll_interval = 20 // in ms
     }
 };

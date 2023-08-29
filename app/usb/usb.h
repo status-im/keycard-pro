@@ -66,8 +66,8 @@ typedef struct __attribute__((packed)) {
   usb_conf_desc_t confd;
   usb_if_desc_t ifd;
   usb_hid_desc_t hidd;
-  usb_ep_desc_t epoutd;
   usb_ep_desc_t epind;
+  usb_ep_desc_t epoutd;
 } usb_hid_inout_desc_t;
 
 #endif

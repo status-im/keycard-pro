@@ -17,10 +17,12 @@ void pwr_shutdown() {
 
 void pwr_usb_plugged() {
   //TODO: start usb
+  hal_usb_start();
 }
 
 void pwr_usb_unplugged() {
   //TODO: stop usb
+  hal_usb_stop();
 }
 
 void pwr_smartcard_inserted() {
