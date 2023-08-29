@@ -3,6 +3,8 @@
 
 #include "common.h"
 
+#define USB_EP_HALT 0
+
 typedef struct __attribute__((packed)) {
   uint8_t len;
   uint8_t type;
@@ -69,5 +71,62 @@ typedef struct __attribute__((packed)) {
   usb_ep_desc_t epind;
   usb_ep_desc_t epoutd;
 } usb_hid_inout_desc_t;
+
+typedef struct __attribute__((packed)) {
+  uint8_t req_type;
+  uint8_t req;
+  union {
+    uint16_t val;
+    struct {
+        uint8_t desc_idx;
+        uint8_t desc_type;
+    };
+  };
+  uint16_t idx;
+  uint16_t len;
+} usb_setup_packet_t;
+
+typedef enum {
+  USB_REQUEST_DEV = 0,
+  USB_REQUEST_IF = 1,
+  USB_REQUEST_EP = 2,
+} usb_request_recipient_t;
+
+typedef enum {
+  USB_REQUEST_STD = 0,
+  USB_REQUEST_CLASS = 32,
+  USB_REQUEST_VEND = 64,
+} usb_request_type_t;
+
+typedef enum {
+  USB_REQ_GET_STATUS = 0x00,
+  USB_REQ_CLEAR_FEATURE = 0x01,
+  USB_REQ_SET_FEATURE = 0x03,
+  USB_REQ_SET_ADDRESS = 0x05,
+  USB_REQ_GET_DESCRIPTOR = 0x06,
+  USB_REQ_SET_DESCRIPTOR = 0x07,
+  USB_REQ_GET_CONFIGURATION = 0x08,
+  USB_REQ_SET_CONFIGURATION = 0x09,
+  USB_REQ_GET_INTERFACE = 0x0a,
+  USB_REQ_SET_INTERFACE = 0x11,
+  USB_REQ_SYNCH_FRAME = 0x12,
+} usb_std_request_t;
+
+typedef enum {
+  USB_DESC_DEV = 1,
+  USB_DESC_CONFIG = 2,
+  USB_DESC_STRING = 3,
+} usb_desc_id_t;
+
+typedef enum {
+  USB_HID_GET_REPORT = 0x01,
+  USB_HID_GET_IDLE = 0x02,
+  USB_HID_GET_PROTOCOL = 0x03,
+  USB_HID_GET_DESCRIPTOR = 0x06,
+  USB_HID_SET_DESCRIPTOR = 0x07,
+  USB_HID_SET_REPORT = 0x09,
+  USB_HID_SET_IDLE = 0x0a,
+  USB_HID_SET_PROTOCOL = 0x0b,
+} usb_hid_request_type_t;
 
 #endif

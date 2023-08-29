@@ -61,6 +61,8 @@ static int8_t g_acquiring;
 static struct dcmi_buf g_dcmi_bufs[CAMERA_FB_COUNT];
 static uint8_t g_uid[HAL_DEVICE_UID_LEN] __attribute__((aligned(4)));
 
+static uint8_t ep_data[2][HAL_USB_MPS] __attribute__((aligned(4)));
+
 static inline void mco_off() {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   GPIO_InitStruct.Pin = GPIO_PIN_8;
@@ -178,6 +180,7 @@ void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi) {
 }
 
 void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
+  hal_usb_setup_cb((uint8_t*) hpcd->Setup);
 }
 
 void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
@@ -624,10 +627,26 @@ hal_err_t hal_usb_stop() {
   return HAL_OK;
 }
 
-hal_err_t hal_usb_send(const uint8_t* data, size_t len) {
-  return HAL_PCD_EP_Transmit(&hpcd_USB_DRD_FS, 0x81, (uint8_t *) data, len);
+hal_err_t hal_usb_send(uint8_t epaddr, const uint8_t* data, size_t len) {
+  return HAL_PCD_EP_Transmit(&hpcd_USB_DRD_FS, epaddr, (uint8_t *) data, len);
 }
 
-hal_err_t hal_usb_send_ctrl(const uint8_t* data, size_t len) {
-  return HAL_PCD_EP_Transmit(&hpcd_USB_DRD_FS, 0x1, (uint8_t *) data, len);
+hal_err_t hal_usb_set_stall(uint8_t epaddr, uint8_t stall) {
+  if (stall) {
+    return HAL_PCD_EP_SetStall(&hpcd_USB_DRD_FS, epaddr);
+  } else {
+    return HAL_PCD_EP_ClrStall(&hpcd_USB_DRD_FS, epaddr);
+  }
+}
+
+uint8_t hal_usb_get_stall(uint8_t epaddr) {
+  if (epaddr & 0x80) {
+    return hpcd_USB_DRD_FS.IN_ep[epaddr & 0x7].is_stall;
+  } else {
+    return hpcd_USB_DRD_FS.OUT_ep[epaddr & 0x7].is_stall;
+  }
+}
+
+hal_err_t hal_usb_set_address(uint8_t addr) {
+  return HAL_PCD_SetAddress(&hpcd_USB_DRD_FS, addr);
 }
