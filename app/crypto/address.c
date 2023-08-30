@@ -23,6 +23,7 @@
 
 #include "address.h"
 #include "bignum.h"
+#include "util.h"
 
 size_t address_prefix_bytes_len(uint32_t address_type) {
   if (address_type <= 0xFF) return 1;
@@ -65,12 +66,7 @@ void ethereum_address(const uint8_t* pub_key, uint8_t* addr) {
 }
 
 void ethereum_address_checksum(const uint8_t *addr, char *address) {
-  const char *hex = "0123456789abcdef";
-  for (int i = 0; i < 20; i++) {
-    address[i * 2] = hex[(addr[i] >> 4) & 0xF];
-    address[i * 2 + 1] = hex[addr[i] & 0xF];
-  }
-  address[40] = 0;
+  base16_encode(addr, address, 20);
 
   uint8_t hash[32];
   keccak_256((const uint8_t *)(address), 40, hash);

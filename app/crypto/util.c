@@ -1,6 +1,8 @@
 #include "util.h"
 #include "common.h"
 
+const char* HEX_DIGITS = "0123456789abcdef";
+
 uint32_t pad_iso9797_m1(uint8_t* data, uint8_t plen, uint32_t size) {
   uint32_t padding = plen - (size % plen);
   data[size] = 0x80;
@@ -74,6 +76,15 @@ bool base16_decode(const char* s, uint8_t* out, size_t s_len) {
   }
 
   return true;
+}
+
+void base16_encode(const uint8_t* data, char* out, size_t len) {
+  for (int i = 0; i < len; i++) {
+    *(out++) = HEX_DIGITS[(data[i] >> 4) & 0xf];
+    *(out++) = HEX_DIGITS[data[i] & 0xf];
+  }
+
+  *out = '\0';
 }
 
 bool atoi256BE(const char* str, size_t len, uint8_t out[32]) {
