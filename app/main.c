@@ -3,7 +3,7 @@
 #include "task.h"
 #include "hal.h"
 
-#define USB_STACK_SIZE 100
+#define USB_STACK_SIZE 200
 #define USB_TASK_PRIO 1
 
 #define CORE_STACK_SIZE 1024

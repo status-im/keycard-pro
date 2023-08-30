@@ -46,6 +46,6 @@ void command_send_ack(command_t* cmd, uint8_t len) {
   cmd->segment_count++;
 
   if (cmd->apdu.lr == 0) {
-    cmd->status = COMMAND_IDLE;
+    cmd->status = COMMAND_INBOUND;
   }  
 }

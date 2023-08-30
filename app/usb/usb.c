@@ -369,30 +369,37 @@ void hal_usb_data_in_cb(uint8_t epaddr) {
   }
 }
 
+static void hal_usb_hid_capdu() {
+  _apdu_channel[0] = _usb_packet[0];
+  _apdu_channel[1] = _usb_packet[1];
+
+  if (_usb_packet[2] == USB_CMD_PING) {
+    hal_usb_send(0x81, _usb_packet, HAL_USB_MPS);
+  }
+
+  if ((_usb_packet[2] != USB_CMD_APDU) || (g_core.usb_command.status != COMMAND_INBOUND)) {
+    return;
+  }
+
+  uint16_t recv_off = 5;
+
+  if (_usb_packet[3] == 0 && _usb_packet[4] == 0) {
+    if (command_init_recv(&g_core.usb_command, ((_usb_packet[5] << 8) | _usb_packet[6])) != ERR_OK) {
+      return;
+    }
+
+    recv_off += 2;
+  }
+
+  command_receive(&g_core.usb_command, &_usb_packet[recv_off], (HAL_USB_MPS - recv_off));
+
+}
+
 void hal_usb_data_out_cb(uint8_t epaddr) {
   if (epaddr == 0) {
     usb_ep0_ack(); // we don't implement anything with relevant DATA OUT phase on EP0
   } else {
-    _apdu_channel[0] = _usb_packet[0];
-    _apdu_channel[1] = _usb_packet[1];
-
-    if (_usb_packet[2] == USB_CMD_PING) {
-      hal_usb_send(0x81, _usb_packet, HAL_USB_MPS);
-    } else if (_usb_packet[2] == USB_CMD_APDU) {
-      uint16_t recv_off = 5;
-
-      if (_usb_packet[3] == 0 && _usb_packet[4] == 0) {
-        if (command_init_recv(&g_core.usb_command, ((_usb_packet[5] << 8) | _usb_packet[6])) != ERR_OK) {
-          usb_hid_next_recv();
-          return;
-        }
-
-        recv_off += 2;
-      }
-
-      command_receive(&g_core.usb_command, &_usb_packet[recv_off], (HAL_USB_MPS - recv_off));
-    }
-
+    hal_usb_hid_capdu();
     usb_hid_next_recv();
   }
 }
