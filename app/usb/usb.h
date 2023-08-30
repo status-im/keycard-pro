@@ -136,4 +136,11 @@ typedef enum {
   USB_HID_SET_PROTOCOL = 0x0b,
 } usb_hid_request_type_t;
 
+typedef enum {
+  USB_CMD_PING = 2,
+  USB_CMD_APDU = 5,
+} usb_cmd_t;
+
+void usb_hid_send_rapdu();
+
 #endif

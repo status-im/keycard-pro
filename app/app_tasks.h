@@ -9,6 +9,7 @@
 #define CORE_UI_EVT 1
 #define CORE_USB_EVT 2
 
+APP_DEF_EXTERN_TASK(usb);
 APP_DEF_EXTERN_TASK(core);
 APP_DEF_EXTERN_TASK(ui);
 

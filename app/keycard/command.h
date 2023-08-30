@@ -19,7 +19,8 @@ typedef enum {
   COMMAND_IDLE = 0x00,
   COMMAND_INBOUND = 0x01,
   COMMAND_COMPLETE = 0x02,
-  COMMAND_OUTBOUND = 0x03
+  COMMAND_PROCESSING = 0x03,
+  COMMAND_OUTBOUND = 0x04
 } command_status_t;
 
 typedef struct {

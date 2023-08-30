@@ -433,11 +433,11 @@ static void core_usb_command(keycard_t* kc, command_t* cmd) {
 }
 
 void core_usb_cancel() {
-  //TODO: implement
+  core_usb_err_sw(&g_core.usb_command.apdu, 0x69, 0x82);
 }
 
 void core_usb_run() {
-
+  core_usb_command(&g_core.keycard, &g_core.usb_command);
 }
 
 app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {

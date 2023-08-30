@@ -27,15 +27,15 @@ void core_task_entry(void* pvParameters) {
     pwr_shutdown();
   }
 
-  if (hal_gpio_get(GPIO_VUSB_OK) == GPIO_RESET) {
-    pwr_usb_plugged();
-  }
-
   keycard_init(&g_core.keycard);
   keycard_activate(&g_core.keycard);
 
   if (g_core.keycard.sc.state != SC_READY) {
     pwr_reboot();
+  }
+
+  if (hal_gpio_get(GPIO_VUSB_OK) == GPIO_RESET) {
+    pwr_usb_plugged();
   }
 
   while(1) {

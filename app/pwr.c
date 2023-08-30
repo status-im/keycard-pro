@@ -1,3 +1,7 @@
+#include "FreeRTOS.h"
+#include "task.h"
+#include "app_tasks.h"
+
 #include "pwr.h"
 #include "hal.h"
 
@@ -16,12 +20,12 @@ void pwr_shutdown() {
 }
 
 void pwr_usb_plugged() {
-  //TODO: start usb
   hal_usb_start();
+  vTaskResume(APP_TASK(usb));
 }
 
 void pwr_usb_unplugged() {
-  //TODO: stop usb
+  vTaskSuspend(APP_TASK(usb));
   hal_usb_stop();
 }
 

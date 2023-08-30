@@ -61,8 +61,6 @@ static int8_t g_acquiring;
 static struct dcmi_buf g_dcmi_bufs[CAMERA_FB_COUNT];
 static uint8_t g_uid[HAL_DEVICE_UID_LEN] __attribute__((aligned(4)));
 
-static uint8_t ep_data[2][HAL_USB_MPS] __attribute__((aligned(4)));
-
 static inline void mco_off() {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
   GPIO_InitStruct.Pin = GPIO_PIN_8;
@@ -156,7 +154,6 @@ static void inline _hal_acquire(int8_t idx) {
   hdcmi.Instance->CR |= DCMI_CR_CAPTURE;
 }
 
-
 void HAL_DCMI_FrameEventCallback(DCMI_HandleTypeDef *hdcmi) {
   hdcmi->Instance->CR &= ~(DCMI_CR_CAPTURE);
 
@@ -184,11 +181,11 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
 }
 
 void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
-  HAL_PCD_EP_Transmit(&hpcd_USB_DRD_FS, epnum, NULL, 0);
+  hal_usb_data_out_cb(epnum);
 }
 
 void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
-  HAL_PCD_EP_Receive(&hpcd_USB_DRD_FS, epnum, ep_data[epnum & 0x7], HAL_USB_MPS);
+  hal_usb_data_in_cb(epnum);
 }
 
 static void _hal_usb_close_ep() {
@@ -208,10 +205,7 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
   HAL_PCD_EP_Open(&hpcd_USB_DRD_FS, 0x80, HAL_USB_MPS, EP_TYPE_CTRL);
 
   _hal_usb_open_ep();
-  HAL_PCD_EP_Receive(hpcd, 0, ep_data[0], HAL_USB_MPS);
-  HAL_PCD_EP_Receive(hpcd, 1, ep_data[1], HAL_USB_MPS);
 }
-
 
 hal_err_t hal_init() {
   // Copies UID, Flash size, package info before it becomes privileged
@@ -615,9 +609,10 @@ hal_err_t hal_usb_start() {
   HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, HAL_USB_EPIN_ADDR, PCD_SNG_BUF, 0x98);
   HAL_PCDEx_PMAConfig(&hpcd_USB_DRD_FS, HAL_USB_EPOUT_ADDR, PCD_SNG_BUF, 0xD8);
 
-  if (HAL_PCD_Start(&hpcd_USB_DRD_FS) != HAL_OK) {
-    return HAL_FAIL;
-  }
+  USB_DevConnect(hpcd_USB_DRD_FS.Instance);
+
+  hpcd_USB_DRD_FS.Instance->ISTR = 0U;
+  hpcd_USB_DRD_FS.Instance->CNTR = USB_CNTR_CTRM  | USB_CNTR_WKUPM | USB_CNTR_SUSPM | USB_CNTR_ERRM | USB_CNTR_RESETM | USB_CNTR_L1REQM;
 
   return HAL_OK;
 }
@@ -653,4 +648,8 @@ uint8_t hal_usb_get_stall(uint8_t epaddr) {
 
 hal_err_t hal_usb_set_address(uint8_t addr) {
   return HAL_PCD_SetAddress(&hpcd_USB_DRD_FS, addr);
+}
+
+hal_err_t hal_usb_next_recv(uint8_t epaddr, uint8_t* data, size_t len) {
+  return HAL_PCD_EP_Receive(&hpcd_USB_DRD_FS, epaddr, data, len);
 }

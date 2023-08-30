@@ -149,8 +149,11 @@ hal_err_t hal_usb_start();
 hal_err_t hal_usb_stop();
 hal_err_t hal_usb_set_address(uint8_t addr);
 hal_err_t hal_usb_send(uint8_t epaddr, const uint8_t* data, size_t len);
+hal_err_t hal_usb_next_recv(uint8_t epaddr, uint8_t* data, size_t len);
 hal_err_t hal_usb_set_stall(uint8_t epaddr, uint8_t stall);
 uint8_t hal_usb_get_stall(uint8_t epaddr);
 void hal_usb_setup_cb(uint8_t* data);
+void hal_usb_data_in_cb(uint8_t epaddr);
+void hal_usb_data_out_cb(uint8_t epaddr);
 
 #endif

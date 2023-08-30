@@ -1,6 +1,11 @@
 #include "usb.h"
 #include "hal.h"
+#include "core/core.h"
 #include "crypto/util.h"
+#include "keycard/command.h"
+
+static uint8_t _usb_packet[HAL_USB_MPS];
+static uint8_t _apdu_channel[2];
 
 APP_ALIGNED(const static uint8_t kpro_hid_report_desc[27], 4) = {
   0x06, 0x00, 0xff,  // Usage Page (Vendor Defined 0xff00)
@@ -25,7 +30,7 @@ APP_ALIGNED(const static usb_dev_desc_t kpro_dev_desc, 4) = {
     .dev_class = 0, // Class in IF descriptor
     .dev_subclass = 0,
     .dev_protocol = 0,
-    .max_packet_size = 64, // EP0 packet size
+    .max_packet_size = HAL_USB_MPS, // EP0 packet size
     .vendor_id = 0x1209, // pid.codes VID for now
     .product_id = 0x0001, // pid.codes test PID
     .dev_version = 0x0100, // Version 1.0
@@ -71,7 +76,7 @@ APP_ALIGNED(const static usb_hid_inout_desc_t kpro_conf_desc, 4) = {
         .type = 0x05, // Endpoint descriptor
         .addr = 0x81, // EP1 IN
         .attr = 0x3, // Interrupt transfer type
-        .max_packet_size = 64,
+        .max_packet_size = HAL_USB_MPS,
         .poll_interval = 20, // in ms
     },
     .epoutd = {
@@ -79,7 +84,7 @@ APP_ALIGNED(const static usb_hid_inout_desc_t kpro_conf_desc, 4) = {
         .type = 0x05, // Endpoint descriptor
         .addr = 0x01, // EP1 OUT
         .attr = 0x3, // Interrupt transfer type
-        .max_packet_size = 64,
+        .max_packet_size = HAL_USB_MPS,
         .poll_interval = 20 // in ms
     }
 };
@@ -95,6 +100,10 @@ static void usb_stall_ep0() {
 
 static void usb_ep0_ack() {
   hal_usb_send(0x80, NULL, 0);
+}
+
+static void usb_hid_next_recv() {
+  hal_usb_next_recv(0x01, _usb_packet, HAL_USB_MPS);
 }
 
 static void usb_get_string(uint8_t idx, uint16_t maxlen) {
@@ -143,6 +152,7 @@ static void usb_get_string(uint8_t idx, uint16_t maxlen) {
 static void usb_get_descriptor(usb_desc_id_t desc_id, uint8_t idx, uint16_t len) {
   switch(desc_id) {
   case USB_DESC_DEV:
+    usb_hid_next_recv();
     hal_usb_send(0x80, (uint8_t*) &kpro_dev_desc, APP_MIN(sizeof(kpro_dev_desc), len));
     break;
   case USB_DESC_CONFIG:
@@ -196,10 +206,6 @@ static void usb_dev_std_req(usb_setup_packet_t* packet) {
   }
 }
 
-static void usb_dev_class_req(usb_setup_packet_t* packet) {
-
-}
-
 static void usb_if_std_req(usb_setup_packet_t* packet) {
   uint8_t if_id = 0;
 
@@ -228,8 +234,25 @@ static void usb_if_std_req(usb_setup_packet_t* packet) {
 }
 
 static void usb_if_class_req(usb_setup_packet_t* packet) {
+  uint8_t idle = 0;
+
   switch(packet->req) {
+  case USB_HID_GET_REPORT:
+    usb_ep0_ack();
+    break;
+  case USB_HID_GET_IDLE:
+    hal_usb_send(0x80, &idle, 1);
+    break;
+  case USB_HID_GET_PROTOCOL:
+    hal_usb_send(0x80, &idle, 1);
+    break;
+  case USB_HID_SET_REPORT:
+    usb_ep0_ack();
+    break;
   case USB_HID_SET_IDLE:
+    usb_ep0_ack();
+    break;
+  case USB_HID_SET_PROTOCOL:
     usb_ep0_ack();
     break;
   default:
@@ -258,18 +281,12 @@ static void usb_ep_std_req(usb_setup_packet_t* packet) {
   }
 }
 
-static void usb_ep_class_req(usb_setup_packet_t* packet) {
-
-}
-
 static void usb_dev_req(usb_setup_packet_t* packet) {
   switch(packet->req_type & 0x60) {
   case USB_REQUEST_STD:
     usb_dev_std_req(packet);
     break;
   case USB_REQUEST_CLASS:
-    usb_dev_class_req(packet);
-    break;
   case USB_REQUEST_VEND:
   default:
     break;
@@ -296,11 +313,32 @@ static void usb_ep_req(usb_setup_packet_t* packet) {
     usb_ep_std_req(packet);
     break;
   case USB_REQUEST_CLASS:
-    usb_ep_class_req(packet);
-    break;
   case USB_REQUEST_VEND:
   default:
     break;
+  }
+}
+
+void usb_hid_send_rapdu() {
+  uint8_t packet[HAL_USB_MPS];
+
+  packet[0] = _apdu_channel[0];
+  packet[1] = _apdu_channel[1];
+  packet[2] = USB_CMD_APDU;
+  packet[3] = (g_core.usb_command.segment_count >> 8);
+  packet[4] = (g_core.usb_command.segment_count & 0xff);
+
+  uint16_t send_off = 5;
+  if (!g_core.usb_command.segment_count) {
+    packet[5] = 0;
+    packet[6] = g_core.usb_command.apdu.lr;
+    send_off += 2;
+  }
+
+  uint8_t len = command_send(&g_core.usb_command, &packet[send_off], (HAL_USB_MPS - send_off));
+
+  if (hal_usb_send(0x81, packet, HAL_USB_MPS) == HAL_SUCCESS) {
+    command_send_ack(&g_core.usb_command, len);
   }
 }
 
@@ -320,5 +358,41 @@ void hal_usb_setup_cb(uint8_t* data) {
   default:
     usb_stall_ep0();
     break;
+  }
+}
+
+void hal_usb_data_in_cb(uint8_t epaddr) {
+  if (epaddr == 0) {
+    hal_usb_next_recv(0, NULL, 0);
+  } else {
+    usb_hid_next_recv();
+  }
+}
+
+void hal_usb_data_out_cb(uint8_t epaddr) {
+  if (epaddr == 0) {
+    usb_ep0_ack(); // we don't implement anything with relevant DATA OUT phase on EP0
+  } else {
+    _apdu_channel[0] = _usb_packet[0];
+    _apdu_channel[1] = _usb_packet[1];
+
+    if (_usb_packet[2] == USB_CMD_PING) {
+      hal_usb_send(0x81, _usb_packet, HAL_USB_MPS);
+    } else if (_usb_packet[2] == USB_CMD_APDU) {
+      uint16_t recv_off = 5;
+
+      if (_usb_packet[3] == 0 && _usb_packet[4] == 0) {
+        if (command_init_recv(&g_core.usb_command, ((_usb_packet[5] << 8) | _usb_packet[6])) != ERR_OK) {
+          usb_hid_next_recv();
+          return;
+        }
+
+        recv_off += 2;
+      }
+
+      command_receive(&g_core.usb_command, &_usb_packet[recv_off], (HAL_USB_MPS - recv_off));
+    }
+
+    usb_hid_next_recv();
   }
 }
