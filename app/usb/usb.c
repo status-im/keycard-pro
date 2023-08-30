@@ -1,7 +1,8 @@
 #include "usb.h"
 #include "hal.h"
+#include "crypto/util.h"
 
-APP_ALIGNED(static uint8_t kpro_hid_report_desc[27], 4) = {
+APP_ALIGNED(const static uint8_t kpro_hid_report_desc[27], 4) = {
   0x06, 0x00, 0xff,  // Usage Page (Vendor Defined 0xff00)
   0x09, 0x01,        // Usage (0x01)
   0xa1, 0x01,        // Collection (Application)
@@ -17,7 +18,7 @@ APP_ALIGNED(static uint8_t kpro_hid_report_desc[27], 4) = {
   0xc0,              // End Collection
 };
 
-APP_ALIGNED(usb_dev_desc_t kpro_dev_desc, 4) = {
+APP_ALIGNED(const static usb_dev_desc_t kpro_dev_desc, 4) = {
     .len = 18,
     .type = 0x01, // Device descriptor
     .usb_version = 0x0200, // USB 2.0
@@ -28,13 +29,13 @@ APP_ALIGNED(usb_dev_desc_t kpro_dev_desc, 4) = {
     .vendor_id = 0x1209, // pid.codes VID for now
     .product_id = 0x0001, // pid.codes test PID
     .dev_version = 0x0100, // Version 1.0
-    .manufacturer_str_idx = 0, //TODO: add strings
-    .product_str_idx = 0,
-    .serial_number_str_idx = 0,
+    .manufacturer_str_idx = USB_MANUFACTURER_IDX,
+    .product_str_idx = USB_PRODUCT_IDX,
+    .serial_number_str_idx = USB_SN_IDX,
     .config_count = 1
 };
 
-APP_ALIGNED(usb_hid_inout_desc_t kpro_conf_desc, 4) = {
+APP_ALIGNED(const static usb_hid_inout_desc_t kpro_conf_desc, 4) = {
     .confd = {
         .len = 9,
         .type = 0x02, // Config descriptor
@@ -96,16 +97,65 @@ static void usb_ep0_ack() {
   hal_usb_send(0x80, NULL, 0);
 }
 
-static void usb_get_descriptor(usb_desc_id_t desc_id) {
+static void usb_get_string(uint8_t idx, uint16_t maxlen) {
+  uint8_t report[HAL_USB_MPS];
+  uint8_t len = 0;
+  const char* to_copy = NULL;
+
+  if (idx == 0) {
+    len = 4;
+    report[2] = 0x09;
+    report[3] = 0x04;
+  } else if (idx == USB_SN_IDX) {
+    uint8_t uid[HAL_DEVICE_UID_LEN];
+    hal_device_uid(uid);
+
+    len = 2;
+    // we cannot include the last byte to keep in the 64 bytes limit
+    for (int i = 0; i < (HAL_DEVICE_UID_LEN - 1); i++) {
+      report[len++] = HEX_DIGITS[(uid[i] >> 4) & 0xf];
+      report[len++] = 0;
+      report[len++] = HEX_DIGITS[uid[i] & 0xf];
+      report[len++] = 0;
+    }
+  } else if (idx == USB_MANUFACTURER_IDX) {
+    to_copy = USB_MANUFACTURER_STR;
+  } else if (idx == USB_PRODUCT_IDX) {
+    to_copy = USB_PRODUCT_STR;
+  } else {
+    len = 2;
+  }
+
+  if (to_copy) {
+    len = 2;
+    while(*to_copy != '\0') {
+      report[len++] = *(to_copy++);
+      report[len++] = 0;
+    }
+  }
+
+  report[0] = len;
+  report[1] = 3; // String descriptor
+
+  hal_usb_send(0x80, report, APP_MIN(len, maxlen));
+}
+
+static void usb_get_descriptor(usb_desc_id_t desc_id, uint8_t idx, uint16_t len) {
   switch(desc_id) {
   case USB_DESC_DEV:
-    hal_usb_send(0x80, (uint8_t*) &kpro_dev_desc, sizeof(kpro_dev_desc));
+    hal_usb_send(0x80, (uint8_t*) &kpro_dev_desc, APP_MIN(sizeof(kpro_dev_desc), len));
     break;
   case USB_DESC_CONFIG:
-    hal_usb_send(0x80, (uint8_t*) &kpro_conf_desc, sizeof(kpro_conf_desc));
+    hal_usb_send(0x80, (uint8_t*) &kpro_conf_desc, APP_MIN(sizeof(kpro_conf_desc), len));
     break;
   case USB_DESC_STRING:
-    usb_ep0_ack();
+    usb_get_string(idx, len);
+    break;
+  case USB_DESC_HID:
+    hal_usb_send(0x80, (uint8_t*) &kpro_conf_desc.hidd, APP_MIN(sizeof(usb_hid_desc_t), len));
+    break;
+  case USB_DESC_HID_REPORT:
+    hal_usb_send(0x80, kpro_hid_report_desc, APP_MIN(sizeof(kpro_hid_report_desc), len));
     break;
   default:
     usb_stall_ep0();
@@ -130,11 +180,7 @@ static void usb_dev_std_req(usb_setup_packet_t* packet) {
     usb_ep0_ack();
     break;
   case USB_REQ_GET_DESCRIPTOR:
-    if (packet->len) {
-      usb_get_descriptor(packet->desc_type);
-    } else {
-      usb_ep0_ack();
-    }
+    usb_get_descriptor(packet->desc_type, packet->desc_idx, packet->len);
     break;
   case USB_REQ_SET_DESCRIPTOR:
     usb_stall_ep0();
@@ -154,10 +200,6 @@ static void usb_dev_class_req(usb_setup_packet_t* packet) {
 
 }
 
-static void usb_dev_vend_req(usb_setup_packet_t* packet) {
-
-}
-
 static void usb_if_std_req(usb_setup_packet_t* packet) {
   uint8_t if_id = 0;
 
@@ -170,6 +212,9 @@ static void usb_if_std_req(usb_setup_packet_t* packet) {
     break;
   case USB_REQ_SET_FEATURE:
     usb_stall_ep0();
+    break;
+  case USB_REQ_GET_DESCRIPTOR:
+    usb_get_descriptor(packet->desc_type, packet->desc_idx, packet->len);
     break;
   case USB_REQ_GET_INTERFACE:
     hal_usb_send(0x80, &if_id, 1);
@@ -184,16 +229,12 @@ static void usb_if_std_req(usb_setup_packet_t* packet) {
 
 static void usb_if_class_req(usb_setup_packet_t* packet) {
   switch(packet->req) {
-  case USB_HID_GET_DESCRIPTOR:
-    hal_usb_send(0x80, kpro_hid_report_desc, sizeof(kpro_hid_report_desc));
+  case USB_HID_SET_IDLE:
+    usb_ep0_ack();
     break;
   default:
     usb_stall_ep0();
   }
-}
-
-static void usb_if_vend_req(usb_setup_packet_t* packet) {
-
 }
 
 static void usb_ep_std_req(usb_setup_packet_t* packet) {
@@ -221,10 +262,6 @@ static void usb_ep_class_req(usb_setup_packet_t* packet) {
 
 }
 
-static void usb_ep_vend_req(usb_setup_packet_t* packet) {
-
-}
-
 static void usb_dev_req(usb_setup_packet_t* packet) {
   switch(packet->req_type & 0x60) {
   case USB_REQUEST_STD:
@@ -234,8 +271,6 @@ static void usb_dev_req(usb_setup_packet_t* packet) {
     usb_dev_class_req(packet);
     break;
   case USB_REQUEST_VEND:
-    usb_dev_vend_req(packet);
-    break;
   default:
     break;
   }
@@ -250,8 +285,6 @@ static void usb_if_req(usb_setup_packet_t* packet) {
     usb_if_class_req(packet);
     break;
   case USB_REQUEST_VEND:
-    usb_if_vend_req(packet);
-    break;
   default:
     break;
   }
@@ -266,8 +299,6 @@ static void usb_ep_req(usb_setup_packet_t* packet) {
     usb_ep_class_req(packet);
     break;
   case USB_REQUEST_VEND:
-    usb_ep_vend_req(packet);
-    break;
   default:
     break;
   }

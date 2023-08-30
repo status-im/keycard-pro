@@ -5,6 +5,13 @@
 
 #define USB_EP_HALT 0
 
+#define USB_MANUFACTURER_IDX 1
+#define USB_PRODUCT_IDX 2
+#define USB_SN_IDX 3
+
+#define USB_MANUFACTURER_STR "Status Research & Development"
+#define USB_PRODUCT_STR "Keycard Pro"
+
 typedef struct __attribute__((packed)) {
   uint8_t len;
   uint8_t type;
@@ -113,17 +120,17 @@ typedef enum {
 } usb_std_request_t;
 
 typedef enum {
-  USB_DESC_DEV = 1,
-  USB_DESC_CONFIG = 2,
-  USB_DESC_STRING = 3,
+  USB_DESC_DEV = 0x01,
+  USB_DESC_CONFIG = 0x02,
+  USB_DESC_STRING = 0x03,
+  USB_DESC_HID = 0x21,
+  USB_DESC_HID_REPORT = 0x22,
 } usb_desc_id_t;
 
 typedef enum {
   USB_HID_GET_REPORT = 0x01,
   USB_HID_GET_IDLE = 0x02,
   USB_HID_GET_PROTOCOL = 0x03,
-  USB_HID_GET_DESCRIPTOR = 0x06,
-  USB_HID_SET_DESCRIPTOR = 0x07,
   USB_HID_SET_REPORT = 0x09,
   USB_HID_SET_IDLE = 0x0a,
   USB_HID_SET_PROTOCOL = 0x0b,

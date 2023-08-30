@@ -184,9 +184,11 @@ void HAL_PCD_SetupStageCallback(PCD_HandleTypeDef *hpcd) {
 }
 
 void HAL_PCD_DataOutStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
+  HAL_PCD_EP_Transmit(&hpcd_USB_DRD_FS, epnum, NULL, 0);
 }
 
 void HAL_PCD_DataInStageCallback(PCD_HandleTypeDef *hpcd, uint8_t epnum) {
+  HAL_PCD_EP_Receive(&hpcd_USB_DRD_FS, epnum, ep_data[epnum & 0x7], HAL_USB_MPS);
 }
 
 static void _hal_usb_close_ep() {
@@ -206,6 +208,8 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
   HAL_PCD_EP_Open(&hpcd_USB_DRD_FS, 0x80, HAL_USB_MPS, EP_TYPE_CTRL);
 
   _hal_usb_open_ep();
+  HAL_PCD_EP_Receive(hpcd, 0, ep_data[0], HAL_USB_MPS);
+  HAL_PCD_EP_Receive(hpcd, 1, ep_data[1], HAL_USB_MPS);
 }
 
 
