@@ -65,6 +65,8 @@ void ui_task_entry(void* pvParameters) {
       break;
     }
 
-    xTaskNotifyIndexed(APP_TASK(core), CORE_EVENT_IDX, CORE_UI_EVT, eSetBits);
+    if (!g_ui_cmd.received) {
+      xTaskNotifyIndexed(APP_TASK(core), CORE_EVENT_IDX, CORE_UI_EVT, eSetBits);
+    }
   }
 }
