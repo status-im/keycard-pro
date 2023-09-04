@@ -12,6 +12,7 @@
 static inline void keypad_report_key(keypad_key_t key, bool is_long) {
   g_ui_ctx.keypad.last_key = key;
   g_ui_ctx.keypad.last_key_long = is_long;
+  g_ui_ctx.keypad.last_key_released = !is_long;
 
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   xTaskNotifyIndexedFromISR(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_KEY_EVT, eSetBits, &xHigherPriorityTaskWoken);
@@ -29,6 +30,8 @@ void keypad_scan_tick() {
       if (duration > KEYPAD_DEBOUNCE_THRESHOLD && duration < KEYPAD_LONG_PRESS_THRESHOLD) {
         keypad_report_key(key, false);
         break;
+      } else {
+        g_ui_ctx.keypad.last_key_released = true;
       }
     } else {
       g_ui_ctx.keypad.matrix_state[key]++;

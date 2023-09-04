@@ -31,6 +31,7 @@ typedef enum {
 typedef struct {
   uint32_t matrix_state[KEYPAD_ROWS * KEYPAD_COLS];
   bool last_key_long;
+  bool last_key_released;
   keypad_key_t last_key;
   uint8_t current_row;
 } keypad_t;
