@@ -259,7 +259,7 @@ app_err_t fs_erase(fs_entry_t* entry) {
   _fs_iterate_page((uint8_t*) HAL_FLASH_BLOCK_ADDR(HAL_FLASH_ADDR_TO_BLOCK((uint32_t)entry)), _fs_erase_entries, &erase_ctx);
   _fs_commit_block(&erase_ctx);
 
-  return ERR_HW;
+  return erase_ctx.err;
 }
 
 app_err_t fs_erase_all(fs_predicate_t predicate, void* ctx) {

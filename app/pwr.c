@@ -2,20 +2,25 @@
 #include "task.h"
 #include "app_tasks.h"
 
-#include "pwr.h"
+#include "core/settings.h"
 #include "hal.h"
+#include "pwr.h"
 
-static void pwr_wait_idle() {
-  //TODO: check that no flash and smartcard communication is active
+static void pwr_graceful_shutdown() {
+  while(hal_flash_busy()) {
+    ;
+  }
+
+  settings_commit();
 }
 
 void pwr_reboot() {
-  pwr_wait_idle();
+  pwr_graceful_shutdown();
   hal_reboot();
 }
 
 void pwr_shutdown() {
-  pwr_wait_idle();
+  pwr_graceful_shutdown();
   hal_gpio_set(GPIO_PWR_KILL, GPIO_SET);
 }
 

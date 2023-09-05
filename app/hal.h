@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <stdbool.h>
 #include "crypto/sha2_soft.h"
 #include "iso7816/smartcard.h"
 
@@ -131,6 +132,7 @@ hal_err_t hal_flash_begin_program();
 hal_err_t hal_flash_program(const uint8_t* data, uint8_t* addr, size_t len);
 hal_err_t hal_flash_erase(uint32_t block);
 hal_err_t hal_flash_end_program();
+bool hal_flash_busy();
 const hal_flash_data_segment_t* hal_flash_get_data_segments();
 
 // PWM

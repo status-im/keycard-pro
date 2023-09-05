@@ -460,7 +460,7 @@ hal_err_t hal_flash_begin_program() {
 hal_err_t hal_flash_wait_program() {
   uint32_t base = HAL_GetTick();
 
-  while (FLASH_NS->NSSR & FLASH_FLAG_BSY) {
+  while (hal_flash_busy()) {
     if ((HAL_GetTick() - base) > HAL_TIMEOUT) {
       return HAL_FAIL;
     }

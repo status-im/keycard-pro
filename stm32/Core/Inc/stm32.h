@@ -22,4 +22,8 @@ static inline void hal_reboot() {
   NVIC_SystemReset();
 }
 
+static inline bool hal_flash_busy() {
+  return FLASH_NS->NSSR & FLASH_SR_BSY;
+}
+
 #endif
