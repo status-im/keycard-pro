@@ -3,6 +3,8 @@
 #include "task.h"
 #include "hal.h"
 
+#include "core/settings.h"
+
 #define USB_STACK_SIZE 200
 #define USB_TASK_PRIO 1
 
@@ -18,6 +20,7 @@ APP_DEF_TASK(ui, UI_STACK_SIZE);
 
 int main(void) {
   hal_init();
+  settings_load();
 
   APP_CREATE_TASK(usb, USB_TASK_PRIO);
   APP_CREATE_TASK(core, CORE_TASK_PRIO);
