@@ -9,6 +9,7 @@
 #include "ui/dialog.h"
 #include "ui/input.h"
 #include "ui/menu.h"
+#include "ui/settings_ui.h"
 #include "ui/ui_internal.h"
 
 struct ui_cmd g_ui_cmd;

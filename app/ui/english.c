@@ -7,7 +7,6 @@ const char *const i18n_english_strings[] = {
     "Display public QR",
     "Keycard",
     "Settings",
-    "Power off",
 
     // Keycard menu
     "Set card name",

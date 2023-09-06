@@ -10,7 +10,6 @@ typedef enum {
   MENU_DISPLAY_PUBLIC,
   MENU_KEYCARD,
   MENU_SETTINGS,
-  MENU_OFF,
 
   // Keycard menu
   MENU_CARD_NAME,

@@ -1,4 +1,5 @@
 #include "core/core.h"
+#include "core/settings.h"
 #include "keycard/keycard.h"
 #include "pwr.h"
 

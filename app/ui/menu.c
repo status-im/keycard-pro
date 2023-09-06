@@ -30,12 +30,11 @@ const menu_t menu_settings = {
 };
 
 const menu_t menu_mainmenu = {
-  5, {
+  4, {
     {MENU_QRCODE, NULL},
     {MENU_DISPLAY_PUBLIC, NULL},
     {MENU_KEYCARD, &menu_keycard},
     {MENU_SETTINGS, &menu_settings},
-    {MENU_OFF, NULL},
   }
 };
 
