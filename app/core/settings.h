@@ -15,3 +15,5 @@ typedef struct __attribute__((packed)) {
 
 void settings_load();
 void settings_commit();
+
+void settings_lcd_brightness();

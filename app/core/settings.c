@@ -1,5 +1,7 @@
 #include "settings.h"
 #include "storage/fs.h"
+#include "ui/ui.h"
+
 #include <string.h>
 
 #define FS_SETTINGS 0x5331
@@ -45,4 +47,13 @@ void settings_commit() {
   entry.entry.len = sizeof(settings_t);
   memcpy(&entry.settings, &g_settings, sizeof(settings_t));
   fs_write(&entry.entry, sizeof(struct settings_entry));
+}
+
+void settings_lcd_brightness() {
+  uint8_t new_brightness = g_settings.lcd_brightness;
+  if (ui_settings_brightness(&new_brightness) == CORE_EVT_UI_OK) {
+    g_settings.lcd_brightness = new_brightness;
+  }
+
+  hal_pwm_set_dutycycle(PWM_BACKLIGHT, g_settings.lcd_brightness);
 }

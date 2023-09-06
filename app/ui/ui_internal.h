@@ -30,6 +30,7 @@ enum cmd_type {
   UI_CMD_INPUT_MNEMO,
   UI_CMD_BACKUP_MNEMO,
   UI_CMD_DEV_AUTH,
+  UI_CMD_LCD_BRIGHTNESS,
 };
 
 struct cmd_info {
@@ -80,6 +81,10 @@ struct cmd_auth {
   uint32_t auth_count;
 };
 
+struct cmd_brightness {
+  uint8_t* brightness;
+};
+
 union cmd_params {
   struct cmd_info info;
   struct cmd_txn txn;
@@ -90,6 +95,7 @@ union cmd_params {
   struct cmd_input_pin input_pin;
   struct cmd_mnemo mnemo;
   struct cmd_auth auth;
+  struct cmd_brightness lcd;
 };
 
 struct ui_cmd {

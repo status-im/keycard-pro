@@ -16,6 +16,9 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_DEV_AUTH:
     device_auth_run();
     break;
+  case MENU_BRIGHTNESS:
+    settings_lcd_brightness();
+    break;
   default:
     //unhandled commands
     break;

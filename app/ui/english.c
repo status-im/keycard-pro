@@ -71,5 +71,8 @@ const char *const i18n_english_strings[] = {
     "Verification successful!",
     "Verification warning",
     "The verification was successful and this was the first time this unit has been verified. You can safely use the device.",
-    "The verification succeeded, however this wasn't the first time the unit has been verified. If you remember already verifying this device before, then there is nothing to worry about. Otherwise please contact us."
+    "The verification succeeded, however this wasn't the first time the unit has been verified. If you remember already verifying this device before, then there is nothing to worry about. Otherwise please contact us.",
+
+    // LCD settings
+    "LCD brightness",
 };

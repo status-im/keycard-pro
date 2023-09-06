@@ -75,6 +75,10 @@ typedef enum {
   DEV_AUTH_TITLE_WARNING,
   DEV_AUTH_INFO_SUCCESS,
   DEV_AUTH_INFO_WARNING,
+
+  // LCD settings
+  LCD_BRIGHTNESS_TITLE,
+
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

@@ -27,11 +27,14 @@ void keypad_scan_tick() {
       uint32_t duration = g_ui_ctx.keypad.matrix_state[key];
       g_ui_ctx.keypad.matrix_state[key] = 0;
 
-      if (duration > KEYPAD_DEBOUNCE_THRESHOLD && duration < KEYPAD_LONG_PRESS_THRESHOLD) {
-        keypad_report_key(key, false);
+      if (duration > KEYPAD_DEBOUNCE_THRESHOLD) {
+        if (duration < KEYPAD_LONG_PRESS_THRESHOLD) {
+          keypad_report_key(key, false);
+        } else {
+          g_ui_ctx.keypad.last_key_released = true;
+        }
+
         break;
-      } else {
-        g_ui_ctx.keypad.last_key_released = true;
       }
     } else {
       g_ui_ctx.keypad.matrix_state[key]++;

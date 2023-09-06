@@ -198,3 +198,10 @@ core_evt_t ui_device_auth(uint32_t first_auth, uint32_t auth_time, uint32_t auth
 
   return ui_signal_wait(0);
 }
+
+core_evt_t ui_settings_brightness(uint8_t* brightness) {
+  g_ui_cmd.type = UI_CMD_LCD_BRIGHTNESS;
+  g_ui_cmd.params.lcd.brightness = brightness;
+
+  return ui_signal_wait(0);
+}
