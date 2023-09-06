@@ -190,6 +190,7 @@ static enum fs_iterator_action _fs_erase_entries(void* ctx, fs_entry_t* entry, s
     erase_ctx->off += copy_len;
     break;
   case FS_STOP:
+    erase_ctx->pending_erase = 1;
     erase_ctx->err = ERR_OK;
     erase_ctx->stop = 1;
     break;
@@ -255,9 +256,15 @@ app_err_t fs_write(fs_entry_t* first_entry, size_t total_length) {
 }
 
 app_err_t fs_erase(fs_entry_t* entry) {
-  struct fs_erase_ctx erase_ctx = { .block = 0, .data = g_flash_swap, .predicate = _fs_erase_one, .ctx = entry, .err = ERR_OK, .stop = 0 };
+  if (hal_flash_begin_program() != HAL_SUCCESS) {
+    return ERR_HW;
+  }
+
+  struct fs_erase_ctx erase_ctx = { .block = 0, .data = g_flash_swap, .predicate = _fs_erase_one, .ctx = entry, .err = ERR_DATA, .stop = 0, .pending_erase = 0 };
   _fs_iterate_page((uint8_t*) HAL_FLASH_BLOCK_ADDR(HAL_FLASH_ADDR_TO_BLOCK((uint32_t)entry)), _fs_erase_entries, &erase_ctx);
   _fs_commit_block(&erase_ctx);
+
+  hal_flash_end_program();
 
   return erase_ctx.err;
 }

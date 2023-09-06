@@ -11,7 +11,7 @@ struct __attribute__((packed)) settings_entry {
   settings_t settings;
 };
 
-static settings_t g_settings;
+settings_t g_settings;
 static struct settings_entry* _settings_entry;
 
 fs_action_t _settings_match_settings(void* ctx, fs_entry_t* entry) {

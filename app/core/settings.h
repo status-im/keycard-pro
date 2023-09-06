@@ -13,6 +13,8 @@ typedef struct __attribute__((packed)) {
   uint32_t shutdown_timeout;
 } settings_t;
 
+extern settings_t g_settings;
+
 void settings_load();
 void settings_commit();
 

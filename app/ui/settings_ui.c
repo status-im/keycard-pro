@@ -10,7 +10,28 @@
 #define LCD_MAX_BRIGHTNESS 100
 #define LCD_MIN_BRIGHTNESS 5
 
-static void handle_lcd_change(bool increase) {
+void ui_progressbar_render(const screen_area_t* area, uint8_t val) {
+  uint16_t completed = val == 100 ? area->width : (area->width / 100) * val;
+
+  screen_area_t full_area = {
+      .x = area->x,
+      .y = area->y,
+      .width = completed,
+      .height = area->height
+  };
+
+  screen_area_t empty_area = {
+      .x = area->x + completed,
+      .y = area->y,
+      .width = area->width - completed,
+      .height = area->height
+  };
+
+  screen_fill_area(&full_area, TH_COLOR_PROGRESS_FG);
+  screen_fill_area(&empty_area, TH_COLOR_PROGRESS_BG);
+}
+
+static void handle_lcd_change(const screen_area_t* progress_area, bool increase) {
   do {
     if (increase) {
       if (*g_ui_cmd.params.lcd.brightness < LCD_MAX_BRIGHTNESS) {
@@ -23,6 +44,7 @@ static void handle_lcd_change(bool increase) {
     }
 
     hal_pwm_set_dutycycle(PWM_BACKLIGHT, *g_ui_cmd.params.lcd.brightness);
+    ui_progressbar_render(progress_area, *g_ui_cmd.params.lcd.brightness);
     vTaskDelay(pdMS_TO_TICKS(50));
   } while(g_ui_ctx.keypad.last_key_long && !g_ui_ctx.keypad.last_key_released);
 }
@@ -30,6 +52,15 @@ static void handle_lcd_change(bool increase) {
 app_err_t settings_ui_lcd_brightness() {
   dialog_title(LSTR(LCD_BRIGHTNESS_TITLE));
   dialog_footer(TH_TITLE_HEIGHT);
+
+  screen_area_t progress_area = {
+      .x = TH_PROGRESS_LEFT_MARGIN,
+      .y = TH_TITLE_HEIGHT + TH_PROGRESS_VERTICAL_MARGIN,
+      .width = TH_PROGRESS_WIDTH,
+      .height = TH_PROGRESS_HEIGHT
+  };
+
+  ui_progressbar_render(&progress_area, *g_ui_cmd.params.lcd.brightness);
 
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {
@@ -40,10 +71,10 @@ app_err_t settings_ui_lcd_brightness() {
     case KEYPAD_KEY_CONFIRM:
       return ERR_OK;
     case KEYPAD_KEY_LEFT:
-      handle_lcd_change(false);
+      handle_lcd_change(&progress_area, false);
       break;
     case KEYPAD_KEY_RIGHT:
-      handle_lcd_change(true);
+      handle_lcd_change(&progress_area, true);
       break;
     default:
       break;
