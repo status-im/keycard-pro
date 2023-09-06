@@ -42,7 +42,7 @@ void settings_commit() {
     }
   }
 
-  struct settings_entry entry;
+  APP_ALIGNED(struct settings_entry entry, 4);
   entry.entry.magic = FS_SETTINGS;
   entry.entry.len = sizeof(settings_t);
   memcpy(&entry.settings, &g_settings, sizeof(settings_t));

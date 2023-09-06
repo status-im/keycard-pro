@@ -523,6 +523,7 @@ hal_err_t hal_flash_erase(uint32_t block) {
 }
 
 hal_err_t hal_flash_end_program() {
+  HAL_ICACHE_Invalidate();
   CLEAR_BIT(FLASH_NS->NSCR, FLASH_CR_PG);
   return HAL_FLASH_Lock();
 }
