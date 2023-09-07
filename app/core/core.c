@@ -167,7 +167,7 @@ static app_err_t core_process_msg(const uint8_t* data, uint32_t len, uint8_t fir
   g_core.data.msg.received += len;
 
   if (g_core.data.msg.received == g_core.data.msg.len) {
-    return core_wait_msg_confirmation(data, g_core.data.msg.len);
+    return core_wait_msg_confirmation(g_core.data.msg.content, g_core.data.msg.len);
   } else {
     return ERR_NEED_MORE_DATA;
   }
@@ -334,14 +334,14 @@ static void core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
   }
 }
 
-static void core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
+static void core_usb_message_reassemble(keycard_t* kc, apdu_t* cmd, uint8_t** segment, uint32_t* len, uint8_t* first_segment) {
   cmd->has_lc = 1;
   uint8_t* data = APDU_DATA(cmd);
-  uint32_t len = APDU_LC(cmd);
-  uint8_t first_segment = APDU_P1(cmd) == 0;
+  *len = APDU_LC(cmd);
+  *first_segment = APDU_P1(cmd) == 0;
   g_core.data.msg.content = g_mem_heap;
 
-  if (first_segment) {
+  if (*first_segment) {
     if (core_usb_init_sign(data) != ERR_OK) {
       core_usb_err_sw(cmd, 0x6a, 0x80);
       return;
@@ -355,20 +355,26 @@ static void core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
     }
 
     g_core.data.msg.received = 0;
-    keccak_Update(&g_core.hash_ctx, ETH_MSG_MAGIC, ETH_MSG_MAGIC_LEN);
-    len -= g_core.bip44_path_len + 5;
+    *len -= g_core.bip44_path_len + 5;
     data = &data[g_core.bip44_path_len + 5];
   }
 
-  if ((g_core.data.msg.received + len) > MEM_HEAP_SIZE) {
+  if ((g_core.data.msg.received + *len) > MEM_HEAP_SIZE) {
     core_usb_err_sw(cmd, 0x6a, 0x80);
     return;
   }
 
-  uint8_t* buf = &g_core.data.msg.content[g_core.data.msg.received];
-  memcpy(buf, data, len);
+  *segment = &g_core.data.msg.content[g_core.data.msg.received];
+  memcpy(*segment, data, *len);
+}
 
-  switch(core_process_msg(buf, len, first_segment)) {
+static void core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
+  uint8_t* segment;
+  uint32_t len;
+  uint8_t first_segment;
+  core_usb_message_reassemble(kc, cmd, &segment, &len, &first_segment);
+
+  switch(core_process_msg(segment, len, first_segment)) {
     case ERR_OK:
       core_usb_sign(kc, cmd, 27);
       break;
@@ -388,17 +394,43 @@ static void core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
 }
 
 static void core_usb_sign_eip712(keycard_t* kc, apdu_t* cmd) {
-  uint8_t* data = APDU_DATA(cmd);
+  // TODO: legacy, probably substitute with throwing 0x6982
+  if (APDU_P2(cmd) == 0) {
+    uint8_t* data = APDU_DATA(cmd);
 
-  if (core_usb_init_sign(data) != ERR_OK) {
-    core_usb_err_sw(cmd, 0x6a, 0x80);
+    if (core_usb_init_sign(data) != ERR_OK) {
+      core_usb_err_sw(cmd, 0x6a, 0x80);
+      return;
+    }
+
+    keccak_Update(&g_core.hash_ctx, ETH_EIP712_MAGIC, ETH_EIP712_MAGIC_LEN);
+    keccak_Update(&g_core.hash_ctx, &data[1+g_core.bip44_path_len], (SHA3_256_DIGEST_LENGTH * 2));
+
+    core_usb_sign(kc, cmd, 27);
     return;
   }
 
-  keccak_Update(&g_core.hash_ctx, ETH_EIP712_MAGIC, ETH_EIP712_MAGIC_LEN);
-  keccak_Update(&g_core.hash_ctx, &data[1+g_core.bip44_path_len], (SHA3_256_DIGEST_LENGTH * 2));
+  uint8_t* segment;
+  uint32_t len;
+  uint8_t first_segment;
+  core_usb_message_reassemble(kc, cmd, &segment, &len, &first_segment);
 
-  core_usb_sign(kc, cmd, 27);
+  if ((g_core.data.msg.received + len) > g_core.data.msg.len) {
+    core_usb_err_sw(cmd, 0x6a, 0x80);
+  }
+
+  g_core.data.msg.received += len;
+
+  if (g_core.data.msg.received == g_core.data.msg.len) {
+    if (core_process_eip712(g_core.data.msg.content, g_core.data.msg.len) == ERR_OK) {
+      core_usb_sign(kc, cmd, 27);
+    } else {
+      core_usb_err_sw(cmd, 0x69, 0x82);
+    }
+  } else {
+    core_usb_err_sw(cmd, 0x90, 0x00);
+  }
+
 }
 
 static void core_usb_command(keycard_t* kc, command_t* cmd) {
@@ -484,6 +516,7 @@ void core_qr_run() {
       err = core_process_tx(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len, 1);
       break;
     case _sign_data_type__eth_raw_bytes:
+      g_core.data.msg.content = (uint8_t*) qr_request._eth_sign_request_sign_data.value;
       g_core.data.msg.len = qr_request._eth_sign_request_sign_data.len;
       err = core_process_msg(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len, 1);
       break;
