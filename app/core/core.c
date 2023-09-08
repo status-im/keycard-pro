@@ -394,20 +394,8 @@ static void core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
 }
 
 static void core_usb_sign_eip712(keycard_t* kc, apdu_t* cmd) {
-  // TODO: legacy, probably substitute with throwing 0x6982
-  if (APDU_P2(cmd) == 0) {
-    uint8_t* data = APDU_DATA(cmd);
-
-    if (core_usb_init_sign(data) != ERR_OK) {
-      core_usb_err_sw(cmd, 0x6a, 0x80);
-      return;
-    }
-
-    keccak_Update(&g_core.hash_ctx, ETH_EIP712_MAGIC, ETH_EIP712_MAGIC_LEN);
-    keccak_Update(&g_core.hash_ctx, &data[1+g_core.bip44_path_len], (SHA3_256_DIGEST_LENGTH * 2));
-
-    core_usb_sign(kc, cmd, 27);
-    return;
+  if (APDU_P2(cmd) != 1) {
+    core_usb_err_sw(cmd, 0x69, 0x82);
   }
 
   uint8_t* segment;
