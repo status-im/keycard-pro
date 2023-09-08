@@ -20,6 +20,9 @@ typedef struct {
   size_t len;
 } data_t;
 
+extern const uint8_t FW_SIGNATURE[64];
+extern const uint8_t FW_VERSION[4];
+
 #define APP_ALIGNED(x, a) x __attribute__((aligned(a)))
 #define APP_SECTION(x, s) x __attribute__((section(s)))
 #define APP_ALWAYS_INLINE inline __attribute__((always_inline))

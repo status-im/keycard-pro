@@ -58,6 +58,15 @@ SECTIONS
     KEEP(*(.isr_vector)) /* Startup code */
     . = ALIGN(4);
   } >FLASH
+  
+  /* The header information */
+  .header :
+  {
+  	. = ALIGN(4);
+  	KEEP(*(.fw_signature))
+  	KEEP(*(.fw_version))
+  	. = ALIGN(4);
+  } >FLASH
 
   /* The program code and other data into "FLASH" Rom type memory */
   .text :

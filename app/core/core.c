@@ -12,10 +12,6 @@
 #include "ur/eip4527_encode.h"
 #include "util/tlv.h"
 
-#define APP_MAJOR 1
-#define APP_MINOR 9
-#define APP_PATCH 17
-
 #define ETH_MSG_MAGIC_LEN 26
 #define ETH_EIP712_MAGIC_LEN 2
 
@@ -198,13 +194,16 @@ static void core_usb_err_sw(apdu_t* cmd, uint8_t sw1, uint8_t sw2) {
 
 static void core_usb_get_app_config(apdu_t* cmd) {
   uint8_t* data = APDU_RESP(cmd);
-  data[0] = 0x03;
-  data[1] = APP_MAJOR;
-  data[2] = APP_MINOR;
-  data[3] = APP_PATCH;
-  data[4] = 0x90;
+  data[0] = FW_VERSION[0];
+  data[1] = FW_VERSION[1];
+  data[2] = FW_VERSION[2];
+  data[3] = 0x00;
+  data[4] = 0x00;
   data[5] = 0x00;
-  cmd->lr = 6;
+  data[6] = 0x00;
+  data[7] = 0x90;
+  data[8] = 0x00;
+  cmd->lr = 9;
 }
 
 static void core_usb_get_address(keycard_t* kc, apdu_t* cmd) {
