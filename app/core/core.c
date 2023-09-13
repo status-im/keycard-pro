@@ -185,13 +185,6 @@ static app_err_t core_process_eip712(const uint8_t* data, uint32_t len) {
   return core_wait_msg_confirmation(data, len);
 }
 
-static void core_usb_err_sw(apdu_t* cmd, uint8_t sw1, uint8_t sw2) {
-  uint8_t* data = APDU_RESP(cmd);
-  data[0] = sw1;
-  data[1] = sw2;
-  cmd->lr = 2;
-}
-
 static void core_usb_get_app_config(apdu_t* cmd) {
   uint8_t* data = APDU_RESP(cmd);
   data[0] = FW_VERSION[0];
@@ -439,6 +432,9 @@ static void core_usb_command(keycard_t* kc, command_t* cmd) {
         break;
       case INS_SIGN_EIP_712:
         core_usb_sign_eip712(kc, apdu);
+        break;
+      case INS_FW_UPGRADE:
+        updater_usb_fw_upgrade(apdu);
         break;
       default:
         core_usb_err_sw(apdu, 0x6d, 0x00);

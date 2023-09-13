@@ -18,6 +18,11 @@ typedef uint32_t hal_crc32_ctx_t;
 
 #define HAL_FLASH_DATA_BLOCK_COUNT 96
 
+#define HAL_FLASH_FW_UPGRADE_AREA (HAL_FLASH_ADDR + (HAL_FLASH_BLOCK_SIZE * FLASH_SECTOR_NB))
+#define HAL_FLASH_FW_BLOCK_COUNT 80
+
+#define HAL_FW_HEADER_OFFSET 588
+
 static inline void hal_reboot() {
   NVIC_SystemReset();
 }

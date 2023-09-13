@@ -9,11 +9,9 @@
 #define INS_SIGN_ETH_TX 0x04
 #define INS_GET_APP_CONF 0x06
 #define INS_SIGN_ETH_MSG 0x08
-#define INS_SIGN_ETH_MSG 0x08
-#define INS_PROVIDE_ERC20 0x0A
 #define INS_SIGN_EIP_712 0x0C
-#define INS_SIGN_ETH_MSG 0x08
-#define INS_PROVIDE_NFT 0x14
+#define INS_FW_UPGRADE 0xf2
+#define INS_ERC20_UPGRADE 0xf4
 
 typedef enum {
   COMMAND_INBOUND = 0,
