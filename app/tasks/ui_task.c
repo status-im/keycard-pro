@@ -16,7 +16,6 @@ struct ui_cmd g_ui_cmd;
 struct ui_ctx g_ui_ctx;
 
 void ui_task_entry(void* pvParameters) {
-
   if (screen_init() != HAL_SUCCESS) {
     vTaskSuspend(NULL);
   }
@@ -26,10 +25,14 @@ void ui_task_entry(void* pvParameters) {
 
   g_ui_cmd.received = 0;
 
+  hal_inactivity_timer_set(g_settings.shutdown_timeout);
+
   while(1) {
     if (!g_ui_cmd.received && ((ui_wait_event(portMAX_DELAY) & UI_CMD_EVT) == 0)) {
       continue;
     }
+
+    hal_inactivity_timer_reset();
 
     g_ui_cmd.received = 0;
 

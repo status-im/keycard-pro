@@ -50,6 +50,7 @@ extern SMARTCARD_HandleTypeDef hsmartcard6;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim5;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 extern CRC_HandleTypeDef hcrc;
 extern ADC_HandleTypeDef hadc2;
@@ -80,6 +81,7 @@ void MX_USB_PCD_Init(void);
 void MX_ICACHE_Init(void);
 void MX_MEMORYMAP_Init(void);
 void MX_ADC2_Init(void);
+void MX_TIM5_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);

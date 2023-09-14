@@ -14,6 +14,8 @@ static inline void keypad_report_key(keypad_key_t key, bool is_long) {
   g_ui_ctx.keypad.last_key_long = is_long;
   g_ui_ctx.keypad.last_key_released = !is_long;
 
+  hal_inactivity_timer_reset();
+
   BaseType_t xHigherPriorityTaskWoken = pdFALSE;
   xTaskNotifyIndexedFromISR(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_KEY_EVT, eSetBits, &xHigherPriorityTaskWoken);
   portYIELD_FROM_ISR(xHigherPriorityTaskWoken);

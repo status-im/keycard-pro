@@ -89,6 +89,7 @@ app_err_t qrscan_scan() {
     quirc_end(&qrctx);
 
     if (qrscan_decode(&qrctx, &ur) == ERR_OK) {
+      hal_inactivity_timer_reset();
       if (qrscan_deserialize(&ur) == ERR_OK) {
         screen_wait();
         goto end;

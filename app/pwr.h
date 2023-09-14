@@ -10,4 +10,6 @@ void pwr_usb_unplugged();
 void pwr_smartcard_inserted();
 void pwr_smartcard_removed();
 
+void pwr_inactivity_timer_elapsed();
+
 #endif

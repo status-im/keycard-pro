@@ -158,4 +158,7 @@ void hal_usb_setup_cb(uint8_t* data);
 void hal_usb_data_in_cb(uint8_t epaddr);
 void hal_usb_data_out_cb(uint8_t epaddr);
 
+// Inactivity timer
+void hal_inactivity_timer_set(uint32_t delay_ms);
+void hal_inactivity_timer_reset();
 #endif

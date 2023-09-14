@@ -207,6 +207,10 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
   _hal_usb_open_ep();
 }
 
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
+  pwr_inactivity_timer_elapsed();
+}
+
 hal_err_t hal_init() {
   // Copies UID, Flash size, package info before it becomes privileged
   memcpy(g_uid, (uint32_t*) UID_BASE, HAL_DEVICE_UID_LEN);
@@ -221,6 +225,7 @@ hal_err_t hal_init() {
   MX_GPIO_Init();
   MX_TIM6_Init();
   MX_TIM2_Init();
+  MX_TIM5_Init();
   MX_GPDMA2_Init();
   MX_GPDMA1_Init();
 
@@ -653,4 +658,16 @@ hal_err_t hal_usb_set_address(uint8_t addr) {
 
 hal_err_t hal_usb_next_recv(uint8_t epaddr, uint8_t* data, size_t len) {
   return HAL_PCD_EP_Receive(&hpcd_USB_DRD_FS, epaddr, data, len);
+}
+
+void hal_inactivity_timer_set(uint32_t delay_ms) {
+  HAL_TIM_Base_Stop_IT(&htim5);
+  __HAL_TIM_SET_COUNTER(&htim5, 0);
+  __HAL_TIM_SET_AUTORELOAD(&htim5, delay_ms);
+  __HAL_TIM_CLEAR_IT(&htim5, TIM_IT_UPDATE);
+  HAL_TIM_Base_Start_IT(&htim5);
+}
+
+void hal_inactivity_timer_reset() {
+  __HAL_TIM_SET_COUNTER(&htim5, 0);
 }
