@@ -58,9 +58,7 @@ static app_err_t updater_verify_firmware() {
   sha256_Init(&sha2);
   sha256_Update(&sha2, fw_upgrade_area, HAL_FW_HEADER_OFFSET);
 
-  size_t len = ((uint32_t*) fw_upgrade_area)[(HAL_FW_HEADER_OFFSET + SIG_LEN)/4];
-
-  sha256_Update(&sha2, &fw_upgrade_area[HAL_FW_HEADER_OFFSET + SIG_LEN], len);
+  sha256_Update(&sha2, &fw_upgrade_area[HAL_FW_HEADER_OFFSET + SIG_LEN], (HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE));
   sha256_Final(&sha2, digest);
 
   const uint8_t* key;
