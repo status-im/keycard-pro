@@ -20,6 +20,9 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_BRIGHTNESS:
     settings_lcd_brightness();
     break;
+  case MENU_SET_OFF_TIME:
+    settings_set_off_time();
+    break;
   default:
     //unhandled commands
     break;
@@ -43,17 +46,17 @@ void core_task_entry(void* pvParameters) {
   }
 
   while(1) {
-    i18n_str_id_t selected;
+    i18n_str_id_t selected = MENU_QRCODE;
 
-    switch(ui_menu(LSTR(MENU_TITLE), &menu_mainmenu, &selected)) {
+    switch(ui_menu(LSTR(MENU_TITLE), &menu_mainmenu, &selected, 1)) {
     case CORE_EVT_USB_CMD:
       core_usb_run();
       break;
     case CORE_EVT_UI_OK:
       core_action_run(selected);
       break;
+    case CORE_EVT_UI_CANCELLED:
     default:
-      // should not happen, if it does we restart the main menu
       break;
     }
   }

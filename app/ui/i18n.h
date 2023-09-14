@@ -24,7 +24,7 @@ typedef enum {
   MENU_FW_UPGRADE,
   MENU_DB_UPDATE,
   MENU_BRIGHTNESS,
-  MENU_SET_LANG,
+  MENU_SET_OFF_TIME,
 
   // TX Confirmation
   TX_CONFIRM_TITLE,
@@ -78,6 +78,13 @@ typedef enum {
   // LCD settings
   LCD_BRIGHTNESS_TITLE,
 
+  // Auto off times
+  AUTO_OFF_TITLE,
+  MENU_OFF_3MINS,
+  MENU_OFF_5MINS,
+  MENU_OFF_10MINS,
+  MENU_OFF_30MINS,
+  MENU_OFF_NEVER
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

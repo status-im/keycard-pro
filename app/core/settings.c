@@ -57,3 +57,53 @@ void settings_lcd_brightness() {
 
   hal_pwm_set_dutycycle(PWM_BACKLIGHT, g_settings.lcd_brightness);
 }
+
+void settings_set_off_time() {
+  i18n_str_id_t selected;
+
+  switch(g_settings.shutdown_timeout) {
+  case SETTINGS_SHUTDOWN_MINS(3):
+    selected = MENU_OFF_3MINS;
+    break;
+  case SETTINGS_SHUTDOWN_MINS(5):
+    selected = MENU_OFF_5MINS;
+    break;
+  case SETTINGS_SHUTDOWN_MINS(10):
+    selected = MENU_OFF_10MINS;
+    break;
+  case SETTINGS_SHUTDOWN_MINS(30):
+    selected = MENU_OFF_30MINS;
+    break;
+  case SETTINGS_SHUTDOWN_NEVER:
+    selected = MENU_OFF_NEVER;
+    break;
+  default:
+    selected = MENU_OFF_3MINS;
+  }
+
+  if (ui_menu(LSTR(AUTO_OFF_TITLE), &menu_autooff, &selected, 0) != CORE_EVT_UI_OK) {
+    return;
+  }
+
+  switch(selected) {
+  case MENU_OFF_3MINS:
+    g_settings.shutdown_timeout = SETTINGS_SHUTDOWN_MINS(3);
+    break;
+  case MENU_OFF_5MINS:
+    g_settings.shutdown_timeout = SETTINGS_SHUTDOWN_MINS(5);
+    break;
+  case MENU_OFF_10MINS:
+    g_settings.shutdown_timeout = SETTINGS_SHUTDOWN_MINS(10);
+    break;
+  case MENU_OFF_30MINS:
+    g_settings.shutdown_timeout = SETTINGS_SHUTDOWN_MINS(30);
+    break;
+  case MENU_OFF_NEVER:
+    g_settings.shutdown_timeout = SETTINGS_SHUTDOWN_NEVER;
+    break;
+  default:
+    return;
+  }
+
+  hal_inactivity_timer_set(g_settings.shutdown_timeout);
+}

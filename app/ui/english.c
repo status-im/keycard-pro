@@ -21,7 +21,7 @@ const char *const i18n_english_strings[] = {
     "Upgrade firmware",
     "Update ERC20 db",
     "Set brightness",
-    "Set language",
+    "Auto off time",
 
     // TX
     "Sign transaction",
@@ -74,4 +74,12 @@ const char *const i18n_english_strings[] = {
 
     // LCD settings
     "LCD brightness",
+
+    // Auto off times
+    "Set auto off timeout",
+    "3 minutes",
+    "5 minutes",
+    "10 minutes" ,
+    "30 minutes",
+    "Never"
 };

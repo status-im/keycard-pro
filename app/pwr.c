@@ -43,5 +43,5 @@ void pwr_smartcard_removed() {
 }
 
 void pwr_inactivity_timer_elapsed() {
-  //pwr_shutdown();
+  pwr_shutdown();
 }

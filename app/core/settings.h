@@ -1,7 +1,11 @@
 #include "common.h"
 #include <stdbool.h>
 
-#define SETTINGS_DEF_SHUTDOWN_TIMEOUT 180000
+#define SETTINGS_SHUTDOWN_SECS(__TIME__) (__TIME__ * 1000)
+#define SETTINGS_SHUTDOWN_MINS(__TIME__) SETTINGS_SHUTDOWN_SECS(__TIME__ * 60)
+#define SETTINGS_SHUTDOWN_NEVER UINT32_MAX
+
+#define SETTINGS_DEF_SHUTDOWN_TIMEOUT SETTINGS_SHUTDOWN_MINS(3)
 #define SETTINGS_DEF_LCD_BRIGHTNESS 75
 #define SETTINGS_DEF_ENABLE_USB 1
 #define SETTINGS_DEF_LANG 0
@@ -19,3 +23,4 @@ void settings_load();
 void settings_commit();
 
 void settings_lcd_brightness();
+void settings_set_off_time();

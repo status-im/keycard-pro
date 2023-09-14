@@ -25,7 +25,7 @@ const menu_t menu_settings = {
     {MENU_FW_UPGRADE, NULL},
     {MENU_DB_UPDATE, NULL},
     {MENU_BRIGHTNESS, NULL},
-    {MENU_SET_LANG, NULL},
+    {MENU_SET_OFF_TIME, NULL},
   }
 };
 
@@ -44,6 +44,16 @@ const menu_t menu_mnemonic = {
     {MENU_MNEMO_18WORDS, NULL},
     {MENU_MNEMO_24WORDS, NULL},
     {MENU_MNEMO_GENERATE, NULL},
+  }
+};
+
+const menu_t menu_autooff = {
+  5, {
+    {MENU_OFF_3MINS, NULL},
+    {MENU_OFF_5MINS, NULL},
+    {MENU_OFF_10MINS, NULL},
+    {MENU_OFF_30MINS, NULL},
+    {MENU_OFF_NEVER, NULL},
   }
 };
 
@@ -115,11 +125,19 @@ app_err_t menu_run() {
   const menu_t* menus[MENU_MAX_DEPTH];
   const char* titles[MENU_MAX_DEPTH];
 
-  uint8_t selected = 0;
   uint8_t depth = 0;
   enum menu_draw_mode draw = MENU_ALL;
   menus[depth] = g_ui_cmd.params.menu.menu;
   titles[depth] = g_ui_cmd.params.menu.title;
+
+  uint8_t selected = 0;
+
+  for (int i = 0; i < menus[0]->len; i++) {
+    if (menus[0]->entries[i].label_id == *g_ui_cmd.params.menu.selected) {
+      selected = i;
+      break;
+    }
+  }
 
   while(1) {
     const menu_t* menu = menus[depth];
@@ -133,6 +151,8 @@ app_err_t menu_run() {
           selected = 0;
           depth--;
           draw = MENU_ALL;
+        } else {
+          return ERR_CANCEL;
         }
         break;
       case KEYPAD_KEY_UP:
