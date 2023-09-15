@@ -33,7 +33,6 @@ int main(void) {
   APP_CREATE_TASK(core, CORE_TASK_PRIO);
   APP_CREATE_TASK(ui, UI_TASK_PRIO);
 
-  vTaskSuspend(APP_TASK(usb));
   vTaskStartScheduler();
 
   while(1) {

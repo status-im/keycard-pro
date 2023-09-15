@@ -3,12 +3,17 @@
 
 #include "app_tasks.h"
 #include "core/core.h"
+#include "core/settings.h"
 #include "usb/usb.h"
 
 #define USB_TASK_INTERVAL 20
 
 void usb_task_entry(void* pvParameters) {
   while(1) {
+    if (!(usb_connected() && g_settings.enable_usb)) {
+      ulTaskNotifyTakeIndexed(USB_NOTIFICATION_IDX, pdTRUE, portMAX_DELAY);
+    }
+
     if (g_core.usb_command.status == COMMAND_COMPLETE) {
       g_core.usb_command.status = COMMAND_PROCESSING;
       xTaskNotifyIndexed(APP_TASK(core), CORE_EVENT_IDX, CORE_USB_EVT, eSetBits);

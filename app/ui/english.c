@@ -6,6 +6,7 @@ const char *const i18n_english_strings[] = {
     "Scan QR transaction",
     "Display public QR",
     "Keycard",
+    "Device",
     "Settings",
 
     // Keycard menu
@@ -15,13 +16,15 @@ const char *const i18n_english_strings[] = {
     "Change pairing pass",
     "Factory reset card",
 
-    // Settings menu
+    // Device menu
     "Device info",
     "Device authentication",
-    "Upgrade firmware",
     "Update ERC20 db",
+
+    // Settings menu
     "Set brightness",
     "Auto off time",
+    "USB data",
 
     // TX
     "Sign transaction",
@@ -81,5 +84,10 @@ const char *const i18n_english_strings[] = {
     "5 minutes",
     "10 minutes" ,
     "30 minutes",
-    "Never"
+    "Never",
+
+    // USB enable
+    "Enable USB data transfer",
+    "Off",
+    "On",
 };

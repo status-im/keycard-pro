@@ -18,22 +18,28 @@ const menu_t menu_keycard = {
   }
 };
 
-const menu_t menu_settings = {
-  6, {
+const menu_t menu_device = {
+  3, {
     {MENU_INFO, NULL},
     {MENU_DEV_AUTH, NULL},
-    {MENU_FW_UPGRADE, NULL},
     {MENU_DB_UPDATE, NULL},
+  }
+};
+
+const menu_t menu_settings = {
+  3, {
     {MENU_BRIGHTNESS, NULL},
     {MENU_SET_OFF_TIME, NULL},
+    {MENU_USB, NULL},
   }
 };
 
 const menu_t menu_mainmenu = {
-  4, {
+  5, {
     {MENU_QRCODE, NULL},
     {MENU_DISPLAY_PUBLIC, NULL},
     {MENU_KEYCARD, &menu_keycard},
+    {MENU_DEVICE, &menu_device},
     {MENU_SETTINGS, &menu_settings},
   }
 };
@@ -54,6 +60,13 @@ const menu_t menu_autooff = {
     {MENU_OFF_10MINS, NULL},
     {MENU_OFF_30MINS, NULL},
     {MENU_OFF_NEVER, NULL},
+  }
+};
+
+const menu_t menu_onoff = {
+  2, {
+    {MENU_ON, NULL},
+    {MENU_OFF, NULL},
   }
 };
 

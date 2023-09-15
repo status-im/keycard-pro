@@ -2,6 +2,7 @@
 #include "core/settings.h"
 #include "keycard/keycard.h"
 #include "pwr.h"
+#include "usb/usb.h"
 
 static inline void core_action_run(i18n_str_id_t menu) {
   switch(menu) {
@@ -23,6 +24,9 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_SET_OFF_TIME:
     settings_set_off_time();
     break;
+  case MENU_USB:
+    settings_usb_onoff();
+    break;
   default:
     //unhandled commands
     break;
@@ -41,9 +45,7 @@ void core_task_entry(void* pvParameters) {
     pwr_reboot();
   }
 
-  if (hal_gpio_get(GPIO_VUSB_OK) == GPIO_RESET) {
-    pwr_usb_plugged();
-  }
+  usb_start_if_connected();
 
   while(1) {
     i18n_str_id_t selected = MENU_QRCODE;

@@ -20,6 +20,7 @@ typedef struct _menu {
 extern const menu_t menu_mainmenu;
 extern const menu_t menu_mnemonic;
 extern const menu_t menu_autooff;
+extern const menu_t menu_onoff;
 
 app_err_t menu_run();
 

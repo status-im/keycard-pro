@@ -5,6 +5,7 @@
 #include "core/settings.h"
 #include "hal.h"
 #include "pwr.h"
+#include "usb/usb.h"
 
 static void pwr_graceful_shutdown() {
   while(hal_flash_busy()) {
@@ -24,13 +25,21 @@ void pwr_shutdown() {
   hal_gpio_set(GPIO_PWR_KILL, GPIO_SET);
 }
 
-void pwr_usb_plugged() {
-  hal_usb_start();
-  vTaskResume(APP_TASK(usb));
+void pwr_usb_plugged(bool from_isr) {
+  if (g_settings.enable_usb) {
+    hal_usb_start();
+  }
+
+  if (from_isr) {
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    vTaskNotifyGiveIndexedFromISR(APP_TASK(usb), USB_NOTIFICATION_IDX, &xHigherPriorityTaskWoken);
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+  } else {
+    xTaskNotifyGiveIndexed(APP_TASK(usb), USB_NOTIFICATION_IDX);
+  }
 }
 
 void pwr_usb_unplugged() {
-  vTaskSuspend(APP_TASK(usb));
   hal_usb_stop();
 }
 

@@ -9,6 +9,7 @@ typedef enum {
   MENU_QRCODE,
   MENU_DISPLAY_PUBLIC,
   MENU_KEYCARD,
+  MENU_DEVICE,
   MENU_SETTINGS,
 
   // Keycard menu
@@ -18,13 +19,15 @@ typedef enum {
   MENU_CHANGE_PAIRING,
   MENU_RESET_CARD,
 
-  // Settings menu
+  // Device menu
   MENU_INFO,
   MENU_DEV_AUTH,
-  MENU_FW_UPGRADE,
   MENU_DB_UPDATE,
+
+  // Settings menu
   MENU_BRIGHTNESS,
   MENU_SET_OFF_TIME,
+  MENU_USB,
 
   // TX Confirmation
   TX_CONFIRM_TITLE,
@@ -84,7 +87,12 @@ typedef enum {
   MENU_OFF_5MINS,
   MENU_OFF_10MINS,
   MENU_OFF_30MINS,
-  MENU_OFF_NEVER
+  MENU_OFF_NEVER,
+
+  // USB enable
+  USB_ENABLE_TITLE,
+  MENU_OFF,
+  MENU_ON,
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

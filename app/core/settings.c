@@ -1,6 +1,7 @@
 #include "settings.h"
 #include "storage/fs.h"
 #include "ui/ui.h"
+#include "usb/usb.h"
 
 #include <string.h>
 
@@ -79,6 +80,7 @@ void settings_set_off_time() {
     break;
   default:
     selected = MENU_OFF_3MINS;
+    break;
   }
 
   if (ui_menu(LSTR(AUTO_OFF_TITLE), &menu_autooff, &selected, 0) != CORE_EVT_UI_OK) {
@@ -106,4 +108,23 @@ void settings_set_off_time() {
   }
 
   hal_inactivity_timer_set(g_settings.shutdown_timeout);
+}
+
+void settings_usb_onoff() {
+  i18n_str_id_t selected = g_settings.enable_usb ? MENU_ON : MENU_OFF;
+
+  if (ui_menu(LSTR(USB_ENABLE_TITLE), &menu_onoff, &selected, 0) != CORE_EVT_UI_OK) {
+    return;
+  }
+
+  bool prev = g_settings.enable_usb;
+  g_settings.enable_usb = selected == MENU_OFF ? false : true;
+
+  if (prev == g_settings.enable_usb) {
+    return;
+  } else if (g_settings.enable_usb) {
+    usb_start_if_connected();
+  } else {
+    pwr_usb_unplugged();
+  }
 }

@@ -2,6 +2,8 @@
 #define __USB__
 
 #include "common.h"
+#include "hal.h"
+#include "pwr.h"
 
 #define USB_EP_HALT 0
 
@@ -11,6 +13,8 @@
 
 #define USB_MANUFACTURER_STR "Status Research & Development"
 #define USB_PRODUCT_STR "Keycard Pro"
+
+#define USB_NOTIFICATION_IDX 0
 
 typedef struct __attribute__((packed)) {
   uint8_t len;
@@ -142,5 +146,15 @@ typedef enum {
 } usb_cmd_t;
 
 void usb_hid_send_rapdu();
+
+static inline bool usb_connected() {
+  return hal_gpio_get(GPIO_VUSB_OK) == GPIO_RESET;
+}
+
+static inline void usb_start_if_connected() {
+  if (usb_connected()) {
+    pwr_usb_plugged(false);
+  }
+}
 
 #endif
