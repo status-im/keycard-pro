@@ -219,6 +219,30 @@ static app_err_t keycard_init_keys(keycard_t* kc) {
   return ERR_OK;
 }
 
+static app_err_t keycard_read_name(keycard_t* kc) {
+  if (keycard_cmd_get_data(kc) != ERR_OK) {
+    return ERR_TXRX;
+  }
+
+  if ((APDU_SW(&kc->apdu) != SW_OK) || (kc->apdu.lr == 0)) {
+    return ERR_OK;
+  }
+
+  uint8_t* data = APDU_RESP(&kc->apdu);
+  if ((data[0] & 0xe0 >> 5) != 1) {
+    return ERR_OK;
+  }
+
+  size_t name_len = data[0] & 0x1f;
+
+  char *title = (char *) &data[1];
+  data[name_len] = '\0';
+
+  strncpy(kc->name, title, KEYCARD_NAME_MAX_LEN);
+
+  return ERR_OK;
+}
+
 static app_err_t keycard_setup(keycard_t* kc, uint8_t* pin, uint8_t* cached_pin) {
   if (keycard_cmd_select(kc, KEYCARD_AID, KEYCARD_AID_LEN) != ERR_OK) {
     return ERR_TXRX;
@@ -233,6 +257,10 @@ static app_err_t keycard_setup(keycard_t* kc, uint8_t* pin, uint8_t* cached_pin)
   if (application_info_parse(APDU_RESP(&kc->apdu), &info) != ERR_OK) {
     ui_keycard_wrong_card();
     return ERR_DATA;
+  }
+
+  if (keycard_read_name(kc) != ERR_OK) {
+    return ERR_TXRX;
   }
 
   uint8_t init_keys;

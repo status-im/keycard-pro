@@ -8,10 +8,13 @@
 #define KEYCARD_PIN_LEN 6
 #define KEYCARD_PUK_LEN 12
 
+#define KEYCARD_NAME_MAX_LEN 20
+
 typedef struct {
   smartcard_t sc;
   secure_channel_t ch;
   apdu_t apdu;
+  char name[KEYCARD_NAME_MAX_LEN + 1];
 } keycard_t;
 
 void keycard_init(keycard_t* kc);

@@ -187,3 +187,28 @@ app_err_t keycard_cmd_factoy_reset(keycard_t* kc) {
 
   return smartcard_send_apdu(&kc->sc, &kc->apdu);
 }
+
+app_err_t keycard_cmd_get_data(keycard_t* kc) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0xca;
+  APDU_P1(&kc->apdu) = 0x00;
+  APDU_P2(&kc->apdu) = 0x00;
+
+  if (kc->ch.open) {
+    SC_BUF(data, 0);
+    return securechannel_send_apdu(&kc->sc, &kc->ch, &kc->apdu, data, 0);
+  } else {
+    return smartcard_send_apdu(&kc->sc, &kc->apdu);
+  }
+}
+
+app_err_t keycard_cmd_set_data(keycard_t* kc, uint8_t* data, int8_t len) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0xe2;
+  APDU_P1(&kc->apdu) = 0x00;
+  APDU_P2(&kc->apdu) = 0x00;
+
+  return securechannel_send_apdu(&kc->sc, &kc->ch, &kc->apdu, data, len);
+}

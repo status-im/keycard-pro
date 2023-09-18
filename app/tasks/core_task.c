@@ -49,8 +49,9 @@ void core_task_entry(void* pvParameters) {
 
   while(1) {
     i18n_str_id_t selected = MENU_QRCODE;
+    const char* title = g_core.keycard.name[0] ? g_core.keycard.name : LSTR(MENU_TITLE);
 
-    switch(ui_menu(LSTR(MENU_TITLE), &menu_mainmenu, &selected, 1)) {
+    switch(ui_menu(title, &menu_mainmenu, &selected, 1)) {
     case CORE_EVT_USB_CMD:
       core_usb_run();
       break;
