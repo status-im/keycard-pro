@@ -134,6 +134,7 @@ hal_err_t hal_flash_erase(uint32_t block);
 hal_err_t hal_flash_end_program();
 bool hal_flash_busy();
 const hal_flash_data_segment_t* hal_flash_get_data_segments();
+void hal_flash_switch_firmware();
 
 // PWM
 typedef enum {

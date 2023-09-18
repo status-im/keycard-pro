@@ -533,6 +533,16 @@ hal_err_t hal_flash_end_program() {
   return HAL_FLASH_Lock();
 }
 
+void hal_flash_switch_firmware() {
+  HAL_FLASH_OB_Unlock();
+  FLASH_OBProgramInitTypeDef ob;
+  HAL_FLASHEx_OBGetConfig(&ob);
+  ob.USERConfig = (ob.USERConfig & (~FLASH_OPTSR_SWAP_BANK)) | ((~ob.USERConfig) & FLASH_OPTSR_SWAP_BANK);
+  HAL_FLASHEx_OBProgram(&ob);
+  HAL_FLASH_OB_Launch();
+  NVIC_SystemReset();
+}
+
 void hal_tick() {
   HAL_IncTick();
 }

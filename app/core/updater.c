@@ -62,8 +62,13 @@ static app_err_t updater_verify_firmware() {
   sha256_Final(&sha2, digest);
 
   const uint8_t* key;
-  key_read(FW_UPDATE, &key);
+  key_read(FW_VERIFICATION_KEY, &key);
   return ecdsa_verify_digest(&secp256k1, key, &fw_upgrade_area[HAL_FW_HEADER_OFFSET], digest) ? ERR_DATA : ERR_OK;
+}
+
+static void updater_fw_switch() {
+  //TODO: actual switching must be done in the bootloader, here we must launch the bootloader in fw upgrade mode
+  hal_flash_switch_firmware();
 }
 
 void updater_usb_fw_upgrade(apdu_t* cmd) {
@@ -98,10 +103,15 @@ void updater_usb_fw_upgrade(apdu_t* cmd) {
     return;
   } else if (g_core.data.msg.received == g_core.data.msg.len) {
     if (updater_verify_firmware() != ERR_OK) {
-      //TODO: warn user
+      updater_clear_flash_area();
+      ui_info(INFO_ERROR_TITLE, LSTR(INFO_FW_UPGRADE_INVALID), 1);
+      return;
     }
 
-    // TODO: confirm with the user, switch and reboot
+    //TODO: show current and new fw version
+    if (ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_FW_UPGRADE_CONFIRM),1) == CORE_EVT_UI_OK) {
+      updater_fw_switch();
+    }
   }
 
   core_usb_err_sw(cmd, 0x90, 0x00);
