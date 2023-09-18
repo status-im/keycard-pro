@@ -229,14 +229,14 @@ static app_err_t keycard_read_name(keycard_t* kc) {
   }
 
   uint8_t* data = APDU_RESP(&kc->apdu);
-  if ((data[0] & 0xe0 >> 5) != 1) {
+  if ((data[0] >> 5) != 1) {
     return ERR_OK;
   }
 
   size_t name_len = data[0] & 0x1f;
 
   char *title = (char *) &data[1];
-  data[name_len] = '\0';
+  data[1 + name_len] = '\0';
 
   strncpy(kc->name, title, KEYCARD_NAME_MAX_LEN);
 
@@ -384,6 +384,51 @@ app_err_t keycard_read_signature(uint8_t* data, uint8_t* digest, uint8_t* out_si
   }
 
   return ERR_DATA;
+}
+
+app_err_t keycard_set_name(keycard_t* kc, const char* name) {
+  SC_BUF(metadata, 127);
+  uint8_t metadata_len = 1;
+
+  for (int i = 0; i < KEYCARD_NAME_MAX_LEN; i++) {
+    if (name[i] == '\0') {
+      break;
+    }
+
+    metadata[metadata_len++] = name[i];
+  }
+
+  metadata[0] = ((1 << 5) | (metadata_len - 1));
+
+  if (keycard_cmd_get_data(kc) != ERR_OK) {
+    return ERR_TXRX;
+  }
+
+  if ((APDU_SW(&kc->apdu) != SW_OK)) {
+    return ERR_DATA;
+  }
+
+  if (kc->apdu.lr != 0) {
+    uint8_t* data = APDU_RESP(&kc->apdu);
+
+    if ((data[0] >> 5) == 1) {
+      uint8_t copy_off =  1 + (data[0] & 0x1f);
+      uint8_t copy_len = kc->apdu.lr - copy_off;
+      memcpy(&metadata[metadata_len], &data[copy_off], copy_len);
+      metadata_len += copy_len;
+    }
+  }
+
+  if (keycard_cmd_set_data(kc, metadata, metadata_len) != ERR_OK) {
+    return ERR_TXRX;
+  }
+
+  if ((APDU_SW(&kc->apdu) != SW_OK)) {
+    return ERR_DATA;
+  }
+
+  strncpy(kc->name, name, KEYCARD_NAME_MAX_LEN);
+  return ERR_OK;
 }
 
 void keycard_in(keycard_t* kc) {
