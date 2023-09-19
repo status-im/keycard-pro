@@ -1,4 +1,5 @@
 #include "core/core.h"
+#include "core/card.h"
 #include "core/settings.h"
 #include "keycard/keycard.h"
 #include "pwr.h"
@@ -6,11 +7,31 @@
 
 static inline void core_action_run(i18n_str_id_t menu) {
   switch(menu) {
+  // Top Level
   case MENU_QRCODE:
     core_qr_run();
     break;
   case MENU_DISPLAY_PUBLIC:
     core_display_public();
+    break;
+  // Keycard
+  case MENU_CARD_NAME:
+    card_change_name();
+    break;
+  case MENU_CHANGE_PIN:
+    card_change_pin();
+    break;
+  case MENU_CHANGE_PUK:
+    card_change_puk();
+    break;
+  case MENU_CHANGE_PAIRING:
+    card_change_pairing();
+    break;
+  case MENU_RESET_CARD:
+    card_reset();
+    break;
+  // Device
+  case MENU_INFO:
     break;
   case MENU_DB_UPDATE:
     updater_database_run();
@@ -18,6 +39,7 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_DEV_AUTH:
     device_auth_run();
     break;
+  // Settings
   case MENU_BRIGHTNESS:
     settings_lcd_brightness();
     break;
@@ -28,7 +50,7 @@ static inline void core_action_run(i18n_str_id_t menu) {
     settings_usb_onoff();
     break;
   default:
-    //unhandled commands
+    //unknown commands
     break;
   }
 }

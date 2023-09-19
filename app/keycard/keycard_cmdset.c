@@ -89,6 +89,16 @@ app_err_t keycard_cmd_verify_pin(keycard_t* kc, uint8_t* pin) {
   return securechannel_send_apdu(&kc->sc, &kc->ch, &kc->apdu, pin, KEYCARD_PIN_LEN);
 }
 
+app_err_t keycard_cmd_change_credential(keycard_t* kc, keycard_credentials_t type, uint8_t* credentials, uint8_t len) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0x21;
+  APDU_P1(&kc->apdu) = type;
+  APDU_P2(&kc->apdu) = 0;
+
+  return securechannel_send_apdu(&kc->sc, &kc->ch, &kc->apdu, credentials, len);
+}
+
 app_err_t keycard_cmd_unblock_pin(keycard_t* kc, uint8_t* pin, uint8_t* puk) {
   APDU_RESET(&kc->apdu);
   APDU_CLA(&kc->apdu) = 0x80;

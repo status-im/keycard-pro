@@ -1,3 +1,6 @@
+#ifndef __CORE_SETTINGS__
+#define __CORE_SETTINGS__
+
 #include "common.h"
 #include <stdbool.h>
 
@@ -25,3 +28,5 @@ void settings_commit();
 void settings_lcd_brightness();
 void settings_set_off_time();
 void settings_usb_onoff();
+
+#endif
