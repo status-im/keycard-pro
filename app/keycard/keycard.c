@@ -65,18 +65,18 @@ static app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instan
       return ERR_OK;
     }
 
-    uint8_t password[16];
+    uint8_t password[KEYCARD_PAIRING_PASS_MAX_LEN + 1];
     uint8_t pairing[32];
-    uint32_t len = 16;
+    uint8_t len = KEYCARD_PAIRING_PASS_MAX_LEN;
     psk = pairing;
 
     ui_keycard_pairing_failed();
 
-    if (ui_read_pairing(pairing, &len) != CORE_EVT_UI_OK) {
+    if (ui_read_pairing(password, &len) != CORE_EVT_UI_OK) {
       return ERR_CANCEL;
     }
 
-    pbkdf2_hmac_sha256(password, len, (uint8_t*)"Keycard Pairing Password Salt", 30, 50000, pairing, 32);
+    keycard_pairing_password_hash(password, len, pairing);
   }
 }
 
@@ -85,7 +85,7 @@ static app_err_t keycard_factoryreset(keycard_t* kc) {
     return ERR_CANCEL;
   }
 
-  return keycard_cmd_factoy_reset(kc);
+  return keycard_cmd_factory_reset(kc);
 }
 
 static app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {
@@ -429,6 +429,10 @@ app_err_t keycard_set_name(keycard_t* kc, const char* name) {
 
   strncpy(kc->name, name, KEYCARD_NAME_MAX_LEN);
   return ERR_OK;
+}
+
+void keycard_pairing_password_hash(uint8_t* pass, uint8_t len, uint8_t pairing[32]) {
+  pbkdf2_hmac_sha256(pass, len, (uint8_t*)"Keycard Pairing Password Salt", 30, 50000, pairing, 32);
 }
 
 void keycard_in(keycard_t* kc) {

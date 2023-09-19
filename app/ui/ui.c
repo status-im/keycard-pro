@@ -134,8 +134,17 @@ core_evt_t ui_read_puk(uint8_t* out, int8_t retries) {
   return CORE_EVT_UI_CANCELLED;
 }
 
-core_evt_t ui_read_pairing(uint8_t* pairing, uint32_t *len) {
-  return CORE_EVT_UI_OK;
+core_evt_t ui_read_pairing(uint8_t* pairing, uint8_t *len) {
+  return ui_read_string(LSTR(PAIRING_INPUT_TITLE), (char*) pairing, len);
+}
+
+core_evt_t ui_read_string(const char* title, char* out, uint8_t* len) {
+  g_ui_cmd.type = UI_CMD_INPUT_STRING;
+  g_ui_cmd.params.input_string.title = title;
+  g_ui_cmd.params.input_string.out = out;
+  g_ui_cmd.params.input_string.len = len;
+
+  return ui_signal_wait(0);
 }
 
 void ui_seed_loaded() {

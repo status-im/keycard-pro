@@ -58,6 +58,9 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_INPUT_PIN:
       g_ui_cmd.result = input_pin();
       break;
+    case UI_CMD_INPUT_STRING:
+      g_ui_cmd.result = input_string();
+      break;
     case UI_CMD_INPUT_MNEMO:
       g_ui_cmd.result = input_mnemonic();
       break;
@@ -71,6 +74,7 @@ void ui_task_entry(void* pvParameters) {
       g_ui_cmd.result = settings_ui_lcd_brightness();
       break;
     default:
+      g_ui_cmd.result = ERR_CANCEL;
       break;
     }
 

@@ -25,17 +25,17 @@
 
 #define KEYBOARD_ROW1_LEN 10
 #define KEYBOARD_ROW2_LEN 9
-#define KEYBOARD_ROW3_LEN 7
+#define KEYBOARD_ROW3_LEN(__HAS_SPACE__) (7 + __HAS_SPACE__)
 
 #define KEYBOARD_ROW1_LIMIT KEYBOARD_ROW1_LEN
 #define KEYBOARD_ROW2_LIMIT (KEYBOARD_ROW1_LIMIT + KEYBOARD_ROW2_LEN)
-#define KEYBOARD_ROW3_LIMIT (KEYBOARD_ROW2_LIMIT + KEYBOARD_ROW3_LEN)
+#define KEYBOARD_ROW3_LIMIT(__HAS_SPACE__) (KEYBOARD_ROW2_LIMIT + KEYBOARD_ROW3_LEN(__HAS_SPACE__))
 
 const char KEYPAD_TO_DIGIT[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', DIG_INV, '0', DIG_INV, DIG_INV, DIG_INV};
 const char KEYBOARD_MAP[] = {
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
-    'z', 'x', 'c', 'v', 'b', 'n', 'm'
+    'z', 'x', 'c', 'v', 'b', 'n', 'm', ' '
 };
 
 static app_err_t input_render_secret(uint16_t yOff, int len, int pos) {
@@ -171,7 +171,7 @@ static inline void input_keyboard_render_key(char c, uint16_t x, uint16_t y, boo
   screen_draw_glyph(&ctx, glyph);
 }
 
-static inline void input_keyboard_render(int idx) {
+static inline void input_keyboard_render(int idx, bool show_space) {
   int i = 0;
 
   while (i < KEYBOARD_ROW1_LIMIT) {
@@ -193,21 +193,21 @@ static inline void input_keyboard_render(int idx) {
 
   screen_fill_area(&padding, TH_KEYBOARD_KEY_BG);
 
-  while (i < KEYBOARD_ROW3_LIMIT) {
+  while (i < KEYBOARD_ROW3_LIMIT(show_space)) {
     input_keyboard_render_key(KEYBOARD_MAP[i], ((i - 19) * TH_KEYBOARD_KEY_SIZE), (KEYBOARD_TOP_Y + (TH_KEYBOARD_KEY_SIZE * 2)), idx == i);
     i++;
   }
 
-  padding.x = KEYBOARD_ROW3_LEN * TH_KEYBOARD_KEY_SIZE;
+  padding.x = KEYBOARD_ROW3_LEN(show_space) * TH_KEYBOARD_KEY_SIZE;
   padding.y = KEYBOARD_TOP_Y + (TH_KEYBOARD_KEY_SIZE * 2);
   padding.width = (TH_KEYBOARD_KEY_SIZE * 3);
 
   screen_fill_area(&padding, TH_KEYBOARD_KEY_BG);
 }
 
-static char input_keyboard(int *idx) {
+static char input_keyboard(int *idx, bool show_space) {
   while(1) {
-    input_keyboard_render(*idx);
+    input_keyboard_render(*idx, show_space);
 
     switch(ui_wait_keypress(portMAX_DELAY)) {
     case KEYPAD_KEY_UP:
@@ -227,7 +227,7 @@ static char input_keyboard(int *idx) {
     case KEYPAD_KEY_RIGHT:
       if ((*idx < (KEYBOARD_ROW1_LIMIT - 1)) ||
           ((*idx < (KEYBOARD_ROW2_LIMIT - 1)) && (*idx >= KEYBOARD_ROW1_LIMIT)) ||
-          ((*idx < (KEYBOARD_ROW3_LIMIT - 1)) && (*idx >= KEYBOARD_ROW2_LIMIT))) {
+          ((*idx < (KEYBOARD_ROW3_LIMIT(show_space) - 1)) && (*idx >= KEYBOARD_ROW2_LIMIT))) {
         (*idx)++;
       }
       break;
@@ -235,7 +235,7 @@ static char input_keyboard(int *idx) {
       if (*idx < KEYBOARD_ROW1_LIMIT) {
         *idx = APP_MIN(*idx + KEYBOARD_ROW1_LEN, (KEYBOARD_ROW2_LIMIT - 1));
       } else if (*idx < KEYBOARD_ROW2_LIMIT) {
-        *idx = APP_MIN(*idx + KEYBOARD_ROW2_LEN, (KEYBOARD_ROW3_LIMIT - 1));
+        *idx = APP_MIN(*idx + KEYBOARD_ROW2_LEN, (KEYBOARD_ROW3_LIMIT(show_space) - 1));
       }
       break;
     case KEYPAD_KEY_BACK:
@@ -328,7 +328,7 @@ static app_err_t input_mnemonic_get_word(int i, uint16_t* idx) {
 
   while(1) {
     input_mnemonic_render(word, len, *idx);
-    char c = input_keyboard(&key_idx);
+    char c = input_keyboard(&key_idx, false);
 
     if (c == KEY_RETURN) {
       if (*idx != UINT16_MAX) {
@@ -453,4 +453,31 @@ app_err_t input_backup_mnemonic() {
   } while(input_backup_confirm_mnemonic(positions) != ERR_OK);
 
   return ERR_OK;
+}
+
+app_err_t input_string() {
+  dialog_title(g_ui_cmd.params.input_string.title);
+  dialog_footer(TH_TITLE_HEIGHT);
+
+  int len = 0;
+  int key_idx = 0;
+
+  while(1) {
+    input_render_editable_text_field(g_ui_cmd.params.input_string.out, len, 0);
+    char c = input_keyboard(&key_idx, true);
+
+    if (c == KEY_RETURN) {
+      g_ui_cmd.params.input_string.out[len] = '\0';
+      *g_ui_cmd.params.input_string.len = len;
+      return ERR_OK;
+    } else if (c == KEY_BACKSPACE) {
+      if (len > 0) {
+        len--;
+      }
+    } else if (c == KEY_ESCAPE) {
+      return ERR_CANCEL;
+    } else if (len < *g_ui_cmd.params.input_string.len) {
+      g_ui_cmd.params.input_string.out[len++] = c;
+    }
+  }
 }

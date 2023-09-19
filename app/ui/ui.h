@@ -48,7 +48,8 @@ core_evt_t ui_prompt_try_puk();
 core_evt_t ui_confirm_factory_reset();
 core_evt_t ui_read_pin(uint8_t* out, int8_t retries);
 core_evt_t ui_read_puk(uint8_t* out, int8_t retries);
-core_evt_t ui_read_pairing(uint8_t* pairing, uint32_t *len);
+core_evt_t ui_read_pairing(uint8_t* pairing, uint8_t* len);
+core_evt_t ui_read_string(const char* title, char* out, uint8_t* len);
 
 core_evt_t ui_read_mnemonic_len(uint32_t* len);
 core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len);

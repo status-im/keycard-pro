@@ -27,6 +27,7 @@ enum cmd_type {
   UI_CMD_DISPLAY_QR,
   UI_CMD_QRSCAN,
   UI_CMD_INPUT_PIN,
+  UI_CMD_INPUT_STRING,
   UI_CMD_INPUT_MNEMO,
   UI_CMD_BACKUP_MNEMO,
   UI_CMD_DEV_AUTH,
@@ -70,6 +71,12 @@ struct cmd_input_pin {
   uint8_t* out;
 };
 
+struct cmd_input_string {
+  const char* title;
+  char* out;
+  uint8_t* len;
+};
+
 struct cmd_mnemo {
   uint16_t* indexes;
   uint32_t len;
@@ -93,6 +100,7 @@ union cmd_params {
   struct cmd_menu menu;
   struct cmd_qrscan qrscan;
   struct cmd_input_pin input_pin;
+  struct cmd_input_string input_string;
   struct cmd_mnemo mnemo;
   struct cmd_auth auth;
   struct cmd_brightness lcd;

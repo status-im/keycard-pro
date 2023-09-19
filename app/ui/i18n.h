@@ -50,6 +50,17 @@ typedef enum {
   PIN_LABEL_REPEAT,
   PIN_LABEL_MISMATCH,
 
+  // Pairing input
+  PAIRING_INPUT_TITLE,
+  PAIRING_CREATE_TITLE,
+
+  // Name input
+  CARD_NAME_TITLE,
+
+  // Factory reset
+  FACTORY_RESET_TITLE,
+  FACTORY_RESET_WARNING,
+
   // Info messages
   INFO_ERROR_TITLE,
   INFO_SUCCESS_TITLE,
