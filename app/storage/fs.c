@@ -209,7 +209,7 @@ static enum fs_iterator_action _fs_iterate_page(uint8_t* p, fs_iterator_cb_t cb,
       continue;
     }
 
-    size_t to_skip;
+    size_t to_skip = 0;
 
     switch(cb(ctx, entry, &to_skip)) {
     case FS_ITER_END:
