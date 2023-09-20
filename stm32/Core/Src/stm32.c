@@ -12,7 +12,7 @@
 #define CLOCK_STABLE_DELAY 5
 #define SMARTCARD_STOPBITS_1 0x00000000U
 #define ANALOG_REF 3000
-#define ANALOG_DIV_VBAT (4096/4)
+#define ANALOG_DIV 4095
 
 #define FLASH_BANK_SWAPPED() (FLASH->OPTSR_CUR & FLASH_OPTSR_SWAP_BANK)
 
@@ -702,7 +702,7 @@ hal_err_t hal_adc_read(hal_adc_channel_t ch, uint32_t* val) {
     return HAL_FAIL;
   }
 
-  *val = (HAL_ADC_GetValue(&hadc2) * ANALOG_REF) / ANALOG_DIV_VBAT;
+  *val = (HAL_ADC_GetValue(&hadc2) * ANALOG_REF) / ANALOG_DIV;
 
   HAL_ADC_Stop(&hadc2);
   HAL_ADCEx_EnterADCDeepPowerDownMode(&hadc2);

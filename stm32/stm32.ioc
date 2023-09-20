@@ -1,11 +1,13 @@
 #MicroXplorer Configuration settings - do not modify
 ADC2.Channel-0\#ChannelRegularConversion=ADC_CHANNEL_VBAT
 ADC2.ClockPrescaler=ADC_CLOCK_ASYNC_DIV12
-ADC2.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,OffsetNumber-0\#ChannelRegularConversion,MonitoredBy-0\#ChannelRegularConversion,NbrOfConversionFlag,ClockPrescaler
+ADC2.IPParameters=Rank-0\#ChannelRegularConversion,Channel-0\#ChannelRegularConversion,SamplingTime-0\#ChannelRegularConversion,OffsetNumber-0\#ChannelRegularConversion,MonitoredBy-0\#ChannelRegularConversion,NbrOfConversionFlag,ClockPrescaler,OversamplingMode,Ratio
 ADC2.MonitoredBy-0\#ChannelRegularConversion=__NULL
 ADC2.NbrOfConversionFlag=1
 ADC2.OffsetNumber-0\#ChannelRegularConversion=ADC_OFFSET_NONE
+ADC2.OversamplingMode=ENABLE
 ADC2.Rank-0\#ChannelRegularConversion=1
+ADC2.Ratio=ADC_OVERSAMPLING_RATIO_4
 ADC2.SamplingTime-0\#ChannelRegularConversion=ADC_SAMPLETIME_247CYCLES_5
 CAD.formats=
 CAD.pinconfig=
