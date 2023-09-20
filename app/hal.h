@@ -162,4 +162,12 @@ void hal_usb_data_out_cb(uint8_t epaddr);
 // Inactivity timer
 void hal_inactivity_timer_set(uint32_t delay_ms);
 void hal_inactivity_timer_reset();
+
+// ADC
+typedef enum {
+  ADC_VBAT,
+} hal_adc_channel_t;
+
+hal_err_t hal_adc_read(hal_adc_channel_t ch, uint32_t* val);
+
 #endif

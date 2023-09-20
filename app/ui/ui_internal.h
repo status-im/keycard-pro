@@ -115,6 +115,7 @@ struct ui_cmd {
 
 struct ui_ctx {
   keypad_t keypad;
+  uint8_t battery;
 };
 
 static inline uint32_t ui_wait_event(uint32_t timeout) {

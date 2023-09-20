@@ -11,6 +11,8 @@
 #define SC_RESET_DELAY 10
 #define CLOCK_STABLE_DELAY 5
 #define SMARTCARD_STOPBITS_1 0x00000000U
+#define ANALOG_REF 3000
+#define ANALOG_DIV_VBAT (4096/4)
 
 #define FLASH_BANK_SWAPPED() (FLASH->OPTSR_CUR & FLASH_OPTSR_SWAP_BANK)
 
@@ -60,6 +62,7 @@ static TaskHandle_t g_smartcard_task = NULL;
 static int8_t g_acquiring;
 static struct dcmi_buf g_dcmi_bufs[CAMERA_FB_COUNT];
 static uint8_t g_uid[HAL_DEVICE_UID_LEN] __attribute__((aligned(4)));
+static uint32_t g_adc_calibration;
 
 static inline void mco_off() {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -226,6 +229,7 @@ hal_err_t hal_init() {
   MX_TIM6_Init();
   MX_TIM2_Init();
   MX_TIM5_Init();
+
   MX_GPDMA2_Init();
   MX_GPDMA1_Init();
 
@@ -247,6 +251,11 @@ hal_err_t hal_init() {
   MX_ICACHE_Init();
 
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
+  MX_ADC2_Init();
+  HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
+  g_adc_calibration = HAL_ADCEx_Calibration_GetValue(&hadc2, ADC_SINGLE_ENDED);
+  HAL_ADCEx_EnterADCDeepPowerDownMode(&hadc2);
 
   return HAL_SUCCESS;
 }
@@ -680,4 +689,23 @@ void hal_inactivity_timer_set(uint32_t delay_ms) {
 
 void hal_inactivity_timer_reset() {
   __HAL_TIM_SET_COUNTER(&htim5, 0);
+}
+
+hal_err_t hal_adc_read(hal_adc_channel_t ch, uint32_t* val) {
+  assert(ch == ADC_VBAT);
+
+  MX_ADC2_Init();
+  HAL_ADCEx_Calibration_SetValue(&hadc2, ADC_SINGLE_ENDED, g_adc_calibration);
+  HAL_ADC_Start(&hadc2);
+
+  if (HAL_ADC_PollForConversion(&hadc2, HAL_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  *val = (HAL_ADC_GetValue(&hadc2) * ANALOG_REF) / ANALOG_DIV_VBAT;
+
+  HAL_ADC_Stop(&hadc2);
+  HAL_ADCEx_EnterADCDeepPowerDownMode(&hadc2);
+
+  return HAL_SUCCESS;
 }

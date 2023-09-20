@@ -31,7 +31,17 @@ app_err_t dialog_separator(uint16_t yOff) {
 
 app_err_t dialog_title(const char* title) {
   screen_text_ctx_t ctx = { TH_FONT_TITLE, TH_COLOR_TITLE_FG, TH_COLOR_TITLE_BG, TH_TITLE_LEFT_MARGIN, 0 };
-  return dialog_line(&ctx, title, TH_TITLE_HEIGHT);
+  if (dialog_line(&ctx, title, TH_TITLE_HEIGHT) != ERR_OK) {
+    return ERR_HW;
+  }
+
+  ctx.y = ((TH_TITLE_HEIGHT - ctx.font->yAdvance) / 2);
+  ctx.x = 280;
+
+  uint8_t buf[11];
+  uint8_t *battery = u32toa(g_ui_ctx.battery, buf, 11);
+
+  return screen_draw_string(&ctx, (char *) battery) == HAL_SUCCESS? ERR_OK : ERR_HW;;
 }
 
 app_err_t dialog_footer(uint16_t yOff) {
