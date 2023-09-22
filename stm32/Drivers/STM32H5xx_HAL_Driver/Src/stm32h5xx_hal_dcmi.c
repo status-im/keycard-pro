@@ -719,7 +719,7 @@ HAL_StatusTypeDef HAL_DCMI_Resume(DCMI_HandleTypeDef *hdcmi)
   *                the configuration information for the DCMI.
   * @retval None
   */
-void HAL_DCMI_IRQHandler(DCMI_HandleTypeDef *hdcmi)
+void __attribute__((optimize("O0"))) HAL_DCMI_IRQHandler(DCMI_HandleTypeDef *hdcmi)
 {
   uint32_t isr_value = READ_REG(hdcmi->Instance->MISR);
 
