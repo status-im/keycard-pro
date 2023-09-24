@@ -1,3 +1,5 @@
+# This tool is for development only, not to be used in production
+
 import json
 import argparse
 import struct
