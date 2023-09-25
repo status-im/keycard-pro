@@ -59,6 +59,7 @@ extern DCMI_HandleTypeDef hdcmi;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 extern DMA_HandleTypeDef handle_GPDMA1_Channel0;
 extern SPI_HandleTypeDef hspi6;
+extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim5;
 extern SMARTCARD_HandleTypeDef hsmartcard6;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
@@ -218,6 +219,20 @@ void GPDMA1_Channel0_IRQHandler(void)
   /* USER CODE BEGIN GPDMA1_Channel0_IRQn 1 */
 
   /* USER CODE END GPDMA1_Channel0_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM2 global interrupt.
+  */
+void TIM2_IRQHandler(void)
+{
+  /* USER CODE BEGIN TIM2_IRQn 0 */
+
+  /* USER CODE END TIM2_IRQn 0 */
+  HAL_TIM_IRQHandler(&htim2);
+  /* USER CODE BEGIN TIM2_IRQn 1 */
+
+  /* USER CODE END TIM2_IRQn 1 */
 }
 
 /**

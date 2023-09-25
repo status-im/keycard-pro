@@ -2,6 +2,7 @@
 
 #include "main.h"
 #include "hal.h"
+#include "keypad/keypad.h"
 #include "linked_list.h"
 #include "FreeRTOS.h"
 #include "task.h"
@@ -211,7 +212,11 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
-  pwr_inactivity_timer_elapsed();
+  if (htim == &htim2) {
+    keypad_scan_tick();
+  } else if (htim == &htim5) {
+    pwr_inactivity_timer_elapsed();
+  }
 }
 
 hal_err_t hal_init() {
@@ -250,6 +255,7 @@ hal_err_t hal_init() {
 
   MX_ICACHE_Init();
 
+  __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_UPDATE);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
 
   MX_ADC2_Init();

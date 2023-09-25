@@ -7,6 +7,8 @@
 #define KEYPAD_ROWS 4
 #define KEYPAD_COLS 3
 
+#define KEYPAD_POLL_MS 5
+
 typedef enum {
   KEYPAD_KEY_1 = 0,
   KEYPAD_KEY_2,

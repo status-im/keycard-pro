@@ -90,6 +90,7 @@ void SystemClock_Config(void);
 /* Private defines -----------------------------------------------------------*/
 #define SC_DEFAULT_PSC 25
 #define SC_DEFAULT_BAUD_RATE 10752
+#define KEYPAD_POLL_MS 5
 #define GPIO_VUSB_OK_Pin GPIO_PIN_13
 #define GPIO_VUSB_OK_GPIO_Port GPIOC
 #define GPIO_VUSB_OK_EXTI_IRQn EXTI13_IRQn
