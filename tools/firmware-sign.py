@@ -35,6 +35,9 @@ def main():
     with open(args.binary, 'rb') as f:
         actual_fw_size = f.readinto(fw)
 
+    if (actual_fw_size % 16) != 0:
+        actual_fw_size = ((actual_fw_size // 16) + 1) * 16
+
     m = hash_firmware(fw)
     signature = sign(sign_key, m)
     fw[FW_IV_SIZE:FW_IV_SIZE+SIG_SIZE] = signature

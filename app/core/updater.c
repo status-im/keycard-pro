@@ -57,7 +57,6 @@ static app_err_t updater_verify_firmware() {
   SHA256_CTX sha2;
   sha256_Init(&sha2);
   sha256_Update(&sha2, fw_upgrade_area, HAL_FW_HEADER_OFFSET);
-
   sha256_Update(&sha2, &fw_upgrade_area[HAL_FW_HEADER_OFFSET + SIG_LEN], (HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE));
   sha256_Final(&sha2, digest);
 
@@ -104,6 +103,7 @@ void updater_usb_fw_upgrade(apdu_t* cmd) {
   } else if (g_core.data.msg.received == g_core.data.msg.len) {
     if (updater_verify_firmware() != ERR_OK) {
       updater_clear_flash_area();
+      core_usb_err_sw(cmd, 0x69, 0x82);
       ui_info(INFO_ERROR_TITLE, LSTR(INFO_FW_UPGRADE_INVALID), 1);
       return;
     }
