@@ -44,10 +44,13 @@ void updater_database_run() {
 
 static void updater_clear_flash_area() {
   const int fw_block = HAL_FLASH_ADDR_TO_BLOCK(HAL_FLASH_FW_UPGRADE_AREA);
+  hal_flash_begin_program();
 
   for (int i = fw_block; i < (fw_block + HAL_FLASH_FW_BLOCK_COUNT); i++) {
     hal_flash_erase(i);
   }
+
+  hal_flash_end_program();
 }
 
 static app_err_t updater_verify_firmware() {
@@ -57,7 +60,7 @@ static app_err_t updater_verify_firmware() {
   SHA256_CTX sha2;
   sha256_Init(&sha2);
   sha256_Update(&sha2, fw_upgrade_area, HAL_FW_HEADER_OFFSET);
-  sha256_Update(&sha2, &fw_upgrade_area[HAL_FW_HEADER_OFFSET + SIG_LEN], (HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE));
+  sha256_Update(&sha2, &fw_upgrade_area[HAL_FW_HEADER_OFFSET + SIG_LEN], ((HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE) - (HAL_FW_HEADER_OFFSET + SIG_LEN)));
   sha256_Final(&sha2, digest);
 
   const uint8_t* key;
@@ -109,7 +112,7 @@ void updater_usb_fw_upgrade(apdu_t* cmd) {
     }
 
     //TODO: show current and new fw version
-    if (ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_FW_UPGRADE_CONFIRM),1) == CORE_EVT_UI_OK) {
+    if (ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_FW_UPGRADE_CONFIRM), 1) == CORE_EVT_UI_OK) {
       updater_fw_switch();
     }
   }

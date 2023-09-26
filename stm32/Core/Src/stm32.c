@@ -225,6 +225,7 @@ hal_err_t hal_init() {
 
   HAL_Init();
   SystemClock_Config();
+  __HAL_FLASH_SET_PROGRAM_DELAY(FLASH_PROGRAMMING_DELAY_2);
 
   MX_RNG_Init();
   MX_HASH_Init();
