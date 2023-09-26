@@ -210,8 +210,8 @@ static app_err_t dialog_wait_dismiss() {
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {
     case KEYPAD_KEY_CANCEL:
-      return ERR_CANCEL;
     case KEYPAD_KEY_BACK:
+      return ERR_CANCEL;
     case KEYPAD_KEY_CONFIRM:
       return ERR_OK;
     default:

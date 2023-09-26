@@ -119,7 +119,7 @@ core_evt_t ui_prompt_try_puk() {
 }
 
 core_evt_t ui_confirm_factory_reset() {
-  return CORE_EVT_UI_OK;
+  return ui_info(FACTORY_RESET_TITLE, LSTR(FACTORY_RESET_WARNING), 1);
 }
 
 core_evt_t ui_read_pin(uint8_t* out, int8_t retries) {

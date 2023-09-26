@@ -67,10 +67,6 @@ void card_change_pairing() {
 }
 
 void card_reset() {
-  if (ui_info(FACTORY_RESET_TITLE, LSTR(FACTORY_RESET_WARNING), 1) != CORE_EVT_UI_OK) {
-    return;
-  }
-
-  keycard_cmd_factory_reset(&g_core.keycard);
+  keycard_factoryreset(&g_core.keycard);
   pwr_reboot();
 }

@@ -80,7 +80,7 @@ static app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instan
   }
 }
 
-static app_err_t keycard_factoryreset(keycard_t* kc) {
+app_err_t keycard_factoryreset(keycard_t* kc) {
   if (ui_confirm_factory_reset() != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
