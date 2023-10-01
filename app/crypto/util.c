@@ -1,7 +1,7 @@
 #include "util.h"
 #include "common.h"
 
-const char* HEX_DIGITS = "0123456789abcdef";
+const char* const HEX_DIGITS = "0123456789abcdef";
 
 uint32_t pad_iso9797_m1(uint8_t* data, uint8_t plen, uint32_t size) {
   uint32_t padding = plen - (size % plen);

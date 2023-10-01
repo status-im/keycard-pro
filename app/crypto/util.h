@@ -5,7 +5,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-extern const char* HEX_DIGITS;
+extern const char* const HEX_DIGITS;
 
 uint32_t pad_iso9797_m1(uint8_t* data, uint8_t plen, uint32_t size);
 uint32_t unpad_iso9797_m1(uint8_t* data, uint32_t size);
