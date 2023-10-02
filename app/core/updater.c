@@ -4,8 +4,10 @@
 #include "crypto/sha2.h"
 #include "crypto/secp256k1.h"
 #include "ethereum/eth_db.h"
+#include "mem.h"
 #include "iso7816/smartcard.h"
 #include "storage/keys.h"
+#include "pwr.h"
 #include "ui/ui.h"
 #include "ur/ur.h"
 
@@ -68,9 +70,9 @@ static app_err_t updater_verify_firmware() {
   return ecdsa_verify_digest(&secp256k1, key, &fw_upgrade_area[HAL_FW_HEADER_OFFSET], digest) ? ERR_DATA : ERR_OK;
 }
 
-static void updater_fw_switch() {
-  //TODO: actual switching must be done in the bootloader, here we must launch the bootloader in fw upgrade mode
-  hal_flash_switch_firmware();
+static inline void updater_fw_switch() {
+  g_bootcmd = BOOTCMD_SWITCH_FW;
+  pwr_reboot();
 }
 
 void updater_usb_fw_upgrade(apdu_t* cmd) {

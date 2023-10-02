@@ -23,9 +23,15 @@ typedef enum {
 
 #define HAL_DEVICE_UID_LEN 16
 
+typedef enum {
+  BOOT_HOT,
+  BOOT_COLD
+} hal_boot_t;
+
 hal_err_t hal_init();
 hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]);
-void hal_reset();
+void hal_reboot();
+hal_boot_t hal_boot_type();
 
 // Camera
 #define CAMERA_WIDTH 480

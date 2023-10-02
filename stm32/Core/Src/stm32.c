@@ -272,6 +272,10 @@ hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]) {
   return HAL_SUCCESS;
 }
 
+hal_boot_t hal_boot_type() {
+  return __HAL_RCC_GET_FLAG(RCC_FLAG_SFTRST) ? BOOT_HOT : BOOT_COLD;
+}
+
 hal_err_t hal_camera_init() {
   mco_on();
   vTaskDelay(pdMS_TO_TICKS(CLOCK_STABLE_DELAY));
