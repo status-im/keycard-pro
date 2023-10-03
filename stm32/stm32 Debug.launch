@@ -12,7 +12,7 @@
     <stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.ip_address_local" value="localhost"/>
     <booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.limit_swo_clock.enabled" value="false"/>
     <stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.limit_swo_clock.value" value=""/>
-    <stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.loadList" value="{&quot;fItems&quot;:[{&quot;fIsFromMainTab&quot;:true,&quot;fPath&quot;:&quot;Debug/stm32.elf&quot;,&quot;fProjectName&quot;:&quot;stm32&quot;,&quot;fPerformBuild&quot;:true,&quot;fDownload&quot;:true,&quot;fLoadSymbols&quot;:true}]}"/>
+    <stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.loadList" value="{&quot;fItems&quot;:[{&quot;fIsFromMainTab&quot;:false,&quot;fPath&quot;:&quot;BL/stm32-bootloader.elf&quot;,&quot;fProjectName&quot;:&quot;stm32&quot;,&quot;fBuildConfigId&quot;:&quot;com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1093676277.1586505413&quot;,&quot;fPerformBuild&quot;:true,&quot;fDownload&quot;:true,&quot;fLoadSymbols&quot;:true},{&quot;fIsFromMainTab&quot;:true,&quot;fPath&quot;:&quot;Debug/stm32.elf&quot;,&quot;fProjectName&quot;:&quot;stm32&quot;,&quot;fPerformBuild&quot;:true,&quot;fDownload&quot;:true,&quot;fLoadSymbols&quot;:true}]}"/>
     <stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.override_start_address_mode" value="default"/>
     <stringAttribute key="com.st.stm32cube.ide.mcu.debug.launch.remoteCommand" value="target remote"/>
     <booleanAttribute key="com.st.stm32cube.ide.mcu.debug.launch.startServer" value="true"/>
@@ -69,7 +69,7 @@
     <stringAttribute key="org.eclipse.cdt.launch.DEBUGGER_STOP_AT_MAIN_SYMBOL" value="main"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROGRAM_NAME" value="Debug/stm32.elf"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_ATTR" value="stm32"/>
-    <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="true"/>
+    <booleanAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_AUTO_ATTR" value="false"/>
     <stringAttribute key="org.eclipse.cdt.launch.PROJECT_BUILD_CONFIG_ID_ATTR" value="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1093676277"/>
     <booleanAttribute key="org.eclipse.debug.core.ATTR_FORCE_SYSTEM_CONSOLE_ENCODING" value="false"/>
     <listAttribute key="org.eclipse.debug.core.MAPPED_RESOURCE_PATHS">
