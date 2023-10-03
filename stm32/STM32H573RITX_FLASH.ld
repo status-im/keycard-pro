@@ -139,8 +139,7 @@ SECTIONS
 
   .bootcmd :
   {
-  	. = ALIGN(4);
-  	KEEP(*(.bootcmd))  	
+  	*(.bootcmd) 	
   } >RAM
   
   /* Used by the startup to initialize data */
