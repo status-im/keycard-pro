@@ -72,7 +72,7 @@ void core_qr_run();
 void core_display_public();
 void updater_database_run();
 void device_auth_run();
-void updater_usb_fw_upgrade(apdu_t* apdu);
+void updater_usb_fw_upgrade(command_t* cmd, apdu_t* apdu);
 
 static inline void core_usb_err_sw(apdu_t* cmd, uint8_t sw1, uint8_t sw2) {
   uint8_t* data = APDU_RESP(cmd);

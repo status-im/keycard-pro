@@ -83,6 +83,12 @@ static inline void mco_on() {
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
+#ifdef BOOTLOADER
+void SysTick_Handler(void) {
+  HAL_IncTick();
+}
+#endif
+
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
   if (g_spi_callback) {
     g_spi_callback();
@@ -263,6 +269,22 @@ hal_err_t hal_init() {
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
   g_adc_calibration = HAL_ADCEx_Calibration_GetValue(&hadc2, ADC_SINGLE_ENDED);
   HAL_ADCEx_EnterADCDeepPowerDownMode(&hadc2);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_init_bootloader() {
+  HAL_Init();
+  SystemClock_Config();
+
+  MX_HASH_Init();
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_teardown_bootloader() {
+  HAL_HASH_DeInit(&hhash);
+  HAL_RCC_DeInit();
 
   return HAL_SUCCESS;
 }
@@ -612,14 +634,14 @@ hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t l
 
 hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
   while (__HAL_HASH_GET_FLAG(&hhash, HASH_FLAG_BUSY) == SET) {
-    vTaskDelay(0);
+    ;
   }
 
   MODIFY_REG(hhash.Instance->STR, HASH_STR_NBLW, 8 * (*ctx & 3));
   SET_BIT(hhash.Instance->STR, HASH_STR_DCAL);
 
   while (__HAL_HASH_GET_FLAG(&hhash, HASH_FLAG_DCIS) == RESET) {
-    vTaskDelay(0);
+    ;
   }
 
   __IO uint32_t* out32 = (uint32_t *) out;

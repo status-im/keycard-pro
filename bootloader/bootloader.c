@@ -9,11 +9,13 @@ struct boot_vectable {
 
 #define BOOTVTAB ((struct boot_vectable *)HAL_FLASH_FW_START_ADDR)
 
-void bootloader_init() {
-
-}
-
 bool verify_firmware() {
+  uint8_t digest[SHA256_DIGEST_LENGTH];
+  hal_sha256_ctx_t sha256;
+  hal_sha256_init(&sha256);
+  hal_sha256_update(&sha256, HAL_FLASH_FW_START_ADDR, (HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE));
+  hal_sha256_finish(&sha256, digest);
+
   return true;
 }
 
@@ -22,7 +24,7 @@ int main(void) {
     g_bootcmd = 0;
   }
 
-  bootloader_init();
+  hal_init_bootloader();
 
   if (g_bootcmd == BOOTCMD_SWITCH_FW) {
     g_bootcmd = 0;
@@ -35,7 +37,11 @@ int main(void) {
     hal_reboot();
   }
 
+  __disable_irq();
+  hal_teardown_bootloader();
+
   SCB->VTOR = HAL_FLASH_FW_START_ADDR;
+  __enable_irq();
 
   __set_MSP(BOOTVTAB->initial_sp);
   BOOTVTAB->reset_handler();

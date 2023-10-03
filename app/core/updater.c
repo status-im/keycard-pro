@@ -13,6 +13,7 @@
 
 #define SIG_LEN 64
 #define UPDATE_SEGMENT_LEN 240
+#define FW_UPGRADE_REBOOT_DELAY 150
 
 static app_err_t updater_verify_data(data_t* data) {
   uint8_t digest[SHA256_DIGEST_LENGTH];
@@ -75,11 +76,11 @@ static inline void updater_fw_switch() {
   pwr_reboot();
 }
 
-void updater_usb_fw_upgrade(apdu_t* cmd) {
-  cmd->has_lc = 1;
-  uint8_t* data = APDU_DATA(cmd);
-  size_t len = APDU_LC(cmd);
-  uint8_t first_segment = APDU_P1(cmd) == 0;
+void updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
+  apdu->has_lc = 1;
+  uint8_t* data = APDU_DATA(apdu);
+  size_t len = APDU_LC(apdu);
+  uint8_t first_segment = APDU_P1(apdu) == 0;
 
   if (first_segment) {
     g_core.data.msg.len = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
@@ -91,7 +92,7 @@ void updater_usb_fw_upgrade(apdu_t* cmd) {
   }
 
   if ((len % HAL_FLASH_WORD_SIZE) || g_core.data.msg.received >= (HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE)) {
-    core_usb_err_sw(cmd, 0x69, 0x82);
+    core_usb_err_sw(apdu, 0x69, 0x82);
     return;
   }
 
@@ -103,21 +104,24 @@ void updater_usb_fw_upgrade(apdu_t* cmd) {
   g_core.data.msg.received += len;
 
   if (g_core.data.msg.received > g_core.data.msg.len) {
-    core_usb_err_sw(cmd, 0x69, 0x82);
+    core_usb_err_sw(apdu, 0x69, 0x82);
     return;
   } else if (g_core.data.msg.received == g_core.data.msg.len) {
     if (updater_verify_firmware() != ERR_OK) {
       updater_clear_flash_area();
-      core_usb_err_sw(cmd, 0x69, 0x82);
+      core_usb_err_sw(apdu, 0x69, 0x82);
       ui_info(INFO_ERROR_TITLE, LSTR(INFO_FW_UPGRADE_INVALID), 1);
       return;
     }
 
     //TODO: show current and new fw version
     if (ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_FW_UPGRADE_CONFIRM), 1) == CORE_EVT_UI_OK) {
+      core_usb_err_sw(apdu, 0x90, 0x00);
+      command_init_send(cmd);
+      vTaskDelay(pdMS_TO_TICKS(FW_UPGRADE_REBOOT_DELAY));
       updater_fw_switch();
     }
   }
 
-  core_usb_err_sw(cmd, 0x90, 0x00);
+  core_usb_err_sw(apdu, 0x90, 0x00);
 }
