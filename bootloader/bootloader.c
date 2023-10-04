@@ -13,14 +13,14 @@ bool verify_firmware() {
   uint8_t digest[SHA256_DIGEST_LENGTH];
   hal_sha256_ctx_t sha256;
   hal_sha256_init(&sha256);
-  hal_sha256_update(&sha256, HAL_FLASH_FW_START_ADDR, (HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE));
+  hal_sha256_update(&sha256, (uint8_t *) HAL_FLASH_FW_START_ADDR, (HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE));
   hal_sha256_finish(&sha256, digest);
 
   return true;
 }
 
 int main(void) {
-  if (hal_boot_type() == BOOT_HOT) {
+  if (hal_boot_type() != BOOT_HOT) {
     g_bootcmd = 0;
   }
 
