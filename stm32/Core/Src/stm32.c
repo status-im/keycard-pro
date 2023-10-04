@@ -276,6 +276,7 @@ hal_err_t hal_init() {
 hal_err_t hal_init_bootloader() {
   HAL_Init();
   SystemClock_Config();
+  __HAL_FLASH_SET_PROGRAM_DELAY(FLASH_PROGRAMMING_DELAY_2);
 
   MX_HASH_Init();
 
@@ -578,7 +579,9 @@ hal_err_t hal_flash_end_program() {
 void hal_flash_switch_firmware() {
   HAL_FLASH_OB_Unlock();
   FLASH_OBProgramInitTypeDef ob;
+  memset(&ob, 0, sizeof(ob));
   HAL_FLASHEx_OBGetConfig(&ob);
+  ob.OptionType = OPTIONBYTE_USER;
   ob.USERConfig = (ob.USERConfig & (~FLASH_OPTSR_SWAP_BANK)) | ((~ob.USERConfig) & FLASH_OPTSR_SWAP_BANK);
   HAL_FLASHEx_OBProgram(&ob);
   HAL_FLASH_OB_Launch();
