@@ -582,6 +582,7 @@ void hal_flash_switch_firmware() {
   memset(&ob, 0, sizeof(ob));
   HAL_FLASHEx_OBGetConfig(&ob);
   ob.OptionType = OPTIONBYTE_USER;
+  ob.USERType = OB_USER_SWAP_BANK;
   ob.USERConfig = (ob.USERConfig & (~FLASH_OPTSR_SWAP_BANK)) | ((~ob.USERConfig) & FLASH_OPTSR_SWAP_BANK);
   HAL_FLASHEx_OBProgram(&ob);
   HAL_FLASH_OB_Launch();
