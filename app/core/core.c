@@ -4,6 +4,7 @@
 #include "crypto/ripemd160.h"
 #include "crypto/util.h"
 #include "ethereum/eip712.h"
+#include "ethereum/eth_db.h"
 #include "mem.h"
 #include "keycard/secure_channel.h"
 #include "keycard/keycard_cmdset.h"
@@ -190,10 +191,14 @@ static void core_usb_get_app_config(apdu_t* cmd) {
   data[0] = FW_VERSION[0];
   data[1] = FW_VERSION[1];
   data[2] = FW_VERSION[2];
-  data[3] = 0x00;
-  data[4] = 0x00;
-  data[5] = 0x00;
-  data[6] = 0x00;
+
+  uint32_t db_version = 0;
+  eth_db_lookup_version(&db_version);
+
+  data[3] = db_version >> 24;
+  data[4] = (db_version >> 16) & 0xff;
+  data[5] = (db_version >> 8) & 0xff;
+  data[6] = db_version & 0xff;
   data[7] = 0x90;
   data[8] = 0x00;
   cmd->lr = 9;
@@ -435,6 +440,9 @@ static void core_usb_command(keycard_t* kc, command_t* cmd) {
         break;
       case INS_FW_UPGRADE:
         updater_usb_fw_upgrade(cmd, apdu);
+        break;
+      case INS_ERC20_UPGRADE:
+        updater_usb_db_upgrade(apdu);
         break;
       default:
         core_usb_err_sw(apdu, 0x6d, 0x00);

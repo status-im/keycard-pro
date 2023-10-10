@@ -15,15 +15,31 @@
 #define UPDATE_SEGMENT_LEN 240
 #define FW_UPGRADE_REBOOT_DELAY 150
 
-static app_err_t updater_verify_data(data_t* data) {
+static app_err_t updater_verify_db(uint8_t* data, size_t data_len) {
   uint8_t digest[SHA256_DIGEST_LENGTH];
-  size_t len = data->len - SIG_LEN;
+  size_t len = data_len - SIG_LEN;
 
-  sha256_Raw(data->data, len, digest);
+  sha256_Raw(data, len, digest);
 
   const uint8_t* key;
   key_read(DB_VERIFICATION_KEY, &key);
-  return ecdsa_verify_digest(&secp256k1, key, &data->data[len], digest) ? ERR_DATA : ERR_OK;
+  return ecdsa_verify_digest(&secp256k1, key, &data[len], digest) ? ERR_DATA : ERR_OK;
+}
+
+static app_err_t updater_database_update(uint8_t* data, size_t len) {
+  if (updater_verify_db(data, len) != ERR_OK) {
+    ui_info(INFO_ERROR_TITLE, LSTR(INFO_DB_UPDATE_INVALID), 1);
+    return ERR_DATA;
+  }
+
+  if (eth_db_update((fs_entry_t *) data, len - SIG_LEN) != ERR_OK) {
+    ui_info(INFO_ERROR_TITLE, LSTR(INFO_DB_UPDATE_ERROR), 1);
+    return ERR_DATA;
+  } else {
+    ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_DB_UPDATE_OK), 1);
+  }
+
+  return ERR_OK;
 }
 
 void updater_database_run() {
@@ -33,16 +49,7 @@ void updater_database_run() {
     return;
   }
 
-  if (updater_verify_data(&data) != ERR_OK) {
-    ui_info(INFO_ERROR_TITLE, LSTR(INFO_DB_UPDATE_INVALID), 1);
-    return;
-  }
-
-  if (eth_db_update((fs_entry_t *) data.data, data.len - SIG_LEN) != ERR_OK) {
-    ui_info(INFO_ERROR_TITLE, LSTR(INFO_DB_UPDATE_ERROR), 1);
-  } else {
-    ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_DB_UPDATE_OK), 1);
-  }
+  updater_database_update(data.data, data.len);
 }
 
 static void updater_clear_flash_area() {
@@ -82,6 +89,7 @@ void updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
   size_t len = APDU_LC(apdu);
   uint8_t first_segment = APDU_P1(apdu) == 0;
 
+  //TODO: show confirmation here, then show progress bar
   if (first_segment) {
     g_core.data.msg.len = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
     g_core.data.msg.received = 0;
@@ -114,12 +122,47 @@ void updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
       return;
     }
 
-    //TODO: show current and new fw version
     if (ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_FW_UPGRADE_CONFIRM), 1) == CORE_EVT_UI_OK) {
       core_usb_err_sw(apdu, 0x90, 0x00);
       command_init_send(cmd);
       vTaskDelay(pdMS_TO_TICKS(FW_UPGRADE_REBOOT_DELAY));
       updater_fw_switch();
+    }
+  }
+
+  core_usb_err_sw(apdu, 0x90, 0x00);
+}
+
+void updater_usb_db_upgrade(apdu_t* apdu) {
+  apdu->has_lc = 1;
+  uint8_t* data = APDU_DATA(apdu);
+  size_t len = APDU_LC(apdu);
+  uint8_t first_segment = APDU_P1(apdu) == 0;
+
+  //TODO: show confirmation here, then show progress bar
+  if (first_segment) {
+    g_core.data.msg.len = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
+    g_core.data.msg.received = 0;
+    data += 4;
+    len -= 4;
+  }
+
+  if ((g_core.data.msg.received + len) > MEM_HEAP_SIZE) {
+    core_usb_err_sw(apdu, 0x69, 0x82);
+    return;
+  }
+
+  memcpy(&g_mem_heap[g_core.data.msg.received], data, len);
+
+  g_core.data.msg.received += len;
+
+  if (g_core.data.msg.received > g_core.data.msg.len) {
+    core_usb_err_sw(apdu, 0x69, 0x82);
+    return;
+  } else if (g_core.data.msg.received == g_core.data.msg.len) {
+    if (updater_database_update(g_mem_heap, g_core.data.msg.len) != ERR_OK) {
+      core_usb_err_sw(apdu, 0x69, 0x82);
+      return;
     }
   }
 

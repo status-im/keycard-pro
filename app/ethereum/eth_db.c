@@ -1,8 +1,9 @@
 #include "eth_db.h"
 #include <string.h>
 
-#define FS_PAIRING_CHAIN 0x4348
-#define FS_PAIRING_ERC20 0x3020
+#define FS_CHAIN_MAGIC 0x4348
+#define FS_ERC20_MAGIC 0x3020
+#define FS_VERSION_MAGIC 0x4532
 
 #define ERC20_NET_LEN 24
 
@@ -18,8 +19,14 @@ struct __attribute__((packed)) erc20_raw_desc {
   uint8_t data[];
 };
 
+struct __attribute__((packed)) version_desc {
+  fs_entry_t _entry;
+  uint32_t version;
+};
+
+
 fs_action_t _eth_db_match_chain(void* ctx, fs_entry_t* entry) {
-  if (entry->magic != FS_PAIRING_CHAIN) {
+  if (entry->magic != FS_CHAIN_MAGIC) {
     return FS_REJECT;
   }
 
@@ -30,7 +37,7 @@ fs_action_t _eth_db_match_chain(void* ctx, fs_entry_t* entry) {
 }
 
 fs_action_t _eth_db_match_erc20(void* ctx, fs_entry_t* entry) {
-  if (entry->magic != FS_PAIRING_ERC20) {
+  if (entry->magic != FS_ERC20_MAGIC) {
     return FS_REJECT;
   }
 
@@ -51,8 +58,12 @@ fs_action_t _eth_db_match_erc20(void* ctx, fs_entry_t* entry) {
   return FS_REJECT;
 }
 
+fs_action_t _eth_db_match_version(void* ctx, fs_entry_t* entry) {
+  return entry->magic == FS_VERSION_MAGIC ? FS_ACCEPT : FS_REJECT;
+}
+
 fs_action_t _eth_db_match_all(void* ctx, fs_entry_t* entry) {
-  return ((entry->magic == FS_PAIRING_CHAIN) || (entry->magic == FS_PAIRING_ERC20)) ? FS_REJECT : FS_ACCEPT;
+  return ((entry->magic == FS_CHAIN_MAGIC) || (entry->magic == FS_ERC20_MAGIC) || (entry->magic == FS_VERSION_MAGIC)) ? FS_REJECT : FS_ACCEPT;
 }
 
 app_err_t eth_db_lookup_chain(chain_desc_t* chain) {
@@ -79,6 +90,18 @@ app_err_t eth_db_lookup_erc20(erc20_desc_t* erc20) {
   uint8_t* data = erc20_data->data + (erc20_data->net_count * ERC20_NET_LEN);
   erc20->decimals = *(data++);
   erc20->ticker = (char *) data;
+
+  return ERR_OK;
+}
+
+app_err_t eth_db_lookup_version(uint32_t* version) {
+  struct version_desc* version_data = (struct version_desc*) fs_find(_eth_db_match_version, NULL);
+
+  if (!version_data) {
+    return ERR_DATA;
+  }
+
+  *version = version_data->version;
 
   return ERR_OK;
 }
