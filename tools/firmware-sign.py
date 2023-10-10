@@ -5,7 +5,7 @@ from secp256k1Crypto import PrivateKey
 import hashlib
 
 PAGE_SIZE = 8192
-FW_PAGE_COUNT = 80
+FW_PAGE_COUNT = 76
 FW_SIZE = PAGE_SIZE * FW_PAGE_COUNT
 FW_IV_SIZE = 588
 SIG_SIZE = 64

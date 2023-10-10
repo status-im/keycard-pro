@@ -171,11 +171,11 @@ void DebugMon_Handler(void)
 void EXTI4_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI4_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END EXTI4_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_HALT_REQ_Pin);
   /* USER CODE BEGIN EXTI4_IRQn 1 */
-
+#endif
   /* USER CODE END EXTI4_IRQn 1 */
 }
 
@@ -185,11 +185,11 @@ void EXTI4_IRQHandler(void)
 void EXTI10_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI10_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END EXTI10_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_SC_PRES_Pin);
   /* USER CODE BEGIN EXTI10_IRQn 1 */
-
+#endif
   /* USER CODE END EXTI10_IRQn 1 */
 }
 
@@ -199,11 +199,11 @@ void EXTI10_IRQHandler(void)
 void EXTI13_IRQHandler(void)
 {
   /* USER CODE BEGIN EXTI13_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END EXTI13_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_VUSB_OK_Pin);
   /* USER CODE BEGIN EXTI13_IRQn 1 */
-
+#endif
   /* USER CODE END EXTI13_IRQn 1 */
 }
 
@@ -213,11 +213,11 @@ void EXTI13_IRQHandler(void)
 void GPDMA1_Channel0_IRQHandler(void)
 {
   /* USER CODE BEGIN GPDMA1_Channel0_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END GPDMA1_Channel0_IRQn 0 */
   HAL_DMA_IRQHandler(&handle_GPDMA1_Channel0);
   /* USER CODE BEGIN GPDMA1_Channel0_IRQn 1 */
-
+#endif
   /* USER CODE END GPDMA1_Channel0_IRQn 1 */
 }
 
@@ -227,11 +227,11 @@ void GPDMA1_Channel0_IRQHandler(void)
 void TIM2_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM2_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END TIM2_IRQn 0 */
   HAL_TIM_IRQHandler(&htim2);
   /* USER CODE BEGIN TIM2_IRQn 1 */
-
+#endif
   /* USER CODE END TIM2_IRQn 1 */
 }
 
@@ -241,11 +241,11 @@ void TIM2_IRQHandler(void)
 void TIM5_IRQHandler(void)
 {
   /* USER CODE BEGIN TIM5_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END TIM5_IRQn 0 */
   HAL_TIM_IRQHandler(&htim5);
   /* USER CODE BEGIN TIM5_IRQn 1 */
-
+#endif
   /* USER CODE END TIM5_IRQn 1 */
 }
 
@@ -255,11 +255,11 @@ void TIM5_IRQHandler(void)
 void USB_DRD_FS_IRQHandler(void)
 {
   /* USER CODE BEGIN USB_DRD_FS_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END USB_DRD_FS_IRQn 0 */
   HAL_PCD_IRQHandler(&hpcd_USB_DRD_FS);
   /* USER CODE BEGIN USB_DRD_FS_IRQn 1 */
-
+#endif
   /* USER CODE END USB_DRD_FS_IRQn 1 */
 }
 
@@ -269,11 +269,11 @@ void USB_DRD_FS_IRQHandler(void)
 void SPI6_IRQHandler(void)
 {
   /* USER CODE BEGIN SPI6_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END SPI6_IRQn 0 */
   HAL_SPI_IRQHandler(&hspi6);
   /* USER CODE BEGIN SPI6_IRQn 1 */
-
+#endif
   /* USER CODE END SPI6_IRQn 1 */
 }
 
@@ -283,11 +283,11 @@ void SPI6_IRQHandler(void)
 void USART6_IRQHandler(void)
 {
   /* USER CODE BEGIN USART6_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END USART6_IRQn 0 */
   HAL_SMARTCARD_IRQHandler(&hsmartcard6);
   /* USER CODE BEGIN USART6_IRQn 1 */
-
+#endif
   /* USER CODE END USART6_IRQn 1 */
 }
 
@@ -297,11 +297,11 @@ void USART6_IRQHandler(void)
 void GPDMA2_Channel5_IRQHandler(void)
 {
   /* USER CODE BEGIN GPDMA2_Channel5_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END GPDMA2_Channel5_IRQn 0 */
   HAL_DMA_IRQHandler(&handle_GPDMA2_Channel5);
   /* USER CODE BEGIN GPDMA2_Channel5_IRQn 1 */
-
+#endif
   /* USER CODE END GPDMA2_Channel5_IRQn 1 */
 }
 
@@ -311,11 +311,11 @@ void GPDMA2_Channel5_IRQHandler(void)
 void DCMI_PSSI_IRQHandler(void)
 {
   /* USER CODE BEGIN DCMI_PSSI_IRQn 0 */
-
+#ifndef BOOTLOADER
   /* USER CODE END DCMI_PSSI_IRQn 0 */
   HAL_DCMI_IRQHandler(&hdcmi);
   /* USER CODE BEGIN DCMI_PSSI_IRQn 1 */
-
+#endif
   /* USER CODE END DCMI_PSSI_IRQn 1 */
 }
 

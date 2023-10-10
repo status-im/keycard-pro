@@ -434,7 +434,7 @@ static void core_usb_command(keycard_t* kc, command_t* cmd) {
         core_usb_sign_eip712(kc, apdu);
         break;
       case INS_FW_UPGRADE:
-        updater_usb_fw_upgrade(apdu);
+        updater_usb_fw_upgrade(cmd, apdu);
         break;
       default:
         core_usb_err_sw(apdu, 0x6d, 0x00);

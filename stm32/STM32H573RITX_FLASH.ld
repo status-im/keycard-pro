@@ -44,8 +44,8 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 /* Memories definition */
 MEMORY
 {
-  RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 640K
-  FLASH    (rx)    : ORIGIN = 0x08000000,   LENGTH = 2048K
+  RAM   (xrw): ORIGIN = 0x20000000,                                      LENGTH = 640K
+  FLASH (rx) : ORIGIN = DEFINED(FW_SIGNATURE) ? 0x08008000 : 0x08000000, LENGTH = DEFINED(FW_SIGNATURE) ? 608K : 32K
 }
 
 /* Sections */
@@ -137,6 +137,11 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+  .bootcmd :
+  {
+  	*(.bootcmd) 	
+  } >RAM
+  
   /* Used by the startup to initialize data */
   _sidata = LOADADDR(.data);
 

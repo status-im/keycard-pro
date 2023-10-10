@@ -83,6 +83,12 @@ static inline void mco_on() {
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 }
 
+#ifdef BOOTLOADER
+void SysTick_Handler(void) {
+  HAL_IncTick();
+}
+#endif
+
 void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
   if (g_spi_callback) {
     g_spi_callback();
@@ -267,9 +273,30 @@ hal_err_t hal_init() {
   return HAL_SUCCESS;
 }
 
+hal_err_t hal_init_bootloader() {
+  HAL_Init();
+  SystemClock_Config();
+  __HAL_FLASH_SET_PROGRAM_DELAY(FLASH_PROGRAMMING_DELAY_2);
+
+  MX_HASH_Init();
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_teardown_bootloader() {
+  HAL_HASH_DeInit(&hhash);
+  HAL_RCC_DeInit();
+
+  return HAL_SUCCESS;
+}
+
 hal_err_t hal_device_uid(uint8_t out[HAL_DEVICE_UID_LEN]) {
   memcpy(out, g_uid, HAL_DEVICE_UID_LEN);
   return HAL_SUCCESS;
+}
+
+hal_boot_t hal_boot_type() {
+  return __HAL_RCC_GET_FLAG(RCC_FLAG_SFTRST) ? BOOT_HOT : BOOT_COLD;
 }
 
 hal_err_t hal_camera_init() {
@@ -552,7 +579,10 @@ hal_err_t hal_flash_end_program() {
 void hal_flash_switch_firmware() {
   HAL_FLASH_OB_Unlock();
   FLASH_OBProgramInitTypeDef ob;
+  memset(&ob, 0, sizeof(ob));
   HAL_FLASHEx_OBGetConfig(&ob);
+  ob.OptionType = OPTIONBYTE_USER;
+  ob.USERType = OB_USER_SWAP_BANK;
   ob.USERConfig = (ob.USERConfig & (~FLASH_OPTSR_SWAP_BANK)) | ((~ob.USERConfig) & FLASH_OPTSR_SWAP_BANK);
   HAL_FLASHEx_OBProgram(&ob);
   HAL_FLASH_OB_Launch();
@@ -608,14 +638,14 @@ hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t l
 
 hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
   while (__HAL_HASH_GET_FLAG(&hhash, HASH_FLAG_BUSY) == SET) {
-    vTaskDelay(0);
+    ;
   }
 
   MODIFY_REG(hhash.Instance->STR, HASH_STR_NBLW, 8 * (*ctx & 3));
   SET_BIT(hhash.Instance->STR, HASH_STR_DCAL);
 
   while (__HAL_HASH_GET_FLAG(&hhash, HASH_FLAG_DCIS) == RESET) {
-    vTaskDelay(0);
+    ;
   }
 
   __IO uint32_t* out32 = (uint32_t *) out;
