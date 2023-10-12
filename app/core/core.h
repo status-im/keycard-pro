@@ -65,15 +65,15 @@ typedef struct {
 
 extern core_ctx_t g_core;
 
-core_evt_t core_wait_event(uint8_t accept_usb);
+core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb);
 void core_usb_run();
 
 void core_qr_run();
 void core_display_public();
 void updater_database_run();
 void device_auth_run();
-void updater_usb_fw_upgrade(command_t* cmd, apdu_t* apdu);
-void updater_usb_db_upgrade(apdu_t* apdu);
+app_err_t updater_usb_fw_upgrade(command_t* cmd, apdu_t* apdu);
+app_err_t updater_usb_db_upgrade(apdu_t* apdu);
 
 static inline void core_usb_err_sw(apdu_t* cmd, uint8_t sw1, uint8_t sw2) {
   uint8_t* data = APDU_RESP(cmd);

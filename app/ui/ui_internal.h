@@ -32,6 +32,7 @@ enum cmd_type {
   UI_CMD_BACKUP_MNEMO,
   UI_CMD_DEV_AUTH,
   UI_CMD_LCD_BRIGHTNESS,
+  UI_CMD_PROGRESS,
 };
 
 struct cmd_info {
@@ -92,6 +93,11 @@ struct cmd_brightness {
   uint8_t* brightness;
 };
 
+struct cmd_progress {
+  const char* title;
+  uint8_t value;
+};
+
 union cmd_params {
   struct cmd_info info;
   struct cmd_txn txn;
@@ -104,6 +110,7 @@ union cmd_params {
   struct cmd_mnemo mnemo;
   struct cmd_auth auth;
   struct cmd_brightness lcd;
+  struct cmd_progress progress;
 };
 
 struct ui_cmd {

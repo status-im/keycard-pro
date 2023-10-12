@@ -81,3 +81,33 @@ app_err_t settings_ui_lcd_brightness() {
     }
   }
 }
+
+static bool updating_progress() {
+  uint32_t evt = ui_wait_event(portMAX_DELAY);
+
+  if (evt & UI_CMD_EVT) {
+    if (g_ui_cmd.type != UI_CMD_PROGRESS) {
+      g_ui_cmd.received = 1;
+      return false;
+    }
+  }
+
+  return true;
+}
+
+app_err_t settings_ui_update_progress() {
+  dialog_title(g_ui_cmd.params.progress.title);
+  dialog_footer(TH_TITLE_HEIGHT);
+  screen_area_t progress_area = {
+      .x = TH_PROGRESS_LEFT_MARGIN,
+      .y = TH_TITLE_HEIGHT + TH_PROGRESS_VERTICAL_MARGIN,
+      .width = TH_PROGRESS_WIDTH,
+      .height = TH_PROGRESS_HEIGHT
+  };
+
+  do {
+    ui_progressbar_render(&progress_area, g_ui_cmd.params.progress.value);
+  } while(updating_progress());
+
+  return ERR_OK;
+}

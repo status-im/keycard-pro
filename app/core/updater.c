@@ -83,7 +83,15 @@ static inline void updater_fw_switch() {
   pwr_reboot();
 }
 
-void updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
+static inline uint8_t updater_progress() {
+  if (g_core.data.msg.len == 0) {
+    return 0;
+  }
+
+  return (g_core.data.msg.received * 100) / g_core.data.msg.len;
+}
+
+app_err_t updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
   apdu->has_lc = 1;
   uint8_t* data = APDU_DATA(apdu);
   size_t len = APDU_LC(apdu);
@@ -100,8 +108,8 @@ void updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
   }
 
   if ((len % HAL_FLASH_WORD_SIZE) || g_core.data.msg.received >= (HAL_FLASH_FW_BLOCK_COUNT * HAL_FLASH_BLOCK_SIZE)) {
-    core_usb_err_sw(apdu, 0x69, 0x82);
-    return;
+    core_usb_err_sw(apdu, 0x6a, 0x80);
+    return ERR_DATA;
   }
 
   uint8_t* const fw_upgrade_area = (uint8_t*) HAL_FLASH_FW_UPGRADE_AREA;
@@ -110,16 +118,17 @@ void updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
   hal_flash_end_program();
 
   g_core.data.msg.received += len;
+  ui_update_progress(LSTR(INFO_DB_UPDATE_TITLE), updater_progress());
 
   if (g_core.data.msg.received > g_core.data.msg.len) {
-    core_usb_err_sw(apdu, 0x69, 0x82);
-    return;
+    core_usb_err_sw(apdu, 0x6a, 0x80);
+    return ERR_DATA;
   } else if (g_core.data.msg.received == g_core.data.msg.len) {
     if (updater_verify_firmware() != ERR_OK) {
       updater_clear_flash_area();
-      core_usb_err_sw(apdu, 0x69, 0x82);
+      core_usb_err_sw(apdu, 0x6a, 0x80);
       ui_info(INFO_ERROR_TITLE, LSTR(INFO_FW_UPGRADE_INVALID), 1);
-      return;
+      return ERR_DATA;
     }
 
     if (ui_info(INFO_SUCCESS_TITLE, LSTR(INFO_FW_UPGRADE_CONFIRM), 1) == CORE_EVT_UI_OK) {
@@ -127,13 +136,18 @@ void updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
       command_init_send(cmd);
       vTaskDelay(pdMS_TO_TICKS(FW_UPGRADE_REBOOT_DELAY));
       updater_fw_switch();
+      return ERR_OK;
+    } else {
+      core_usb_err_sw(apdu, 0x69, 0x82);
+      return ERR_CANCEL;
     }
   }
 
   core_usb_err_sw(apdu, 0x90, 0x00);
+  return ERR_NEED_MORE_DATA;
 }
 
-void updater_usb_db_upgrade(apdu_t* apdu) {
+app_err_t updater_usb_db_upgrade(apdu_t* apdu) {
   apdu->has_lc = 1;
   uint8_t* data = APDU_DATA(apdu);
   size_t len = APDU_LC(apdu);
@@ -148,23 +162,27 @@ void updater_usb_db_upgrade(apdu_t* apdu) {
   }
 
   if ((g_core.data.msg.received + len) > MEM_HEAP_SIZE) {
-    core_usb_err_sw(apdu, 0x69, 0x82);
-    return;
+    core_usb_err_sw(apdu, 0x6a, 0x80);
+    return ERR_DATA;
   }
 
   memcpy(&g_mem_heap[g_core.data.msg.received], data, len);
 
   g_core.data.msg.received += len;
+  ui_update_progress(LSTR(INFO_DB_UPDATE_TITLE), updater_progress());
 
   if (g_core.data.msg.received > g_core.data.msg.len) {
-    core_usb_err_sw(apdu, 0x69, 0x82);
-    return;
+    core_usb_err_sw(apdu, 0x6a, 0x80);
+    return ERR_DATA;
   } else if (g_core.data.msg.received == g_core.data.msg.len) {
     if (updater_database_update(g_mem_heap, g_core.data.msg.len) != ERR_OK) {
-      core_usb_err_sw(apdu, 0x69, 0x82);
-      return;
+      core_usb_err_sw(apdu, 0x6a, 0x80);
+      return ERR_DATA;
+    } else {
+      return ERR_OK;
     }
   }
 
   core_usb_err_sw(apdu, 0x90, 0x00);
+  return ERR_NEED_MORE_DATA;
 }

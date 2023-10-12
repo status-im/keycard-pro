@@ -13,7 +13,8 @@
 typedef enum {
   CORE_EVT_USB_CMD,
   CORE_EVT_UI_CANCELLED,
-  CORE_EVT_UI_OK
+  CORE_EVT_UI_OK,
+  CORE_EVT_NONE,
 } core_evt_t;
 
 core_evt_t ui_qrscan(ur_type_t type, void* out);
@@ -59,5 +60,7 @@ core_evt_t ui_confirm_eth_address(const char* address);
 
 core_evt_t ui_device_auth(uint32_t first_auth, uint32_t auth_time, uint32_t auth_count);
 core_evt_t ui_settings_brightness(uint8_t* brightness);
+
+void ui_update_progress(const char* title, uint8_t progress);
 
 #endif

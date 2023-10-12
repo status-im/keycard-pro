@@ -4,9 +4,13 @@
 #include "ui.h"
 #include "ui_internal.h"
 
-static inline core_evt_t ui_signal_wait(uint8_t allow_usb) {
+static inline void ui_signal() {
   xTaskNotifyIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_CMD_EVT, eSetBits);
-  return core_wait_event(allow_usb);
+}
+
+static inline core_evt_t ui_signal_wait(uint8_t allow_usb) {
+  ui_signal();
+  return core_wait_event(portMAX_DELAY, allow_usb);
 }
 
 core_evt_t ui_qrscan(ur_type_t type, void* out) {
@@ -208,4 +212,12 @@ core_evt_t ui_settings_brightness(uint8_t* brightness) {
   g_ui_cmd.params.lcd.brightness = brightness;
 
   return ui_signal_wait(0);
+}
+
+void ui_update_progress(const char* title, uint8_t progress) {
+  g_ui_cmd.type = UI_CMD_PROGRESS;
+  g_ui_cmd.params.progress.title = title;
+  g_ui_cmd.params.progress.value = progress;
+
+  return ui_signal();
 }

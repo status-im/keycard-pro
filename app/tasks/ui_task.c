@@ -91,6 +91,9 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_LCD_BRIGHTNESS:
       g_ui_cmd.result = settings_ui_lcd_brightness();
       break;
+    case UI_CMD_PROGRESS:
+      g_ui_cmd.result = settings_ui_update_progress();
+      break;
     default:
       g_ui_cmd.result = ERR_CANCEL;
       break;

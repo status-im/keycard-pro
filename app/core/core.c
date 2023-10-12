@@ -15,6 +15,7 @@
 
 #define ETH_MSG_MAGIC_LEN 26
 #define ETH_EIP712_MAGIC_LEN 2
+#define USB_MORE_DATA_TIMEOUT 100
 
 const uint8_t *const ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
 const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
@@ -186,7 +187,7 @@ static app_err_t core_process_eip712(const uint8_t* data, uint32_t len) {
   return core_wait_msg_confirmation(data, len);
 }
 
-static void core_usb_get_app_config(apdu_t* cmd) {
+static app_err_t core_usb_get_app_config(apdu_t* cmd) {
   uint8_t* data = APDU_RESP(cmd);
   data[0] = FW_VERSION[0];
   data[1] = FW_VERSION[1];
@@ -202,14 +203,16 @@ static void core_usb_get_app_config(apdu_t* cmd) {
   data[7] = 0x90;
   data[8] = 0x00;
   cmd->lr = 9;
+
+  return ERR_OK;
 }
 
-static void core_usb_get_address(keycard_t* kc, apdu_t* cmd) {
+static app_err_t core_usb_get_address(keycard_t* kc, apdu_t* cmd) {
   uint8_t* data = APDU_DATA(cmd);
   uint16_t len = data[0] * 4;
   if (len > BIP44_MAX_PATH_LEN) {
     core_usb_err_sw(cmd, 0x6a, 0x80);
-    return;
+    return ERR_DATA;
   }
 
   uint8_t extended = APDU_P2(cmd) == 1;
@@ -225,10 +228,10 @@ static void core_usb_get_address(keycard_t* kc, apdu_t* cmd) {
     break;
   case ERR_CRYPTO:
     core_usb_err_sw(cmd, 0x69, 0x82);
-    return;
+    return ERR_DATA;
   default:
     core_usb_err_sw(cmd, 0x6f, 0x00);
-    return;
+    return ERR_DATA;
   }
 
   out[0] = 65;
@@ -240,7 +243,7 @@ static void core_usb_get_address(keycard_t* kc, apdu_t* cmd) {
   if (APDU_P1(cmd) == 1) {
     if (ui_confirm_eth_address((char *)&out[67]) != CORE_EVT_UI_OK) {
       core_usb_err_sw(cmd, 0x69, 0x82);
-      return;
+      return ERR_CANCEL;
     }
   }
 
@@ -254,6 +257,8 @@ static void core_usb_get_address(keycard_t* kc, apdu_t* cmd) {
   out[len++] = 0x00;
 
   cmd->lr = len;
+
+  return ERR_OK;
 }
 
 static app_err_t core_usb_init_sign(uint8_t* data) {
@@ -288,7 +293,7 @@ static void core_usb_sign(keycard_t* kc, apdu_t* cmd, uint8_t v_base) {
   }
 }
 
-static void core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
+static app_err_t core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
   cmd->has_lc = 1;
   uint8_t* data = APDU_DATA(cmd);
   uint32_t len = APDU_LC(cmd);
@@ -297,7 +302,7 @@ static void core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
   if (first) {
     if (core_usb_init_sign(data) != ERR_OK) {
       core_usb_err_sw(cmd, 0x6a, 0x80);
-      return;
+      return ERR_DATA;
     }
 
     data = &data[1+g_core.bip44_path_len];
@@ -305,11 +310,13 @@ static void core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
 
     if (len < 1) {
       core_usb_err_sw(cmd, 0x6a, 0x80);
-      return;
+      return ERR_DATA;
     }
   }
 
-  switch(core_process_tx(data, len, first)) {
+  app_err_t err = core_process_tx(data, len, first);
+
+  switch(err) {
   case ERR_OK:
     core_usb_sign(kc, cmd, core_get_tx_v_base());
     break;
@@ -329,6 +336,8 @@ static void core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
     core_usb_err_sw(cmd, 0x6f, 0x00);
     break;
   }
+
+  return err;
 }
 
 static void core_usb_message_reassemble(keycard_t* kc, apdu_t* cmd, uint8_t** segment, uint32_t* len, uint8_t* first_segment) {
@@ -365,13 +374,15 @@ static void core_usb_message_reassemble(keycard_t* kc, apdu_t* cmd, uint8_t** se
   memcpy(*segment, data, *len);
 }
 
-static void core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
+static app_err_t core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
   uint8_t* segment;
   uint32_t len;
   uint8_t first_segment;
   core_usb_message_reassemble(kc, cmd, &segment, &len, &first_segment);
 
-  switch(core_process_msg(segment, len, first_segment)) {
+  app_err_t err = core_process_msg(segment, len, first_segment);
+
+  switch(err) {
     case ERR_OK:
       core_usb_sign(kc, cmd, 27);
       break;
@@ -388,11 +399,14 @@ static void core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
       core_usb_err_sw(cmd, 0x6f, 0x00);
       break;
   }
+
+  return err;
 }
 
-static void core_usb_sign_eip712(keycard_t* kc, apdu_t* cmd) {
+static app_err_t core_usb_sign_eip712(keycard_t* kc, apdu_t* cmd) {
   if (APDU_P2(cmd) != 1) {
     core_usb_err_sw(cmd, 0x69, 0x82);
+    return ERR_DATA;
   }
 
   uint8_t* segment;
@@ -402,6 +416,7 @@ static void core_usb_sign_eip712(keycard_t* kc, apdu_t* cmd) {
 
   if ((g_core.data.msg.received + len) > g_core.data.msg.len) {
     core_usb_err_sw(cmd, 0x6a, 0x80);
+    return ERR_DATA;
   }
 
   g_core.data.msg.received += len;
@@ -409,50 +424,58 @@ static void core_usb_sign_eip712(keycard_t* kc, apdu_t* cmd) {
   if (g_core.data.msg.received == g_core.data.msg.len) {
     if (core_process_eip712(g_core.data.msg.content, g_core.data.msg.len) == ERR_OK) {
       core_usb_sign(kc, cmd, 27);
+      return ERR_OK;
     } else {
       core_usb_err_sw(cmd, 0x69, 0x82);
+      return ERR_CANCEL;
     }
   } else {
     core_usb_err_sw(cmd, 0x90, 0x00);
+    return ERR_NEED_MORE_DATA;
   }
 
 }
 
-static void core_usb_command(keycard_t* kc, command_t* cmd) {
+static app_err_t core_usb_command(keycard_t* kc, command_t* cmd) {
   apdu_t* apdu = &cmd->apdu;
+
+  app_err_t err;
 
   if (APDU_CLA(apdu) == 0xe0) {
     switch(APDU_INS(apdu)) {
       case INS_GET_ETH_ADDR:
-        core_usb_get_address(kc, apdu);
+        err = core_usb_get_address(kc, apdu);
         break;
       case INS_SIGN_ETH_TX:
-        core_usb_sign_tx(kc, apdu);
+        err = core_usb_sign_tx(kc, apdu);
         break;
       case INS_SIGN_ETH_MSG:
-        core_usb_sign_message(kc, apdu);
+        err = core_usb_sign_message(kc, apdu);
         break;
       case INS_GET_APP_CONF:
-        core_usb_get_app_config(apdu);
+        err = core_usb_get_app_config(apdu);
         break;
       case INS_SIGN_EIP_712:
-        core_usb_sign_eip712(kc, apdu);
+        err = core_usb_sign_eip712(kc, apdu);
         break;
       case INS_FW_UPGRADE:
-        updater_usb_fw_upgrade(cmd, apdu);
+        err = updater_usb_fw_upgrade(cmd, apdu);
         break;
       case INS_ERC20_UPGRADE:
-        updater_usb_db_upgrade(apdu);
+        err = updater_usb_db_upgrade(apdu);
         break;
       default:
+        err = ERR_CANCEL;
         core_usb_err_sw(apdu, 0x6d, 0x00);
         break;
     }
   } else {
+    err = ERR_CANCEL;
     core_usb_err_sw(apdu, 0x6e, 0x00);
   }
 
   command_init_send(cmd);
+  return err;
 }
 
 void core_usb_cancel() {
@@ -461,7 +484,15 @@ void core_usb_cancel() {
 }
 
 void core_usb_run() {
-  core_usb_command(&g_core.keycard, &g_core.usb_command);
+  while(1) {
+    if (core_usb_command(&g_core.keycard, &g_core.usb_command) == ERR_NEED_MORE_DATA) {
+      if (core_wait_event(USB_MORE_DATA_TIMEOUT, 1) != CORE_EVT_USB_CMD) {
+        break;
+      }
+    } else {
+      break;
+    }
+  }
 }
 
 app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
@@ -599,27 +630,27 @@ void core_display_public() {
   ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
 }
 
-core_evt_t core_wait_event(uint8_t accept_usb) {
+core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb) {
   uint32_t events;
 
-  while(1) {
-    BaseType_t res = pdFAIL;
-    res = xTaskNotifyWaitIndexed(CORE_EVENT_IDX, 0, UINT32_MAX, &events, portMAX_DELAY);
+  BaseType_t res = pdFAIL;
+  res = xTaskNotifyWaitIndexed(CORE_EVENT_IDX, 0, UINT32_MAX, &events, timeout);
 
-    if (res != pdPASS) {
-      continue;
-    }
+  if (res != pdPASS) {
+    return CORE_EVT_NONE;
+  }
 
-    if (events & CORE_USB_EVT) {
-      if (accept_usb) {
-        return CORE_EVT_USB_CMD;
-      } else {
-        core_usb_cancel();
-      }
-    }
-
-    if (events & CORE_UI_EVT) {
-      return g_ui_cmd.result == ERR_OK ? CORE_EVT_UI_OK : CORE_EVT_UI_CANCELLED;
+  if (events & CORE_USB_EVT) {
+    if (accept_usb) {
+      return CORE_EVT_USB_CMD;
+    } else {
+      core_usb_cancel();
     }
   }
+
+  if (events & CORE_UI_EVT) {
+    return g_ui_cmd.result == ERR_OK ? CORE_EVT_UI_OK : CORE_EVT_UI_CANCELLED;
+  }
+
+  return CORE_EVT_NONE;
 }
