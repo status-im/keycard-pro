@@ -77,7 +77,7 @@ APP_ALIGNED(const static usb_hid_inout_desc_t kpro_conf_desc, 4) = {
         .addr = 0x81, // EP1 IN
         .attr = 0x3, // Interrupt transfer type
         .max_packet_size = HAL_USB_MPS,
-        .poll_interval = 20, // in ms
+        .poll_interval = USB_POLL_INTERVAL_MS, // in ms
     },
     .epoutd = {
         .len = 7,
@@ -85,7 +85,7 @@ APP_ALIGNED(const static usb_hid_inout_desc_t kpro_conf_desc, 4) = {
         .addr = 0x01, // EP1 OUT
         .attr = 0x3, // Interrupt transfer type
         .max_packet_size = HAL_USB_MPS,
-        .poll_interval = 20 // in ms
+        .poll_interval = USB_POLL_INTERVAL_MS, // in ms
     }
 };
 

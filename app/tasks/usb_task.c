@@ -6,8 +6,6 @@
 #include "core/settings.h"
 #include "usb/usb.h"
 
-#define USB_TASK_INTERVAL 20
-
 void usb_task_entry(void* pvParameters) {
   while(1) {
     if (!(usb_connected() && g_settings.enable_usb)) {
@@ -23,6 +21,6 @@ void usb_task_entry(void* pvParameters) {
       usb_hid_send_rapdu();
     }
 
-    vTaskDelay(pdMS_TO_TICKS(USB_TASK_INTERVAL));
+    vTaskDelay(pdMS_TO_TICKS(USB_POLL_INTERVAL_MS));
   }
 }

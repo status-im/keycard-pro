@@ -16,6 +16,8 @@
 
 #define USB_NOTIFICATION_IDX 0
 
+#define USB_POLL_INTERVAL_MS 2
+
 typedef struct __attribute__((packed)) {
   uint8_t len;
   uint8_t type;
