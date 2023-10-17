@@ -158,8 +158,8 @@ app_err_t dialog_confirm_tx() {
   }
 }
 
-static size_t dialog_draw_message(i18n_str_id_t title, const uint8_t* txt, size_t len) {
-  dialog_title(LSTR(title));
+static size_t dialog_draw_message(const char* title, const char* txt, size_t len) {
+  dialog_title(title);
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
   dialog_footer(ctx.y);
@@ -170,7 +170,7 @@ static size_t dialog_draw_message(i18n_str_id_t title, const uint8_t* txt, size_
   ctx.bg = TH_COLOR_TEXT_BG;
   ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
 
-  return screen_draw_text(&ctx, (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN), (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN), txt, len);
+  return screen_draw_text(&ctx, (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN), (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN), (uint8_t*) txt, len);
 }
 
 app_err_t dialog_confirm_msg() {
@@ -181,7 +181,7 @@ app_err_t dialog_confirm_msg() {
   while(1) {
     size_t offset = pages[page];
     size_t to_display = g_ui_cmd.params.msg.len - offset;
-    size_t remaining = dialog_draw_message(MSG_CONFIRM_TITLE, &g_ui_cmd.params.msg.data[offset], to_display);
+    size_t remaining = dialog_draw_message(LSTR(MSG_CONFIRM_TITLE), (char*) &g_ui_cmd.params.msg.data[offset], to_display);
 
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
     case KEYPAD_KEY_LEFT:
@@ -221,7 +221,7 @@ static app_err_t dialog_wait_dismiss() {
 }
 
 app_err_t dialog_info() {
-  dialog_draw_message(g_ui_cmd.params.info.title, (uint8_t*) g_ui_cmd.params.info.msg, strlen(g_ui_cmd.params.info.msg));
+  dialog_draw_message(g_ui_cmd.params.info.title, g_ui_cmd.params.info.msg, strlen(g_ui_cmd.params.info.msg));
 
   if (!g_ui_cmd.params.info.dismissable) {
     vTaskSuspend(NULL);
@@ -233,9 +233,9 @@ app_err_t dialog_info() {
 
 app_err_t dialog_dev_auth() {
   if (g_ui_cmd.params.auth.auth_count > 1) {
-    dialog_draw_message(DEV_AUTH_TITLE_WARNING, (uint8_t*) LSTR(DEV_AUTH_INFO_WARNING), strlen(LSTR(DEV_AUTH_INFO_WARNING)));
+    dialog_draw_message(LSTR(DEV_AUTH_TITLE_WARNING), LSTR(DEV_AUTH_INFO_WARNING), strlen(LSTR(DEV_AUTH_INFO_WARNING)));
   } else {
-    dialog_draw_message(DEV_AUTH_TITLE_SUCCESS, (uint8_t*) LSTR(DEV_AUTH_INFO_SUCCESS), strlen(LSTR(DEV_AUTH_INFO_SUCCESS)));
+    dialog_draw_message(LSTR(DEV_AUTH_TITLE_SUCCESS), LSTR(DEV_AUTH_INFO_SUCCESS), strlen(LSTR(DEV_AUTH_INFO_SUCCESS)));
   }
 
   return dialog_wait_dismiss();

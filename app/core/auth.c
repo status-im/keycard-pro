@@ -82,7 +82,7 @@ void device_auth_run() {
       !auth._dev_auth_auth_count_present ||
       !auth._dev_auth_signature_present
       ) {
-    ui_info(INFO_ERROR_TITLE, LSTR(DEV_AUTH_INVALID_CHALLENGE), 1);
+    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DEV_AUTH_INVALID_CHALLENGE), 1);
     return;
   }
 
@@ -95,6 +95,6 @@ void device_auth_run() {
   if (!ecdsa_verify_digest(&secp256k1, key, auth._dev_auth_signature._dev_auth_signature.value, digest)) {
     ui_device_auth(auth._dev_auth_first_auth._dev_auth_first_auth, auth._dev_auth_auth_time._dev_auth_auth_time, auth._dev_auth_auth_count._dev_auth_auth_count);
   } else {
-    ui_info(INFO_ERROR_TITLE, LSTR(DEV_AUTH_INVALID_AUTH), 1);
+    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DEV_AUTH_INVALID_AUTH), 1);
   }
 }

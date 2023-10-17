@@ -36,8 +36,8 @@ enum cmd_type {
 };
 
 struct cmd_info {
+  const char* title;
   const char* msg;
-  i18n_str_id_t title;
   uint8_t dismissable;
 };
 

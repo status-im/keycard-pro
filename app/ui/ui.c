@@ -49,7 +49,7 @@ core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type) {
   return ui_signal_wait(0);
 }
 
-core_evt_t ui_info(i18n_str_id_t title, const char* msg, uint8_t dismissable) {
+core_evt_t ui_info(const char* title, const char* msg, uint8_t dismissable) {
   g_ui_cmd.type = UI_CMD_INFO;
   g_ui_cmd.params.info.dismissable = dismissable;
   g_ui_cmd.params.info.title = title;
@@ -65,22 +65,22 @@ void ui_card_removed() {
 }
 
 void ui_card_transport_error() {
-  ui_info(INFO_ERROR_TITLE, LSTR(INFO_CARD_ERROR_MSG), 0);
+  ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_CARD_ERROR_MSG), 0);
 }
 
 void ui_card_accepted() {
 }
 
 void ui_keycard_wrong_card() {
-  ui_info(INFO_ERROR_TITLE, LSTR(INFO_NOT_KEYCARD), 0);
+  ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_NOT_KEYCARD), 0);
 }
 
 void ui_keycard_old_card() {
-  ui_info(INFO_ERROR_TITLE, LSTR(INFO_OLD_KEYCARD), 0);
+  ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_OLD_KEYCARD), 0);
 }
 
 void ui_keycard_not_initialized() {
-  ui_info(INFO_NEW_CARD_TITLE, LSTR(INFO_NEW_CARD), 1);
+  ui_info(LSTR(INFO_NEW_CARD_TITLE), LSTR(INFO_NEW_CARD), 1);
 }
 
 void ui_keycard_init_failed() {
@@ -127,7 +127,7 @@ core_evt_t ui_prompt_try_puk() {
 }
 
 core_evt_t ui_confirm_factory_reset() {
-  return ui_info(FACTORY_RESET_TITLE, LSTR(FACTORY_RESET_WARNING), 1);
+  return ui_info(LSTR(FACTORY_RESET_TITLE), LSTR(FACTORY_RESET_WARNING), 1);
 }
 
 core_evt_t ui_read_pin(uint8_t* out, int8_t retries) {
