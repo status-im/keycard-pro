@@ -179,6 +179,7 @@ app_err_t updater_usb_db_upgrade(apdu_t* apdu) {
       core_usb_err_sw(apdu, 0x6a, 0x80);
       return ERR_DATA;
     } else {
+      core_usb_err_sw(apdu, 0x90, 0x00);
       return ERR_OK;
     }
   }
