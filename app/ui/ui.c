@@ -75,6 +75,10 @@ void ui_keycard_wrong_card() {
   ui_info(INFO_ERROR_TITLE, LSTR(INFO_NOT_KEYCARD), 0);
 }
 
+void ui_keycard_old_card() {
+  ui_info(INFO_ERROR_TITLE, LSTR(INFO_OLD_KEYCARD), 0);
+}
+
 void ui_keycard_not_initialized() {
   ui_info(INFO_NEW_CARD_TITLE, LSTR(INFO_NEW_CARD), 1);
 }

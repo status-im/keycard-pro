@@ -15,6 +15,7 @@
 #include "crypto/secp256k1.h"
 
 #define KEYCARD_AID_LEN 9
+#define KEYCARD_MIN_VERSION 0x0301
 
 const uint8_t KEYCARD_AID[] = {0xa0, 0x00, 0x00, 0x08, 0x04, 0x00, 0x01, 0x01, 0x01};
 const uint8_t KEYCARD_DEFAULT_PSK[] = {0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72, 0x4b, 0x4a, 0x36, 0xca, 0xad, 0x0e, 0x28, 0x08, 0x26, 0x15, 0x9e, 0x89, 0x88, 0x6f, 0x70, 0x82, 0x53, 0x5d, 0x43, 0x1e, 0x92, 0x48, 0x48, 0xbc, 0xf1};
@@ -259,10 +260,6 @@ static app_err_t keycard_setup(keycard_t* kc, uint8_t* pin, uint8_t* cached_pin)
     return ERR_DATA;
   }
 
-  if (keycard_read_name(kc) != ERR_OK) {
-    return ERR_TXRX;
-  }
-
   uint8_t init_keys;
   app_err_t err;
 
@@ -286,6 +283,15 @@ static app_err_t keycard_setup(keycard_t* kc, uint8_t* pin, uint8_t* cached_pin)
       break;
     default:
       return ERR_DATA;
+  }
+
+  if (info.version < KEYCARD_MIN_VERSION) {
+    ui_keycard_old_card();
+    return ERR_DATA;
+  }
+
+  if (keycard_read_name(kc) != ERR_OK) {
+    return ERR_TXRX;
   }
 
   APP_ALIGNED(pairing_t pairing, 4);
