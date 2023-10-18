@@ -170,7 +170,7 @@ static inline int eip712_is_array(const struct eip712_string* type) {
   return type->str[type->len - 1] == ']';
 }
 
-static app_err_t __attribute__((optimize("O0"))) eip712_inner_type(const struct eip712_string* array_type, struct eip712_string* inner_type) {
+static app_err_t eip712_inner_type(const struct eip712_string* array_type, struct eip712_string* inner_type) {
   inner_type->str = array_type->str;
   inner_type->len = array_type->len;
 
@@ -240,11 +240,12 @@ static int eip712_insert(int insert, const struct eip712_type types[], int types
 
 static app_err_t eip712_collect_references(int main_type, int current_type, const struct eip712_type types[], int types_count, int references[], int *references_count) {
   for (int j = 0; j < types[current_type].field_count; j++) {
-    struct eip712_string* field_type = &types[current_type].fields[j].type;
+    const struct eip712_string* field_type = &types[current_type].fields[j].type;
 
     if (eip712_is_struct(field_type)) {
+      struct eip712_string inner_type;
+
       if (eip712_is_array(field_type)) {
-        struct eip712_string inner_type;
         if (eip712_inner_type(field_type, &inner_type) != ERR_OK) {
           return ERR_DATA;
         }
@@ -329,7 +330,7 @@ static int eip712_hash_find_data(const struct eip712_string* name, int start, co
   heap_size -= sizeof(SHA3_CTX); \
   keccak_256_Init(sha3)
 
-static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
+static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, const struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
   if (eip712_is_array(field_type)) {
     if (tokens[field_val].type != JSMN_ARRAY) {
       return ERR_DATA;
