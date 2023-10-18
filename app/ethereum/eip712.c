@@ -166,6 +166,23 @@ static inline int eip712_is_struct(const struct eip712_string* type) {
   return isupper((int) type->str[0]) || type->str[0] == '_';
 }
 
+static inline int eip712_is_array(const struct eip712_string* type) {
+  return type->str[type->len - 1] == ']';
+}
+
+static inline app_err_t eip712_inner_type(const struct eip712_string* array_type, struct eip712_string* inner_type) {
+  inner_type->str = array_type->str;
+  inner_type->len = array_type->len;
+
+  while(inner_type->str[--inner_type->len] != '[') {
+    if (inner_type->len == 0) {
+      return ERR_DATA;
+    }
+  }
+
+  return ERR_OK;
+}
+
 static int eip712_find_type(const struct eip712_type types[], int types_count, const struct eip712_string* type) {
   for (int i = 0; i < types_count; i++) {
     if (eip712_streq(type, &types[i].name)) {
@@ -223,8 +240,19 @@ static int eip712_insert(int insert, const struct eip712_type types[], int types
 
 static app_err_t eip712_collect_references(int main_type, int current_type, const struct eip712_type types[], int types_count, int references[], int *references_count) {
   for (int j = 0; j < types[current_type].field_count; j++) {
-    if (eip712_is_struct(&types[current_type].fields[j].type)) {
-      int found = eip712_find_type(types, types_count, &types[current_type].fields[j].type);
+    struct eip712_string* field_type = &types[current_type].fields[j].type;
+
+    if (eip712_is_struct(field_type)) {
+      if (eip712_is_array(field_type)) {
+        struct eip712_string inner_type;
+        if (eip712_inner_type(field_type, &inner_type) != ERR_OK) {
+          return ERR_DATA;
+        }
+
+        field_type = &inner_type;
+      }
+
+      int found = eip712_find_type(types, types_count, field_type);
       if (found == -1 || (main_type == found)) {
         return ERR_DATA;
       }
@@ -302,7 +330,7 @@ static int eip712_hash_find_data(const struct eip712_string* name, int start, co
   keccak_256_Init(sha3)
 
 static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
-  if (field_type->str[field_type->len - 1] == ']') {
+  if (eip712_is_array(field_type)) {
     if (tokens[field_val].type != JSMN_ARRAY) {
       return ERR_DATA;
     }
@@ -312,25 +340,24 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
     __DECL_SHA3_CTX();
 
     struct eip712_string inner_type;
-    inner_type.str = field_type->str;
-    inner_type.len = field_type->len;
-
-    while(inner_type.str[--inner_type.len] != '[') {
-      if (inner_type.len == 0) {
-        return ERR_DATA;
-      }
+    if (eip712_inner_type(field_type, &inner_type) != ERR_OK) {
+      return ERR_DATA;
     }
 
     int inner_field = field_val + 1;
 
     for (int i = 0; i < tokens[field_val].size; i++) {
-      eip712_encode_field(tmp, heap, heap_size, &inner_type, inner_field, types, types_count, tokens, token_count, json);
-      keccak_Update(sha3, tmp, 32);
-      while(tokens[++inner_field].parent != field_val) {
-        if (inner_field == token_count) {
+      while(tokens[inner_field].parent != field_val) {
+        if (++inner_field == token_count) {
           return ERR_DATA;
         }
       }
+
+      if (eip712_encode_field(tmp, heap, heap_size, &inner_type, inner_field++, types, types_count, tokens, token_count, json) != ERR_OK) {
+        return ERR_DATA;
+      }
+
+      keccak_Update(sha3, tmp, 32);
     }
 
     keccak_Final(sha3, out);
@@ -341,7 +368,9 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
       return ERR_DATA;
     }
 
-    eip712_hash_struct(out, heap, heap_size, type, types, types_count, field_val, tokens, token_count, json);
+    if (eip712_hash_struct(out, heap, heap_size, type, types, types_count, field_val, tokens, token_count, json) != ERR_OK) {
+      return ERR_DATA;
+    }
   } else if (field_type->len == 6 && !strncmp(field_type->str, "string", 6)) {
     if (tokens[field_val].type != JSMN_STRING) {
       return ERR_DATA;
