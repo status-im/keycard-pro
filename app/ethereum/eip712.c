@@ -170,7 +170,7 @@ static inline int eip712_is_array(const struct eip712_string* type) {
   return type->str[type->len - 1] == ']';
 }
 
-static inline app_err_t eip712_inner_type(const struct eip712_string* array_type, struct eip712_string* inner_type) {
+static app_err_t __attribute__((optimize("O0"))) eip712_inner_type(const struct eip712_string* array_type, struct eip712_string* inner_type) {
   inner_type->str = array_type->str;
   inner_type->len = array_type->len;
 
