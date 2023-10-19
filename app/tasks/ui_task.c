@@ -15,8 +15,8 @@
 struct ui_cmd g_ui_cmd;
 struct ui_ctx g_ui_ctx;
 
-#define VBAT_MIN 0
-#define VBAT_MAX 700
+#define VBAT_MIN 3400
+#define VBAT_MAX 4200
 
 static void ui_read_battery() {
   uint32_t vbat;

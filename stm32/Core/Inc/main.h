@@ -53,6 +53,7 @@ extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim5;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 extern CRC_HandleTypeDef hcrc;
+extern ADC_HandleTypeDef hadc1;
 extern ADC_HandleTypeDef hadc2;
 /* USER CODE END EC */
 
@@ -82,6 +83,7 @@ void MX_ICACHE_Init(void);
 void MX_MEMORYMAP_Init(void);
 void MX_ADC2_Init(void);
 void MX_TIM5_Init(void);
+void MX_ADC1_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);

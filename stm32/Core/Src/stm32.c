@@ -12,8 +12,8 @@
 #define SC_RESET_DELAY 10
 #define CLOCK_STABLE_DELAY 5
 #define SMARTCARD_STOPBITS_1 0x00000000U
-#define ANALOG_REF 3000
 #define ANALOG_DIV 4095
+#define VBAT_OFFSET 1660
 
 #define FLASH_BANK_SWAPPED() (FLASH->OPTSR_CUR & FLASH_OPTSR_SWAP_BANK)
 
@@ -64,6 +64,7 @@ static int8_t g_acquiring;
 static struct dcmi_buf g_dcmi_bufs[CAMERA_FB_COUNT];
 static uint8_t g_uid[HAL_DEVICE_UID_LEN] __attribute__((aligned(4)));
 static uint32_t g_adc_calibration;
+static uint32_t g_adc_vref;
 
 static inline void mco_off() {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
@@ -228,6 +229,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
 hal_err_t hal_init() {
   // Copies UID, Flash size, package info before it becomes privileged
   memcpy(g_uid, (uint32_t*) UID_BASE, HAL_DEVICE_UID_LEN);
+  uint16_t vrefint_cal = *VREFINT_CAL_ADDR;
 
   HAL_Init();
   SystemClock_Config();
@@ -264,6 +266,17 @@ hal_err_t hal_init() {
 
   __HAL_TIM_ENABLE_IT(&htim2, TIM_IT_UPDATE);
   HAL_TIM_PWM_Start(&htim2, TIM_CHANNEL_1);
+
+  MX_ADC1_Init();
+  HAL_ADCEx_Calibration_Start(&hadc1, ADC_SINGLE_ENDED);
+  HAL_ADC_Start(&hadc1);
+
+  if (HAL_ADC_PollForConversion(&hadc1, HAL_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  g_adc_vref = (VREFINT_CAL_VREF * vrefint_cal) / HAL_ADC_GetValue(&hadc1);
+  HAL_ADCEx_EnterADCDeepPowerDownMode(&hadc1);
 
   MX_ADC2_Init();
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
@@ -739,7 +752,7 @@ hal_err_t hal_adc_read(hal_adc_channel_t ch, uint32_t* val) {
     return HAL_FAIL;
   }
 
-  *val = (HAL_ADC_GetValue(&hadc2) * ANALOG_REF) / ANALOG_DIV;
+  *val = VBAT_OFFSET + (((HAL_ADC_GetValue(&hadc2) * g_adc_vref)) / ANALOG_DIV);
 
   HAL_ADC_Stop(&hadc2);
   HAL_ADCEx_EnterADCDeepPowerDownMode(&hadc2);
