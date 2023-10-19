@@ -41,7 +41,6 @@ int main(void) {
   hal_teardown_bootloader();
 
   SCB->VTOR = HAL_FLASH_FW_START_ADDR;
-  __enable_irq();
 
   __set_MSP(BOOTVTAB->initial_sp);
   BOOTVTAB->reset_handler();
