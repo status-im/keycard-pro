@@ -118,7 +118,7 @@ app_err_t updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
   hal_flash_end_program();
 
   g_core.data.msg.received += len;
-  ui_update_progress(LSTR(INFO_DB_UPDATE_TITLE), updater_progress());
+  ui_update_progress(LSTR(INFO_FW_UPGRADE_TITLE), updater_progress());
 
   if (g_core.data.msg.received > g_core.data.msg.len) {
     core_usb_err_sw(apdu, 0x6a, 0x80);
