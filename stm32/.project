@@ -48,6 +48,11 @@
 			<locationURI>PARENT-1-PROJECT_LOC/freertos</locationURI>
 		</link>
 		<link>
+			<name>test</name>
+			<type>2</type>
+			<locationURI>PARENT-1-PROJECT_LOC/test</locationURI>
+		</link>
+		<link>
 			<name>zcbor</name>
 			<type>2</type>
 			<locationURI>PARENT-1-PROJECT_LOC/zcbor</locationURI>
