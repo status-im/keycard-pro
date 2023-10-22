@@ -7,10 +7,47 @@
 #include "screen/screen.h"
 #include "ui/dialog.h"
 #include "ui/settings_ui.h"
+#include "ui/theme.h"
 #include "ui/ui_internal.h"
 
 struct ui_cmd g_ui_cmd;
 struct ui_ctx g_ui_ctx;
+
+static app_err_t test_keypad() {
+  return ERR_OK;
+}
+
+static app_err_t test_colors() {
+  dialog_title("R G B");
+
+  screen_area_t area = {
+      .x = 0,
+      .y = TH_TITLE_HEIGHT,
+      .width = (SCREEN_WIDTH / 3),
+      .height = (SCREEN_HEIGHT - TH_TITLE_HEIGHT)
+  };
+  screen_fill_area(&area, SCREEN_COLOR_RED);
+
+  area.x += (SCREEN_WIDTH / 3);
+  screen_fill_area(&area, SCREEN_COLOR_GREEN);
+
+  area.x += (SCREEN_WIDTH / 3);
+  screen_fill_area(&area, SCREEN_COLOR_BLUE);
+
+  while(1) {
+    switch(ui_wait_keypress(portMAX_DELAY)) {
+    case KEYPAD_KEY_CANCEL:
+    case KEYPAD_KEY_BACK:
+      return ERR_CANCEL;
+    case KEYPAD_KEY_CONFIRM:
+      return ERR_OK;
+    default:
+      break;
+    }
+  }
+
+  return ERR_OK;
+}
 
 void ui_task_entry(void* pvParameters) {
   if (screen_init() != HAL_SUCCESS) {
@@ -35,6 +72,12 @@ void ui_task_entry(void* pvParameters) {
       break;
     case UI_CMD_QRSCAN:
       g_ui_cmd.result = qrscan_scan();
+      break;
+    case UI_CMD_INPUT_STRING:
+      g_ui_cmd.result = test_keypad();
+      break;
+    case UI_CMD_LCD_BRIGHTNESS:
+      g_ui_cmd.result = test_colors();
       break;
     default:
       g_ui_cmd.result = ERR_CANCEL;
