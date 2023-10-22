@@ -4,15 +4,6 @@
 #include "ui.h"
 #include "ui_internal.h"
 
-static inline void ui_signal() {
-  xTaskNotifyIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_CMD_EVT, eSetBits);
-}
-
-static inline core_evt_t ui_signal_wait(uint8_t allow_usb) {
-  ui_signal();
-  return core_wait_event(portMAX_DELAY, allow_usb);
-}
-
 core_evt_t ui_qrscan(ur_type_t type, void* out) {
   g_ui_cmd.type = UI_CMD_QRSCAN;
   g_ui_cmd.params.qrscan.out = out;

@@ -68,6 +68,8 @@ void core_task_entry(void* pvParameters) {
     pwr_reboot();
   }
 
+  g_core.ready = true;
+
   usb_start_if_connected();
 
   while(1) {

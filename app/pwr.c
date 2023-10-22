@@ -2,6 +2,7 @@
 #include "task.h"
 #include "app_tasks.h"
 
+#include "core/core.h"
 #include "core/settings.h"
 #include "hal.h"
 #include "pwr.h"
@@ -26,7 +27,7 @@ void pwr_shutdown() {
 }
 
 void pwr_usb_plugged(bool from_isr) {
-  if (g_settings.enable_usb) {
+  if (g_settings.enable_usb && g_core.ready) {
     hal_usb_start();
   }
 
