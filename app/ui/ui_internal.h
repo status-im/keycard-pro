@@ -6,6 +6,7 @@
 
 #include "menu.h"
 #include "keypad/keypad.h"
+#include "core/core.h"
 #include "ethereum/ethUstream.h"
 #include "qrcode/qrcode.h"
 #include "ur/eip4527_types.h"
@@ -141,6 +142,15 @@ static inline keypad_key_t ui_wait_keypress(uint32_t timeout) {
   }
 
   return KEYPAD_KEY_INVALID;
+}
+
+static inline void ui_signal() {
+  xTaskNotifyIndexed(APP_TASK(ui), UI_NOTIFICATION_IDX, UI_CMD_EVT, eSetBits);
+}
+
+static inline core_evt_t ui_signal_wait(uint8_t allow_usb) {
+  ui_signal();
+  return core_wait_event(portMAX_DELAY, allow_usb);
 }
 
 #endif

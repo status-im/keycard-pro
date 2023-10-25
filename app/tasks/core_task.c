@@ -1,3 +1,4 @@
+#ifndef TEST_APP
 #include "core/core.h"
 #include "core/card.h"
 #include "core/settings.h"
@@ -67,6 +68,8 @@ void core_task_entry(void* pvParameters) {
     pwr_reboot();
   }
 
+  g_core.ready = true;
+
   usb_start_if_connected();
 
   while(1) {
@@ -86,3 +89,4 @@ void core_task_entry(void* pvParameters) {
     }
   }
 }
+#endif

@@ -609,7 +609,7 @@ void hal_tick() {
 hal_err_t hal_pwm_set_dutycycle(hal_pwm_output_t out, uint8_t cycle) {
   assert(out == PWM_BACKLIGHT);
   assert(cycle <= 100);
-  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (cycle * 10));
+  __HAL_TIM_SET_COMPARE(&htim2, TIM_CHANNEL_1, (cycle * 5));
   return HAL_SUCCESS;
 }
 

@@ -54,6 +54,7 @@ typedef union {
 } core_data_t;
 
 typedef struct {
+  bool ready;
   keycard_t keycard;
   command_t usb_command;
 

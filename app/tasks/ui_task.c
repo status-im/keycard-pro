@@ -1,3 +1,4 @@
+#ifndef TEST_APP
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -17,15 +18,19 @@ struct ui_ctx g_ui_ctx;
 
 #define VBAT_MIN 3400
 #define VBAT_MAX 4200
+#define VBAT_USB 4900
 
 static void ui_read_battery() {
   uint32_t vbat;
   hal_adc_read(ADC_VBAT, &vbat);
 
-  if (vbat < VBAT_MIN) {
-    vbat = VBAT_MIN;
+  if (vbat > VBAT_USB) {
+    g_ui_ctx.battery = 255;
+    return;
   } else if (vbat > VBAT_MAX) {
     vbat = VBAT_MAX;
+  } else if (vbat < VBAT_MIN) {
+    vbat = VBAT_MIN;
   }
 
   g_ui_ctx.battery = ((vbat - VBAT_MIN) * 100) / (VBAT_MAX - VBAT_MIN);
@@ -104,3 +109,4 @@ void ui_task_entry(void* pvParameters) {
     }
   }
 }
+#endif
