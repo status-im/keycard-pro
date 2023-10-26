@@ -21,6 +21,6 @@ typedef struct {
 app_err_t eth_db_lookup_chain(chain_desc_t* chain);
 app_err_t eth_db_lookup_erc20(erc20_desc_t* erc20);
 app_err_t eth_db_lookup_version(uint32_t* version);
-app_err_t eth_db_update(fs_entry_t* entries, size_t len);
+app_err_t eth_db_update(uint8_t* data, size_t len);
 
 #endif

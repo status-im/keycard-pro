@@ -4,6 +4,7 @@
 #define FS_CHAIN_MAGIC 0x4348
 #define FS_ERC20_MAGIC 0x3020
 #define FS_VERSION_MAGIC 0x4532
+#define FS_DELTA_MAGIC 0x444c
 
 #define ERC20_NET_LEN 24
 
@@ -24,6 +25,20 @@ struct __attribute__((packed)) version_desc {
   uint32_t version;
 };
 
+struct __attribute__((packed)) delta_desc {
+  uint16_t magic;
+  uint32_t old_version;
+  uint16_t erase_chain_len;
+  uint16_t erase_token_len;
+  uint8_t data[];
+};
+
+struct delta_erase_ctx {
+  uint8_t* erase_chain;
+  uint8_t* erase_token;
+  uint16_t erase_chain_len;
+  uint16_t erase_token_len;
+};
 
 fs_action_t _eth_db_match_chain(void* ctx, fs_entry_t* entry) {
   if (entry->magic != FS_CHAIN_MAGIC) {
@@ -66,6 +81,57 @@ fs_action_t _eth_db_match_all(void* ctx, fs_entry_t* entry) {
   return ((entry->magic == FS_CHAIN_MAGIC) || (entry->magic == FS_ERC20_MAGIC) || (entry->magic == FS_VERSION_MAGIC)) ? FS_REJECT : FS_ACCEPT;
 }
 
+static inline fs_action_t _eth_db_match_erase_chain(struct delta_erase_ctx* ctx, struct chain_raw_desc* entry) {
+  for (int i = 0; i < ctx->erase_chain_len; i += 4) {
+    if (!memcmp(&entry->chain_id, &ctx->erase_chain[i], 4)) {
+      return FS_REJECT;
+    }
+  }
+
+  return FS_ACCEPT;
+}
+
+static inline fs_action_t _eth_db_match_erase_token(struct delta_erase_ctx* ctx, struct erc20_raw_desc* entry) {
+  uint8_t* ticker = entry->data + (entry->net_count * ERC20_NET_LEN) + 1;
+  size_t off = 0;
+
+  while (off < ctx->erase_token_len) {
+    size_t ticker_off = 0;
+
+    while(1) {
+      if (ticker[ticker_off] != ctx->erase_token[off]) {
+        while(ctx->erase_token[off++] != '\0') {
+          continue;
+        }
+
+        break;
+      }
+
+      if (ticker[ticker_off] == '\0') {
+        return FS_REJECT;
+      }
+
+      ticker_off++;
+      off++;
+    }
+  }
+
+  return FS_ACCEPT;
+}
+
+fs_action_t _eth_db_match_delta(void* ctx, fs_entry_t* entry) {
+  switch(entry->magic) {
+  case FS_VERSION_MAGIC:
+    return FS_REJECT;
+  case FS_CHAIN_MAGIC:
+    return _eth_db_match_erase_chain((struct delta_erase_ctx*) ctx, (struct chain_raw_desc*) entry);
+  case FS_ERC20_MAGIC:
+    return _eth_db_match_erase_token((struct delta_erase_ctx*) ctx, (struct erc20_raw_desc*) entry);
+  default:
+    return FS_ACCEPT;
+  }
+}
+
 app_err_t eth_db_lookup_chain(chain_desc_t* chain) {
   struct chain_raw_desc* chain_data = (struct chain_raw_desc*) fs_find(_eth_db_match_chain, chain);
 
@@ -106,15 +172,67 @@ app_err_t eth_db_lookup_version(uint32_t* version) {
   return ERR_OK;
 }
 
-app_err_t eth_db_update(fs_entry_t* entries, size_t len) {
+static app_err_t eth_full_db_rewrite(fs_entry_t* entries, size_t len) {
   app_err_t err = fs_erase_all(_eth_db_match_all, NULL);
 
-  // since our matcher doesn't know when it has reached
-  // completion, if everything went OK the error code
+  // since our matcher doesn't know when it has reached completion, if everything went OK the error code
   // will be ERR_DATA on success.
   if (err != ERR_DATA) {
     return err;
   }
 
   return fs_write(entries, len);
+}
+
+static app_err_t eth_delta_db_update(struct delta_desc* delta, size_t len) {
+  uint32_t version;
+  if (eth_db_lookup_version(&version) != ERR_OK) {
+    return ERR_HW;
+  }
+
+  if (delta->old_version != version) {
+    return ERR_VERSION;
+  }
+
+  struct delta_erase_ctx erase_ctx = {
+      .erase_chain = &delta->data[0],
+      .erase_token = &delta->data[delta->erase_chain_len],
+      .erase_chain_len = delta->erase_chain_len,
+      .erase_token_len = delta->erase_token_len
+  };
+
+  fs_entry_t* entries = (fs_entry_t*) &delta->data[delta->erase_chain_len + delta->erase_token_len];
+
+  size_t off = sizeof(struct delta_desc) + delta->erase_chain_len + delta->erase_token_len;
+
+  if (off > len) {
+    return ERR_DATA;
+  }
+
+  app_err_t err = fs_erase_all(_eth_db_match_delta, &erase_ctx);
+
+  // since our matcher doesn't know when it has reached completion, if everything went OK the error code
+  // will be ERR_DATA on success. This could be optimized if noticeable delays are observed.
+  if (err != ERR_DATA) {
+    return err;
+  }
+
+  return fs_write(entries, (len - off));
+}
+
+app_err_t eth_db_update(uint8_t* data, size_t len) {
+  if (len < 1) {
+    return ERR_DATA;
+  }
+
+  uint16_t magic = data[0] | (data[1] << 8);
+
+  switch(magic) {
+  case FS_VERSION_MAGIC:
+    return eth_full_db_rewrite((fs_entry_t*) data, len);
+  case FS_DELTA_MAGIC:
+    return eth_delta_db_update((struct delta_desc*) data, len);
+  default:
+    return ERR_UNSUPPORTED;
+  }
 }

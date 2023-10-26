@@ -32,7 +32,7 @@ static app_err_t updater_database_update(uint8_t* data, size_t len) {
     return ERR_DATA;
   }
 
-  if (eth_db_update((fs_entry_t *) data, len - SIG_LEN) != ERR_OK) {
+  if (eth_db_update(data, len - SIG_LEN) != ERR_OK) {
     ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_DB_UPDATE_ERROR), 1);
     return ERR_DATA;
   } else {
