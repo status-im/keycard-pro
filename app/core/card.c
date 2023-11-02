@@ -19,7 +19,7 @@ void card_change_name() {
 void card_change_pin() {
   SC_BUF(pin, KEYCARD_PIN_LEN);
 
-  if (ui_read_pin(pin, PIN_NEW_CODE) != CORE_EVT_UI_OK) {
+  if (ui_read_pin(pin, PIN_NEW_CODE, 1) != CORE_EVT_UI_OK) {
     return;
   }
 
@@ -34,7 +34,7 @@ void card_change_pin() {
 void card_change_puk() {
   SC_BUF(puk, KEYCARD_PUK_LEN);
 
-  if (ui_read_puk(puk, PUK_NEW_CODE) != CORE_EVT_UI_OK) {
+  if (ui_read_puk(puk, PUK_NEW_CODE, 1) != CORE_EVT_UI_OK) {
     return;
   }
 

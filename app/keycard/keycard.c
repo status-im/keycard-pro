@@ -28,7 +28,7 @@ static void keycard_random_puk(uint8_t puk[KEYCARD_PUK_LEN]) {
 
 static app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key, uint8_t* pin) {
   uint8_t puk[KEYCARD_PUK_LEN];
-  if (ui_read_pin(pin, PIN_NEW_CODE) != CORE_EVT_UI_OK) {
+  if (ui_read_pin(pin, PIN_NEW_CODE, 0) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
 
@@ -62,7 +62,7 @@ static app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instan
         return ERR_DATA;
       }
 
-      ui_keyard_paired();
+      ui_keycard_paired();
       return ERR_OK;
     }
 
@@ -95,14 +95,14 @@ static app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {
   if (pukRetries) {
     if (ui_prompt_try_puk() != CORE_EVT_UI_OK) {
       pukRetries = 0;
-    } else if (ui_read_pin(pin, PIN_NEW_CODE) != CORE_EVT_UI_OK) {
+    } else if (ui_read_pin(pin, PIN_NEW_CODE, 0) != CORE_EVT_UI_OK) {
       return ERR_CANCEL;
     }
   }
 
   while(pukRetries) {
     uint8_t puk[KEYCARD_PUK_LEN];
-    if (ui_read_puk(puk, pukRetries) != CORE_EVT_UI_OK) {
+    if (ui_read_puk(puk, pukRetries, 0) != CORE_EVT_UI_OK) {
       return ERR_CANCEL;
     }
 
@@ -136,7 +136,7 @@ static app_err_t keycard_authenticate(keycard_t* kc, uint8_t* pin, uint8_t* cach
   application_status_parse(APDU_RESP(&kc->apdu), &pinStatus);
 
   while(pinStatus.pin_retries) {
-    if (!(*cached_pin) && (ui_read_pin(pin, pinStatus.pin_retries) != CORE_EVT_UI_OK)) {
+    if (!(*cached_pin) && (ui_read_pin(pin, pinStatus.pin_retries, 0) != CORE_EVT_UI_OK)) {
       return ERR_CANCEL;
     }
 

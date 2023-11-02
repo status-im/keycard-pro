@@ -81,6 +81,9 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_INPUT_PIN:
       g_ui_cmd.result = input_pin();
       break;
+    case UI_CMD_INPUT_PUK:
+      g_ui_cmd.result = input_puk();
+      break;
     case UI_CMD_INPUT_STRING:
       g_ui_cmd.result = input_string();
       break;

@@ -83,7 +83,7 @@ void ui_keycard_no_keys() {
 void ui_keycard_ready() {
 }
 
-void ui_keyard_paired() {
+void ui_keycard_paired() {
 }
 
 void ui_keycard_already_paired() {
@@ -114,27 +114,37 @@ void ui_keycard_wrong_puk() {
 }
 
 core_evt_t ui_prompt_try_puk() {
-  return CORE_EVT_UI_OK;
+  return ui_info(LSTR(PUK_PROMPT_TITLE), LSTR(PUK_PROMPT), 1);
 }
 
 core_evt_t ui_confirm_factory_reset() {
   return ui_info(LSTR(FACTORY_RESET_TITLE), LSTR(FACTORY_RESET_WARNING), 1);
 }
 
-core_evt_t ui_read_pin(uint8_t* out, int8_t retries) {
+core_evt_t ui_read_pin(uint8_t* out, int8_t retries, uint8_t dismissable) {
   g_ui_cmd.type = UI_CMD_INPUT_PIN;
+  g_ui_cmd.params.input_pin.dismissable = dismissable;
   g_ui_cmd.params.input_pin.retries = retries;
   g_ui_cmd.params.input_pin.out = out;
 
   return ui_signal_wait(0);
 }
 
-core_evt_t ui_read_puk(uint8_t* out, int8_t retries) {
-  return CORE_EVT_UI_CANCELLED;
+core_evt_t ui_read_puk(uint8_t* out, int8_t retries, uint8_t dismissable) {
+  g_ui_cmd.type = UI_CMD_INPUT_PUK;
+  g_ui_cmd.params.input_pin.dismissable = dismissable;
+  g_ui_cmd.params.input_pin.retries = retries;
+  g_ui_cmd.params.input_pin.out = out;
+
+  return ui_signal_wait(0);
 }
 
 core_evt_t ui_read_pairing(uint8_t* pairing, uint8_t *len) {
-  return ui_read_string(LSTR(PAIRING_INPUT_TITLE), (char*) pairing, len);
+  while(ui_read_string(LSTR(PAIRING_INPUT_TITLE), (char*) pairing, len) != CORE_EVT_UI_OK) {
+    continue;
+  }
+
+  return CORE_EVT_UI_OK;
 }
 
 core_evt_t ui_read_string(const char* title, char* out, uint8_t* len) {

@@ -12,6 +12,7 @@
 #include "ui/ui_internal.h"
 
 #define PIN_LEN 6
+#define PUK_LEN 12
 #define DIG_INV ' '
 
 #define KEY_BACKSPACE 0x08
@@ -90,6 +91,8 @@ app_err_t input_new_pin() {
     if (key == KEYPAD_KEY_BACK) {
       if (position > 0) {
         position--;
+      } else if (g_ui_cmd.params.input_pin.dismissable) {
+        return ERR_CANCEL;
       }
     } else if (key == KEYPAD_KEY_CONFIRM) {
       if ((position == (PIN_LEN * 2)) && matches) {
@@ -145,12 +148,61 @@ app_err_t input_pin() {
     if (key == KEYPAD_KEY_BACK) {
       if (position > 0) {
         position--;
+      } else if (g_ui_cmd.params.input_pin.dismissable) {
+        return ERR_CANCEL;
       }
     } else if (key == KEYPAD_KEY_CONFIRM) {
       if (position == PIN_LEN) {
         return ERR_OK;
       }
     } else if (position < PIN_LEN) {
+      char digit = KEYPAD_TO_DIGIT[key];
+      if (digit != DIG_INV) {
+        out[position++] = digit;
+      }
+    }
+  }
+}
+
+app_err_t input_puk() {
+  dialog_footer(TH_TITLE_HEIGHT);
+
+  if (g_ui_cmd.params.input_pin.retries == PUK_NEW_CODE) {
+    dialog_title(LSTR(PUK_CREATE_TITLE));
+  } else {
+    dialog_title(LSTR(PUK_INPUT_TITLE));
+    screen_text_ctx_t ctx = {
+        .bg = TH_COLOR_TEXT_BG,
+        .fg = TH_COLOR_TEXT_FG,
+        .font = TH_FONT_TEXT,
+        .x = TH_LABEL_LEFT_MARGIN,
+        .y = TH_TITLE_HEIGHT + (TH_PIN_FIELD_HEIGHT * 3) + (TH_PIN_FIELD_VERTICAL_MARGIN * 2) + (TH_PUK_FIELD_VERTICAL_MARGIN * 4)
+    };
+
+    screen_draw_string(&ctx, LSTR(PIN_LABEL_REMAINING_ATTEMPTS));
+    screen_draw_char(&ctx, (g_ui_cmd.params.input_pin.retries + '0'));
+  }
+
+  char* out = (char *) g_ui_cmd.params.input_pin.out;
+  uint8_t position = 0;
+
+  while(1) {
+    input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN, 4, position);
+    input_render_secret((TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN) + (TH_PIN_FIELD_HEIGHT + TH_PUK_FIELD_VERTICAL_MARGIN) , 4, position - 4);
+    input_render_secret((TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN) + ((TH_PIN_FIELD_HEIGHT + TH_PUK_FIELD_VERTICAL_MARGIN) * 2), 4, position - 8);
+
+    keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
+    if (key == KEYPAD_KEY_BACK) {
+      if (position > 0) {
+        position--;
+      } else if (g_ui_cmd.params.input_pin.retries == PUK_NEW_CODE) {
+        return ERR_CANCEL;
+      }
+    } else if (key == KEYPAD_KEY_CONFIRM) {
+      if (position == PUK_LEN) {
+        return ERR_OK;
+      }
+    } else if (position < PUK_LEN) {
       char digit = KEYPAD_TO_DIGIT[key];
       if (digit != DIG_INV) {
         out[position++] = digit;

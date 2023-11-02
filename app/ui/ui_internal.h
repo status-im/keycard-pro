@@ -28,6 +28,7 @@ enum cmd_type {
   UI_CMD_DISPLAY_QR,
   UI_CMD_QRSCAN,
   UI_CMD_INPUT_PIN,
+  UI_CMD_INPUT_PUK,
   UI_CMD_INPUT_STRING,
   UI_CMD_INPUT_MNEMO,
   UI_CMD_BACKUP_MNEMO,
@@ -69,8 +70,9 @@ struct cmd_qrscan {
 };
 
 struct cmd_input_pin {
-  int8_t retries;
   uint8_t* out;
+  int8_t retries;
+  uint8_t dismissable;
 };
 
 struct cmd_input_string {
