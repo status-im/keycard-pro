@@ -73,6 +73,8 @@ void core_qr_run();
 void core_display_public();
 void updater_database_run();
 void device_auth_run();
+void device_info();
+
 app_err_t updater_usb_fw_upgrade(command_t* cmd, apdu_t* apdu);
 app_err_t updater_usb_db_upgrade(apdu_t* apdu);
 

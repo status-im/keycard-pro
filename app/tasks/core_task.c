@@ -33,6 +33,7 @@ static inline void core_action_run(i18n_str_id_t menu) {
     break;
   // Device
   case MENU_INFO:
+    device_info();
     break;
   case MENU_DB_UPDATE:
     updater_database_run();

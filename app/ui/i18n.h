@@ -115,6 +115,13 @@ typedef enum {
   USB_ENABLE_TITLE,
   MENU_OFF,
   MENU_ON,
+
+  // Device info
+  DEVICE_INFO_FW,
+  DEVICE_INFO_DB,
+  DEVICE_INFO_NEW_FW,
+  DEVICE_INFO_NEW_DB,
+
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

@@ -3,6 +3,7 @@
 #include "crypto/ecdsa.h"
 #include "crypto/sha2.h"
 #include "crypto/secp256k1.h"
+#include "crypto/util.h"
 #include "ethereum/eth_db.h"
 #include "mem.h"
 #include "iso7816/smartcard.h"
@@ -14,6 +15,56 @@
 #define SIG_LEN 64
 #define UPDATE_SEGMENT_LEN 240
 #define FW_UPGRADE_REBOOT_DELAY 150
+
+#define MAX_INFO_SIZE 1024
+
+static char* append_fw_version(char* dst, const char* label, const uint8_t* version) {
+  size_t seg_len = strlen(label);
+  memcpy(dst, label, seg_len);
+  dst += seg_len;
+  uint8_t tmp[4];
+  uint8_t* digits;
+
+  for (int i = 0; i < 3; i++) {
+    digits = u32toa(version[i], tmp, 4);
+    seg_len = strlen((char *) digits);
+    memcpy(dst, digits, seg_len);
+    dst += seg_len;
+    *(dst++) = '.';
+  }
+
+  *(dst - 1) = '\n';
+  *dst = '\0';
+
+  return dst;
+}
+
+static char* append_db_version(char* dst, const char* label, uint32_t version) {
+  size_t seg_len = strlen(label);
+  memcpy(dst, label, seg_len);
+  dst += seg_len;
+
+  uint8_t tmp[11];
+  uint8_t* digits = u32toa(version, tmp, 11);
+  seg_len = strlen((char* ) digits);
+  memcpy(dst, digits, seg_len);
+  dst += seg_len;
+  *(dst++) = '\n';
+  *dst = '\0';
+
+  return dst;
+}
+
+void device_info() {
+  char info[MAX_INFO_SIZE];
+  char* p = append_fw_version(info, LSTR(DEVICE_INFO_FW), FW_VERSION);
+  uint32_t db_ver;
+  if (eth_db_lookup_version(&db_ver) == ERR_OK) {
+    append_db_version(p, LSTR(DEVICE_INFO_DB), db_ver);
+  }
+
+  ui_info(LSTR(MENU_INFO), info, 1);
+}
 
 static app_err_t updater_verify_db(uint8_t* data, size_t data_len) {
   uint8_t digest[SHA256_DIGEST_LENGTH];

@@ -112,4 +112,10 @@ const char *const i18n_english_strings[] = {
     "Enable USB data transfer",
     "Off",
     "On",
+
+    // Device info
+    "Firmware version: ",
+    "Database version: ",
+    "New firmware version: ",
+    "New database version: ",
 };
