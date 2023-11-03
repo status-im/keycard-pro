@@ -613,7 +613,7 @@ void core_display_public() {
   sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
   ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
 
-  uint32_t fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[0] << 16) | (g_core.data.key.pub[0] << 8) | g_core.data.key.pub[0];
+  uint32_t fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
   key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint = fingerprint;
 
   memcpy(path, g_core.bip44_path, path_len);
