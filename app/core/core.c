@@ -136,7 +136,7 @@ static app_err_t core_process_tx(const uint8_t* data, uint32_t len, uint8_t firs
     return ERR_DATA;
   }
 
-  parserStatus_e res = processTx(&g_core.data.tx.ctx, data, len, 0);
+  parserStatus_e res = processTx(&g_core.data.tx.ctx, data, len);
   switch (res) {
     case USTREAM_FINISHED:
       return core_wait_tx_confirmation();

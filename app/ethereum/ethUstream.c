@@ -104,30 +104,6 @@ static uint16_t processAccessList(txContext_t *context) {
   return 0;
 }
 
-static uint16_t processType(txContext_t *context) {
-  if (context->currentFieldIsList) {
-    return EXCEPTION;
-  }
-
-  if (context->currentFieldLength > MAX_INT256) {
-    return EXCEPTION;
-  }
-
-  if (context->currentFieldPos < context->currentFieldLength) {
-    uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
-    if (copyTxData(context, NULL, copySize) == EXCEPTION) {
-      return EXCEPTION;
-    }
-  }
-
-  if (context->currentFieldPos == context->currentFieldLength) {
-    context->currentField++;
-    context->processingField = false;
-  }
-
-  return 0;
-}
-
 static uint16_t processChainID(txContext_t *context) {
   if (context->currentFieldIsList) {
     return EXCEPTION;
@@ -342,17 +318,16 @@ static uint16_t processV(txContext_t *context) {
 
   if (context->currentFieldPos < context->currentFieldLength) {
     uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
-    // Make sure we do not copy more than the size of v.
-    copySize = APP_MIN(copySize, sizeof(context->content->v));
     if (copyTxData(context, NULL, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
   }
 
   if (context->currentFieldPos == context->currentFieldLength) {
-    context->content->v = u32_from_BE(vBuf, context->currentFieldLength);
-
-    if (context->txType == LEGACY) {
+    if (context->currentFieldLength == 0) {
+      context->content->v = V_NONE;
+    } else {
+      context->content->v = u32_from_BE(vBuf, context->currentFieldLength);
       context->content->chainID = context->content->v;
     }
 
@@ -369,14 +344,8 @@ static bool processEIP1559Tx(txContext_t *context) {
       if (processContent(context) == EXCEPTION) {
         return true;
       }
-      if ((context->processingFlags & TX_FLAG_TYPE) == 0) {
-        context->currentField++;
-      }
+      context->currentField++;
       break;
-    }
-    // This gets hit only by Wanchain
-    case EIP1559_RLP_TYPE: {
-      return processType(context) == EXCEPTION;
     }
     case EIP1559_RLP_CHAINID: {
       return processChainID(context) == EXCEPTION;
@@ -417,14 +386,8 @@ static bool processEIP2930Tx(txContext_t *context) {
       if (processContent(context) == EXCEPTION) {
         return true;
       }
-
-      if ((context->processingFlags & TX_FLAG_TYPE) == 0) {
-        context->currentField++;
-      }
+      context->currentField++;
       break;
-    // This gets hit only by Wanchain
-    case EIP2930_RLP_TYPE:
-      return processType(context) == EXCEPTION;
     case EIP2930_RLP_CHAINID:
       return processChainID(context) == EXCEPTION;
     case EIP2930_RLP_NONCE:
@@ -454,14 +417,8 @@ static bool processLegacyTx(txContext_t *context) {
       if (processContent(context) == EXCEPTION) {
         return true;
       }
-
-      if ((context->processingFlags & TX_FLAG_TYPE) == 0) {
-        context->currentField++;
-      }
+      context->currentField++;
       break;
-    // This gets hit only by Wanchain
-    case LEGACY_RLP_TYPE:
-      return processType(context) == EXCEPTION;
     case LEGACY_RLP_NONCE:
       return processNonce(context) == EXCEPTION;
       break;
@@ -598,9 +555,8 @@ parserStatus_e continueTx(txContext_t *context) {
   }
 }
 
-parserStatus_e processTx(txContext_t *context, const uint8_t *buffer, uint32_t length, uint32_t processingFlags) {
+parserStatus_e processTx(txContext_t *context, const uint8_t *buffer, uint32_t length) {
   context->workBuffer = buffer;
   context->commandLength = length;
-  context->processingFlags = processingFlags;
   return continueTx(context);
 }

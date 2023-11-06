@@ -25,7 +25,6 @@
 
 struct txContext_t;
 
-#define TX_FLAG_TYPE   0x01
 #define ADDRESS_LENGTH 20
 #define INT128_LENGTH  16
 #define INT256_LENGTH  32
@@ -142,14 +141,13 @@ typedef struct txContext_t {
   uint32_t rlpBufferPos;
   const uint8_t *workBuffer;
   uint32_t commandLength;
-  uint32_t processingFlags;
   txContent_t *content;
   void *extra;
   uint8_t txType;
 } txContext_t;
 
 void initTx(txContext_t *context, SHA3_CTX *sha3, txContent_t *content);
-parserStatus_e processTx(txContext_t *context, const uint8_t *buffer, uint32_t length, uint32_t processingFlags);
+parserStatus_e processTx(txContext_t *context, const uint8_t *buffer, uint32_t length);
 parserStatus_e continueTx(txContext_t *context);
 uint16_t copyTxData(txContext_t *context, uint8_t *out, uint32_t length);
 uint16_t readTxByte(txContext_t *context);
