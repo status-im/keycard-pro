@@ -70,8 +70,8 @@ static inline app_err_t core_init_sign() {
   return ERR_OK;
 }
 
-static inline uint8_t core_get_tx_v_base() {
-  uint8_t v_base;
+static inline uint32_t core_get_tx_v_base() {
+  uint32_t v_base;
   if (g_core.data.tx.ctx.txType == EIP1559 || g_core.data.tx.ctx.txType == EIP2930) {
     v_base = 0;
   } else {
@@ -83,6 +83,11 @@ static inline uint8_t core_get_tx_v_base() {
   }
 
   return v_base;
+}
+
+static inline void core_set_is_message() {
+  g_core.data.tx.ctx.txType = LEGACY;
+  g_core.data.tx.content.v = V_NONE;
 }
 
 static app_err_t core_sign(keycard_t* kc, uint8_t* out) {
@@ -150,6 +155,7 @@ static app_err_t core_process_tx(const uint8_t* data, uint32_t len, uint8_t firs
 
 static app_err_t core_process_msg(const uint8_t* data, uint32_t len, uint8_t first_segment) {
   if (first_segment) {
+    core_set_is_message();
     g_core.data.msg.received = 0;
     keccak_Update(&g_core.hash_ctx, ETH_MSG_MAGIC, ETH_MSG_MAGIC_LEN);
     uint8_t tmp[11];
@@ -172,6 +178,8 @@ static app_err_t core_process_msg(const uint8_t* data, uint32_t len, uint8_t fir
 }
 
 static app_err_t core_process_eip712(const uint8_t* data, uint32_t len) {
+  core_set_is_message();
+
   uint8_t* heap = (uint8_t*) &data[len];
   size_t heap_size = MEM_HEAP_SIZE - ((size_t) (heap - g_mem_heap));
   app_err_t err;
@@ -274,12 +282,12 @@ static app_err_t core_usb_init_sign(uint8_t* data) {
   return core_init_sign();
 }
 
-static void core_usb_sign(keycard_t* kc, apdu_t* cmd, uint8_t v_base) {
+static void core_usb_sign(keycard_t* kc, apdu_t* cmd) {
   uint8_t* out = APDU_RESP(cmd);
 
   switch (core_sign(kc, &out[1])) {
   case ERR_OK:
-    out[0] = v_base + out[65];
+    out[0] = core_get_tx_v_base() + out[65];
     out[65] = 0x90;
     out[66] = 0x00;
     cmd->lr = 67;
@@ -318,7 +326,7 @@ static app_err_t core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
 
   switch(err) {
   case ERR_OK:
-    core_usb_sign(kc, cmd, core_get_tx_v_base());
+    core_usb_sign(kc, cmd);
     break;
   case ERR_NEED_MORE_DATA:
     core_usb_err_sw(cmd, 0x90, 0x00);
@@ -384,7 +392,7 @@ static app_err_t core_usb_sign_message(keycard_t* kc, apdu_t* cmd) {
 
   switch(err) {
     case ERR_OK:
-      core_usb_sign(kc, cmd, 27);
+      core_usb_sign(kc, cmd);
       break;
     case ERR_NEED_MORE_DATA:
       core_usb_err_sw(cmd, 0x90, 0x00);
@@ -421,9 +429,11 @@ static app_err_t core_usb_sign_eip712(keycard_t* kc, apdu_t* cmd) {
 
   g_core.data.msg.received += len;
 
+  core_set_is_message();
+
   if (g_core.data.msg.received == g_core.data.msg.len) {
     if (core_process_eip712(g_core.data.msg.content, g_core.data.msg.len) == ERR_OK) {
-      core_usb_sign(kc, cmd, 27);
+      core_usb_sign(kc, cmd);
       return ERR_OK;
     } else {
       core_usb_err_sw(cmd, 0x69, 0x82);
@@ -555,6 +565,8 @@ void core_qr_run() {
     return;
   }
 
+  uint32_t v = core_get_tx_v_base();
+
   if (core_sign(&g_core.keycard, g_core.data.sig.plain_sig) != ERR_OK) {
     return;
   }
@@ -567,6 +579,29 @@ void core_qr_run() {
   }
   sig._eth_signature_signature.value = g_core.data.sig.plain_sig;
   sig._eth_signature_signature.len = SIGNATURE_LEN;
+
+  v += g_core.data.sig.plain_sig[SIGNATURE_LEN];
+
+  if (v <= 0xff) {
+    g_core.data.sig.plain_sig[SIGNATURE_LEN] = v;
+    sig._eth_signature_signature.len += 1;
+  } else if (v <= 0xffff) {
+    g_core.data.sig.plain_sig[SIGNATURE_LEN] = (v >> 8) & 0xff;
+    g_core.data.sig.plain_sig[SIGNATURE_LEN + 1] = v & 0xff;
+    sig._eth_signature_signature.len += 2;
+  } else if (v <= 0xffffff) {
+    g_core.data.sig.plain_sig[SIGNATURE_LEN] = (v >> 16) & 0xff;
+    g_core.data.sig.plain_sig[SIGNATURE_LEN + 1] = (v >> 8) & 0xff;
+    g_core.data.sig.plain_sig[SIGNATURE_LEN + 2] = v & 0xff;
+    sig._eth_signature_signature.len += 3;
+  } else if (v <= 0xffffffff) {
+    g_core.data.sig.plain_sig[SIGNATURE_LEN] = v >> 24;
+    g_core.data.sig.plain_sig[SIGNATURE_LEN + 1] = (v >> 16) & 0xff;
+    g_core.data.sig.plain_sig[SIGNATURE_LEN + 2] = (v >> 8) & 0xff;
+    g_core.data.sig.plain_sig[SIGNATURE_LEN + 3] = v & 0xff;
+    sig._eth_signature_signature.len += 4;
+  }
+
   cbor_encode_eth_signature(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &sig, &g_core.data.sig.cbor_len);
   ui_display_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGNATURE);
 }

@@ -15,7 +15,7 @@
 
 #define BIP44_MAX_PATH_LEN 40
 
-#define SIGNATURE_LEN 65
+#define SIGNATURE_LEN 64
 #define PUBKEY_LEN 65
 #define PUBKEY_COMPRESSED_LEN 33
 #define CHAINCODE_LEN 32
@@ -34,7 +34,7 @@ typedef struct {
 } core_msg_t;
 
 typedef struct {
-  uint8_t plain_sig[SIGNATURE_LEN];
+  uint8_t plain_sig[SIGNATURE_LEN + 4];
   uint8_t cbor_sig[CBOR_SIG_MAX_LEN];
   size_t cbor_len;
 } core_sig_t;

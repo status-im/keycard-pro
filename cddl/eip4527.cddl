@@ -72,5 +72,5 @@ eth-signature = {
 signature = 2
 signature-origin = 3
 
-eth-signature-bytes = bstr .size 65
+eth-signature-bytes = bstr
 
