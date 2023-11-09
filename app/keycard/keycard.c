@@ -13,6 +13,7 @@
 #include "crypto/pbkdf2.h"
 #include "crypto/bip39.h"
 #include "crypto/secp256k1.h"
+#include "storage/keys.h"
 
 #define KEYCARD_AID_LEN 9
 #define KEYCARD_MIN_VERSION 0x0301
@@ -45,12 +46,76 @@ static app_err_t keycard_init_card(keycard_t* kc, uint8_t* sc_key, uint8_t* pin)
   return ERR_OK;
 }
 
+static app_err_t keycard_check_genuine(keycard_t* kc) {
+  uint8_t tmp[SHA256_DIGEST_LENGTH];
+  random_buffer(tmp, SHA256_DIGEST_LENGTH);
+
+  if (keycard_cmd_identify(kc, tmp) != ERR_OK) {
+    return ERR_TXRX;
+  }
+
+  APDU_ASSERT_OK(&kc->apdu);
+  uint8_t* data = APDU_RESP(&kc->apdu);
+
+  uint16_t len;
+  uint16_t tag;
+  uint16_t off = tlv_read_tag(data, &tag);
+  if (tag != 0xa0) {
+    return ERR_DATA;
+  }
+
+  off += tlv_read_length(&data[off], &len);
+
+  off += tlv_read_tag(&data[off], &tag);
+  if (tag != 0x8a) {
+    return ERR_DATA;
+  }
+
+  off += tlv_read_length(&data[off], &len);
+  if (len != 98) {
+    return ERR_DATA;
+  }
+
+  uint8_t* cert = &data[off];
+  uint8_t ca_pub[65];
+
+  if (ecdsa_sig_from_der(&cert[98], 72, ca_pub)) {
+    return ERR_DATA;
+  }
+
+  if (ecdsa_verify_digest(&secp256k1, cert, ca_pub, tmp)) {
+    return ERR_CRYPTO;
+  }
+
+  sha256_Raw(cert, 33, tmp);
+
+  if (ecdsa_recover_pub_from_sig(&secp256k1, ca_pub, &cert[33], tmp, cert[97])) {
+    return ERR_CRYPTO;
+  }
+
+  ca_pub[0] = 0x02 | (ca_pub[64] & 1);
+  const uint8_t* expected_ca_pub;
+  key_read(KEYCARD_CA_KEY, &expected_ca_pub);
+
+  if (memcmp(ca_pub, expected_ca_pub, 33)) {
+    return ERR_CRYPTO;
+  }
+
+  return ERR_OK;
+}
+
 static app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instance_uid) {
   memcpy(pairing->instance_uid, instance_uid, APP_INFO_INSTANCE_UID_LEN);
   
   if (pairing_read(pairing) == ERR_OK) {
     ui_keycard_already_paired();
     return ERR_OK;
+  }
+
+  if (keycard_check_genuine(kc) != ERR_OK) {
+    if (ui_keycard_not_genuine() != CORE_EVT_UI_OK) {
+      return ERR_CANCEL;
+    }
   }
 
   uint8_t* psk = (uint8_t*) KEYCARD_DEFAULT_PSK;

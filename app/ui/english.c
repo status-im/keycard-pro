@@ -69,6 +69,7 @@ const char *const i18n_english_strings[] = {
     "Success",
     "Communication with the card lost.\n\nPlease remove it and insert it again",
     "The inserted card does not appear to be a Keycard. Please replace it with a Keycard",
+    "Failed to verify genuineness of this card. Do not press OK unless you loaded a custom Keycard applet on this card yourself",
     "This Keycard has an old version of the applet installed. Please replace it with a newer one",
     "Initialize your Keycard",
     "We will now proceed initializing your Keycard.\n\nYou will be required to choose a PIN for your card.\n\nPress OK to continue.",

@@ -113,6 +113,10 @@ void ui_keycard_puk_ok() {
 void ui_keycard_wrong_puk() {
 }
 
+core_evt_t ui_keycard_not_genuine() {
+  return ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_NOT_GENUINE), 1);
+}
+
 core_evt_t ui_prompt_try_puk() {
   return ui_info(LSTR(PUK_PROMPT_TITLE), LSTR(PUK_PROMPT), 1);
 }

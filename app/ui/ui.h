@@ -62,6 +62,8 @@ core_evt_t ui_confirm_eth_address(const char* address);
 core_evt_t ui_device_auth(uint32_t first_auth, uint32_t auth_time, uint32_t auth_count);
 core_evt_t ui_settings_brightness(uint8_t* brightness);
 
+core_evt_t ui_keycard_not_genuine();
+
 void ui_update_progress(const char* title, uint8_t progress);
 
 #endif

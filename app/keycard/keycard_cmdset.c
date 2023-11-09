@@ -222,3 +222,17 @@ app_err_t keycard_cmd_set_data(keycard_t* kc, uint8_t* data, int8_t len) {
 
   return securechannel_send_apdu(&kc->sc, &kc->ch, &kc->apdu, data, len);
 }
+
+app_err_t keycard_cmd_identify(keycard_t* kc, const uint8_t challenge[SHA256_DIGEST_LENGTH]) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0x14;
+  APDU_P1(&kc->apdu) = 0x00;
+  APDU_P2(&kc->apdu) = 0x00;
+  memcpy(APDU_DATA(&kc->apdu), challenge, SHA256_DIGEST_LENGTH);
+  APDU_SET_LC(&kc->apdu, SHA256_DIGEST_LENGTH);
+  APDU_SET_LE(&kc->apdu, 0);
+
+  return smartcard_send_apdu(&kc->sc, &kc->apdu);
+}
+
