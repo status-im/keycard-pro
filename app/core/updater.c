@@ -79,21 +79,47 @@ static app_err_t updater_verify_db(uint8_t* data, size_t data_len) {
 
 static app_err_t updater_database_update(uint8_t* data, size_t len) {
   if (updater_verify_db(data, len) != ERR_OK) {
-    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_DB_UPDATE_INVALID), 1);
+    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DB_UPDATE_INVALID), 1);
     return ERR_DATA;
   }
 
   if (eth_db_update(data, len - SIG_LEN) != ERR_OK) {
-    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_DB_UPDATE_ERROR), 1);
+    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DB_UPDATE_ERROR), 1);
     return ERR_DATA;
   } else {
-    ui_info(LSTR(INFO_SUCCESS_TITLE), LSTR(INFO_DB_UPDATE_OK), 1);
+    ui_info(LSTR(INFO_SUCCESS_TITLE), LSTR(DB_UPDATE_OK), 1);
+  }
+
+  return ERR_OK;
+}
+
+static app_err_t updater_prompt_version() {
+  char info[MAX_INFO_SIZE];
+
+  uint32_t db_ver;
+  if (eth_db_lookup_version(&db_ver) != ERR_OK) {
+    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DB_UPDATE_NO_DB), 1);
+    return ERR_CANCEL;
+  }
+
+  const char* prompt = LSTR(DB_UPDATE_PROMPT);
+  size_t len = strlen(prompt);
+  memcpy(info, prompt, len);
+
+  append_db_version(&info[len], LSTR(DEVICE_INFO_DB), db_ver);
+
+  if (ui_info(LSTR(DB_UPDATE_TITLE), info, 1) != CORE_EVT_UI_OK) {
+    return ERR_CANCEL;
   }
 
   return ERR_OK;
 }
 
 void updater_database_run() {
+  if (updater_prompt_version() != ERR_OK) {
+    return;
+  }
+
   data_t data;
 
   if (ui_qrscan(FS_DATA, &data) != CORE_EVT_UI_OK) {
@@ -169,7 +195,7 @@ app_err_t updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
   hal_flash_end_program();
 
   g_core.data.msg.received += len;
-  ui_update_progress(LSTR(INFO_FW_UPGRADE_TITLE), updater_progress());
+  ui_update_progress(LSTR(FW_UPGRADE_TITLE), updater_progress());
 
   if (g_core.data.msg.received > g_core.data.msg.len) {
     core_usb_err_sw(apdu, 0x6a, 0x80);
@@ -178,11 +204,11 @@ app_err_t updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
     if (updater_verify_firmware() != ERR_OK) {
       updater_clear_flash_area();
       core_usb_err_sw(apdu, 0x6a, 0x80);
-      ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_FW_UPGRADE_INVALID), 1);
+      ui_info(LSTR(INFO_ERROR_TITLE), LSTR(FW_UPGRADE_INVALID), 1);
       return ERR_DATA;
     }
 
-    if (ui_info(LSTR(INFO_SUCCESS_TITLE), LSTR(INFO_FW_UPGRADE_CONFIRM), 1) == CORE_EVT_UI_OK) {
+    if (ui_info(LSTR(INFO_SUCCESS_TITLE), LSTR(FW_UPGRADE_CONFIRM), 1) == CORE_EVT_UI_OK) {
       core_usb_err_sw(apdu, 0x90, 0x00);
       command_init_send(cmd);
       vTaskDelay(pdMS_TO_TICKS(FW_UPGRADE_REBOOT_DELAY));
@@ -220,7 +246,7 @@ app_err_t updater_usb_db_upgrade(apdu_t* apdu) {
   memcpy(&g_mem_heap[g_core.data.msg.received], data, len);
 
   g_core.data.msg.received += len;
-  ui_update_progress(LSTR(INFO_DB_UPDATE_TITLE), updater_progress());
+  ui_update_progress(LSTR(DB_UPDATE_TITLE), updater_progress());
 
   if (g_core.data.msg.received > g_core.data.msg.len) {
     core_usb_err_sw(apdu, 0x6a, 0x80);
