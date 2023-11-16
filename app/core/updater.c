@@ -13,6 +13,7 @@
 #include "ur/ur.h"
 
 #define SIG_LEN 64
+#define MIN_DB_LEN (SIG_LEN + 8)
 #define UPDATE_SEGMENT_LEN 240
 #define FW_UPGRADE_REBOOT_DELAY 150
 
@@ -77,10 +78,34 @@ static app_err_t updater_verify_db(uint8_t* data, size_t data_len) {
   return ecdsa_verify_digest(&secp256k1, key, &data[len], digest) ? ERR_DATA : ERR_OK;
 }
 
+static app_err_t updater_confirm_database_update(uint32_t db_ver) {
+  const char* prompt = LSTR(DB_UPDATE_CONFIRM);
+  size_t len = strlen(prompt);
+
+  char info[MAX_INFO_SIZE];
+  memcpy(info, prompt, len);
+
+  append_db_version(&info[len], LSTR(DEVICE_INFO_NEW_DB), db_ver);
+
+  if (ui_info(LSTR(DB_UPDATE_TITLE), info, 1) != CORE_EVT_UI_OK) {
+    return ERR_CANCEL;
+  }
+
+  return ERR_OK;
+}
+
 static app_err_t updater_database_update(uint8_t* data, size_t len) {
-  if (updater_verify_db(data, len) != ERR_OK) {
+  uint32_t version;
+
+  if ((len < MIN_DB_LEN) ||
+      (updater_verify_db(data, len) != ERR_OK) ||
+      (eth_db_extract_version(data, &version) != ERR_OK)) {
     ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DB_UPDATE_INVALID), 1);
     return ERR_DATA;
+  }
+
+  if (updater_confirm_database_update(version) != ERR_OK) {
+    return ERR_CANCEL;
   }
 
   if (eth_db_update(data, len - SIG_LEN) != ERR_OK) {
@@ -94,8 +119,6 @@ static app_err_t updater_database_update(uint8_t* data, size_t len) {
 }
 
 static app_err_t updater_prompt_version() {
-  char info[MAX_INFO_SIZE];
-
   uint32_t db_ver;
   if (eth_db_lookup_version(&db_ver) != ERR_OK) {
     ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DB_UPDATE_NO_DB), 1);
@@ -104,6 +127,8 @@ static app_err_t updater_prompt_version() {
 
   const char* prompt = LSTR(DB_UPDATE_PROMPT);
   size_t len = strlen(prompt);
+
+  char info[MAX_INFO_SIZE];
   memcpy(info, prompt, len);
 
   append_db_version(&info[len], LSTR(DEVICE_INFO_DB), db_ver);
@@ -168,13 +193,29 @@ static inline uint8_t updater_progress() {
   return (g_core.data.msg.received * 100) / g_core.data.msg.len;
 }
 
+static app_err_t updater_confirm_fw_upgrade() {
+  const char* prompt = LSTR(FW_UPGRADE_CONFIRM);
+  size_t len = strlen(prompt);
+
+  char info[MAX_INFO_SIZE];
+  memcpy(info, prompt, len);
+
+  uint32_t ver_off = ((uint32_t ) FW_VERSION) - HAL_FLASH_FW_START_ADDR;
+  append_fw_version(&info[len], LSTR(DEVICE_INFO_NEW_FW), (uint8_t*)(HAL_FLASH_FW_UPGRADE_AREA + ver_off));
+
+  if (ui_info(LSTR(FW_UPGRADE_TITLE), info, 1) != CORE_EVT_UI_OK) {
+    return ERR_CANCEL;
+  }
+
+  return ERR_OK;
+}
+
 app_err_t updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
   apdu->has_lc = 1;
   uint8_t* data = APDU_DATA(apdu);
   size_t len = APDU_LC(apdu);
   uint8_t first_segment = APDU_P1(apdu) == 0;
 
-  //TODO: show confirmation here, then show progress bar
   if (first_segment) {
     g_core.data.msg.len = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
     g_core.data.msg.received = 0;
@@ -208,7 +249,7 @@ app_err_t updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
       return ERR_DATA;
     }
 
-    if (ui_info(LSTR(INFO_SUCCESS_TITLE), LSTR(FW_UPGRADE_CONFIRM), 1) == CORE_EVT_UI_OK) {
+    if (updater_confirm_fw_upgrade() == ERR_OK) {
       core_usb_err_sw(apdu, 0x90, 0x00);
       command_init_send(cmd);
       vTaskDelay(pdMS_TO_TICKS(FW_UPGRADE_REBOOT_DELAY));
@@ -230,7 +271,6 @@ app_err_t updater_usb_db_upgrade(apdu_t* apdu) {
   size_t len = APDU_LC(apdu);
   uint8_t first_segment = APDU_P1(apdu) == 0;
 
-  //TODO: show confirmation here, then show progress bar
   if (first_segment) {
     g_core.data.msg.len = (data[0] << 24) | (data[1] << 16) | (data[2] << 8) | data[3];
     g_core.data.msg.received = 0;

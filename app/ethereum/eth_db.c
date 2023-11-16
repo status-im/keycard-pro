@@ -220,14 +220,12 @@ static app_err_t eth_delta_db_update(struct delta_desc* delta, size_t len) {
   return fs_write(entries, (len - off));
 }
 
+static inline uint16_t eth_db_get_magic(uint8_t* data) {
+  return data[0] | (data[1] << 8);
+}
+
 app_err_t eth_db_update(uint8_t* data, size_t len) {
-  if (len < 1) {
-    return ERR_DATA;
-  }
-
-  uint16_t magic = data[0] | (data[1] << 8);
-
-  switch(magic) {
+  switch(eth_db_get_magic(data)) {
   case FS_VERSION_MAGIC:
     return eth_full_db_rewrite((fs_entry_t*) data, len);
   case FS_DELTA_MAGIC:
@@ -235,4 +233,24 @@ app_err_t eth_db_update(uint8_t* data, size_t len) {
   default:
     return ERR_UNSUPPORTED;
   }
+}
+
+app_err_t eth_db_extract_version(uint8_t* data, uint32_t* version) {
+  struct version_desc* ver_data;
+  struct delta_desc* delta;
+
+  switch(eth_db_get_magic(data)) {
+  case FS_VERSION_MAGIC:
+    ver_data = (struct version_desc*) data;
+    break;
+  case FS_DELTA_MAGIC:
+    delta = (struct delta_desc*) data;
+    ver_data = (struct version_desc*) (&delta->data[delta->erase_chain_len + delta->erase_token_len]);
+    break;
+  default:
+    return ERR_UNSUPPORTED;
+  }
+
+  *version = ver_data->version;
+  return ERR_OK;
 }

@@ -84,6 +84,7 @@ typedef enum {
   DB_UPDATE_ERROR,
   DB_UPDATE_PROMPT,
   DB_UPDATE_NO_DB,
+  DB_UPDATE_CONFIRM,
 
   // FW Upgrade
   FW_UPGRADE_TITLE,
