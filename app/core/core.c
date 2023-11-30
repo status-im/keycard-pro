@@ -636,7 +636,7 @@ void core_display_public() {
 
   SC_BUF(path, BIP44_MAX_PATH_LEN);
   memcpy(path, g_core.bip44_path, path_len);
-  app_err_t err = core_export_key(&g_core.keycard, path, (path_len - 4), g_core.data.key.pub, NULL);
+  app_err_t err = core_export_key(&g_core.keycard, path, 0, g_core.data.key.pub, NULL);
 
   if (err != ERR_OK) {
     //TODO: handle this
