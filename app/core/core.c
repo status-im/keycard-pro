@@ -65,6 +65,34 @@ static app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uin
   return ERR_OK;
 }
 
+static app_err_t core_export_public(uint32_t* fingerprint) {
+  SC_BUF(path, BIP44_MAX_PATH_LEN);
+  memcpy(path, g_core.bip44_path, g_core.bip44_path_len);
+  app_err_t err = core_export_key(&g_core.keycard, path, 0, g_core.data.key.pub, NULL);
+
+  if (err != ERR_OK) {
+    return err;
+  }
+
+  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
+
+  sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
+  ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
+
+  *fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
+
+  memcpy(path, g_core.bip44_path, g_core.bip44_path_len);
+  err = core_export_key(&g_core.keycard, path, g_core.bip44_path_len, g_core.data.key.pub, g_core.data.key.chain);
+
+  if (err != ERR_OK) {
+    return err;
+  }
+
+  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
+
+  return ERR_OK;
+}
+
 static inline app_err_t core_init_sign() {
   keccak_256_Init(&g_core.hash_ctx);
   return ERR_OK;
@@ -505,7 +533,7 @@ void core_usb_run() {
   }
 }
 
-app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
+static app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
   g_core.bip44_path_len = qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component_count * 4;
 
   if (g_core.bip44_path_len > BIP44_MAX_PATH_LEN) {
@@ -623,43 +651,22 @@ void core_display_public() {
   key._hd_key_name._hd_key_name.value = EIP4527_NAME;
   key._hd_key_source_present = 0;
 
-  uint16_t path_len = 0;
   for (int i = 0; i < ETH_DEFAULT_BIP44_LEN; i++) {
     uint32_t c = ETH_DEFAULT_BIP44[i];
-    g_core.bip44_path[path_len++] = c >> 24;
-    g_core.bip44_path[path_len++] = (c >> 16) & 0xff;
-    g_core.bip44_path[path_len++] = (c >> 8) & 0xff;
-    g_core.bip44_path[path_len++] = (c & 0xff);
+    g_core.bip44_path[(i * 4)] = c >> 24;
+    g_core.bip44_path[(i * 4) + 1] = (c >> 16) & 0xff;
+    g_core.bip44_path[(i * 4) + 2] = (c >> 8) & 0xff;
+    g_core.bip44_path[(i * 4) + 3] = (c & 0xff);
     key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component[i]._path_component__child_index = c & 0x7fffffff;
     key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component[i]._path_component__is_hardened = c > 0x7fffffff;
   }
 
-  SC_BUF(path, BIP44_MAX_PATH_LEN);
-  memcpy(path, g_core.bip44_path, path_len);
-  app_err_t err = core_export_key(&g_core.keycard, path, 0, g_core.data.key.pub, NULL);
+  g_core.bip44_path_len = ETH_DEFAULT_BIP44_LEN * 4;
 
-  if (err != ERR_OK) {
+  if (core_export_public(&key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint) != ERR_OK) {
     //TODO: handle this
     return;
   }
-
-  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
-
-  sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
-  ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
-
-  uint32_t fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
-  key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint = fingerprint;
-
-  memcpy(path, g_core.bip44_path, path_len);
-  err = core_export_key(&g_core.keycard, path, path_len, g_core.data.key.pub, g_core.data.key.chain);
-
-  if (err != ERR_OK) {
-    //TODO: handle this
-    return;
-  }
-
-  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
 
   cbor_encode_hd_key(g_core.data.key.cbor_key, CBOR_KEY_MAX_LEN, &key, &g_core.data.key.cbor_len);
   ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
