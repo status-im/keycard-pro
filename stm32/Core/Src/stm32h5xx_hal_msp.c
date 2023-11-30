@@ -97,7 +97,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
   /** Initializes the peripherals clock
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADCDAC;
-    PeriphClkInitStruct.AdcDacClockSelection = RCC_ADCDACCLKSOURCE_HCLK;
+    PeriphClkInitStruct.AdcDacClockSelection = RCC_ADCDACCLKSOURCE_HSI;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
       Error_Handler();
@@ -121,7 +121,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
   /** Initializes the peripherals clock
   */
     PeriphClkInitStruct.PeriphClockSelection = RCC_PERIPHCLK_ADCDAC;
-    PeriphClkInitStruct.AdcDacClockSelection = RCC_ADCDACCLKSOURCE_HCLK;
+    PeriphClkInitStruct.AdcDacClockSelection = RCC_ADCDACCLKSOURCE_HSI;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
       Error_Handler();

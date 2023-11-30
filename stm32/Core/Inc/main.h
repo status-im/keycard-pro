@@ -80,7 +80,6 @@ void MX_CRC_Init(void);
 void MX_HASH_Init(void);
 void MX_USB_PCD_Init(void);
 void MX_ICACHE_Init(void);
-void MX_MEMORYMAP_Init(void);
 void MX_ADC2_Init(void);
 void MX_TIM5_Init(void);
 void MX_ADC1_Init(void);

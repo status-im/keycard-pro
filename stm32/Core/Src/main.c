@@ -527,27 +527,6 @@ void MX_ICACHE_Init(void)
 }
 
 /**
-  * @brief MEMORYMAP Initialization Function
-  * @param None
-  * @retval None
-  */
-void MX_MEMORYMAP_Init(void)
-{
-
-  /* USER CODE BEGIN MEMORYMAP_Init 0 */
-
-  /* USER CODE END MEMORYMAP_Init 0 */
-
-  /* USER CODE BEGIN MEMORYMAP_Init 1 */
-
-  /* USER CODE END MEMORYMAP_Init 1 */
-  /* USER CODE BEGIN MEMORYMAP_Init 2 */
-
-  /* USER CODE END MEMORYMAP_Init 2 */
-
-}
-
-/**
   * @brief RNG Initialization Function
   * @param None
   * @retval None
