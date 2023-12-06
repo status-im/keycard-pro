@@ -67,19 +67,22 @@ static app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uin
 
 static app_err_t core_export_public(uint32_t* fingerprint) {
   SC_BUF(path, BIP44_MAX_PATH_LEN);
-  memcpy(path, g_core.bip44_path, g_core.bip44_path_len);
-  app_err_t err = core_export_key(&g_core.keycard, path, 0, g_core.data.key.pub, NULL);
+  app_err_t err;
 
-  if (err != ERR_OK) {
-    return err;
+  if (fingerprint) {
+    err = core_export_key(&g_core.keycard, path, 0, g_core.data.key.pub, NULL);
+
+    if (err != ERR_OK) {
+      return err;
+    }
+
+    g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
+
+    sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
+    ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
+
+    *fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
   }
-
-  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
-
-  sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
-  ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
-
-  *fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
 
   memcpy(path, g_core.bip44_path, g_core.bip44_path_len);
   err = core_export_key(&g_core.keycard, path, g_core.bip44_path_len, g_core.data.key.pub, g_core.data.key.chain);
@@ -93,8 +96,15 @@ static app_err_t core_export_public(uint32_t* fingerprint) {
   return ERR_OK;
 }
 
-static inline app_err_t core_init_sign() {
+static inline app_err_t core_init_sign(uint32_t* fingerprint) {
   keccak_256_Init(&g_core.hash_ctx);
+
+  if (core_export_public(fingerprint) != ERR_OK) {
+    return ERR_HW;
+  }
+
+  ethereum_address(g_core.data.key.pub, g_core.address);
+
   return ERR_OK;
 }
 
@@ -136,11 +146,11 @@ static app_err_t core_sign(keycard_t* kc, uint8_t* out) {
 }
 
 static inline app_err_t core_wait_tx_confirmation() {
-  return ui_display_tx(&g_core.data.tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  return ui_display_tx(g_core.address, &g_core.data.tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static inline app_err_t core_wait_msg_confirmation(const uint8_t* msg, size_t msg_len) {
-  return ui_display_msg(msg, msg_len) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  return ui_display_msg(g_core.address, msg, msg_len) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static app_err_t core_process_tx(const uint8_t* data, uint32_t len, uint8_t first_segment) {
@@ -307,7 +317,7 @@ static app_err_t core_usb_init_sign(uint8_t* data) {
 
   memcpy(g_core.bip44_path, &data[1], g_core.bip44_path_len);
 
-  return core_init_sign();
+  return core_init_sign(NULL);
 }
 
 static void core_usb_sign(keycard_t* kc, apdu_t* cmd) {
@@ -553,7 +563,21 @@ static app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
     g_core.bip44_path[(i * 4) + 3] = idx & 0xff;
   }
 
-  return core_init_sign();
+  uint32_t fingerprint;
+  app_err_t err = core_init_sign(&fingerprint);
+
+  if (err != ERR_OK) {
+    return err;
+  }
+
+  if (!(qr_request->_eth_sign_request_derivation_path._crypto_keypath_source_fingerprint_present &&
+      (qr_request->_eth_sign_request_derivation_path._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint == fingerprint))) {
+    return ERR_MISMATCH;
+  }
+
+  ethereum_address(g_core.data.key.pub, g_core.address);
+
+  return ERR_OK;
 }
 
 void core_qr_run() {

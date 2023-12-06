@@ -44,10 +44,12 @@ struct cmd_info {
 };
 
 struct cmd_txn {
+  const uint8_t* addr;
   const txContent_t* tx;
 };
 
 struct cmd_msg {
+  const uint8_t* addr;
   const uint8_t* data;
   uint32_t len;
 };

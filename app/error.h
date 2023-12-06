@@ -12,7 +12,8 @@ typedef enum {
   ERR_UNSUPPORTED,
   ERR_NEED_MORE_DATA,
   ERR_FULL,
-  ERR_VERSION
+  ERR_VERSION,
+  ERR_MISMATCH,
 } app_err_t;
 
 #endif

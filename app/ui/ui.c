@@ -19,14 +19,16 @@ core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selecte
   return ui_signal_wait(allow_usb);
 }
 
-core_evt_t ui_display_tx(const txContent_t* tx) {
+core_evt_t ui_display_tx(const uint8_t* address, const txContent_t* tx) {
   g_ui_cmd.type = UI_CMD_DISPLAY_TXN;
+  g_ui_cmd.params.txn.addr = address;
   g_ui_cmd.params.txn.tx = tx;
   return ui_signal_wait(0);
 }
 
-core_evt_t ui_display_msg(const uint8_t* msg, uint32_t len) {
+core_evt_t ui_display_msg(const uint8_t* address, const uint8_t* msg, uint32_t len) {
   g_ui_cmd.type = UI_CMD_DISPLAY_MSG;
+  g_ui_cmd.params.msg.addr = address;
   g_ui_cmd.params.msg.data = msg;
   g_ui_cmd.params.msg.len = len;
   return ui_signal_wait(0);

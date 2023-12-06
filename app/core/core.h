@@ -58,6 +58,7 @@ typedef struct {
   keycard_t keycard;
   command_t usb_command;
 
+  uint8_t address[ADDRESS_LENGTH];
   uint8_t bip44_path[BIP44_MAX_PATH_LEN];
   uint8_t bip44_path_len;
   SHA3_CTX hash_ctx;
