@@ -20,7 +20,7 @@
 #define PUBKEY_COMPRESSED_LEN 33
 #define CHAINCODE_LEN 32
 #define CBOR_SIG_MAX_LEN 128
-#define CBOR_KEY_MAX_LEN 128
+#define CBOR_KEY_MAX_LEN 192
 
 typedef struct {
   txContext_t ctx;

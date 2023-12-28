@@ -22,12 +22,22 @@
 int cbor_encode_eth_signature(
 		uint8_t *payload, size_t payload_len,
 		const struct eth_signature *input,
-		size_t *payload_len_out);
-
+		size_t *payload_len_out);
+
+
+
 
 int cbor_encode_hd_key(
 		uint8_t *payload, size_t payload_len,
 		const struct hd_key *input,
+		size_t *payload_len_out);
+
+
+
+
+int cbor_encode_crypto_multi_accounts(
+		uint8_t *payload, size_t payload_len,
+		const struct crypto_multi_accounts *input,
 		size_t *payload_len_out);
 
 

@@ -26,6 +26,9 @@ const uint32_t ETH_DEFAULT_BIP44_LEN = 3;
 const uint8_t *const EIP4527_NAME = (uint8_t*) "Keycard Pro";
 const uint32_t EIP4527_NAME_LEN = 11;
 
+const uint8_t *const EIP4527_SOURCE = (uint8_t*) "account.standard";
+const uint32_t EIP4527_SOURCE_LEN = 16;
+
 core_ctx_t g_core;
 
 static app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain) {
@@ -65,23 +68,39 @@ static app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uin
   return ERR_OK;
 }
 
-static app_err_t core_export_public(uint32_t* fingerprint) {
+static app_err_t core_get_fingerprint(uint8_t* path, size_t len, uint32_t* fingerprint) {
+  app_err_t err = core_export_key(&g_core.keycard, path, len, g_core.data.key.pub, NULL);
+
+  if (err != ERR_OK) {
+    return err;
+  }
+
+  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
+
+  sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
+  ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
+
+  *fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
+  return ERR_OK;
+}
+
+static app_err_t core_export_public(uint32_t* fingerprint, uint32_t* parent_fingerprint) {
   SC_BUF(path, BIP44_MAX_PATH_LEN);
   app_err_t err;
 
   if (fingerprint) {
-    err = core_export_key(&g_core.keycard, path, 0, g_core.data.key.pub, NULL);
-
+    err = core_get_fingerprint(path, 0, fingerprint);
     if (err != ERR_OK) {
       return err;
     }
+  }
 
-    g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
-
-    sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
-    ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
-
-    *fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
+  if (parent_fingerprint) {
+    memcpy(path, g_core.bip44_path, (g_core.bip44_path_len - 4));
+    err = core_get_fingerprint(path, (g_core.bip44_path_len - 4), parent_fingerprint);
+    if (err != ERR_OK) {
+      return err;
+    }
   }
 
   memcpy(path, g_core.bip44_path, g_core.bip44_path_len);
@@ -99,7 +118,7 @@ static app_err_t core_export_public(uint32_t* fingerprint) {
 static inline app_err_t core_init_sign(uint32_t* fingerprint) {
   keccak_256_Init(&g_core.hash_ctx);
 
-  if (core_export_public(fingerprint) != ERR_OK) {
+  if (core_export_public(fingerprint, NULL) != ERR_OK) {
     return ERR_HW;
   }
 
@@ -658,22 +677,22 @@ void core_qr_run() {
   ui_display_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGNATURE);
 }
 
-void core_display_public() {
-  struct hd_key key;
-  key._hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
-  key._hd_key_key_data.value = g_core.data.key.pub;
-  key._hd_key_chain_code._hd_key_chain_code.len = CHAINCODE_LEN;
-  key._hd_key_chain_code._hd_key_chain_code.value = g_core.data.key.chain;
-  key._hd_key_chain_code_present = 1;
-  key._hd_key_origin._hd_key_origin._crypto_keypath_depth_present = 1;
-  key._hd_key_origin._hd_key_origin._crypto_keypath_depth._crypto_keypath_depth = ETH_DEFAULT_BIP44_LEN;
-  key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint_present = 1;
-  key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component_count = ETH_DEFAULT_BIP44_LEN;
-  key._hd_key_origin_present = 1;
-  key._hd_key_name_present = 1;
-  key._hd_key_name._hd_key_name.len = EIP4527_NAME_LEN;
-  key._hd_key_name._hd_key_name.value = EIP4527_NAME;
-  key._hd_key_source_present = 0;
+static app_err_t encode_hd_key(struct hd_key* key) {
+  key->_hd_key_is_master = 0;
+  key->_hd_key_is_private = 0;
+  key->_hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
+  key->_hd_key_key_data.value = g_core.data.key.pub;
+  key->_hd_key_chain_code.len = CHAINCODE_LEN;
+  key->_hd_key_chain_code.value = g_core.data.key.chain;
+  key->_hd_key_use_info_present = 0;
+  key->_hd_key_origin._crypto_keypath_depth_present = 1;
+  key->_hd_key_origin._crypto_keypath_depth._crypto_keypath_depth = ETH_DEFAULT_BIP44_LEN;
+  key->_hd_key_origin._crypto_keypath_source_fingerprint_present = 1;
+  key->_hd_key_origin._crypto_keypath_components__path_component_count = ETH_DEFAULT_BIP44_LEN;
+  key->_hd_key_name.len = EIP4527_NAME_LEN;
+  key->_hd_key_name.value = EIP4527_NAME;
+  key->_hd_key_source.len = EIP4527_SOURCE_LEN;
+  key->_hd_key_source.value = EIP4527_SOURCE;
 
   for (int i = 0; i < ETH_DEFAULT_BIP44_LEN; i++) {
     uint32_t c = ETH_DEFAULT_BIP44[i];
@@ -681,14 +700,24 @@ void core_display_public() {
     g_core.bip44_path[(i * 4) + 1] = (c >> 16) & 0xff;
     g_core.bip44_path[(i * 4) + 2] = (c >> 8) & 0xff;
     g_core.bip44_path[(i * 4) + 3] = (c & 0xff);
-    key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component[i]._path_component__child_index = c & 0x7fffffff;
-    key._hd_key_origin._hd_key_origin._crypto_keypath_components__path_component[i]._path_component__is_hardened = c > 0x7fffffff;
+    key->_hd_key_origin._crypto_keypath_components__path_component[i]._path_component__child_index = c & 0x7fffffff;
+    key->_hd_key_origin._crypto_keypath_components__path_component[i]._path_component__is_hardened = c > 0x7fffffff;
   }
 
   g_core.bip44_path_len = ETH_DEFAULT_BIP44_LEN * 4;
 
-  if (core_export_public(&key._hd_key_origin._hd_key_origin._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint) != ERR_OK) {
-    //TODO: handle this
+  if (core_export_public(&key->_hd_key_origin._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint, &key->_hd_key_parent_fingerprint) != ERR_OK) {
+    return ERR_HW;
+  }
+
+  return ERR_OK;
+}
+
+void core_display_public() {
+  struct hd_key key;
+
+  if (encode_hd_key(&key) != ERR_OK) {
+    //TODO: handle
     return;
   }
 

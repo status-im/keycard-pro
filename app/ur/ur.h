@@ -8,14 +8,15 @@
 #define UR_PART_DESC_COUNT (UR_MAX_PART_COUNT + 16)
 
 typedef enum {
-  BYTES = 0,
-  ETH_SIGN_REQUEST = 1,
-  FS_DATA = 2,
-  CRYPTO_HDKEY = 3,
-  DEV_AUTH = 4,
-  ETH_SIGNATURE = 5,
+  BYTES = 3,
+  FS_DATA = 4,
+  DEV_AUTH = 5,
   FW_UPDATE = 6,
-  CRYPTO_KEYPATH = 7,
+  CRYPTO_HDKEY = 8,
+  ETH_SIGNATURE = 9,
+  CRYPTO_KEYPATH = 10,
+  ETH_SIGN_REQUEST = 11,
+  CRYPTO_MULTI_ACCOUNTS = 14,
 } ur_type_t;
 
 typedef struct {
