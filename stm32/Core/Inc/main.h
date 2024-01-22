@@ -89,9 +89,9 @@ void SystemClock_Config(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define KEYPAD_POLL_MS 5
 #define SC_DEFAULT_PSC 25
 #define SC_DEFAULT_BAUD_RATE 10752
-#define KEYPAD_POLL_MS 5
 #define GPIO_VUSB_OK_Pin GPIO_PIN_13
 #define GPIO_VUSB_OK_GPIO_Port GPIOC
 #define GPIO_VUSB_OK_EXTI_IRQn EXTI13_IRQn
@@ -128,10 +128,6 @@ void SystemClock_Config(void);
 #define CAM_XCLK_GPIO_Port GPIOA
 #define GPIO_CARD_RST_Pin GPIO_PIN_10
 #define GPIO_CARD_RST_GPIO_Port GPIOA
-#define USB_FS_N_Pin GPIO_PIN_11
-#define USB_FS_N_GPIO_Port GPIOA
-#define USB_FS_P_Pin GPIO_PIN_12
-#define USB_FS_P_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14
