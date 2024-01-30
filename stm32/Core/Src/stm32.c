@@ -98,6 +98,9 @@ void HAL_SPI_TxCpltCallback(SPI_HandleTypeDef *hspi) {
 
 void HAL_GPIO_EXTI_Rising_Callback(uint16_t gpio_pin) {
   switch(gpio_pin) {
+  case GPIO_HALT_REQ_Pin:
+    HAL_TIM_Base_Stop_IT(&htim3);
+    break;
   case GPIO_SC_PRES_Pin:
     pwr_smartcard_inserted();
     break;
@@ -110,7 +113,10 @@ void HAL_GPIO_EXTI_Rising_Callback(uint16_t gpio_pin) {
 void HAL_GPIO_EXTI_Falling_Callback(uint16_t gpio_pin) {
   switch(gpio_pin) {
   case GPIO_HALT_REQ_Pin:
-    pwr_shutdown();
+    HAL_TIM_Base_Stop_IT(&htim3);
+    __HAL_TIM_SET_COUNTER(&htim3, 0);
+    __HAL_TIM_CLEAR_IT(&htim3, TIM_IT_UPDATE);
+    HAL_TIM_Base_Start_IT(&htim3);
     break;
   case GPIO_SC_PRES_Pin:
     pwr_smartcard_removed();
@@ -221,6 +227,8 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd) {
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if (htim == &htim2) {
     keypad_scan_tick();
+  } else if (htim == &htim3) {
+    pwr_shutdown();
   } else if (htim == &htim5) {
     pwr_inactivity_timer_elapsed();
   }
@@ -242,6 +250,7 @@ hal_err_t hal_init() {
   MX_GPIO_Init();
   MX_TIM6_Init();
   MX_TIM2_Init();
+  MX_TIM3_Init();
   MX_TIM5_Init();
 
   MX_GPDMA2_Init();
@@ -693,10 +702,12 @@ hal_err_t hal_usb_start() {
 }
 
 hal_err_t hal_usb_stop() {
-  _hal_usb_close_ep();
-  HAL_PCD_Stop(&hpcd_USB_DRD_FS);
-  HAL_PCD_DeInit(&hpcd_USB_DRD_FS);
-  HAL_PWREx_DisableVddUSB();
+  if (READ_BIT(PWR_USBSCR, PWR_USBSCR_USB33SV)) {
+    _hal_usb_close_ep();
+    HAL_PCD_Stop(&hpcd_USB_DRD_FS);
+    HAL_PCD_DeInit(&hpcd_USB_DRD_FS);
+    HAL_PWREx_DisableVddUSB();
+  }
 
   return HAL_OK;
 }

@@ -50,6 +50,7 @@ extern SMARTCARD_HandleTypeDef hsmartcard6;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim5;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 extern CRC_HandleTypeDef hcrc;
@@ -83,6 +84,7 @@ void MX_ICACHE_Init(void);
 void MX_ADC2_Init(void);
 void MX_TIM5_Init(void);
 void MX_ADC1_Init(void);
+void MX_TIM3_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);
@@ -92,6 +94,7 @@ void SystemClock_Config(void);
 #define KEYPAD_POLL_MS 5
 #define SC_DEFAULT_PSC 25
 #define SC_DEFAULT_BAUD_RATE 10752
+#define HALT_REQ_MS 10
 #define GPIO_VUSB_OK_Pin GPIO_PIN_13
 #define GPIO_VUSB_OK_GPIO_Port GPIOC
 #define GPIO_VUSB_OK_EXTI_IRQn EXTI13_IRQn
