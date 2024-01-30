@@ -702,7 +702,7 @@ hal_err_t hal_usb_start() {
 }
 
 hal_err_t hal_usb_stop() {
-  if (READ_BIT(PWR_USBSCR, PWR_USBSCR_USB33SV)) {
+  if (READ_BIT(PWR->USBSCR, PWR_USBSCR_USB33SV)) {
     _hal_usb_close_ep();
     HAL_PCD_Stop(&hpcd_USB_DRD_FS);
     HAL_PCD_DeInit(&hpcd_USB_DRD_FS);
