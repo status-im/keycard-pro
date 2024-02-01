@@ -56,6 +56,9 @@ hal_err_t screen_init() {
 }
 
 hal_err_t screen_set_drawing_window(const screen_area_t* area) {
+  //TODO: check why this is needed, especially if the function is called in a tight loop
+  vTaskDelay(pdMS_TO_TICKS(1));
+
   if (st7789_write_cmd(ST7789_CASET) != HAL_SUCCESS) {
     return HAL_FAIL;
   }
