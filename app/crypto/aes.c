@@ -1,6 +1,12 @@
 #include <string.h>
 #include "aes.h"
+#include "hal.h"
 
+const static uint8_t cmac_iv[AES_IV_SIZE] __attribute__((aligned(4))) = {
+  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+#ifdef SOFT_AES
 #define AES_128_KEYROUND 10
 #define AES_192_KEYROUND 12
 #define AES_256_KEYROUND 14
@@ -17,10 +23,6 @@
 #else
 #error Unsupported architecture
 #endif
-
-const static uint8_t cmac_iv[AES_IV_SIZE] __attribute__((aligned(4))) = {
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
 
 uint8_t aes_encrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out) {
   uint8_t round_key[(AES_256_KEYROUND+1)*16] __attribute__((aligned(4)));
@@ -97,3 +99,40 @@ uint8_t aes_cmac(const uint8_t* key, const uint8_t* data, uint32_t len, uint8_t*
 
   return 1;
 }
+#else
+uint8_t aes_encrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out) {
+  hal_aes256_init(AES_ENCRYPT, AES_CBC, key, iv);
+
+  for(uint32_t i = 0; i < len; i += AES_BLOCK_SIZE) {
+    hal_aes256_block_process(&data[i], &out[i]);
+  }
+
+  hal_aes256_finalize();
+
+  return 1;
+}
+
+uint8_t aes_decrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* data, uint32_t len, uint8_t* out) {
+  hal_aes256_init(AES_DECRYPT, AES_CBC, key, iv);
+
+  for(uint32_t i = 0; i < len; i += AES_BLOCK_SIZE) {
+    hal_aes256_block_process(&data[i], &out[i]);
+  }
+
+  hal_aes256_finalize();
+
+  return 1;
+}
+
+uint8_t aes_cmac(const uint8_t* key, const uint8_t* data, uint32_t len, uint8_t* out) {
+  hal_aes256_init(AES_ENCRYPT, AES_CBC, key, cmac_iv);
+
+  for(uint32_t i = 0; i < len; i += AES_BLOCK_SIZE) {
+    hal_aes256_block_process(&data[i], out);
+  }
+
+  hal_aes256_finalize();
+
+  return 1;
+}
+#endif

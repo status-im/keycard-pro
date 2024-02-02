@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include "crypto/sha2_soft.h"
+#include "crypto/aes.h"
 #include "iso7816/smartcard.h"
 
 #ifdef __MCUXPRESSO
@@ -109,6 +110,15 @@ hal_err_t hal_smarcard_recv(uint8_t* data, size_t len);
 void hal_smartcard_abort();
 
 // Crypto (only use in crypto library)
+typedef enum {
+  AES_CBC,
+} hal_aes_chaining_t;
+
+typedef enum {
+  AES_ENCRYPT,
+  AES_DECRYPT
+} hal_aes_mode_t;
+
 hal_err_t hal_rng_next(uint8_t *buf, size_t len);
 
 #ifndef SOFT_SHA256
@@ -121,6 +131,12 @@ hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LEN
 hal_err_t hal_crc32_init(hal_crc32_ctx_t* ctx);
 hal_err_t hal_crc32_update(hal_crc32_ctx_t* ctx, uint8_t data);
 hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out);
+#endif
+
+#ifndef SOFT_AES
+hal_err_t hal_aes256_init(hal_aes_mode_t mode, hal_aes_chaining_t chaining, const uint8_t key[AES_256_KEY_SIZE], const uint8_t iv[AES_IV_SIZE]);
+hal_err_t hal_aes256_block_process(const uint8_t in[AES_BLOCK_SIZE], uint8_t out[AES_BLOCK_SIZE]);
+hal_err_t hal_aes256_finalize();
 #endif
 
 // Timer

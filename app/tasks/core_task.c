@@ -5,6 +5,7 @@
 #include "keycard/keycard.h"
 #include "pwr.h"
 #include "usb/usb.h"
+#include "crypto/aes.h"
 
 static inline void core_action_run(i18n_str_id_t menu) {
   switch(menu) {
