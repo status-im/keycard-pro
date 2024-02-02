@@ -50,6 +50,7 @@ extern SMARTCARD_HandleTypeDef hsmartcard6;
 extern PCD_HandleTypeDef hpcd_USB_DRD_FS;
 extern TIM_HandleTypeDef htim6;
 extern TIM_HandleTypeDef htim2;
+extern TIM_HandleTypeDef htim3;
 extern TIM_HandleTypeDef htim5;
 extern DMA_HandleTypeDef handle_GPDMA2_Channel5;
 extern CRC_HandleTypeDef hcrc;
@@ -83,15 +84,17 @@ void MX_ICACHE_Init(void);
 void MX_ADC2_Init(void);
 void MX_TIM5_Init(void);
 void MX_ADC1_Init(void);
+void MX_TIM3_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define KEYPAD_POLL_MS 5
 #define SC_DEFAULT_PSC 25
 #define SC_DEFAULT_BAUD_RATE 10752
-#define KEYPAD_POLL_MS 5
+#define HALT_REQ_MS 10
 #define GPIO_VUSB_OK_Pin GPIO_PIN_13
 #define GPIO_VUSB_OK_GPIO_Port GPIOC
 #define GPIO_VUSB_OK_EXTI_IRQn EXTI13_IRQn
@@ -114,24 +117,20 @@ void SystemClock_Config(void);
 #define GPIO_HALT_REQ_Pin GPIO_PIN_4
 #define GPIO_HALT_REQ_GPIO_Port GPIOC
 #define GPIO_HALT_REQ_EXTI_IRQn EXTI4_IRQn
-#define GPIO_KEYPAD_ROW_3_Pin GPIO_PIN_5
-#define GPIO_KEYPAD_ROW_3_GPIO_Port GPIOC
-#define GPIO_KEYPAD_ROW_2_Pin GPIO_PIN_0
-#define GPIO_KEYPAD_ROW_2_GPIO_Port GPIOB
-#define GPIO_KEYPAD_ROW_1_Pin GPIO_PIN_1
+#define GPIO_KEYPAD_ROW_0_Pin GPIO_PIN_5
+#define GPIO_KEYPAD_ROW_0_GPIO_Port GPIOC
+#define GPIO_KEYPAD_ROW_1_Pin GPIO_PIN_0
 #define GPIO_KEYPAD_ROW_1_GPIO_Port GPIOB
-#define GPIO_KEYPAD_ROW_0_Pin GPIO_PIN_2
-#define GPIO_KEYPAD_ROW_0_GPIO_Port GPIOB
+#define GPIO_KEYPAD_ROW_2_Pin GPIO_PIN_1
+#define GPIO_KEYPAD_ROW_2_GPIO_Port GPIOB
+#define GPIO_KEYPAD_ROW_3_Pin GPIO_PIN_2
+#define GPIO_KEYPAD_ROW_3_GPIO_Port GPIOB
 #define GPIO_PWR_KILL_Pin GPIO_PIN_14
 #define GPIO_PWR_KILL_GPIO_Port GPIOB
 #define CAM_XCLK_Pin GPIO_PIN_8
 #define CAM_XCLK_GPIO_Port GPIOA
 #define GPIO_CARD_RST_Pin GPIO_PIN_10
 #define GPIO_CARD_RST_GPIO_Port GPIOA
-#define USB_FS_N_Pin GPIO_PIN_11
-#define USB_FS_N_GPIO_Port GPIOA
-#define USB_FS_P_Pin GPIO_PIN_12
-#define USB_FS_P_GPIO_Port GPIOA
 #define SWDIO_Pin GPIO_PIN_13
 #define SWDIO_GPIO_Port GPIOA
 #define SWCLK_Pin GPIO_PIN_14

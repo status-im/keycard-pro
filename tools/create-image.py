@@ -21,7 +21,7 @@ def main():
     image = bytearray(b'\xff') * FLASH_SIZE
     image_view = memoryview(image)
 
-    secondary_fw = args.secondary_fiwmare if args.secondary_firmware else args.primary_firmware
+    secondary_fw = args.secondary_firmware if args.secondary_firmware else args.primary_firmware
 
     with open(args.bootloader, 'rb') as f: 
         f.readinto(image_view)
@@ -32,11 +32,11 @@ def main():
     with open(args.filesystem, 'rb') as f:
         f.readinto(image_view[FS_OFFSET:])
 
-    with open(secondary_fw, 'rb') as f:
-        f.readinto(image_view[FW2_OFFSET:])
-
     with open(args.bootloader, 'rb') as f: 
         f.readinto(image_view[BANK_SIZE:])
+
+    with open(secondary_fw, 'rb') as f:
+        f.readinto(image_view[FW2_OFFSET:])
 
     with open(args.output, 'wb') as f:
         f.write(image)

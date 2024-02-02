@@ -183,7 +183,7 @@
   * @brief This is the HAL system configuration section
   */
 
-#define  VDD_VALUE                  3300UL /*!< Value of VDD in mv */
+#define  VDD_VALUE                  1800UL /*!< Value of VDD in mv */
 #define  TICK_INT_PRIORITY          (15UL)  /*!< tick interrupt priority (lowest by default) */
 #define  USE_RTOS                   0U
 #define  PREFETCH_ENABLE            0U               /*!< Enable prefetch */

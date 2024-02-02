@@ -59,6 +59,7 @@ SPI_HandleTypeDef hspi6;
 DMA_HandleTypeDef handle_GPDMA1_Channel0;
 
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim3;
 TIM_HandleTypeDef htim5;
 TIM_HandleTypeDef htim6;
 
@@ -466,7 +467,7 @@ void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x40303DFF;
+  hi2c2.Init.Timing = 0x10707DBC;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -661,6 +662,51 @@ void MX_TIM2_Init(void)
 }
 
 /**
+  * @brief TIM3 Initialization Function
+  * @param None
+  * @retval None
+  */
+void MX_TIM3_Init(void)
+{
+
+  /* USER CODE BEGIN TIM3_Init 0 */
+
+  /* USER CODE END TIM3_Init 0 */
+
+  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM3_Init 1 */
+
+  /* USER CODE END TIM3_Init 1 */
+  htim3.Instance = TIM3;
+  htim3.Init.Prescaler = ((HAL_RCC_GetHCLKFreq() / 100000) - 1);
+  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim3.Init.Period = ((HALT_REQ_MS * 100) - 1);
+  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM3_Init 2 */
+
+  /* USER CODE END TIM3_Init 2 */
+
+}
+
+/**
   * @brief TIM5 Initialization Function
   * @param None
   * @retval None
@@ -848,6 +894,7 @@ void MX_GPIO_Init(void)
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOE_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -861,10 +908,10 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOA, GPIO_LCD_RST_Pin|GPIO_CAMERA_RST_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIO_KEYPAD_ROW_3_GPIO_Port, GPIO_KEYPAD_ROW_3_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIO_KEYPAD_ROW_0_GPIO_Port, GPIO_KEYPAD_ROW_0_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_1_Pin|GPIO_KEYPAD_ROW_0_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_KEYPAD_ROW_1_Pin|GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_3_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIO_PWR_KILL_GPIO_Port, GPIO_PWR_KILL_Pin, GPIO_PIN_RESET);
@@ -872,10 +919,22 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIO_CAM_EN_GPIO_Port, GPIO_CAM_EN_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : GPIO_VUSB_OK_Pin GPIO_SC_PRES_Pin */
-  GPIO_InitStruct.Pin = GPIO_VUSB_OK_Pin|GPIO_SC_PRES_Pin;
+  /*Configure GPIO pins : PE2 PE3 PE4 PE5
+                           PE6 PE7 PE8 PE9
+                           PE10 PE11 PE12 PE13
+                           PE14 PE15 PE0 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5
+                          |GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9
+                          |GPIO_PIN_10|GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13
+                          |GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : GPIO_VUSB_OK_Pin GPIO_HALT_REQ_Pin */
+  GPIO_InitStruct.Pin = GPIO_VUSB_OK_Pin|GPIO_HALT_REQ_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PC14 PC15 PC3 */
@@ -905,28 +964,22 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : GPIO_HALT_REQ_Pin */
-  GPIO_InitStruct.Pin = GPIO_HALT_REQ_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(GPIO_HALT_REQ_GPIO_Port, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : GPIO_KEYPAD_ROW_3_Pin */
-  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_3_Pin;
+  /*Configure GPIO pin : GPIO_KEYPAD_ROW_0_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_0_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIO_KEYPAD_ROW_3_GPIO_Port, &GPIO_InitStruct);
+  HAL_GPIO_Init(GPIO_KEYPAD_ROW_0_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : GPIO_KEYPAD_ROW_2_Pin GPIO_KEYPAD_ROW_1_Pin GPIO_KEYPAD_ROW_0_Pin */
-  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_1_Pin|GPIO_KEYPAD_ROW_0_Pin;
+  /*Configure GPIO pins : GPIO_KEYPAD_ROW_1_Pin GPIO_KEYPAD_ROW_2_Pin GPIO_KEYPAD_ROW_3_Pin */
+  GPIO_InitStruct.Pin = GPIO_KEYPAD_ROW_1_Pin|GPIO_KEYPAD_ROW_2_Pin|GPIO_KEYPAD_ROW_3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB13 PB5 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_5;
+  /*Configure GPIO pins : PB13 PB5 PB9 */
+  GPIO_InitStruct.Pin = GPIO_PIN_13|GPIO_PIN_5|GPIO_PIN_9;
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
@@ -937,6 +990,18 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIO_PWR_KILL_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PD8 PD9 PD10 PD11
+                           PD12 PD13 PD14 PD15
+                           PD0 PD1 PD3 PD4
+                           PD5 PD6 PD7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
+                          |GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14|GPIO_PIN_15
+                          |GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_3|GPIO_PIN_4
+                          |GPIO_PIN_5|GPIO_PIN_6|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pin : CAM_XCLK_Pin */
   GPIO_InitStruct.Pin = CAM_XCLK_Pin;
@@ -951,6 +1016,12 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : GPIO_SC_PRES_Pin */
+  GPIO_InitStruct.Pin = GPIO_SC_PRES_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(GPIO_SC_PRES_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : GPIO_CAM_EN_Pin */
   GPIO_InitStruct.Pin = GPIO_CAM_EN_Pin;
