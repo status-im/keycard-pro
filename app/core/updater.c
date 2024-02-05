@@ -75,7 +75,7 @@ static app_err_t updater_verify_db(uint8_t* data, size_t data_len) {
 
   const uint8_t* key;
   key_read(DB_VERIFICATION_KEY, &key);
-  return ecdsa_verify_digest(&secp256k1, key, &data[len], digest) ? ERR_DATA : ERR_OK;
+  return ecdsa_verify(&secp256k1, key, &data[len], digest) ? ERR_DATA : ERR_OK;
 }
 
 static app_err_t updater_confirm_database_update(uint32_t db_ver) {
@@ -177,7 +177,7 @@ static app_err_t updater_verify_firmware() {
 
   const uint8_t* key;
   key_read(FW_VERIFICATION_KEY, &key);
-  return ecdsa_verify_digest(&secp256k1, key, &fw_upgrade_area[HAL_FW_HEADER_OFFSET], digest) ? ERR_DATA : ERR_OK;
+  return ecdsa_verify(&secp256k1, key, &fw_upgrade_area[HAL_FW_HEADER_OFFSET], digest) ? ERR_DATA : ERR_OK;
 }
 
 static inline void updater_fw_switch() {

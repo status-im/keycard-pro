@@ -22,7 +22,7 @@
  */
 
 #include "nist256p1.h"
-
+#ifdef SOFT_ECDSA
 const ecdsa_curve nist256p1 = {
     /* .prime */ {/*.val =*/{0x1fffffff, 0x1fffffff, 0x1fffffff, 0x000001ff,
                              0x00000000, 0x00000000, 0x00040000, 0x1fe00000,
@@ -58,4 +58,4 @@ const ecdsa_curve nist256p1 = {
     }
 #endif
 };
-
+#endif

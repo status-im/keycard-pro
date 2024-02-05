@@ -9,6 +9,7 @@
 #include "pwr.h"
 
 #define HAL_TIMEOUT 250
+#define PKA_TIMEOUT 500
 #define SC_RESET_DELAY 10
 #define CLOCK_STABLE_DELAY 5
 #define SMARTCARD_STOPBITS_1 0x00000000U
@@ -766,6 +767,85 @@ hal_err_t hal_aes256_finalize() {
   SAES->CR = AES_CR_IPRST;
   HAL_WAIT((SAES->SR & AES_SR_BUSY));
   SAES->CR = 0;
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_ecdsa_sign(const ecdsa_curve* curve, const uint8_t* priv_key, const uint8_t* digest, const uint8_t* k, uint8_t* sig_out) {
+  PKA_ECDSASignInTypeDef sign_params;
+  sign_params.modulus = curve->prime;
+  sign_params.modulusSize = ECDSA_256_ELEMENT_SIZE;
+  sign_params.basePointX = curve->G;
+  sign_params.basePointY = &curve->G[ECDSA_256_ELEMENT_SIZE];
+  sign_params.coef = curve->a;
+  sign_params.coefSign = curve->a_sign;
+  sign_params.coefB = curve->b;
+  sign_params.primeOrder = curve->order;
+  sign_params.primeOrderSize = ECDSA_256_ELEMENT_SIZE;
+  sign_params.hash = digest;
+  sign_params.integer = k;
+  sign_params.privateKey = priv_key;
+
+  if (HAL_PKA_ECDSASign(&hpka, &sign_params, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_ECDSASignOutTypeDef out;
+  out.RSign = sig_out;
+  out.SSign = &sig_out[ECDSA_256_ELEMENT_SIZE];
+
+  HAL_PKA_ECDSASign_GetResult(&hpka, &out, NULL);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_ecdsa_verify(const ecdsa_curve* curve, const uint8_t* pub_key, const uint8_t* sig, const uint8_t* digest) {
+  PKA_ECDSAVerifInTypeDef verify_params;
+
+  verify_params.modulus = curve->prime;
+  verify_params.modulusSize = ECDSA_256_ELEMENT_SIZE;
+  verify_params.basePointX = curve->G;
+  verify_params.basePointY = &curve->G[ECDSA_256_ELEMENT_SIZE];
+  verify_params.coef = curve->a;
+  verify_params.coefSign = curve->a_sign;
+  verify_params.primeOrder = curve->order;
+  verify_params.primeOrderSize = ECDSA_256_ELEMENT_SIZE;
+  verify_params.hash = digest;
+  verify_params.pPubKeyCurvePtX = pub_key;
+  verify_params.pPubKeyCurvePtY = &pub_key[ECDSA_256_ELEMENT_SIZE];
+  verify_params.RSign = sig;
+  verify_params.RSign = &sig[ECDSA_256_ELEMENT_SIZE];
+
+  if (HAL_PKA_ECDSAVerif(&hpka, &verify_params, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  return HAL_PKA_ECDSAVerif_IsValidSignature(&hpka) ? HAL_SUCCESS : HAL_FAIL;
+}
+
+hal_err_t hal_ec_point_multiply(const ecdsa_curve* curve, const uint8_t* scalar, const uint8_t* point, uint8_t* point_out) {
+  PKA_ECCMulInTypeDef mult;
+
+  mult.modulus = curve->prime;
+  mult.modulusSize = ECDSA_256_ELEMENT_SIZE;
+  mult.coefA = curve->a;
+  mult.coefSign = curve->a_sign;
+  mult.coefB = curve->b;
+  mult.primeOrder = curve->order;
+  mult.pointX = point;
+  mult.pointY = &point[ECDSA_256_ELEMENT_SIZE];
+  mult.scalarMul = scalar;
+  mult.scalarMulSize = ECDSA_256_ELEMENT_SIZE;
+
+  if (HAL_PKA_ECCMul(&hpka, &mult, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_ECCMulOutTypeDef out;
+  out.ptX = point_out;
+  out.ptY = &point_out[ECDSA_256_ELEMENT_SIZE];
+
+  HAL_PKA_ECCMul_GetResult(&hpka, &out);
 
   return HAL_SUCCESS;
 }
