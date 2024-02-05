@@ -26,10 +26,8 @@
 
 #include <stdint.h>
 
-#include "bip32.h"
 #include "ecdsa.h"
 
 extern const ecdsa_curve nist256p1;
-extern const curve_info nist256p1_info;
 
 #endif

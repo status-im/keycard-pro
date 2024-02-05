@@ -44,6 +44,7 @@ extern "C" {
 extern DCMI_HandleTypeDef hdcmi;
 extern HASH_HandleTypeDef hhash;
 extern I2C_HandleTypeDef hi2c2;
+extern PKA_HandleTypeDef hpka;
 extern RNG_HandleTypeDef hrng;
 extern SPI_HandleTypeDef hspi6;
 extern SMARTCARD_HandleTypeDef hsmartcard6;
@@ -85,6 +86,7 @@ void MX_ADC2_Init(void);
 void MX_TIM5_Init(void);
 void MX_ADC1_Init(void);
 void MX_TIM3_Init(void);
+void MX_PKA_Init(void);
 
 /* USER CODE BEGIN EFP */
 void SystemClock_Config(void);

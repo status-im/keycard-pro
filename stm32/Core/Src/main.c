@@ -53,6 +53,8 @@ HASH_HandleTypeDef hhash;
 
 I2C_HandleTypeDef hi2c2;
 
+PKA_HandleTypeDef hpka;
+
 RNG_HandleTypeDef hrng;
 
 SPI_HandleTypeDef hspi6;
@@ -524,6 +526,32 @@ void MX_ICACHE_Init(void)
   /* USER CODE BEGIN ICACHE_Init 2 */
 
   /* USER CODE END ICACHE_Init 2 */
+
+}
+
+/**
+  * @brief PKA Initialization Function
+  * @param None
+  * @retval None
+  */
+void MX_PKA_Init(void)
+{
+
+  /* USER CODE BEGIN PKA_Init 0 */
+
+  /* USER CODE END PKA_Init 0 */
+
+  /* USER CODE BEGIN PKA_Init 1 */
+
+  /* USER CODE END PKA_Init 1 */
+  hpka.Instance = PKA;
+  if (HAL_PKA_Init(&hpka) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN PKA_Init 2 */
+
+  /* USER CODE END PKA_Init 2 */
 
 }
 

@@ -260,6 +260,8 @@ hal_err_t hal_init() {
   MX_RNG_Init();
   MX_HASH_Init();
   MX_CRC_Init();
+  _hal_aes_enable();
+  MX_PKA_Init();
 
   MX_GPIO_Init();
   MX_TIM6_Init();
@@ -305,8 +307,6 @@ hal_err_t hal_init() {
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
   g_adc_calibration = HAL_ADCEx_Calibration_GetValue(&hadc2, ADC_SINGLE_ENDED);
   HAL_ADCEx_EnterADCDeepPowerDownMode(&hadc2);
-
-  _hal_aes_enable();
 
   return HAL_SUCCESS;
 }
