@@ -365,8 +365,12 @@ static app_err_t keycard_setup(keycard_t* kc, uint8_t* pin, uint8_t* cached_pin)
     return err;
   }
 
-  if (securechannel_open(&kc->ch, &kc->sc, &kc->apdu, &pairing, info.sc_key) != ERR_OK) {
-    pairing_erase(&pairing);
+  err = securechannel_open(&kc->ch, &kc->sc, &kc->apdu, &pairing, info.sc_key);
+  if (err != ERR_OK) {
+    if (err == ERR_CRYPTO) {
+      pairing_erase(&pairing);
+    }
+
     ui_keycard_secure_channel_failed();
     return ERR_RETRY;
   }
