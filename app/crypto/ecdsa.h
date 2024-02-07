@@ -4,16 +4,24 @@
 #include <stdint.h>
 #include <stddef.h>
 
-#define ECDSA_256_ELEMENT_SIZE 32
+#define ECC256_ELEMENT_SIZE 32
+#define ECC256_POINT_SIZE (ECC256_ELEMENT_SIZE * 2)
 
 #ifndef SOFT_ECDSA
+#define A_SIGN_ZERO 0x00
+#define A_SIGN_NEGATIVE 0x01
+#define A_SIGN_POSITIVE 0x02
+
 typedef struct {
-  uint8_t prime[ECDSA_256_ELEMENT_SIZE];
-  uint8_t G[ECDSA_256_ELEMENT_SIZE * 2];
-  uint8_t order[ECDSA_256_ELEMENT_SIZE];
-  uint8_t a[ECDSA_256_ELEMENT_SIZE];
+  uint8_t prime[ECC256_ELEMENT_SIZE];
+  uint8_t G[ECC256_POINT_SIZE];
+  uint8_t order[ECC256_ELEMENT_SIZE];
+  uint8_t a[ECC256_ELEMENT_SIZE];
+  uint8_t b[ECC256_ELEMENT_SIZE];
+  uint8_t sqrt_exp[ECC256_ELEMENT_SIZE];
+  uint32_t r2_modn[ECC256_ELEMENT_SIZE/4];
+  uint32_t r2_modp[ECC256_ELEMENT_SIZE/4];
   uint8_t a_sign;
-  uint8_t b[ECDSA_256_ELEMENT_SIZE];
 } ecdsa_curve;
 #endif
 

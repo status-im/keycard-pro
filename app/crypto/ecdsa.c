@@ -3,32 +3,47 @@
 #include "ecdsa.h"
 #include "hal.h"
 #include "memzero.h"
+#include "util.h"
 
-static int ec_uncompress_point(const uint8_t* point, uint8_t odd, uint8_t out[64]) {
-  return 1;
+static int ec_uncompress_point(const ecdsa_curve *curve, const uint8_t x[ECC256_ELEMENT_SIZE], uint8_t odd, uint8_t out[ECC256_POINT_SIZE]) {
+  // y^2 = x^3 + a*x + b
+  uint8_t *y = &out[ECC256_ELEMENT_SIZE];
+  hal_bn_mul_mod(x, x, curve->prime, curve->r2_modp, y);
+
+  if (curve->a_sign != A_SIGN_ZERO) {
+    hal_bn_add_mod(y, curve->a, curve->prime, y);
+  }
+
+  hal_bn_mul_mod(y, y, curve->prime, curve->r2_modp, y);
+  hal_bn_add_mod(y, curve->b, curve->prime, y);
+  hal_bn_exp_mod(y, curve->sqrt_exp, curve->prime, curve->r2_modp, y);
+
+  if ((odd & 0x1) != (y[ECC256_ELEMENT_SIZE-1] & 1)) {
+    hal_bn_sub_mod(curve->prime, y, curve->prime, y);
+  }
+
+  return 0;
 }
 
-static const uint8_t* ec_uncompress_key(const uint8_t* pub_key, uint8_t out[64]) {
+static const uint8_t* ec_uncompress_key(const ecdsa_curve *curve, const uint8_t* pub_key, uint8_t out[ECC256_POINT_SIZE]) {
   if (pub_key[0] == 0x04) {
     return &pub_key[1];
   } else {
-    if (ec_uncompress_point(&pub_key[1], (pub_key[0] & 0x1), out) != 0) {
-      return NULL;
-    }
-
-    return out;
+    return ec_uncompress_point(curve, &pub_key[1], pub_key[0], out) == 0 ? out : NULL;
   }
 }
 
 int ecdsa_sign(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *digest, uint8_t *sig) {
-  uint8_t k[ECDSA_256_ELEMENT_SIZE];
-  hal_rng_next(k, ECDSA_256_ELEMENT_SIZE);
-  return hal_ecdsa_sign(curve, priv_key, digest, k, sig) == HAL_SUCCESS ? 0 : 1;
+  uint8_t k[ECC256_ELEMENT_SIZE];
+  hal_rng_next(k, ECC256_ELEMENT_SIZE);
+  hal_err_t err = hal_ecdsa_sign(curve, priv_key, digest, k, sig);
+  memzero(k, ECC256_ELEMENT_SIZE);
+  return err == HAL_SUCCESS ? 0 : 1;
 }
 
 int ecdsa_verify(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest) {
-  uint8_t buf[ECDSA_256_ELEMENT_SIZE * 2];
-  pub_key = ec_uncompress_key(pub_key, buf);
+  uint8_t buf[ECC256_ELEMENT_SIZE * 2];
+  pub_key = ec_uncompress_key(curve, pub_key, buf);
 
   if (pub_key == NULL) {
     return 1;
@@ -47,12 +62,53 @@ int ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key, ui
 }
 
 int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest, int recid) {
-  return 1;
+  //TODO: sanity check on input
+  const uint8_t* r = sig;
+  const uint8_t* s = &sig[ECC256_ELEMENT_SIZE];
+
+  if ((hal_bn_cmp(r, curve->order) >= 0) || all_zero(r, ECC256_ELEMENT_SIZE)) {
+    return 1;
+  }
+
+  if ((hal_bn_cmp(s, curve->order) >= 0) || all_zero(r, ECC256_ELEMENT_SIZE)) {
+    return 1;
+  }
+
+  if (recid & 2) {
+    uint8_t r2[ECC256_ELEMENT_SIZE];
+    hal_bn_add(r, curve->order, r2);
+    r = r2;
+
+    if (hal_bn_cmp(r, curve->prime) >= 0) {
+      return 1;
+    }
+  }
+
+  uint8_t* P = &pub_key[1];
+  ec_uncompress_point(curve, r, recid, P);
+  if (hal_ec_point_check(curve, P) != HAL_SUCCESS) {
+    return 1;
+  }
+
+  uint8_t z[ECC256_ELEMENT_SIZE];
+  hal_bn_sub(curve->order, digest, z);
+
+  if (hal_ec_double_ladder(curve, s, P, z, curve->G, P) != HAL_SUCCESS) {
+    return 1;
+  }
+
+  uint8_t r_inv[ECC256_ELEMENT_SIZE];
+  hal_bn_inv_mod(r, curve->order, r_inv);
+  hal_ec_point_multiply(curve, r_inv, P, P);
+
+  pub_key[0] = 0x04;
+
+  return hal_ec_point_check(curve, P) != HAL_SUCCESS;
 }
 
 int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *pub_key, uint8_t *session_key) {
-  uint8_t buf[ECDSA_256_ELEMENT_SIZE * 2];
-  pub_key = ec_uncompress_key(pub_key, buf);
+  uint8_t buf[ECC256_ELEMENT_SIZE * 2];
+  pub_key = ec_uncompress_key(curve, pub_key, buf);
 
   if (pub_key == NULL) {
     return 1;
