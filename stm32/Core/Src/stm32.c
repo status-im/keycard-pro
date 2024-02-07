@@ -33,6 +33,7 @@
 HAL_StatusTypeDef PKA_Process(PKA_HandleTypeDef *hpka, uint32_t mode, uint32_t Timeout);
 void PKA_Memcpy_u8_to_u32(__IO uint32_t dst[], const uint8_t src[], size_t n);
 void PKA_Memcpy_u32_to_u8(uint8_t dst[], __IO const uint32_t src[], size_t n);
+void PKA_Memcpy_u32_to_u32(__IO uint32_t dst[], __IO const uint32_t src[], size_t n);
 
 extern DMA_QListTypeDef Camera_DMA_LL;
 extern DMA_NodeTypeDef Camera_DMA_Node1;
@@ -938,8 +939,36 @@ static inline hal_err_t _hal_pka_ari_do(uint32_t op, const uint8_t a[BN_SIZE], c
   return HAL_OK;
 }
 
+hal_err_t hal_bn_mul_r2(const uint8_t a[BN_SIZE], const uint32_t r2_mod[BN_SIZE/4], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_NB_BITS] = BN_SIZE * 8;
+  PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP1], a, BN_SIZE);
+  __PKA_RAM_PARAM_END(hpka.Instance->RAM, PKA_ARITHMETIC_ALL_OPS_IN_OP1 + (BN_SIZE / 4));
+
+  PKA_Memcpy_u32_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP2], r2_mod, (BN_SIZE / 4));
+  __PKA_RAM_PARAM_END(hpka.Instance->RAM, PKA_ARITHMETIC_ALL_OPS_IN_OP2 + (BN_SIZE / 4));
+
+  PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP3], mod, BN_SIZE);
+  __PKA_RAM_PARAM_END(hpka.Instance->RAM, PKA_ARITHMETIC_ALL_OPS_IN_OP3 + (BN_SIZE / 4));
+
+  if (PKA_Process(&hpka, PKA_MODE_MONTGOMERY_MUL, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_Memcpy_u32_to_u8(r, &hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_OUT_RESULT], BN_SIZE);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_bn_mul_mont(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  return _hal_pka_ari_do(PKA_MODE_MONTGOMERY_MUL, a, b, mod, r);
+}
+
 hal_err_t hal_bn_mul_mod(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], const uint32_t r2_mod[BN_SIZE/4], uint8_t r[BN_SIZE]) {
-  return HAL_FAIL;
+  if (hal_bn_mul_r2(a, r2_mod, mod, r) != HAL_SUCCESS) {
+    return HAL_FAIL;
+  }
+
+  return hal_bn_mul_mont(r, b, mod, r);
 }
 
 hal_err_t hal_bn_add(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], uint8_t r[BN_SIZE]) {
