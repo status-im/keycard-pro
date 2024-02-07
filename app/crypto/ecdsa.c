@@ -7,16 +7,17 @@
 
 static int ec_uncompress_point(const ecdsa_curve *curve, const uint8_t x[ECC256_ELEMENT_SIZE], uint8_t odd, uint8_t out[ECC256_POINT_SIZE]) {
   // y^2 = x^3 + a*x + b
+  memcpy(out, x, ECC256_ELEMENT_SIZE);
   uint8_t *y = &out[ECC256_ELEMENT_SIZE];
-  hal_bn_mul_mod(x, x, curve->prime, curve->r2_modp, y);
+  hal_bn_mul_mod(x, x, curve->prime, y);
 
   if (curve->a_sign != A_SIGN_ZERO) {
     hal_bn_add_mod(y, curve->a, curve->prime, y);
   }
 
-  hal_bn_mul_mod(y, y, curve->prime, curve->r2_modp, y);
+  hal_bn_mul_mod(x, y, curve->prime, y);
   hal_bn_add_mod(y, curve->b, curve->prime, y);
-  hal_bn_exp_mod(y, curve->sqrt_exp, curve->prime, curve->r2_modp, y);
+  hal_bn_exp_mod(y, curve->sqrt_exp, curve->prime, y);
 
   if ((odd & 0x1) != (y[ECC256_ELEMENT_SIZE-1] & 1)) {
     hal_bn_sub_mod(curve->prime, y, curve->prime, y);
@@ -25,7 +26,7 @@ static int ec_uncompress_point(const ecdsa_curve *curve, const uint8_t x[ECC256_
   return 0;
 }
 
-static const uint8_t* ec_uncompress_key(const ecdsa_curve *curve, const uint8_t* pub_key, uint8_t out[ECC256_POINT_SIZE]) {
+const uint8_t* ec_uncompress_key(const ecdsa_curve *curve, const uint8_t* pub_key, uint8_t out[ECC256_POINT_SIZE]) {
   if (pub_key[0] == 0x04) {
     return &pub_key[1];
   } else {

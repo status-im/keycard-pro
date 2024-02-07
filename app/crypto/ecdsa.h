@@ -19,8 +19,6 @@ typedef struct {
   uint8_t a[ECC256_ELEMENT_SIZE];
   uint8_t b[ECC256_ELEMENT_SIZE];
   uint8_t sqrt_exp[ECC256_ELEMENT_SIZE];
-  uint32_t r2_modn[ECC256_ELEMENT_SIZE/4];
-  uint32_t r2_modp[ECC256_ELEMENT_SIZE/4];
   uint8_t a_sign;
 } ecdsa_curve;
 #endif
