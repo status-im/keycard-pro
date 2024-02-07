@@ -22,7 +22,7 @@
  */
 
 #include "nist256p1.h"
-
+#ifdef SOFT_ECDSA
 const ecdsa_curve nist256p1 = {
     /* .prime */ {/*.val =*/{0x1fffffff, 0x1fffffff, 0x1fffffff, 0x000001ff,
                              0x00000000, 0x00000000, 0x00040000, 0x1fe00000,
@@ -58,12 +58,4 @@ const ecdsa_curve nist256p1 = {
     }
 #endif
 };
-
-const curve_info nist256p1_info = {
-    .bip32_name = "Nist256p1 seed",
-    .params = &nist256p1,
-    .hasher_base58 = HASHER_SHA2D,
-    .hasher_sign = HASHER_SHA2D,
-    .hasher_pubkey = HASHER_SHA2_RIPEMD,
-    .hasher_script = HASHER_SHA2,
-};
+#endif

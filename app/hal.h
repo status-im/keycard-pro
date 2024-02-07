@@ -6,6 +6,7 @@
 #include <stdbool.h>
 #include "crypto/sha2_soft.h"
 #include "crypto/aes.h"
+#include "crypto/ecdsa.h"
 #include "iso7816/smartcard.h"
 
 #ifdef __MCUXPRESSO
@@ -137,6 +138,30 @@ hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out);
 hal_err_t hal_aes256_init(hal_aes_mode_t mode, hal_aes_chaining_t chaining, const uint8_t key[AES_256_KEY_SIZE], const uint8_t iv[AES_IV_SIZE]);
 hal_err_t hal_aes256_block_process(const uint8_t in[AES_BLOCK_SIZE], uint8_t out[AES_BLOCK_SIZE]);
 hal_err_t hal_aes256_finalize();
+#endif
+
+#ifndef SOFT_ECDSA
+hal_err_t hal_ecdsa_sign(const ecdsa_curve* curve, const uint8_t* priv_key, const uint8_t* digest, const uint8_t* k, uint8_t* sig_out);
+hal_err_t hal_ecdsa_verify(const ecdsa_curve* curve, const uint8_t* pub_key, const uint8_t* sig, const uint8_t* digest);
+hal_err_t hal_ec_point_multiply(const ecdsa_curve* curve, const uint8_t* scalar, const uint8_t* point, uint8_t* point_out);
+hal_err_t hal_ec_double_ladder(const ecdsa_curve* curve, const uint8_t* s1, const uint8_t* p1, const uint8_t* s2, const uint8_t* p2, uint8_t* point_out);
+hal_err_t hal_ec_point_check(const ecdsa_curve* curve, const uint8_t* point);
+#endif
+
+// Math
+#define BN_SIZE 32
+#ifndef SOFT_BN
+hal_err_t hal_bn_mul_r2(const uint8_t a[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_mul_mont(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_mul_mod(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_add_mod(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_sub_mod(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_exp_mod(const uint8_t a[BN_SIZE], const uint8_t e[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_inv_mod(const uint8_t a[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_mul(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_add(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], uint8_t r[BN_SIZE]);
+hal_err_t hal_bn_sub(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], uint8_t r[BN_SIZE]);
+int hal_bn_cmp(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE]);
 #endif
 
 // Timer

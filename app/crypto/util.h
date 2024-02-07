@@ -26,4 +26,14 @@ static inline int memcmp_ct(const uint8_t* a, const uint8_t* b, size_t length) {
   return compareSum;
 }
 
+static inline bool all_zero(const uint8_t* data, size_t len) {
+  for (int i = 0; i < len; i++) {
+    if (data[i] != 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
 #endif

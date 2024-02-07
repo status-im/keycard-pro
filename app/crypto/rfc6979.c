@@ -21,6 +21,7 @@
  * ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
  * OTHER DEALINGS IN THE SOFTWARE.
  */
+#ifdef SOFT_ECDSA
 #include <assert.h>
 
 #include "hmac_drbg.h"
@@ -60,3 +61,4 @@ void generate_k_rfc6979(bignum256 *k, rfc6979_state *state) {
   bn_read_be(buf, k);
   memzero(buf, sizeof(buf));
 }
+#endif

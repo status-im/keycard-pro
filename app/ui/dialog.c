@@ -80,10 +80,11 @@ static void dialog_tx_address(screen_text_ctx_t *ctx, const uint8_t* to) {
 
 static void dialog_calculate_fees(bignum256* fees) {
   bignum256 gas_amount;
-
+  bignum256 prime;
+  bn_read_be(secp256k1.prime, &prime);
   bn_read_compact_be(g_ui_cmd.params.txn.tx->startgas.value, g_ui_cmd.params.txn.tx->startgas.length, &gas_amount);
   bn_read_compact_be(g_ui_cmd.params.txn.tx->gasprice.value, g_ui_cmd.params.txn.tx->gasprice.length, fees);
-  bn_multiply(&gas_amount, fees, &secp256k1.prime);
+  bn_multiply(&gas_amount, fees, &prime);
 }
 
 static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const bignum256* amount, int decimals, const char* ticker) {

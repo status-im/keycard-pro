@@ -47,7 +47,7 @@ void device_auth_run() {
   sha256_Final(&sha256, digest);
 
   key_read(DEV_AUTH_PRIV_KEY, &key);
-  ecdsa_sign_digest(&secp256k1, key, digest, g_core.data.sig.plain_sig, NULL, NULL);
+  ecdsa_sign(&secp256k1, key, digest, g_core.data.sig.plain_sig);
 
   // Response
   random_buffer((uint8_t*) auth._dev_auth_challenge._dev_auth_challenge.value, AUTH_CHALLENGE_LEN);
@@ -92,7 +92,7 @@ void device_auth_run() {
   sha256_Final(&sha256, digest);
 
   key_read(DEV_AUTH_SERVER_KEY, &key);
-  if (!ecdsa_verify_digest(&secp256k1, key, auth._dev_auth_signature._dev_auth_signature.value, digest)) {
+  if (!ecdsa_verify(&secp256k1, key, auth._dev_auth_signature._dev_auth_signature.value, digest)) {
     ui_device_auth(auth._dev_auth_first_auth._dev_auth_first_auth, auth._dev_auth_auth_time._dev_auth_auth_time, auth._dev_auth_auth_count._dev_auth_auth_count);
   } else {
     ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DEV_AUTH_INVALID_AUTH), 1);

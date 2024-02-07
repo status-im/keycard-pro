@@ -9,6 +9,7 @@
 #include "pwr.h"
 
 #define HAL_TIMEOUT 250
+#define PKA_TIMEOUT 500
 #define SC_RESET_DELAY 10
 #define CLOCK_STABLE_DELAY 5
 #define SMARTCARD_STOPBITS_1 0x00000000U
@@ -27,9 +28,21 @@
   }\
 }
 
+#define __PKA_RAM_PARAM_END(TAB,INDEX) { TAB[INDEX] = 0UL; TAB[INDEX + 1U] = 0UL;}
+
+HAL_StatusTypeDef PKA_Process(PKA_HandleTypeDef *hpka, uint32_t mode, uint32_t Timeout);
+void PKA_Memcpy_u8_to_u32(__IO uint32_t dst[], const uint8_t src[], size_t n);
+void PKA_Memcpy_u32_to_u8(uint8_t dst[], __IO const uint32_t src[], size_t n);
+void PKA_Memcpy_u32_to_u32(__IO uint32_t dst[], __IO const uint32_t src[], size_t n);
+
 extern DMA_QListTypeDef Camera_DMA_LL;
 extern DMA_NodeTypeDef Camera_DMA_Node1;
 extern DMA_NodeTypeDef Camera_DMA_Node2;
+
+const uint8_t BN_ONE[BN_SIZE] = {
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01,
+};
 
 struct gpio_pin_spec {
   GPIO_TypeDef* base;
@@ -260,6 +273,8 @@ hal_err_t hal_init() {
   MX_RNG_Init();
   MX_HASH_Init();
   MX_CRC_Init();
+  _hal_aes_enable();
+  MX_PKA_Init();
 
   MX_GPIO_Init();
   MX_TIM6_Init();
@@ -305,8 +320,6 @@ hal_err_t hal_init() {
   HAL_ADCEx_Calibration_Start(&hadc2, ADC_SINGLE_ENDED);
   g_adc_calibration = HAL_ADCEx_Calibration_GetValue(&hadc2, ADC_SINGLE_ENDED);
   HAL_ADCEx_EnterADCDeepPowerDownMode(&hadc2);
-
-  _hal_aes_enable();
 
   return HAL_SUCCESS;
 }
@@ -768,6 +781,293 @@ hal_err_t hal_aes256_finalize() {
   SAES->CR = 0;
 
   return HAL_SUCCESS;
+}
+
+static hal_err_t _hal_bn_r2(const uint8_t mod[BN_SIZE], uint32_t* r2_mod) {
+  PKA_MontgomeryParamInTypeDef mont;
+  mont.pOp1 = mod;
+  mont.size = BN_SIZE;
+  if (HAL_PKA_MontgomeryParam(&hpka, &mont, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  HAL_PKA_MontgomeryParam_GetResult(&hpka, r2_mod);
+
+  return HAL_OK;
+}
+
+
+hal_err_t hal_ecdsa_sign(const ecdsa_curve* curve, const uint8_t* priv_key, const uint8_t* digest, const uint8_t* k, uint8_t* sig_out) {
+  PKA_ECDSASignInTypeDef sign_params;
+  sign_params.modulus = curve->prime;
+  sign_params.modulusSize = ECC256_ELEMENT_SIZE;
+  sign_params.basePointX = curve->G;
+  sign_params.basePointY = &curve->G[ECC256_ELEMENT_SIZE];
+  sign_params.coef = curve->a;
+  sign_params.coefSign = curve->a_sign & 1;
+  sign_params.coefB = curve->b;
+  sign_params.primeOrder = curve->order;
+  sign_params.primeOrderSize = ECC256_ELEMENT_SIZE;
+  sign_params.hash = digest;
+  sign_params.integer = k;
+  sign_params.privateKey = priv_key;
+
+  if (HAL_PKA_ECDSASign(&hpka, &sign_params, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_ECDSASignOutTypeDef out;
+  out.RSign = sig_out;
+  out.SSign = &sig_out[ECC256_ELEMENT_SIZE];
+
+  HAL_PKA_ECDSASign_GetResult(&hpka, &out, NULL);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_ecdsa_verify(const ecdsa_curve* curve, const uint8_t* pub_key, const uint8_t* sig, const uint8_t* digest) {
+  PKA_ECDSAVerifInTypeDef verify_params;
+
+  verify_params.modulus = curve->prime;
+  verify_params.modulusSize = ECC256_ELEMENT_SIZE;
+  verify_params.basePointX = curve->G;
+  verify_params.basePointY = &curve->G[ECC256_ELEMENT_SIZE];
+  verify_params.coef = curve->a;
+  verify_params.coefSign = curve->a_sign & 1;
+  verify_params.primeOrder = curve->order;
+  verify_params.primeOrderSize = ECC256_ELEMENT_SIZE;
+  verify_params.hash = digest;
+  verify_params.pPubKeyCurvePtX = pub_key;
+  verify_params.pPubKeyCurvePtY = &pub_key[ECC256_ELEMENT_SIZE];
+  verify_params.RSign = sig;
+  verify_params.RSign = &sig[ECC256_ELEMENT_SIZE];
+
+  if (HAL_PKA_ECDSAVerif(&hpka, &verify_params, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  return HAL_PKA_ECDSAVerif_IsValidSignature(&hpka) ? HAL_SUCCESS : HAL_FAIL;
+}
+
+hal_err_t hal_ec_point_multiply(const ecdsa_curve* curve, const uint8_t* scalar, const uint8_t* point, uint8_t* point_out) {
+  PKA_ECCMulInTypeDef mult;
+
+  mult.modulus = curve->prime;
+  mult.modulusSize = ECC256_ELEMENT_SIZE;
+  mult.coefA = curve->a;
+  mult.coefSign = curve->a_sign & 1;
+  mult.coefB = curve->b;
+  mult.primeOrder = curve->order;
+  mult.pointX = point;
+  mult.pointY = &point[ECC256_ELEMENT_SIZE];
+  mult.scalarMul = scalar;
+  mult.scalarMulSize = ECC256_ELEMENT_SIZE;
+
+  if (HAL_PKA_ECCMul(&hpka, &mult, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_ECCMulOutTypeDef out;
+  out.ptX = point_out;
+  out.ptY = &point_out[ECC256_ELEMENT_SIZE];
+
+  HAL_PKA_ECCMul_GetResult(&hpka, &out);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_ec_double_ladder(const ecdsa_curve* curve, const uint8_t* s1, const uint8_t* p1, const uint8_t* s2, const uint8_t* p2, uint8_t* point_out) {
+  PKA_ECCDoubleBaseLadderInTypeDef dbl;
+  dbl.modulus = curve->prime;
+  dbl.modulusSize = ECC256_ELEMENT_SIZE;
+  dbl.primeOrderSize = ECC256_ELEMENT_SIZE;
+  dbl.coefA = curve->a;
+  dbl.coefSign = curve->a_sign & 1;
+  dbl.integerK = s1;
+  dbl.basePointX1 = p1;
+  dbl.basePointY1 = &p1[ECC256_ELEMENT_SIZE];
+  dbl.basePointZ1 = BN_ONE;
+  dbl.integerM = s2;
+  dbl.basePointX2 = p2;
+  dbl.basePointY2 = &p2[ECC256_ELEMENT_SIZE];
+  dbl.basePointZ2 = BN_ONE;
+
+  if (HAL_PKA_ECCDoubleBaseLadder(&hpka, &dbl, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_ECCDoubleBaseLadderOutTypeDef out;
+  out.ptX = point_out;
+  out.ptY = &point_out[ECC256_ELEMENT_SIZE];
+
+  HAL_PKA_ECCDoubleBaseLadder_GetResult(&hpka, &out);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_ec_point_check(const ecdsa_curve* curve, const uint8_t* point) {
+  uint32_t r2_mod[BN_SIZE/4];
+  if (_hal_bn_r2(curve->prime, r2_mod) != HAL_SUCCESS) {
+    return HAL_FAIL;
+  }
+
+  PKA_PointCheckInTypeDef pc;
+  pc.modulus = curve->prime;
+  pc.modulusSize = ECC256_ELEMENT_SIZE;
+  pc.coefA = curve->a;
+  pc.coefSign = curve->a_sign & 1;
+  pc.coefB = curve->b;
+  pc.pointX = point;
+  pc.pointY = &point[ECC256_ELEMENT_SIZE];
+  pc.pMontgomeryParam = r2_mod;
+
+  if (HAL_PKA_PointCheck(&hpka, &pc, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  return HAL_PKA_PointCheck_IsOnCurve(&hpka) ? HAL_SUCCESS : HAL_FAIL;
+}
+
+static void _hal_pka_ari_set(const uint8_t *pOp1, const uint8_t *pOp2, const uint8_t *pOp3) {
+  hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_NB_BITS] = BN_SIZE * 8;
+
+  if (pOp1 != NULL) {
+    PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP1], pOp1, BN_SIZE);
+    __PKA_RAM_PARAM_END(hpka.Instance->RAM, (PKA_ARITHMETIC_ALL_OPS_IN_OP1 + (BN_SIZE / 4)));
+  }
+
+  if (pOp2 != NULL) {
+    PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP2], pOp2, BN_SIZE);
+    __PKA_RAM_PARAM_END(hpka.Instance->RAM, (PKA_ARITHMETIC_ALL_OPS_IN_OP2 + (BN_SIZE / 4)));
+  }
+
+  if (pOp3 != NULL) {
+    PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP3], pOp3, BN_SIZE);
+    __PKA_RAM_PARAM_END(hpka.Instance->RAM, (PKA_ARITHMETIC_ALL_OPS_IN_OP3 + (BN_SIZE / 4)));
+  }
+}
+
+static inline hal_err_t _hal_pka_ari_do(uint32_t op, const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  _hal_pka_ari_set(a, b, mod);
+  if (PKA_Process(&hpka, op, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_Memcpy_u32_to_u8(r, &hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_OUT_RESULT], BN_SIZE);
+
+  return HAL_OK;
+}
+
+hal_err_t hal_bn_mul_r2(const uint8_t a[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  uint32_t r2_mod[BN_SIZE/4];
+  if (_hal_bn_r2(mod, r2_mod) != HAL_SUCCESS) {
+    return HAL_FAIL;
+  }
+
+  hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_NB_BITS] = BN_SIZE * 8;
+  PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP1], a, BN_SIZE);
+  __PKA_RAM_PARAM_END(hpka.Instance->RAM, (PKA_ARITHMETIC_ALL_OPS_IN_OP1 + (BN_SIZE / 4)));
+
+  PKA_Memcpy_u32_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP2], r2_mod, (BN_SIZE / 4));
+  __PKA_RAM_PARAM_END(hpka.Instance->RAM, (PKA_ARITHMETIC_ALL_OPS_IN_OP2 + (BN_SIZE / 4)));
+
+  PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_IN_OP3], mod, BN_SIZE);
+  __PKA_RAM_PARAM_END(hpka.Instance->RAM, (PKA_ARITHMETIC_ALL_OPS_IN_OP3 + (BN_SIZE / 4)));
+
+  if (PKA_Process(&hpka, PKA_MODE_MONTGOMERY_MUL, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_Memcpy_u32_to_u8(r, &hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_OUT_RESULT], BN_SIZE);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_bn_mul_mont(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  return _hal_pka_ari_do(PKA_MODE_MONTGOMERY_MUL, a, b, mod, r);
+}
+
+hal_err_t hal_bn_mul_mod(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  uint8_t tmp[BN_SIZE];
+  if (hal_bn_mul_r2(a, mod, tmp) != HAL_SUCCESS) {
+    return HAL_FAIL;
+  }
+
+  return hal_bn_mul_mont(tmp, b, mod, r);
+}
+
+hal_err_t hal_bn_add(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], uint8_t r[BN_SIZE]) {
+  return _hal_pka_ari_do(PKA_MODE_ARITHMETIC_ADD, a, b, NULL, r);
+}
+
+hal_err_t hal_bn_sub(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], uint8_t r[BN_SIZE]) {
+  return _hal_pka_ari_do(PKA_MODE_ARITHMETIC_SUB, a, b, NULL, r);
+}
+
+hal_err_t hal_bn_mul(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], uint8_t r[BN_SIZE]) {
+  return _hal_pka_ari_do(PKA_MODE_ARITHMETIC_MUL, a, b, NULL, r);
+}
+
+hal_err_t hal_bn_add_mod(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  return _hal_pka_ari_do(PKA_MODE_MODULAR_ADD, a, b, mod, r);
+}
+
+hal_err_t hal_bn_sub_mod(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  return _hal_pka_ari_do(PKA_MODE_MODULAR_SUB, a, b, mod, r);
+}
+
+hal_err_t hal_bn_exp_mod(const uint8_t a[BN_SIZE], const uint8_t e[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  PKA_ModExpInTypeDef exp;
+
+  exp.OpSize = BN_SIZE;
+  exp.expSize = BN_SIZE;
+  exp.pOp1 = a;
+  exp.pExp = e;
+  exp.pMod = mod;
+
+  if (HAL_PKA_ModExp(&hpka, &exp, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  HAL_PKA_ModExp_GetResult(&hpka, r);
+
+  return HAL_SUCCESS;
+}
+
+hal_err_t hal_bn_inv_mod(const uint8_t a[BN_SIZE], const uint8_t mod[BN_SIZE], uint8_t r[BN_SIZE]) {
+  PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_MODULAR_INV_IN_OP1], a, BN_SIZE);
+  __PKA_RAM_PARAM_END(hpka.Instance->RAM, PKA_MODULAR_INV_IN_OP1 + (BN_SIZE / 4));
+
+  PKA_Memcpy_u8_to_u32(&hpka.Instance->RAM[PKA_MODULAR_INV_IN_OP2_MOD], mod, BN_SIZE);
+  __PKA_RAM_PARAM_END(hpka.Instance->RAM, PKA_MODULAR_INV_IN_OP2_MOD + (BN_SIZE / 4));
+
+  if (PKA_Process(&hpka, PKA_MODE_MODULAR_INV, PKA_TIMEOUT) != HAL_OK) {
+    return HAL_FAIL;
+  }
+
+  PKA_Memcpy_u32_to_u8(r, &hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_OUT_RESULT], BN_SIZE);
+
+  return HAL_OK;
+}
+
+int hal_bn_cmp(const uint8_t a[BN_SIZE], const uint8_t b[BN_SIZE]) {
+  _hal_pka_ari_set(a, b, NULL);
+  if (PKA_Process(&hpka, PKA_MODE_COMPARISON, PKA_TIMEOUT) != HAL_OK) {
+    return INT32_MAX;
+  }
+
+  uint32_t res = hpka.Instance->RAM[PKA_ARITHMETIC_ALL_OPS_OUT_RESULT];
+
+  switch(res) {
+  case 0x916a:
+    return -1;
+  case 0xed2c:
+    return 0;
+  case 0x7af8:
+    return 1;
+  default:
+    return INT32_MAX;
+  }
 }
 
 hal_err_t hal_usb_start() {
