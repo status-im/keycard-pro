@@ -108,14 +108,14 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key, const
 }
 
 int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key, const uint8_t *pub_key, uint8_t *session_key) {
-  uint8_t buf[ECC256_ELEMENT_SIZE * 2];
+  uint8_t buf[ECC256_POINT_SIZE];
   pub_key = ec_uncompress_key(curve, pub_key, buf);
 
   if (pub_key == NULL) {
     return 1;
   }
 
-  if (hal_ec_point_multiply(curve, priv_key, &pub_key[1], &session_key[1]) != HAL_SUCCESS) {
+  if (hal_ec_point_multiply(curve, priv_key, pub_key, &session_key[1]) != HAL_SUCCESS) {
     return 1;
   }
 
