@@ -67,8 +67,6 @@ void HAL_GPIO_EXTI_Falling_Callback(uint16_t gpio_pin) {
   }
 }
 
-
-
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) {
   if (htim == &htim2) {
     keypad_scan_tick();
@@ -151,12 +149,15 @@ hal_err_t hal_init_bootloader() {
   SystemClock_Config();
   __HAL_FLASH_SET_PROGRAM_DELAY(FLASH_PROGRAMMING_DELAY_2);
 
+  MX_RNG_Init();
   MX_HASH_Init();
+  MX_PKA_Init();
 
   return HAL_SUCCESS;
 }
 
 hal_err_t hal_teardown_bootloader() {
+  HAL_PKA_DeInit(&hpka);
   HAL_HASH_DeInit(&hhash);
   HAL_RCC_DeInit();
 
