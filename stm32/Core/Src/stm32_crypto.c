@@ -219,7 +219,7 @@ hal_err_t hal_ecdsa_verify(const ecdsa_curve* curve, const uint8_t* pub_key, con
   verify_params.pPubKeyCurvePtX = pub_key;
   verify_params.pPubKeyCurvePtY = &pub_key[ECC256_ELEMENT_SIZE];
   verify_params.RSign = sig;
-  verify_params.RSign = &sig[ECC256_ELEMENT_SIZE];
+  verify_params.SSign = &sig[ECC256_ELEMENT_SIZE];
 
   if (HAL_PKA_ECDSAVerif(&hpka, &verify_params, PKA_TIMEOUT) != HAL_OK) {
     return HAL_FAIL;
