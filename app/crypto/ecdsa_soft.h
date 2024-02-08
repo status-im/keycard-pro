@@ -79,7 +79,7 @@ void uncompress_coords(const ecdsa_curve *curve, uint8_t odd,
 int ecdsa_uncompress_pubkey(const ecdsa_curve *curve, const uint8_t *pub_key,
                             uint8_t *uncompressed);
 
-int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
+int ecdsa_hash_and_sign(const ecdsa_curve *curve, HasherType hasher_sign,
                const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len,
                uint8_t *sig, uint8_t *pby,
                int (*is_canonical)(uint8_t by, uint8_t sig[64]));

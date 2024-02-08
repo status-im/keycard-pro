@@ -660,7 +660,7 @@ int ecdh_multiply(const ecdsa_curve *curve, const uint8_t *priv_key,
 
 // msg is a data to be signed
 // msg_len is the message length
-int ecdsa_sign(const ecdsa_curve *curve, HasherType hasher_sign,
+int ecdsa_hash_and_sign(const ecdsa_curve *curve, HasherType hasher_sign,
                const uint8_t *priv_key, const uint8_t *msg, uint32_t msg_len,
                uint8_t *sig, uint8_t *pby,
                int (*is_canonical)(uint8_t by, uint8_t sig[64])) {
