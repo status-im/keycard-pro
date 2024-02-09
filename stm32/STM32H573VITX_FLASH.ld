@@ -59,17 +59,13 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
   
-  .bootloader_header :
-  {
-  	. = ALIGN(4);
-  	KEEP(*(.fw_verification_key))
-  	. = ALIGN(4);
-  } > FLASH
-  
   /* The header information */
   .header :
   {
   	. = ALIGN(4);
+  	/* this one is only defined in the booloader */
+  	KEEP(*(.fw_verification_key))
+  	/* these are defined in user firmware */
   	KEEP(*(.fw_signature))
   	KEEP(*(.fw_version))
   	. = ALIGN(4);
