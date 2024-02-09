@@ -3,6 +3,9 @@
 import argparse
 from secp256k1Crypto import PrivateKey
 import hashlib
+import tempfile
+import subprocess
+import pathlib
 
 PAGE_SIZE = 8192
 FW_PAGE_COUNT = 76
@@ -21,29 +24,45 @@ def sign(sign_key, m):
     sig = key.ecdsa_sign(m, raw=True)
     return key.ecdsa_serialize_compact(sig)
 
+def elf_to_bin(elf_path, out_path):
+    subprocess.run(["arm-none-eabi-objcopy", "-O", "binary", elf_path, out_path], check=True)
+
+def replace_elf_section(elf_path, section_name, section_content):
+    subprocess.run(["arm-none-eabi-objcopy", "--update-section", f'.{section_name}={section_content}', elf_path, elf_path], check=True)
+
 def main():
     parser = argparse.ArgumentParser(description='Create a database from a token and chain list')
     parser.add_argument('-s', '--secret-key', help="the secret key file")
-    parser.add_argument('-b', '--binary', help="the firmware binary file")
-    parser.add_argument('-o', '--output', help="the output file")
+    parser.add_argument('-e', '--elf', help="the firmware ELF file")
+    parser.add_argument('-o', '--output', help="the output binary file")
     args = parser.parse_args()
     
     with open(args.secret_key) as f: 
         sign_key = f.read()
 
     fw = bytearray(b'\xff') * FW_SIZE
-    with open(args.binary, 'rb') as f:
+    tmp_bin = tempfile.mktemp()
+    elf_to_bin(args.elf, tmp_bin)
+
+    with open(tmp_bin, 'rb') as f:
         actual_fw_size = f.readinto(fw)
+
+    pathlib.Path.unlink(tmp_bin)
 
     if (actual_fw_size % 16) != 0:
         actual_fw_size = ((actual_fw_size // 16) + 1) * 16
 
     m = hash_firmware(fw)
     signature = sign(sign_key, m)
-    fw[FW_IV_SIZE:FW_IV_SIZE+SIG_SIZE] = signature
 
-    with open(args.output, 'wb') as f:
-        f.write(fw[0:actual_fw_size])
+    with tempfile.NamedTemporaryFile('wb', delete=False) as f:
+        f.write(signature)
+        f.write(fw[FW_IV_SIZE+SIG_SIZE:FW_IV_SIZE+SIG_SIZE+4])
+        f.close()
+        replace_elf_section(args.elf, "header", f.name)
+        pathlib.Path.unlink(f.name)
+
+    elf_to_bin(args.elf, args.output)
 
 if __name__ == "__main__":
     main()

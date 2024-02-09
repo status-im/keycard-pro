@@ -28,7 +28,7 @@ bool verify_firmware() {
 
   hal_sha256_finish(&sha256, digest);
 
-  return hal_ecdsa_verify(&secp256k1, FW_PUB, &fw_area[HAL_FW_HEADER_OFFSET], digest);
+  return hal_ecdsa_verify(&secp256k1, FW_PUB, &fw_area[HAL_FW_HEADER_OFFSET], digest) == HAL_SUCCESS;
 }
 
 int main(void) {

@@ -2,3 +2,4 @@ build/
 stm32/Debug
 stm32/Release
 stm32/.settings
+deployment
