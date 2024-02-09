@@ -95,7 +95,7 @@ static app_err_t keycard_check_genuine(keycard_t* kc) {
 
   ca_pub[0] = 0x02 | (ca_pub[64] & 1);
   const uint8_t* expected_ca_pub;
-  key_read(KEYCARD_CA_KEY, &expected_ca_pub);
+  key_read_public(KEYCARD_CA_KEY, &expected_ca_pub);
 
   if (memcmp(ca_pub, expected_ca_pub, 33)) {
     return ERR_CRYPTO;

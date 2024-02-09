@@ -37,7 +37,7 @@ void device_auth_run() {
 
   uint8_t uid[HAL_DEVICE_UID_LEN];
   uint8_t digest[SHA256_DIGEST_LENGTH];
-  const uint8_t* key;
+  uint8_t auth_key[ECC256_ELEMENT_SIZE];
 
   hal_device_uid(uid);
 
@@ -46,8 +46,9 @@ void device_auth_run() {
   sha256_Update(&sha256, auth._dev_auth_challenge._dev_auth_challenge.value, auth._dev_auth_challenge._dev_auth_challenge.len);
   sha256_Final(&sha256, digest);
 
-  key_read(DEV_AUTH_PRIV_KEY, &key);
-  ecdsa_sign(&secp256k1, key, digest, g_core.data.sig.plain_sig);
+  key_read_private(DEV_AUTH_PRIV_KEY, auth_key);
+  ecdsa_sign(&secp256k1, auth_key, digest, g_core.data.sig.plain_sig);
+  memset(auth_key, 0, ECC256_ELEMENT_SIZE);
 
   // Response
   random_buffer((uint8_t*) auth._dev_auth_challenge._dev_auth_challenge.value, AUTH_CHALLENGE_LEN);
@@ -91,7 +92,8 @@ void device_auth_run() {
   sha256_Update(&sha256, (uint8_t*) &auth._dev_auth_auth_count._dev_auth_auth_count, 4);
   sha256_Final(&sha256, digest);
 
-  key_read(DEV_AUTH_SERVER_KEY, &key);
+  const uint8_t* key;
+  key_read_public(DEV_AUTH_SERVER_KEY, &key);
   if (!ecdsa_verify(&secp256k1, key, auth._dev_auth_signature._dev_auth_signature.value, digest)) {
     ui_device_auth(auth._dev_auth_first_auth._dev_auth_first_auth, auth._dev_auth_auth_time._dev_auth_auth_time, auth._dev_auth_auth_count._dev_auth_auth_count);
   } else {

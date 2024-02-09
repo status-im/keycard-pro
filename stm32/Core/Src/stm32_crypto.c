@@ -162,6 +162,36 @@ hal_err_t hal_aes256_finalize() {
   return HAL_SUCCESS;
 }
 
+static hal_err_t _hal_saes_wrap_key(const uint8_t key[32], uint8_t out[32]) {
+  HAL_WAIT((SAES->SR & AES_SR_BUSY));
+
+  uint32_t cr = AES_CR_KMOD_0 | AES_CR_KEYSIZE | AES_CR_KEYSEL_0;
+  SAES->CR = cr;
+  HAL_WAIT(!(SAES->SR & AES_SR_KEYVALID));
+  SAES->CR = cr | AES_CR_EN;
+
+  if (hal_aes256_block_process(key, out) != HAL_SUCCESS) {
+    return HAL_FAIL;
+  }
+
+  if (hal_aes256_block_process(&key[16], &out[16]) != HAL_SUCCESS) {
+    return HAL_FAIL;
+  }
+
+  return hal_aes256_finalize();
+}
+
+hal_err_t hal_derive_device_unique_secret(const uint8_t salt[32], uint8_t out[32]) {
+  if (_hal_saes_wrap_key(salt, out) != HAL_SUCCESS) {
+    return HAL_FAIL;
+  }
+
+  hal_sha256_ctx_t sha;
+  hal_sha256_init(&sha);
+  hal_sha256_update(&sha, out, 32);
+  return hal_sha256_finish(&sha, out);
+}
+
 static hal_err_t _hal_bn_r2(const uint8_t mod[BN_SIZE], uint32_t* r2_mod) {
   PKA_MontgomeryParamInTypeDef mont;
   mont.pOp1 = mod;

@@ -121,6 +121,7 @@ typedef enum {
 } hal_aes_mode_t;
 
 hal_err_t hal_rng_next(uint8_t *buf, size_t len);
+hal_err_t hal_derive_device_unique_secret(const uint8_t salt[32], uint8_t out[32]);
 
 #ifndef SOFT_SHA256
 hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx);

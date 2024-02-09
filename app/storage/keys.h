@@ -12,6 +12,7 @@ typedef enum {
   KEYCARD_CA_KEY,
 } key_type_t;
 
-app_err_t key_read(key_type_t type, const uint8_t** out);
+app_err_t key_read_private(key_type_t type, uint8_t* out);
+app_err_t key_read_public(key_type_t type, const uint8_t** out);
 
 #endif

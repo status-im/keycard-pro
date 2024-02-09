@@ -50,6 +50,10 @@ int ecdsa_verify(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t
     return 1;
   }
 
+  return ecdsa_verify_raw_pub(curve, pub_key, sig, digest) == HAL_SUCCESS ? 0 : 1;
+}
+
+int ecdsa_verify_raw_pub(const ecdsa_curve *curve, const uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest) {
   return hal_ecdsa_verify(curve, pub_key, sig, digest) == HAL_SUCCESS ? 0 : 1;
 }
 

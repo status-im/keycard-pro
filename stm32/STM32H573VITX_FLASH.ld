@@ -59,6 +59,13 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
   
+  .bootloader_header :
+  {
+  	. = ALIGN(4);
+  	KEEP(*(.fw_verification_key))
+  	. = ALIGN(4);
+  } > FLASH
+  
   /* The header information */
   .header :
   {

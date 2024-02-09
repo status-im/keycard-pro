@@ -159,6 +159,7 @@ hal_err_t hal_init_bootloader() {
 hal_err_t hal_teardown_bootloader() {
   HAL_PKA_DeInit(&hpka);
   HAL_HASH_DeInit(&hhash);
+  HAL_RNG_DeInit(&hrng);
   HAL_RCC_DeInit();
 
   return HAL_SUCCESS;
