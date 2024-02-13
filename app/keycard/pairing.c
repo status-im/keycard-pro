@@ -1,10 +1,12 @@
 #include "pairing.h"
+#include "storage/keys.h"
+#include "crypto/aes.h"
 #include <string.h>
 
 #define FS_PAIRING_MAGIC 0x5041
 
 struct pairing_match_ctx {
-  uint8_t* instance_uid;
+  const uint8_t* instance_uid;
   fs_action_t match_action;
   fs_action_t mismatch_action;
 };
@@ -28,19 +30,32 @@ app_err_t pairing_read(pairing_t* out) {
     return ERR_DATA;
   }
 
-  memcpy(out->key, entry->key, SHA256_DIGEST_LENGTH);
+  uint8_t pairing_enc_key[AES_256_KEY_SIZE];
+  key_read_private(PAIRING_ENC_PRIV_KEY, pairing_enc_key);
+  aes_decrypt_cbc(pairing_enc_key, entry->instance_uid, entry->key, SHA256_DIGEST_LENGTH, out->key);
+  memset(pairing_enc_key, 0, AES_256_KEY_SIZE);
+
   out->idx = entry->idx;
 
   return ERR_OK;
 }
 
-app_err_t pairing_write(pairing_t* in) {
-  in->_fs_data.magic = FS_PAIRING_MAGIC;
-  in->_fs_data.len = APP_INFO_INSTANCE_UID_LEN + SHA256_DIGEST_LENGTH + 1;
-  return fs_write((fs_entry_t*) in, sizeof(pairing_t));
+app_err_t pairing_write(const pairing_t* in) {
+  pairing_t write;
+  write._fs_data.magic = FS_PAIRING_MAGIC;
+  write._fs_data.len = APP_INFO_INSTANCE_UID_LEN + SHA256_DIGEST_LENGTH + 1;
+  write.idx = in->idx;
+  memcpy(write.instance_uid, in->instance_uid, APP_INFO_INSTANCE_UID_LEN);
+
+  uint8_t pairing_enc_key[AES_256_KEY_SIZE];
+  key_read_private(PAIRING_ENC_PRIV_KEY, pairing_enc_key);
+  aes_encrypt_cbc(pairing_enc_key, in->instance_uid, in->key, SHA256_DIGEST_LENGTH, write.key);
+  memset(pairing_enc_key, 0, AES_256_KEY_SIZE);
+
+  return fs_write((fs_entry_t*) &write, sizeof(pairing_t));
 }
 
-app_err_t pairing_erase(pairing_t* in) {
+app_err_t pairing_erase(const pairing_t* in) {
   struct pairing_match_ctx match_ctx = {.instance_uid = in->instance_uid, .match_action = FS_STOP, .mismatch_action = FS_ACCEPT};
   return fs_erase_all(_pairing_match_uid, &match_ctx);
 }

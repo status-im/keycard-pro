@@ -16,7 +16,7 @@ typedef struct __attribute__ ((packed)) {
 } pairing_t;
 
 app_err_t pairing_read(pairing_t* out);
-app_err_t pairing_write(pairing_t* in);
-app_err_t pairing_erase(pairing_t* in);
+app_err_t pairing_write(const pairing_t* in);
+app_err_t pairing_erase(const pairing_t* in);
 
 #endif

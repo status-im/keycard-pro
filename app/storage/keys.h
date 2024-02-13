@@ -10,6 +10,7 @@ typedef enum {
   FW_VERIFICATION_KEY,
   DB_VERIFICATION_KEY,
   KEYCARD_CA_KEY,
+  PAIRING_ENC_PRIV_KEY
 } key_type_t;
 
 app_err_t key_read_private(key_type_t type, uint8_t* out);
