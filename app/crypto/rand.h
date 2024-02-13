@@ -34,6 +34,7 @@ static inline void random_buffer(uint8_t *buf, size_t len) {
 
 uint32_t random32(void);
 uint32_t random_uniform(uint32_t n);
+void random_unique_in_range(uint8_t max, uint8_t count, uint8_t* out);
 void random_permute(char *buf, size_t len);
 
 #endif

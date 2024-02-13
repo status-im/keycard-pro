@@ -37,6 +37,27 @@ uint32_t random_uniform(uint32_t n) {
   return x / (max / n);
 }
 
+void random_unique_in_range(uint8_t max, uint8_t count, uint8_t* out) {
+  assert(max < 32);
+  assert(count < max);
+
+  uint32_t selected = 0;
+  while(__builtin_popcount(selected) < count) {
+    selected |= (1 << random_uniform(max));
+  }
+
+  uint8_t out_count = 0;
+  uint8_t val = 0;
+  while(out_count < count) {
+    if (selected & 0x1) {
+      out[out_count++] = val;
+    }
+
+    selected >>= 1;
+    val++;
+  }
+}
+
 void random_permute(char *str, size_t len) {
   for (int i = len - 1; i >= 1; i--) {
     int j = random_uniform(i + 1);

@@ -499,9 +499,7 @@ app_err_t input_backup_mnemonic() {
       return ERR_CANCEL;
     }
 
-    for (int i = 0; i < WORDS_TO_CONFIRM; i++) {
-      positions[i] = random_uniform(g_ui_cmd.params.mnemo.len);
-    }
+    random_unique_in_range(g_ui_cmd.params.mnemo.len, WORDS_TO_CONFIRM, positions);
   } while(input_backup_confirm_mnemonic(positions) != ERR_OK);
 
   return ERR_OK;
