@@ -124,6 +124,7 @@ const char *const i18n_english_strings[] = {
     // Device info
     "Firmware version: ",
     "Database version: ",
+    "S/N: ",
     "New firmware version: ",
     "New database version: ",
 };

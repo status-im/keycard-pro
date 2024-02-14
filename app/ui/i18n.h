@@ -127,6 +127,7 @@ typedef enum {
   // Device info
   DEVICE_INFO_FW,
   DEVICE_INFO_DB,
+  DEVICE_INFO_SN,
   DEVICE_INFO_NEW_FW,
   DEVICE_INFO_NEW_DB,
 

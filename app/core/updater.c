@@ -56,13 +56,49 @@ static char* append_db_version(char* dst, const char* label, uint32_t version) {
   return dst;
 }
 
+static char* append_sn(char* dst, const char* label, uint8_t uid[HAL_DEVICE_UID_LEN]) {
+  size_t seg_len = strlen(label);
+  memcpy(dst, label, seg_len);
+  dst += seg_len;
+
+  base16_encode(uid, dst, 4);
+  dst += 8;
+  *(dst++) = '-';
+
+  base16_encode(&uid[3], dst, 2);
+  dst += 4;
+  *(dst++) = '-';
+
+  base16_encode(&uid[5], dst, 2);
+  dst += 4;
+  *(dst++) = '-';
+
+  base16_encode(&uid[7], dst, 2);
+  dst += 4;
+  *(dst++) = '-';
+
+  base16_encode(&uid[9], dst, 6);
+  dst += 12;
+
+  *(dst++) = '\n';
+  *dst = '\0';
+
+  return dst;
+}
+
 void device_info() {
   char info[MAX_INFO_SIZE];
   char* p = append_fw_version(info, LSTR(DEVICE_INFO_FW), FW_VERSION);
+
   uint32_t db_ver;
   if (eth_db_lookup_version(&db_ver) == ERR_OK) {
-    append_db_version(p, LSTR(DEVICE_INFO_DB), db_ver);
+    p = append_db_version(p, LSTR(DEVICE_INFO_DB), db_ver);
   }
+
+  uint8_t device_uid[HAL_DEVICE_UID_LEN];
+  hal_device_uid(device_uid);
+
+  append_sn(p, LSTR(DEVICE_INFO_SN), device_uid);
 
   ui_info(LSTR(MENU_INFO), info, 1);
 }
