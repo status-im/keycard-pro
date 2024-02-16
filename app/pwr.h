@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#define PWR_BATTERY_CHARGING 255
+
 void pwr_reboot();
 void pwr_shutdown();
 
@@ -13,5 +15,7 @@ void pwr_smartcard_inserted();
 void pwr_smartcard_removed();
 
 void pwr_inactivity_timer_elapsed();
+
+uint8_t pwr_battery_level();
 
 #endif

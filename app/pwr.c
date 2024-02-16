@@ -8,6 +8,10 @@
 #include "pwr.h"
 #include "usb/usb.h"
 
+#define VBAT_MIN 3200
+#define VBAT_MAX 4100
+#define VBAT_USB 4600
+
 static void pwr_graceful_shutdown() {
   while(hal_flash_busy()) {
     ;
@@ -54,4 +58,19 @@ void pwr_smartcard_removed() {
 
 void pwr_inactivity_timer_elapsed() {
   pwr_shutdown();
+}
+
+uint8_t pwr_battery_level() {
+  uint32_t vbat;
+  hal_adc_read(ADC_VBAT, &vbat);
+
+  if (vbat > VBAT_USB) {
+    return PWR_BATTERY_CHARGING;
+  } else if (vbat > VBAT_MAX) {
+    vbat = VBAT_MAX;
+  } else if (vbat < VBAT_MIN) {
+    vbat = VBAT_MIN;
+  }
+
+  return ((vbat - VBAT_MIN) * 100) / (VBAT_MAX - VBAT_MIN);
 }

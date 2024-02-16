@@ -4,6 +4,7 @@
 
 #include "app_tasks.h"
 #include "core/settings.h"
+#include "pwr.h"
 #include "qrcode/qrout.h"
 #include "qrcode/qrscan.h"
 #include "screen/screen.h"
@@ -15,26 +16,6 @@
 
 struct ui_cmd g_ui_cmd;
 struct ui_ctx g_ui_ctx;
-
-#define VBAT_MIN 3200
-#define VBAT_MAX 4000
-#define VBAT_USB 4600
-
-static void ui_read_battery() {
-  uint32_t vbat;
-  hal_adc_read(ADC_VBAT, &vbat);
-
-  if (vbat > VBAT_USB) {
-    g_ui_ctx.battery = 255;
-    return;
-  } else if (vbat > VBAT_MAX) {
-    vbat = VBAT_MAX;
-  } else if (vbat < VBAT_MIN) {
-    vbat = VBAT_MIN;
-  }
-
-  g_ui_ctx.battery = ((vbat - VBAT_MIN) * 100) / (VBAT_MAX - VBAT_MIN);
-}
 
 void ui_task_entry(void* pvParameters) {
   if (screen_init() != HAL_SUCCESS) {
@@ -49,7 +30,7 @@ void ui_task_entry(void* pvParameters) {
   hal_inactivity_timer_set(g_settings.shutdown_timeout);
 
   while(1) {
-    ui_read_battery();
+    g_ui_ctx.battery = pwr_battery_level();
 
     if (!g_ui_cmd.received && ((ui_wait_event(portMAX_DELAY) & UI_CMD_EVT) == 0)) {
       continue;
