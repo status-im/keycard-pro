@@ -49,11 +49,15 @@ void pwr_usb_unplugged() {
 }
 
 void pwr_smartcard_inserted() {
+#ifndef TEST_APP
   pwr_reboot();
+#endif
 }
 
 void pwr_smartcard_removed() {
+#ifndef TEST_APP
   pwr_shutdown();
+#endif
 }
 
 void pwr_inactivity_timer_elapsed() {

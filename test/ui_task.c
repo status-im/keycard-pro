@@ -3,6 +3,7 @@
 #include "task.h"
 
 #include "app_tasks.h"
+#include "pwr.h"
 #include "qrcode/qrscan.h"
 #include "screen/screen.h"
 #include "ui/dialog.h"
@@ -14,8 +15,10 @@ struct ui_cmd g_ui_cmd;
 struct ui_ctx g_ui_ctx;
 
 #define TH_FIELD_MARGIN ((SCREEN_WIDTH - ((TH_PIN_FIELD_WIDTH * 3) + (TH_PIN_FIELD_DIGIT_MARGIN * 2))) / 2)
+#define COLOR_TEST_HEADER_REFRESH_MS (1 * 60 * 1000)
 
 static app_err_t test_keypad() {
+  g_ui_ctx.battery = pwr_battery_level();
   dialog_title("Keypad test");
   dialog_footer(TH_TITLE_HEIGHT);
 
@@ -59,8 +62,6 @@ static app_err_t test_keypad() {
 }
 
 static app_err_t test_colors() {
-  dialog_title("R G B");
-
   screen_area_t area = {
       .x = 0,
       .y = TH_TITLE_HEIGHT,
@@ -77,7 +78,11 @@ static app_err_t test_colors() {
   screen_fill_area(&area, SCREEN_COLOR_BLUE);
 
   while(1) {
-    switch(ui_wait_keypress(portMAX_DELAY)) {
+    hal_inactivity_timer_reset();
+    g_ui_ctx.battery = pwr_battery_level();
+    dialog_title("R G B");
+
+    switch(ui_wait_keypress(pdMS_TO_TICKS(COLOR_TEST_HEADER_REFRESH_MS))) {
     case KEYPAD_KEY_CANCEL:
     case KEYPAD_KEY_BACK:
       return ERR_CANCEL;
