@@ -73,6 +73,7 @@ const char *const i18n_english_strings[] = {
     "This Keycard has an old version of the applet installed. Please replace it with a newer one",
     "Initialize your Keycard",
     "We will now proceed initializing your Keycard.\n\nYou will be required to choose a PIN for your card.\n\nPress OK to continue.",
+    "This card has no free pairing slots and thus cannot be used with Keycard Pro at the moment.\n\nPlease remove the card and free a pairing slot or press OK to factory reset the card.",
 
     // DB Update
     "Updating database...",

@@ -42,7 +42,12 @@ app_err_t keycard_cmd_autopair(keycard_t* kc, const uint8_t* psk, pairing_t* pai
     return ERR_TXRX;
   }
 
-  APDU_ASSERT_OK(&kc->apdu);
+  uint16_t sw = APDU_SW(&kc->apdu);
+  if (sw == 0x6a84) {
+    return ERR_FULL;
+  } else if (sw != SW_OK) {
+    return sw;
+  }
 
   uint8_t* card_cryptogram = APDU_RESP(&kc->apdu);
   uint8_t* card_challenge = &card_cryptogram[SHA256_DIGEST_LENGTH];

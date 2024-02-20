@@ -121,7 +121,8 @@ static app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instan
   uint8_t* psk = (uint8_t*) KEYCARD_DEFAULT_PSK;
   
   while(1) {
-    if (keycard_cmd_autopair(kc, psk, pairing) == ERR_OK) {
+    app_err_t err = keycard_cmd_autopair(kc, psk, pairing);
+    if (err == ERR_OK) {
       if (pairing_write(pairing) != ERR_OK) {
         ui_keycard_flash_failed();
         return ERR_DATA;
@@ -129,6 +130,8 @@ static app_err_t keycard_pair(keycard_t* kc, pairing_t* pairing, uint8_t* instan
 
       ui_keycard_paired();
       return ERR_OK;
+    } else if (err == ERR_FULL) {
+      return ERR_FULL;
     }
 
     uint8_t password[KEYCARD_PAIRING_PASS_MAX_LEN + 1];
@@ -361,7 +364,15 @@ static app_err_t keycard_setup(keycard_t* kc, uint8_t* pin, uint8_t* cached_pin)
 
   APP_ALIGNED(pairing_t pairing, 4);
   err = keycard_pair(kc, &pairing, info.instance_uid);
-  if (err != ERR_OK) {
+  if (err == ERR_FULL) {
+    if (ui_keycard_no_pairing_slots() == CORE_EVT_UI_OK) {
+      if (keycard_factoryreset(kc) == ERR_OK) {
+        return ERR_RETRY;
+      }
+    }
+
+    return ERR_FULL;
+  } else if (err != ERR_OK) {
     return err;
   }
 

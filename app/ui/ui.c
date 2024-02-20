@@ -127,6 +127,10 @@ core_evt_t ui_confirm_factory_reset() {
   return ui_info(LSTR(FACTORY_RESET_TITLE), LSTR(FACTORY_RESET_WARNING), 1);
 }
 
+core_evt_t ui_keycard_no_pairing_slots() {
+  return ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_NO_PAIRING_SLOTS), 1);
+}
+
 core_evt_t ui_read_pin(uint8_t* out, int8_t retries, uint8_t dismissable) {
   g_ui_cmd.type = UI_CMD_INPUT_PIN;
   g_ui_cmd.params.input_pin.dismissable = dismissable;
