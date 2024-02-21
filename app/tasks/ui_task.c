@@ -22,8 +22,8 @@ void ui_task_entry(void* pvParameters) {
     vTaskSuspend(NULL);
   }
 
-  hal_pwm_set_dutycycle(PWM_BACKLIGHT, g_settings.lcd_brightness);
   screen_fill_area(&screen_fullarea, SCREEN_COLOR_BLACK);
+  hal_pwm_set_dutycycle(PWM_BACKLIGHT, g_settings.lcd_brightness);
 
   g_ui_cmd.received = 0;
 
