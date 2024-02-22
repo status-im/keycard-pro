@@ -74,8 +74,9 @@ void core_task_entry(void* pvParameters) {
 
   usb_start_if_connected();
 
+  i18n_str_id_t selected = MENU_QRCODE;
+
   while(1) {
-    i18n_str_id_t selected = MENU_QRCODE;
     const char* title = g_core.keycard.name[0] ? g_core.keycard.name : LSTR(MENU_TITLE);
 
     switch(ui_menu(title, &menu_mainmenu, &selected, 1)) {
@@ -87,6 +88,7 @@ void core_task_entry(void* pvParameters) {
       break;
     case CORE_EVT_UI_CANCELLED:
     default:
+      selected = MENU_QRCODE;
       break;
     }
   }

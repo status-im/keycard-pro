@@ -4,7 +4,7 @@ const char *const i18n_english_strings[] = {
     // Main menu
     "Keycard Pro",
     "Scan QR transaction",
-    "Display public QR",
+    "Connect software wallet",
     "Keycard",
     "Device",
     "Settings",

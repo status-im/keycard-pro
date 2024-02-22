@@ -134,34 +134,50 @@ void menu_render(const menu_t* menu, const char* title, uint8_t selected, enum m
   }
 }
 
-app_err_t menu_run() {
-  const menu_t* menus[MENU_MAX_DEPTH];
-  const char* titles[MENU_MAX_DEPTH];
+static uint8_t menu_scan(const menu_t* menu, const char* title, uint8_t to_find, const menu_t* menus[MENU_MAX_DEPTH], const char* titles[MENU_MAX_DEPTH], uint8_t selected[MENU_MAX_DEPTH], uint8_t depth) {
+  int found = -1;
+  int res = 0xff;
 
-  uint8_t depth = 0;
-  enum menu_draw_mode draw = MENU_ALL;
-  menus[depth] = g_ui_cmd.params.menu.menu;
-  titles[depth] = g_ui_cmd.params.menu.title;
-
-  uint8_t selected = 0;
-
-  for (int i = 0; i < menus[0]->len; i++) {
-    if (menus[0]->entries[i].label_id == *g_ui_cmd.params.menu.selected) {
-      selected = i;
+  for (int i = 0; i < menu->len; i++) {
+    if (menu->entries[i].label_id == to_find) {
+      found = i;
+      res = depth;
       break;
+    } else if (menu->entries[i].submenu) {
+      res = menu_scan(menu->entries[i].submenu, LSTR(menu->entries[i].label_id), to_find, menus, titles, selected, (depth + 1));
+      if (res != 0xff) {
+        found = i;
+        break;
+      }
     }
   }
 
+  if (found != -1) {
+    titles[depth] = title;
+    menus[depth] = menu;
+    selected[depth] = found;
+  }
+
+  return res;
+}
+
+app_err_t menu_run() {
+  const menu_t* menus[MENU_MAX_DEPTH];
+  const char* titles[MENU_MAX_DEPTH];
+  uint8_t selected[MENU_MAX_DEPTH];
+
+  enum menu_draw_mode draw = MENU_ALL;
+  uint8_t depth = menu_scan(g_ui_cmd.params.menu.menu, g_ui_cmd.params.menu.title, *g_ui_cmd.params.menu.selected, menus, titles, selected, 0);
+
   while(1) {
     const menu_t* menu = menus[depth];
-    menu_render(menu, titles[depth], selected, draw);
+    menu_render(menu, titles[depth], selected[depth], draw);
 
     switch(ui_wait_keypress(portMAX_DELAY)) {
       case KEYPAD_KEY_CANCEL:
         return ERR_CANCEL;
       case KEYPAD_KEY_BACK:
         if (depth) {
-          selected = 0;
           depth--;
           draw = MENU_ALL;
         } else {
@@ -169,26 +185,27 @@ app_err_t menu_run() {
         }
         break;
       case KEYPAD_KEY_UP:
-        if (selected > 0) {
-          selected--;
+        if (selected[depth] > 0) {
+          selected[depth]--;
           draw = MENU_NEXT;
         }
         break;
       case KEYPAD_KEY_DOWN:
-        if (selected < (menu->len - 1)) {
-          selected++;
+        if (selected[depth] < (menu->len - 1)) {
+          selected[depth]++;
           draw = MENU_PREV;
         }
         break;
       case KEYPAD_KEY_CONFIRM:
-        if (menu->entries[selected].submenu) {
+        const menu_entry_t* entry = &menu->entries[selected[depth]];
+        if (entry->submenu) {
           assert(depth < (MENU_MAX_DEPTH - 1));
-          menus[++depth] = menu->entries[selected].submenu;
-          titles[depth] = LSTR(menu->entries[selected].label_id);
-          selected = 0;
+          menus[++depth] = entry->submenu;
+          titles[depth] = LSTR(entry->label_id);
+          selected[depth] = 0;
           draw = MENU_ALL;
         } else {
-          *g_ui_cmd.params.menu.selected = menu->entries[selected].label_id;
+          *g_ui_cmd.params.menu.selected = entry->label_id;
           return ERR_OK;
         }
         break;
