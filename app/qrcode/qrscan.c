@@ -13,6 +13,10 @@
 
 const static screen_area_t indicator_area = { .x = 10, .y = 10, .width = 10, .height = 10 };
 
+#define QR_SCORE_RED 1
+#define QR_SCORE_YELLOW 3
+#define QR_SCORE_GREEN 5
+
 app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
   struct quirc_code qrcode;
   struct quirc_data *qrdata = (struct quirc_data *)qrctx;
@@ -76,11 +80,10 @@ app_err_t qrscan_scan() {
   }
 
   uint8_t* fb;
+  uint16_t score = QR_SCORE_RED;
+  uint16_t prev_color = 0;
 
   while (1) {
-    uint16_t prev_detection = 0;
-    uint16_t detection = TH_COLOR_QR_NOT_FOUND;
-
     if (camera_next_frame(&fb) != HAL_SUCCESS) {
       continue;
     }
@@ -94,9 +97,10 @@ app_err_t qrscan_scan() {
     quirc_end(&qrctx);
 
     app_err_t qrerr = qrscan_decode(&qrctx, &ur);
+    score--;
 
     if (qrerr == ERR_OK) {
-      detection = TH_COLOR_QR_OK;
+      score = QR_SCORE_GREEN;
       hal_inactivity_timer_reset();
       if (qrscan_deserialize(&ur) == ERR_OK) {
         screen_wait();
@@ -104,10 +108,10 @@ app_err_t qrscan_scan() {
       } else {
         ur.crc = 0;
       }
-    } else if (qrerr == ERR_DECODE) {
-      detection = TH_COLOR_QR_NOT_DECODED;
+    } else if (qrerr == ERR_DECODE && score < QR_SCORE_YELLOW) {
+      score = QR_SCORE_YELLOW;
     } else if (qrerr != ERR_SCAN) {
-      detection = TH_COLOR_QR_OK;
+      score = QR_SCORE_GREEN;
     }
 
     screen_wait();
@@ -117,9 +121,19 @@ app_err_t qrscan_scan() {
       goto end;
     }
 
-    if (detection != prev_detection) {
-      screen_fill_area(&indicator_area, detection);
-      prev_detection = detection;
+    uint16_t indicator_color;
+
+    if (score > QR_SCORE_YELLOW) {
+      indicator_color = TH_COLOR_QR_OK;
+    } else if (score > QR_SCORE_RED) {
+      indicator_color = TH_COLOR_QR_NOT_DECODED;
+    } else {
+      indicator_color = TH_COLOR_QR_NOT_FOUND;
+      score = QR_SCORE_RED;
+    }
+
+    if (prev_color != indicator_color) {
+      screen_fill_area(&indicator_area, indicator_color);
     }
 
     keypad_key_t k = ui_wait_keypress(0);
