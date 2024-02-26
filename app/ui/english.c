@@ -46,19 +46,23 @@ const char *const i18n_english_strings[] = {
     "Remaining attempts: ",
     "Repeat the PIN",
     "PINs don't match",
+    "PIN changed successfully",
 
     // PUK input
     "Insert your PUK",
     "Choose a new PUK",
     "Card blocked",
     "The card is blocked. If you have setup a PUK press OK to insert it, otherwise press Cancel to factory reset the card.",
+    "PUK changed successfully",
 
     // Pairing input
     "Insert your pairing password",
     "Choose your pairing password",
+    "Pairing password changed successfully",
 
     // Name input
     "Set the Keycard name",
+    "Card name changed successfully",
 
     // Factory reset
     "Card factory reset",
