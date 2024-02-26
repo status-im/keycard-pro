@@ -64,6 +64,7 @@ struct cmd_menu {
   const char* title;
   const menu_t* menu;
   i18n_str_id_t* selected;
+  i18n_str_id_t marked;
 };
 
 struct cmd_qrscan {

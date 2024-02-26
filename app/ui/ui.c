@@ -11,11 +11,12 @@ core_evt_t ui_qrscan(ur_type_t type, void* out) {
   return ui_signal_wait(0);
 }
 
-core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selected, uint8_t allow_usb) {
+core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selected, i18n_str_id_t marked, uint8_t allow_usb) {
   g_ui_cmd.type = UI_CMD_MENU;
   g_ui_cmd.params.menu.title = title;
   g_ui_cmd.params.menu.menu = menu;
   g_ui_cmd.params.menu.selected = selected;
+  g_ui_cmd.params.menu.marked = marked;
   return ui_signal_wait(allow_usb);
 }
 
@@ -172,7 +173,7 @@ void ui_seed_loaded() {
 core_evt_t ui_read_mnemonic_len(uint32_t* len) {
   i18n_str_id_t selected = MENU_MNEMO_12WORDS;
 
-  while (ui_menu(LSTR(MNEMO_TITLE), &menu_mnemonic, &selected, 0) != CORE_EVT_UI_OK);
+  while (ui_menu(LSTR(MNEMO_TITLE), &menu_mnemonic, &selected, -1, 0) != CORE_EVT_UI_OK);
 
   switch(selected) {
   case MENU_MNEMO_12WORDS:

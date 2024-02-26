@@ -88,6 +88,18 @@ void menu_render_entry(const menu_entry_t* entry, uint8_t is_selected, uint16_t 
   ctx.y = yOff;
 
   dialog_line(&ctx, LSTR(entry->label_id), (TH_MENU_HEIGHT - TH_SEP_HEIGHT));
+
+  if (g_ui_cmd.params.menu.marked == entry->label_id) {
+    screen_area_t mark = {
+        .height = TH_MENU_SIZE,
+        .width = TH_MENU_SIZE,
+        .x = SCREEN_WIDTH - TH_MENU_RIGHT_MARGIN - TH_MENU_SIZE,
+        .y = yOff + (((TH_MENU_HEIGHT - TH_SEP_HEIGHT)/ 2) - (TH_MENU_SIZE / 2))
+    };
+
+    screen_fill_area(&mark, TH_COLOR_MENU_MARK);
+  }
+
   dialog_separator(yOff + (TH_MENU_HEIGHT - TH_SEP_HEIGHT));
 }
 
