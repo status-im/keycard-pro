@@ -91,10 +91,10 @@ void menu_render_entry(const menu_entry_t* entry, uint8_t is_selected, uint16_t 
 
   if (g_ui_cmd.params.menu.marked == entry->label_id) {
     screen_area_t mark = {
-        .height = TH_MENU_SIZE,
-        .width = TH_MENU_SIZE,
-        .x = SCREEN_WIDTH - TH_MENU_RIGHT_MARGIN - TH_MENU_SIZE,
-        .y = yOff + (((TH_MENU_HEIGHT - TH_SEP_HEIGHT)/ 2) - (TH_MENU_SIZE / 2))
+        .width = TH_MENU_MARK_WIDTH,
+        .height = TH_MENU_MARK_HEIGHT,
+        .x = SCREEN_WIDTH - TH_MENU_RIGHT_MARGIN - TH_MENU_MARK_WIDTH,
+        .y = yOff + (((TH_MENU_HEIGHT - TH_SEP_HEIGHT)/ 2) - (TH_MENU_MARK_HEIGHT / 2))
     };
 
     screen_fill_area(&mark, TH_COLOR_MENU_MARK);
