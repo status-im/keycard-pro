@@ -15,7 +15,7 @@ const static screen_area_t indicator_area = { .x = 10, .y = 10, .width = 10, .he
 
 #define QR_SCORE_RED 1
 #define QR_SCORE_YELLOW 3
-#define QR_SCORE_GREEN 5
+#define QR_SCORE_GREEN 4
 
 app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
   struct quirc_code qrcode;
