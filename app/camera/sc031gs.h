@@ -125,12 +125,6 @@ static const struct camera_regval camera_regs[] = {
   {0x3908,0x91},
   {0x3d08,0x01},
   SC031GS_GAIN_CFG_TABLE,
-  {SC031GS_EXPOSURE_H_REG,0x0e},
-  {SC031GS_EXPOSURE_L_REG,0x13},
-  {SC031GS_GAIN_ANALOG_H_REG,0x01},
-  {SC031GS_GAIN_ANALOG_L_REG,0x10},
-  {SC031GS_GAIN_DIGITAL_H_REG,0x01},
-  {SC031GS_GAIN_DIGITAL_L_REG,0x10},
   {0x4500,0x59},
   {0x4501,0xc4},
   {0x5011,0x00},
@@ -145,7 +139,7 @@ static const struct camera_regval camera_regs[] = {
 };
 
 const uint16_t _camera_exposure_table[] = {
-    0x0e13, 0x1198, 0x1776, 0x1c27, 0x384e
+    0x0709, 0x0962, 0x0e13, 0x1198, 0x1776, 0x1c27, 0x384e
 };
 
 const uint16_t _camera_analog_gain_table[] = {

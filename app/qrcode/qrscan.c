@@ -83,23 +83,16 @@ app_err_t qrscan_scan() {
   uint16_t score = QR_SCORE_RED;
   uint16_t prev_color = 0;
 
-  camera_exposure_t exposure = EXPOSURE_500;
-  uint8_t again = 1;
-  uint8_t dgain = 1;
-
-  camera_set_exposure(exposure);
-  camera_set_analog_gain(again);
-  camera_set_digital_gain(dgain);
-
   while (1) {
     if (camera_next_frame(&fb) != HAL_SUCCESS) {
       continue;
     }
 
-    quirc_set_image(&qrctx, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
+    quirc_set_image(&qrctx, fb);
     quirc_begin(&qrctx, NULL, NULL);
 
-    quirc_threshold(&qrctx);
+    uint32_t total_luma = quirc_threshold(&qrctx);
+    camera_autoexposure(total_luma);
     screen_camera_passthrough(fb);
 
     quirc_end(&qrctx);
@@ -148,36 +141,6 @@ app_err_t qrscan_scan() {
 
     if (k != KEYPAD_KEY_INVALID) {
       switch(k) {
-      case KEYPAD_KEY_1:
-        if (exposure < EXPOSURE_125) {
-          camera_set_exposure(++exposure);
-        }
-        break;
-      case KEYPAD_KEY_7:
-        if (exposure > EXPOSURE_500) {
-          camera_set_exposure(--exposure);
-        }
-        break;
-      case KEYPAD_KEY_2:
-        if (again < CAMERA_MAX_ANALOG_GAIN) {
-          camera_set_analog_gain(++again);
-        }
-        break;
-      case KEYPAD_KEY_8:
-        if (again > 1) {
-          camera_set_analog_gain(--again);
-        }
-        break;
-      case KEYPAD_KEY_3:
-        if (again < CAMERA_MAX_DIGITAL_GAIN) {
-          camera_set_digital_gain(++dgain);
-        }
-        break;
-      case KEYPAD_KEY_9:
-        if (dgain > 1) {
-          camera_set_digital_gain(--dgain);
-        }
-        break;
       case KEYPAD_KEY_CANCEL:
       case KEYPAD_KEY_BACK:
         res = ERR_CANCEL;

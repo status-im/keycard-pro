@@ -9,9 +9,23 @@
 #define CAMERA_SETTLE_MS 10
 #define CAMERA_FRAME_TIMEOUT 100
 
+#define CAMERA_MID_LUMA (CAMERA_FB_SIZE * 127)
+#define CAMERA_TARGET_LUMA_MIN (CAMERA_MID_LUMA - (CAMERA_FB_SIZE * 64))
+#define CAMERA_TARGET_LUMA_MAX (CAMERA_MID_LUMA - (CAMERA_FB_SIZE * 32))
+
+#define EXPOSURE_MIN EXPOSURE_1000
+#define EXPOSURE_MAX EXPOSURE_125
+#define EXPOSURE_DEF EXPOSURE_400
+
 struct camera_regval {
   uint16_t addr;
   uint8_t val;
+};
+
+struct camera_exposure {
+  camera_exposure_t exposure;
+  uint8_t analog_gain;
+  uint8_t digital_gain;
 };
 
 #if _CAM_MODEL == SC031GS
@@ -21,6 +35,7 @@ struct camera_regval {
 #endif
 
 APP_NOCACHE(uint8_t g_camera_fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE], CAMERA_BUFFER_ALIGN);
+static struct camera_exposure g_camera_exposure = { .exposure = EXPOSURE_DEF, .analog_gain = 1, .digital_gain = 1 };
 
 hal_err_t _camera_reset() {
   hal_gpio_set(GPIO_CAMERA_PWR, GPIO_SET);
@@ -85,6 +100,18 @@ hal_err_t camera_start() {
     return err;
   }
 
+  if ((err = camera_set_exposure(g_camera_exposure.exposure)) != HAL_SUCCESS) {
+    return err;
+  }
+
+  if ((err = camera_set_analog_gain(g_camera_exposure.analog_gain)) != HAL_SUCCESS) {
+    return err;
+  }
+
+  if ((err = camera_set_digital_gain(g_camera_exposure.digital_gain)) != HAL_SUCCESS) {
+    return err;
+  }
+
   err = hal_camera_start(g_camera_fb);
   return err;
 }
@@ -109,19 +136,44 @@ hal_err_t camera_submit(uint8_t* frame) {
   return hal_camera_submit(frame);
 }
 
+hal_err_t camera_autoexposure(uint32_t total_luma) {
+  if (total_luma < CAMERA_TARGET_LUMA_MIN) {
+    if (g_camera_exposure.exposure < EXPOSURE_MAX) {
+      return camera_set_exposure(g_camera_exposure.exposure + 1);
+    } else if (g_camera_exposure.analog_gain < CAMERA_MAX_ANALOG_GAIN) {
+      return camera_set_analog_gain(g_camera_exposure.analog_gain + 1);
+    } else if (g_camera_exposure.digital_gain < CAMERA_MAX_DIGITAL_GAIN) {
+      return camera_set_digital_gain(g_camera_exposure.digital_gain + 1);
+    }
+  } else if (total_luma > CAMERA_TARGET_LUMA_MAX) {
+    if (g_camera_exposure.digital_gain > 1) {
+      return camera_set_digital_gain(g_camera_exposure.digital_gain - 1);
+    } else if (g_camera_exposure.analog_gain > 1) {
+      return camera_set_analog_gain(g_camera_exposure.analog_gain - 1);
+    } else if (g_camera_exposure.exposure > EXPOSURE_MIN) {
+      return camera_set_exposure(g_camera_exposure.exposure - 1);
+    }
+  }
+
+  return HAL_SUCCESS;
+}
+
 hal_err_t camera_set_exposure(camera_exposure_t exposure) {
+  g_camera_exposure.exposure = exposure;
   struct camera_regval regs[3];
   _camera_exposure_regs(regs, exposure);
   return _camera_load_regs(regs);
 }
 
 hal_err_t camera_set_analog_gain(uint8_t gain) {
+  g_camera_exposure.analog_gain = gain;
   struct camera_regval regs[3];
   _camera_analog_gain_regs(regs, gain);
   return _camera_load_regs(regs);
 }
 
 hal_err_t camera_set_digital_gain(uint8_t gain) {
+  g_camera_exposure.digital_gain = gain;
   struct camera_regval regs[3];
   _camera_digital_gain_regs(regs, gain);
   return _camera_load_regs(regs);

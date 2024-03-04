@@ -37,6 +37,9 @@ extern "C" {
 
 #define QUIRC_PERSPECTIVE_PARAMS 8
 
+#define QUIRC_WIDTH 480
+#define QUIRC_HEIGHT 480
+
 /* Limits on the maximum size of QR-codes and their content.
  * Payload size is an overstimated approximation based on version number for
  * the alphanumeric type.
@@ -91,8 +94,6 @@ struct quirc_grid {
 
 struct quirc {
     quirc_pixel_t           *pixels;
-    int                     w;
-    int                     h;
 
     int                     num_regions;
     struct quirc_region     regions[QUIRC_MAX_REGIONS];
@@ -105,7 +106,7 @@ struct quirc {
 };
 
 /* Set image buffer */
-int quirc_set_image(struct quirc *q, uint8_t* image, int w, int h);
+int quirc_set_image(struct quirc *q, uint8_t* image);
 
 /* These functions are used to process images for QR-code recognition.
  * quirc_begin() must first be called to obtain access to a buffer into
@@ -117,7 +118,7 @@ int quirc_set_image(struct quirc *q, uint8_t* image, int w, int h);
  * code may be obtained using accessor functions described below.
  */
 uint8_t *quirc_begin(struct quirc *q, int *w, int *h);
-void quirc_threshold(struct quirc *q);
+uint32_t quirc_threshold(struct quirc *q);
 void quirc_end(struct quirc *q);
 
 /* This enum describes the various decoder errors which may occur. */
