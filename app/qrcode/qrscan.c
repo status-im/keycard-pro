@@ -88,10 +88,11 @@ app_err_t qrscan_scan() {
       continue;
     }
 
-    quirc_set_image(&qrctx, fb, CAMERA_WIDTH, CAMERA_HEIGHT);
+    quirc_set_image(&qrctx, fb);
     quirc_begin(&qrctx, NULL, NULL);
 
-    quirc_threshold(&qrctx);
+    uint32_t total_luma = quirc_threshold(&qrctx);
+    camera_autoexposure(total_luma);
     screen_camera_passthrough(fb);
 
     quirc_end(&qrctx);
@@ -138,9 +139,16 @@ app_err_t qrscan_scan() {
 
     keypad_key_t k = ui_wait_keypress(0);
 
-    if ((k == KEYPAD_KEY_CANCEL) || (k == KEYPAD_KEY_BACK)) {
-      res = ERR_CANCEL;
-      goto end;
+    if (k != KEYPAD_KEY_INVALID) {
+      switch(k) {
+      case KEYPAD_KEY_CANCEL:
+      case KEYPAD_KEY_BACK:
+        res = ERR_CANCEL;
+        goto end;
+        break;
+      default:
+        break;
+      }
     }
   }
 

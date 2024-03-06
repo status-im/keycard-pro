@@ -8,6 +8,7 @@
 #include "crypto/aes.h"
 #include "crypto/ecdsa.h"
 #include "iso7816/smartcard.h"
+#include "qrcode/qrcode.h"
 
 #ifdef __MCUXPRESSO
 #include "nxp.h"
@@ -38,10 +39,10 @@ void hal_reboot();
 hal_boot_t hal_boot_type();
 
 // Camera
-#define CAMERA_WIDTH 480
-#define CAMERA_HEIGHT 480
+#define CAMERA_WIDTH QUIRC_WIDTH
+#define CAMERA_HEIGHT QUIRC_HEIGHT
 #define CAMERA_BPP 1
-#define CAMERA_FB_SIZE CAMERA_WIDTH*CAMERA_HEIGHT*CAMERA_BPP
+#define CAMERA_FB_SIZE (CAMERA_WIDTH * CAMERA_HEIGHT * CAMERA_BPP)
 #define CAMERA_FB_COUNT 2
 #define CAMERA_TASK_NOTIFICATION_IDX 0
 #define SMARTCARD_TASK_NOTIFICATION_IDX 1

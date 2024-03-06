@@ -54,7 +54,7 @@
 
 static const struct camera_regval camera_regs[] = {
   {0x0103, 0x01}, // soft reset.
-  {_CAM_REG_DELAY, 10}, // delay.
+  {_CAM_REG_DELAY, 10},
   {0x0100,0x00},
   {0x300f,0x0f},
   {0x3018,0x1f},
@@ -125,12 +125,6 @@ static const struct camera_regval camera_regs[] = {
   {0x3908,0x91},
   {0x3d08,0x01},
   SC031GS_GAIN_CFG_TABLE,
-  {SC031GS_EXPOSURE_H_REG,0x0f},
-  {SC031GS_EXPOSURE_L_REG,0xa0},
-  {SC031GS_GAIN_ANALOG_H_REG,0x07},
-  {SC031GS_GAIN_ANALOG_L_REG,0x1f},
-  {SC031GS_GAIN_DIGITAL_H_REG,0x03},
-  {SC031GS_GAIN_DIGITAL_L_REG,0x80},
   {0x4500,0x59},
   {0x4501,0xc4},
   {0x5011,0x00},
@@ -143,6 +137,47 @@ static const struct camera_regval camera_regs[] = {
   {0x3317,0x0f},
   {_CAM_REG_NULL, 0x00},
 };
+
+const uint16_t _camera_exposure_table[] = {
+    0x0709, 0x0962, 0x0e13, 0x1198, 0x1776, 0x1c27, 0x384e
+};
+
+const uint16_t _camera_analog_gain_table[] = {
+    0x0010, 0x0110, 0x0118, 0x0310, 0x0314, 0x0318, 0x031c, 0x0710,
+    0x0712, 0x0714, 0x0716, 0x0718, 0x071a, 0x071c, 0x071e, 0x071f
+};
+
+const uint16_t _camera_digital_gain_table[] = {
+    0x0080, 0x0180, 0x01c0, 0x0380, 0x03a0, 0x03c0, 0x03e0, 0x03f8,
+};
+
+static inline void _camera_exposure_regs(struct camera_regval regs[3], camera_exposure_t exposure) {
+  uint16_t val = _camera_exposure_table[exposure];
+  regs[0].addr = SC031GS_EXPOSURE_H_REG;
+  regs[0].val = val >> 8;
+  regs[1].addr = SC031GS_EXPOSURE_L_REG;
+  regs[1].val = val & 0xff;
+  regs[2].addr = _CAM_REG_NULL;
+}
+
+static inline void _camera_analog_gain_regs(struct camera_regval regs[3], uint8_t gain) {
+  uint16_t val = _camera_analog_gain_table[gain - 1];
+  regs[0].addr = SC031GS_GAIN_ANALOG_H_REG;
+  regs[0].val = val >> 8;
+  regs[1].addr = SC031GS_GAIN_ANALOG_L_REG;
+  regs[1].val = val & 0xff;
+  regs[2].addr = _CAM_REG_NULL;
+}
+
+static inline void _camera_digital_gain_regs(struct camera_regval regs[3], uint8_t gain) {
+  uint16_t val = _camera_digital_gain_table[gain - 1];
+  regs[0].addr = SC031GS_GAIN_DIGITAL_H_REG;
+  regs[0].val = val >> 8;
+  regs[1].addr = SC031GS_GAIN_DIGITAL_L_REG;
+  regs[1].val = val & 0xff;
+  regs[2].addr = _CAM_REG_NULL;
+}
+
 #else
 #error This file must be only imported once.
 #endif

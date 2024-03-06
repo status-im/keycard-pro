@@ -746,12 +746,12 @@ static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, spa
         int left = x;
         int right = x;
         int i;
-        quirc_pixel_t *row = q->pixels + y * q->w;
+        quirc_pixel_t *row = q->pixels + y * QUIRC_WIDTH;
 
         while (left > 0 && row[left - 1] == from8)
             left--;
 
-        while (right < q->w - 1 && row[right + 1] == from8)
+        while (right < QUIRC_WIDTH - 1 && row[right + 1] == from8)
             right++;
 
         /* Fill the extent */
@@ -764,7 +764,7 @@ static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, spa
             if (lifo.len < lifo_len) {
                 /* Seed new flood-fills */
                 if (y > 0) {
-                    row = q->pixels + (y - 1) * q->w;
+                    row = q->pixels + (y - 1) * QUIRC_WIDTH;
 
                     bool recurse = false;
                     for (i = left; i <= right; i++)
@@ -784,8 +784,8 @@ static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, spa
                         break;
                 }
 
-                if (y < q->h - 1) {
-                    row = q->pixels + (y + 1) * q->w;
+                if (y < QUIRC_HEIGHT - 1) {
+                    row = q->pixels + (y + 1) * QUIRC_WIDTH;
 
                     bool recurse = false;
                     for (i = left; i <= right; i++)
@@ -824,47 +824,37 @@ static void flood_fill_seed(struct quirc *q, int x, int y, int from, int to, spa
  * Adaptive thresholding
  */
 
-#define THRESHOLD_S_MIN 1
 #define THRESHOLD_S_DEN 8
 #define THRESHOLD_T     5
+#define THRESHOLD_S (QUIRC_WIDTH / THRESHOLD_S_DEN)
 
-void quirc_threshold(struct quirc *q)
+// to use multiply instead of divide (not too many bits or we'll overflow)
+// to get the effect used below (a fraction of threshold_s-1/threshold_s
+// The second constant is to reduce the averaged values to compare with the current pixel
+#define FRACMUL ((32768 * (THRESHOLD_S - 1)) / THRESHOLD_S)
+#define FRACMUL2 ((0x100000 * (100 - THRESHOLD_T)) / (200 * THRESHOLD_S))
+
+uint32_t quirc_threshold(struct quirc *q)
 {
     int x, y;
     int avg_w = 0;
     int avg_u = 0;
-    int threshold_s = q->w / THRESHOLD_S_DEN;
-    int fracmul, fracmul2;
+    uint32_t total_luma = 0;
     quirc_pixel_t *row = q->pixels;
-    int width = q->w;
 
-    /*
-     * Ensure a sane, non-zero value for threshold_s.
-     *
-     * threshold_s can be zero if the image width is small. We need to avoid
-     * SIGFPE as it will be used as divisor.
-     */
-    if (threshold_s < THRESHOLD_S_MIN)
-        threshold_s = THRESHOLD_S_MIN;
+    for (y = 0; y < QUIRC_HEIGHT; y++) {
+        int row_average[QUIRC_WIDTH];
 
-    fracmul = (32768 * (threshold_s - 1)) / threshold_s; // to use multipy instead of divide (not too many bits or we'll overflow)
-    // to get the effect used below (a fraction of threshold_s-1/threshold_s
-    // The second constant is to reduce the averaged values to compare with the current pixel
-    fracmul2 = (0x100000 * (100 - THRESHOLD_T)) / (200 * threshold_s); // use as many bits as possible without overflowing
+        memset(row_average, 0, QUIRC_WIDTH * 4);
 
-    for (y = 0; y < q->h; y++) {
-        int row_average[q->w];
-
-        memset(row_average, 0, width * 4);
-
-        for (x = 0; x < width; x++) {
+        for (x = 0; x < QUIRC_WIDTH; x++) {
             int w, u;
 
             if (y & 1) {
                 w = x;
-                u = width - 1 - x;
+                u = QUIRC_WIDTH - 1 - x;
             } else {
-                w = width - 1 - x;
+                w = QUIRC_WIDTH - 1 - x;
                 u = x;
             }
 
@@ -872,23 +862,26 @@ void quirc_threshold(struct quirc *q)
 //            avg_u = (avg_u * (threshold_s - 1)) / threshold_s + row[u];
             // The original mul/div operation sought to reduce the average value by a small fraction (e.g. 1/79)
             // This mul/shift approximation achieves the same goal with only a small percentage difference
-            avg_w = ((avg_w * fracmul) >> 15) + row[w];
-            avg_u = ((avg_u * fracmul) >> 15) + row[u];
+            avg_w = ((avg_w * FRACMUL) >> 15) + row[w];
+            avg_u = ((avg_u * FRACMUL) >> 15) + row[u];
 
             row_average[w] += avg_w;
             row_average[u] += avg_u;
         }
 
-        for (x = 0; x < width; x++) {
+        for (x = 0; x < QUIRC_WIDTH; x++) {
+            total_luma += row[x];
             //            if (row[x] < row_average[x] * (100 - THRESHOLD_T) / (200 * threshold_s))
-            if (row[x] < ((row_average[x] * fracmul2) >> 20))
+            if (row[x] < ((row_average[x] * FRACMUL2) >> 20))
                 row[x] = QUIRC_PIXEL_BLACK;
             else
                 row[x] = QUIRC_PIXEL_WHITE;
         }
 
-        row += width;
+        row += QUIRC_WIDTH;
     }
+
+    return total_luma;
 } /* threshold() */
 
 static void area_count(void *user_data, int y, int left, int right)
@@ -902,10 +895,10 @@ static int region_code(struct quirc *q, int x, int y)
     struct quirc_region *box;
     int region;
 
-    if (x < 0 || y < 0 || x >= q->w || y >= q->h)
+    if (x < 0 || y < 0 || x >= QUIRC_WIDTH || y >= QUIRC_HEIGHT)
         return -1;
 
-    pixel = q->pixels[y * q->w + x];
+    pixel = q->pixels[y * QUIRC_WIDTH + x];
 
     if (pixel >= QUIRC_PIXEL_REGION)
         return pixel;
@@ -1088,7 +1081,7 @@ static void test_capstone(struct quirc *q, int x, int y, int *pb)
 
 static void finder_scan(struct quirc *q, int y)
 {
-    quirc_pixel_t *row = q->pixels + y * q->w;
+    quirc_pixel_t *row = q->pixels + y * QUIRC_WIDTH;
     int x;
     uint8_t color, last_color;
     int run_length = 1;
@@ -1096,7 +1089,7 @@ static void finder_scan(struct quirc *q, int y)
     int pb[5] = {0};
 
     last_color = row[0];
-    for (x = 1; x < q->w; x++) {
+    for (x = 1; x < QUIRC_WIDTH; x++) {
         color = row[x];
 
         if (/* x && */ color != last_color) {
@@ -1225,9 +1218,9 @@ static int timing_scan(const struct quirc *q,
     int run_length = 0;
     int count = 0;
 
-    if (p0->x < 0 || p0->y < 0 || p0->x >= q->w || p0->y >= q->h)
+    if (p0->x < 0 || p0->y < 0 || p0->x >= QUIRC_WIDTH || p0->y >= QUIRC_HEIGHT)
         return -1;
-    if (p1->x < 0 || p1->y < 0 || p1->x >= q->w || p1->y >= q->h)
+    if (p1->x < 0 || p1->y < 0 || p1->x >= QUIRC_WIDTH || p1->y >= QUIRC_HEIGHT)
         return -1;
 
     if (abs(n) > abs(d)) {
@@ -1262,10 +1255,10 @@ static int timing_scan(const struct quirc *q,
     for (i = 0; i <= d; i++) {
         int pixel;
 
-        if (y < 0 || y >= q->h || x < 0 || x >= q->w)
+        if (y < 0 || y >= QUIRC_HEIGHT || x < 0 || x >= QUIRC_WIDTH)
             break;
 
-        pixel = q->pixels[y * q->w + x];
+        pixel = q->pixels[y * QUIRC_WIDTH + x];
 
         if (pixel) {
             if (run_length >= 2)
@@ -1340,10 +1333,10 @@ static int read_cell(const struct quirc *q, int index, int x, int y)
     struct quirc_point p;
 
     perspective_map(qr->c, x + 0.5, y + 0.5, &p);
-    if (p.y < 0 || p.y >= q->h || p.x < 0 || p.x >= q->w)
+    if (p.y < 0 || p.y >= QUIRC_HEIGHT || p.x < 0 || p.x >= QUIRC_WIDTH)
         return 0;
 
-    return q->pixels[p.y * q->w + p.x] ? 1 : -1;
+    return q->pixels[p.y * QUIRC_WIDTH + p.x] ? 1 : -1;
 }
 
 static int fitness_cell(const struct quirc *q, int index, int x, int y)
@@ -1359,10 +1352,10 @@ static int fitness_cell(const struct quirc *q, int index, int x, int y)
 
             perspective_map(qr->c, x + offsets[u],
                            y + offsets[v], &p);
-            if (p.y < 0 || p.y >= q->h || p.x < 0 || p.x >= q->w)
+            if (p.y < 0 || p.y >= QUIRC_HEIGHT || p.x < 0 || p.x >= QUIRC_WIDTH)
                 continue;
 
-            if (q->pixels[p.y * q->w + p.x])
+            if (q->pixels[p.y * QUIRC_WIDTH + p.x])
                 score++;
             else
                 score--;
@@ -1747,16 +1740,16 @@ uint8_t *quirc_begin(struct quirc *q, int *w, int *h)
     q->num_grids = 0;
 
     if (w)
-        *w = q->w;
+        *w = QUIRC_WIDTH;
     if (h)
-        *h = q->h;
+        *h = QUIRC_HEIGHT;
 
     return q->pixels;
 }
 
 void quirc_end(struct quirc *q)
 {
-    for (int i = 0; i < q->h; i++)
+    for (int i = 0; i < QUIRC_HEIGHT; i++)
         finder_scan(q, i);
 
     for (int i = 0; i < q->num_capstones; i++)
@@ -2730,11 +2723,8 @@ quirc_decode_error_t quirc_decode(const struct quirc_code *code,
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-int quirc_set_image(struct quirc *q, uint8_t* image, int w, int h) {
+int quirc_set_image(struct quirc *q, uint8_t* image) {
     q->pixels = image;
-    q->w = w;
-    q->h = h;
-
     return 0;
 }
 

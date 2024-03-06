@@ -3,19 +3,30 @@
 
 #include "hal.h"
 
-#define _CAM_REG_NULL 0xFFFF
-#define _CAM_REG_DELAY 0X0000
 #define _CAM_MODEL SC031GS
+#define CAMERA_MAX_ANALOG_GAIN 16
+#define CAMERA_MAX_DIGITAL_GAIN 8
 
-struct camera_regval {
-  uint16_t addr;
-  uint8_t val;
-};
+typedef enum {
+  EXPOSURE_1000,
+  EXPOSURE_750,
+  EXPOSURE_500,
+  EXPOSURE_400,
+  EXPOSURE_300,
+  EXPOSURE_250,
+  EXPOSURE_125,
+} camera_exposure_t;
 
 hal_err_t camera_start();
 hal_err_t camera_stop();
 
 hal_err_t camera_next_frame(uint8_t** frame);
 hal_err_t camera_submit(uint8_t* frame);
+
+hal_err_t camera_autoexposure(uint32_t total_luma);
+
+hal_err_t camera_set_exposure(camera_exposure_t exposure);
+hal_err_t camera_set_analog_gain(uint8_t gain);
+hal_err_t camera_set_digital_gain(uint8_t gain);
 
 #endif /* __CAMERA_H__ */
