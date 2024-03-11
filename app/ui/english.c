@@ -42,6 +42,7 @@ const char *const i18n_english_strings[] = {
 
     // PIN input
     "Insert your PIN",
+    "Wrong PIN. Please try again.",
     "Choose a new PIN",
     "Remaining attempts: ",
     "Repeat the PIN",
@@ -50,6 +51,7 @@ const char *const i18n_english_strings[] = {
 
     // PUK input
     "Insert your PUK",
+    "Wrong PUK. Please try again.",
     "Choose a new PUK",
     "Card blocked",
     "The card is blocked. If you have setup a PUK press OK to insert it, otherwise press Cancel to factory reset the card.",

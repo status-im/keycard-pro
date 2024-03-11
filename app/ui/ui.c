@@ -105,6 +105,7 @@ void ui_keycard_secure_channel_ok() {
 }
 
 void ui_keycard_wrong_pin() {
+  ui_info(LSTR(INFO_ERROR_TITLE), LSTR(PIN_WRONG_WARNING), 1);
 }
 
 void ui_keycard_pin_ok() {
@@ -114,6 +115,7 @@ void ui_keycard_puk_ok() {
 }
 
 void ui_keycard_wrong_puk() {
+  ui_info(LSTR(INFO_ERROR_TITLE), LSTR(PUK_WRONG_WARNING), 1);
 }
 
 core_evt_t ui_keycard_not_genuine() {
