@@ -12,6 +12,9 @@
 #define TX_CONFIRM_TIMEOUT 30000
 #define BIGNUM_STRING_LEN 84
 #define MAX_PAGE_COUNT 50
+#define MESSAGE_MAX_X (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN)
+#define MESSAGE_MAX_Y (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN)
+#define MAX_MSG_TITLE_LEN 80
 
 app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_height) {
   screen_area_t fillarea = { 0, ctx->y, SCREEN_WIDTH, line_height };
@@ -159,30 +162,77 @@ app_err_t dialog_confirm_tx() {
   }
 }
 
-static size_t dialog_draw_message(const char* title, const char* txt, size_t len) {
+static void dialog_draw_message(const char* title, const char* txt, size_t len) {
   dialog_title(title);
-  screen_text_ctx_t ctx;
-  ctx.y = TH_TITLE_HEIGHT;
-  dialog_footer(ctx.y);
-  ctx.y += TH_TEXT_VERTICAL_MARGIN;
+  dialog_footer(TH_TITLE_HEIGHT);
 
-  ctx.font = TH_FONT_TEXT;
-  ctx.fg = TH_COLOR_TEXT_FG;
-  ctx.bg = TH_COLOR_TEXT_BG;
-  ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
+  screen_text_ctx_t ctx = {
+      .font = TH_FONT_TEXT,
+      .fg = TH_COLOR_TEXT_FG,
+      .bg = TH_COLOR_TEXT_BG,
+      .x = TH_TEXT_HORIZONTAL_MARGIN,
+      .y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN
+  };
 
-  return screen_draw_text(&ctx, (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN), (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN), (uint8_t*) txt, len);
+  screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, (uint8_t*) txt, len, false);
+}
+
+static inline void _dialog_paged_title(const char* base, char title[MAX_MSG_TITLE_LEN], size_t page, size_t last_page) {
+  size_t base_len = strlen(base);
+  assert(base_len < (MAX_MSG_TITLE_LEN - 9));
+
+  memcpy(title, base, base_len);
+  title[base_len++] = ' ';
+  title[base_len++] = '(';
+
+  uint8_t page_str[4];
+  uint8_t* p = u32toa(page + 1, page_str, 4);
+  uint8_t p_len = strlen((char *) p);
+  memcpy(&title[base_len], p, p_len);
+  base_len += p_len;
+
+  title[base_len++] = '/';
+
+  p = u32toa(last_page + 1, page_str, 4);
+  p_len = strlen((char *) p);
+  memcpy(&title[base_len], p, p_len);
+  base_len += p_len;
+  title[base_len++] = ')';
+  title[base_len] = '\0';
 }
 
 app_err_t dialog_confirm_msg() {
   size_t pages[MAX_PAGE_COUNT];
-  int page = 0;
+  size_t last_page = 0;
   pages[0] = 0;
 
   while(1) {
-    size_t offset = pages[page];
+    screen_text_ctx_t ctx = {
+        .font = TH_FONT_TEXT,
+        .fg = TH_COLOR_TEXT_FG,
+        .bg = TH_COLOR_TEXT_BG,
+        .x = TH_TEXT_HORIZONTAL_MARGIN,
+        .y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN
+    };
+
+    size_t offset = pages[last_page];
     size_t to_display = g_ui_cmd.params.msg.len - offset;
-    size_t remaining = dialog_draw_message(LSTR(MSG_CONFIRM_TITLE), (char*) &g_ui_cmd.params.msg.data[offset], to_display);
+    size_t remaining = screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &g_ui_cmd.params.msg.data[offset], to_display, true);
+
+    if (!remaining || last_page == (MAX_PAGE_COUNT - 1)) {
+      break;
+    }
+
+    pages[++last_page] = offset + (to_display - remaining);
+  }
+
+  int page = 0;
+
+  while(1) {
+    size_t offset = pages[page];
+    char title[MAX_MSG_TITLE_LEN];
+    _dialog_paged_title(LSTR(MSG_CONFIRM_TITLE), title, page, last_page);
+    dialog_draw_message(title, (char*) &g_ui_cmd.params.msg.data[offset], (g_ui_cmd.params.msg.len - offset));
 
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
     case KEYPAD_KEY_LEFT:
@@ -191,8 +241,8 @@ app_err_t dialog_confirm_msg() {
       }
       break;
     case KEYPAD_KEY_RIGHT:
-      if (remaining && (page < MAX_PAGE_COUNT)) {
-        pages[++page] = offset + (to_display - remaining);
+      if (page < last_page) {
+        page++;
       }
       break;
     case KEYPAD_KEY_CANCEL:
