@@ -8,7 +8,7 @@
 #include "pwr.h"
 #include "usb/usb.h"
 
-#define VBAT_MIN 3200
+#define VBAT_MIN 3100
 #define VBAT_MAX 4100
 #define VBAT_USB 4600
 
