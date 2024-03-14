@@ -68,16 +68,33 @@ static inline void dialog_data(screen_text_ctx_t *ctx, const char* data) {
   dialog_line(ctx, data, TH_DATA_HEIGHT);
 }
 
-static void dialog_chain(screen_text_ctx_t *ctx, const char* name) {
-  dialog_label(ctx, LSTR(TX_CHAIN));
-  dialog_data(ctx, name);
+static inline void dialog_inline_data(screen_text_ctx_t *ctx, const char* data) {
+  ctx->font = TH_FONT_DATA;
+  ctx->fg = TH_COLOR_DATA_FG;
+  ctx->bg = TH_COLOR_DATA_BG;
+  ctx->x = TH_INLINE_DATA_LEFT_MARGIN;
+
+  uint16_t tmp = ctx->y;
+  ctx->y = ctx->y - TH_LABEL_HEIGHT + ((TH_LABEL_HEIGHT - ctx->font->yAdvance) / 2);
+  screen_draw_string(ctx, data);
+  ctx->y = tmp;
 }
 
-static void dialog_tx_address(screen_text_ctx_t *ctx, const uint8_t* to) {
-  char address[41];
-  ethereum_address_checksum(to, address);
+static void dialog_chain(screen_text_ctx_t *ctx, const char* name) {
+  dialog_label(ctx, LSTR(TX_CHAIN));
+  dialog_inline_data(ctx, name);
+}
 
-  dialog_label(ctx, LSTR(TX_ADDRESS));
+static void dialog_tx_data(screen_text_ctx_t *ctx, i18n_str_id_t data_type) {
+  dialog_label(ctx, LSTR(TX_DATA));
+  dialog_inline_data(ctx, LSTR(data_type));
+}
+
+static void dialog_address(screen_text_ctx_t *ctx, i18n_str_id_t label, const uint8_t* addr) {
+  char address[41];
+  ethereum_address_checksum(addr, address);
+
+  dialog_label(ctx, LSTR(label));
   dialog_data(ctx, address);
 }
 
@@ -95,7 +112,7 @@ static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const bi
   bn_format(amount, NULL, ticker, decimals, 0, 0, ',', tmp, sizeof(tmp));
 
   dialog_label(ctx, LSTR(prompt));
-  dialog_data(ctx, tmp);
+  dialog_inline_data(ctx, tmp);
 }
 
 app_err_t dialog_confirm_tx() {
@@ -111,6 +128,7 @@ app_err_t dialog_confirm_tx() {
 
   i18n_str_id_t title;
   const uint8_t* to;
+  i18n_str_id_t data_type;
 
   if (g_ui_cmd.params.txn.tx->dataType == DATA_ERC20) {
     title = TX_CONFIRM_ERC20_TITLE;
@@ -123,11 +141,14 @@ app_err_t dialog_confirm_tx() {
       token.ticker = "???";
       token.decimals = 18;
     }
+
+    data_type = TX_DATA_ERC20;
   } else {
     title = TX_CONFIRM_TITLE;
     token.ticker = chain.ticker;
     token.decimals = 18;
     to = g_ui_cmd.params.txn.tx->destination;
+    data_type = g_ui_cmd.params.txn.tx->dataType == DATA_NONE ? TX_DATA_NONE : TX_DATA_PRESENT;
   }
 
   dialog_title(LSTR(title));
@@ -135,9 +156,10 @@ app_err_t dialog_confirm_tx() {
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
 
+  dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.txn.addr);
+  dialog_address(&ctx, TX_ADDRESS, to);
   dialog_chain(&ctx, chain.name);
-
-  dialog_tx_address(&ctx, to);
+  dialog_tx_data(&ctx, data_type);
 
   bignum256 data;
   bn_read_compact_be(g_ui_cmd.params.txn.tx->value.value, g_ui_cmd.params.txn.tx->value.length, &data);

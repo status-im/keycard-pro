@@ -36,6 +36,11 @@ typedef enum {
   TX_ADDRESS,
   TX_AMOUNT,
   TX_FEE,
+  TX_SIGNER,
+  TX_DATA,
+  TX_DATA_NONE,
+  TX_DATA_ERC20,
+  TX_DATA_PRESENT,
 
   // MSG Confirmation
   MSG_CONFIRM_TITLE,

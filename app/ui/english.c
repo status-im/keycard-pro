@@ -33,6 +33,11 @@ const char *const i18n_english_strings[] = {
     "To",
     "Amount",
     "Fee",
+    "Signer",
+    "Data",
+    "No",
+    "Yes (ERC20)",
+    "Yes",
 
     // MSG Confirmation
     "Sign message",
