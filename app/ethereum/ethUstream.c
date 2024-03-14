@@ -34,6 +34,7 @@ void initTx(txContext_t *context, SHA3_CTX *sha3, txContent_t *content) {
   context->sha3 = sha3;
   context->content = content;
   context->currentField = RLP_NONE + 1;
+  context->content->dataType = DATA_NONE;
 }
 
 uint16_t readTxByte(txContext_t *context) {
@@ -259,11 +260,6 @@ static uint16_t processData(txContext_t *context) {
 
   if (context->currentFieldPos < context->currentFieldLength) {
     uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
-    // If there is no data, set dataPresent to false.
-    if (copySize == 1 && *context->workBuffer == 0x00) {
-      context->content->dataType = DATA_NONE;
-    }
-    
     if (copyTxData(context, NULL, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
@@ -275,7 +271,7 @@ static uint16_t processData(txContext_t *context) {
       memmove(context->content->finalRecipient, &dataBuf[16], MAX_ADDRESS);
       memmove(context->content->value.value, &dataBuf[36], MAX_INT256);
       context->content->value.length = MAX_INT256;
-    } else {
+    } else if (context->currentFieldLength > 0) {
       context->content->dataType = DATA_UNKNOWN;
     }
 
