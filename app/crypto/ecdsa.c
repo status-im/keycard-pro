@@ -70,6 +70,7 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key, const
   //TODO: sanity check on input
   const uint8_t* r = sig;
   const uint8_t* s = &sig[ECC256_ELEMENT_SIZE];
+  uint8_t r2[ECC256_ELEMENT_SIZE];
 
   if ((hal_bn_cmp(r, curve->order) >= 0) || all_zero(r, ECC256_ELEMENT_SIZE)) {
     return 1;
@@ -80,7 +81,6 @@ int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key, const
   }
 
   if (recid & 2) {
-    uint8_t r2[ECC256_ELEMENT_SIZE];
     hal_bn_add(r, curve->order, r2);
     r = r2;
 
