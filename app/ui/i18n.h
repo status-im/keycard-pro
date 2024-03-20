@@ -44,6 +44,7 @@ typedef enum {
 
   // MSG Confirmation
   MSG_CONFIRM_TITLE,
+  MSG_LABEL,
 
   // QR output
   QR_OUTPUT_TITLE,

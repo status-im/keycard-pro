@@ -228,14 +228,15 @@ app_err_t dialog_confirm_msg() {
   size_t last_page = 0;
   pages[0] = 0;
 
+  screen_text_ctx_t ctx = {
+      .font = TH_FONT_TEXT,
+      .fg = TH_COLOR_TEXT_FG,
+      .bg = TH_COLOR_TEXT_BG,
+  };
+
   while(1) {
-    screen_text_ctx_t ctx = {
-        .font = TH_FONT_TEXT,
-        .fg = TH_COLOR_TEXT_FG,
-        .bg = TH_COLOR_TEXT_BG,
-        .x = TH_TEXT_HORIZONTAL_MARGIN,
-        .y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN
-    };
+    ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
+    ctx.y = last_page ? (TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN) : (TH_TITLE_HEIGHT + TH_DATA_HEIGHT + (TH_LABEL_HEIGHT * 2));
 
     size_t offset = pages[last_page];
     size_t to_display = g_ui_cmd.params.msg.len - offset;
@@ -254,7 +255,25 @@ app_err_t dialog_confirm_msg() {
     size_t offset = pages[page];
     char title[MAX_MSG_TITLE_LEN];
     _dialog_paged_title(LSTR(MSG_CONFIRM_TITLE), title, page, last_page);
-    dialog_draw_message(title, (char*) &g_ui_cmd.params.msg.data[offset], (g_ui_cmd.params.msg.len - offset));
+
+    dialog_title(title);
+
+    if (page == 0) {
+      ctx.y = TH_TITLE_HEIGHT;
+      dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.txn.addr);
+      dialog_label(&ctx, LSTR(MSG_LABEL));
+      ctx.font = TH_FONT_TEXT;
+      ctx.fg = TH_COLOR_TEXT_FG;
+      ctx.bg = TH_COLOR_TEXT_BG;
+      ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
+      dialog_footer(ctx.y);
+    } else {
+      ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
+      ctx.y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN;
+      dialog_footer(TH_TITLE_HEIGHT);
+    }
+
+    screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &g_ui_cmd.params.msg.data[offset], (g_ui_cmd.params.msg.len - offset), false);
 
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
     case KEYPAD_KEY_LEFT:
