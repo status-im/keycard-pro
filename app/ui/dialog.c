@@ -38,13 +38,18 @@ app_err_t dialog_title(const char* title) {
     return ERR_HW;
   }
 
+  ctx.font = &icons_14pt;
   ctx.y = ((TH_TITLE_HEIGHT - ctx.font->yAdvance) / 2);
   ctx.x = 280;
 
-  uint8_t buf[11];
-  uint8_t *battery = u32toa(g_ui_ctx.battery, buf, 11);
+  uint8_t i = g_ui_ctx.battery / 25;
+  if (i > 5) {
+    i = 4;
+  } else if (i >= 4) {
+    i = 3;
+  }
 
-  return screen_draw_string(&ctx, (char *) battery) == HAL_SUCCESS? ERR_OK : ERR_HW;;
+  return screen_draw_glyph(&ctx, &ctx.font->glyph[i]) == HAL_SUCCESS? ERR_OK : ERR_HW;
 }
 
 app_err_t dialog_footer(uint16_t yOff) {
