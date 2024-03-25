@@ -25,8 +25,8 @@ typedef struct {
   uint8_t yAdvance; ///< Newline distance (y axis)
 } font_t;
 
-extern const font_t free_sans_9pt;
-extern const font_t plat_nomor_8pt;
-extern const font_t icons_14pt;
+extern const font_t free_sans_18px;
+extern const font_t plat_nomor_16px;
+extern const font_t icons_28px;
 
 #endif // _FONT_H_

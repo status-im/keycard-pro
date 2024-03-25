@@ -41,11 +41,12 @@
 #define TH_COLOR_PROGRESS_FG SCREEN_RGB(8, 183, 156)
 #define TH_COLOR_PROGRESS_BG SCREEN_RGB(37, 41, 56)
 
-#define TH_FONT_MENU &free_sans_9pt
-#define TH_FONT_LABEL &free_sans_9pt
-#define TH_FONT_DATA &plat_nomor_8pt
-#define TH_FONT_TITLE &free_sans_9pt
-#define TH_FONT_TEXT &free_sans_9pt
+#define TH_FONT_MENU &free_sans_18px
+#define TH_FONT_LABEL &free_sans_18px
+#define TH_FONT_DATA &plat_nomor_16px
+#define TH_FONT_TITLE &free_sans_18px
+#define TH_FONT_TEXT &free_sans_18px
+#define TH_FONT_ICONS &icons_28px
 
 #define TH_MENU_HEIGHT 30
 #define TH_MENU_LEFT_MARGIN TH_DEF_LEFT_MARGIN

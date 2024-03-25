@@ -38,7 +38,7 @@ app_err_t dialog_title(const char* title) {
     return ERR_HW;
   }
 
-  ctx.font = &icons_14pt;
+  ctx.font = TH_FONT_ICONS;
   ctx.y = ((TH_TITLE_HEIGHT - ctx.font->yAdvance) / 2);
   ctx.x = 280;
 

@@ -20,8 +20,6 @@ class GlyphDesc:
     x_offset: int = 0
     y_offset: int = 0
 
-DPI = 141
-
 class BitmapEncoder:
     buffer = None
     acc = 0
@@ -103,7 +101,8 @@ def write_font(font_desc, glyph_descs, data):
 def main():
     parser = argparse.ArgumentParser(description='Convert font to bitmap')
     parser.add_argument('-f', '--font-file', help="the font file")
-    parser.add_argument('-s', '--size', help="the output font size in points")
+    parser.add_argument('-s', '--size', help="the output font size in pixels")
+    parser.add_argument('-H', '--hinter', help="hinter (force-auto, no-auto)")
     args = parser.parse_args()
     
     font_desc = FontDesc()
@@ -112,7 +111,12 @@ def main():
 
     font_face = freetype.Face(args.font_file)
     font_size = int(args.size)
-    font_face.set_char_size(font_size * 64, 0, DPI, 0)
+    font_face.set_pixel_sizes(font_size, font_size)
+
+    if args.hinter == "no-auto":
+        hint_algo = freetype.FT_LOAD_NO_AUTOHINT        
+    else:
+        hint_algo = freetype.FT_LOAD_FORCE_AUTOHINT
 
     font_desc.y_advance = round(font_face.height / 64)
     font_desc.baseline = round(font_face.ascender / 64)
@@ -121,11 +125,11 @@ def main():
 
     while ch[1] != 0:
         font_desc.last = ch[0]
-        font_face.load_glyph(ch[1], freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_MONO)
+        font_face.load_glyph(ch[1], freetype.FT_LOAD_RENDER | freetype.FT_LOAD_TARGET_MONO | hint_algo)
         glyph_descs.append(glyph_write(font_face.glyph, data))
         ch = font_face.get_next_char(ch[0], ch[1])
 
-    font_desc.name = f"{Path(args.font_file).stem}_{font_size}pt"
+    font_desc.name = f"{Path(args.font_file).stem}_{font_size}px"
     write_font(font_desc, glyph_descs, data)
 
 if __name__ == "__main__":
