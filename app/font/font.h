@@ -1,32 +1,28 @@
-// Font structures from Adafruit_GFX (1.1 and later).
-
 #ifndef _FONT_H_
 #define _FONT_H_
 
 #include <stdint.h>
 
-/// Font data stored PER GLYPH
 typedef struct {
-  uint16_t bitmapOffset; ///< Pointer into GFXfont->bitmap
-  uint8_t width;         ///< Bitmap dimensions in pixels
-  uint8_t height;        ///< Bitmap dimensions in pixels
-  uint8_t xAdvance;      ///< Distance to advance cursor (x axis)
-  int8_t xOffset;        ///< X dist from cursor pos to UL corner
-  int8_t yOffset;        ///< Y dist from cursor pos to UL corner
+  uint16_t bitmapOffset;
+  uint8_t width;
+  uint8_t height;
+  uint8_t xAdvance;
+  int8_t xOffset;
+  int8_t yOffset;
 } glyph_t;
 
-/// Data stored for FONT AS A WHOLE
 typedef struct {
-  const uint8_t *bitmap;  ///< Glyph bitmaps, concatenated
-  const glyph_t *glyph;  ///< Glyph array
-  uint16_t first;   ///< ASCII extents (first char)
-  uint16_t last;    ///< ASCII extents (last char)
-  uint8_t baseline; ///< Baseline
-  uint8_t yAdvance; ///< Newline distance (y axis)
+  const uint8_t *bitmap;
+  const glyph_t *glyph;
+  uint32_t first;
+  uint32_t last;
+  uint8_t baseline;
+  uint8_t yAdvance;
 } font_t;
 
 extern const font_t free_sans_18px;
 extern const font_t plat_nomor_16px;
 extern const font_t icons_28px;
 
-#endif // _FONT_H_
+#endif
