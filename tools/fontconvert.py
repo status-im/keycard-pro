@@ -76,7 +76,12 @@ def write_font(font_desc, glyph_descs, data):
         f.write(f'const glyph_t {font_desc.name}_glyphs[] = {{')
         ch = font_desc.first
         for glyph in glyph_descs:
-            f.write("\n  {{{: 5d}, {: 4d}, {: 4d}, {: 4d}, {: 4d}, {: 4d}}}, // 0x{:02x} '{:c}'".format(
+            if (ch >= 32) and (ch <= 126):
+                ch_quoted = " '{:c}'".format(ch)
+            else:
+                ch_quoted = ""
+
+            f.write("\n  {{{: 5d}, {: 4d}, {: 4d}, {: 4d}, {: 4d}, {: 4d}}}, // 0x{:02x}{:s}".format(
                 glyph.bitmap_offset, 
                 glyph.width,
                 glyph.height,
@@ -84,7 +89,7 @@ def write_font(font_desc, glyph_descs, data):
                 glyph.x_offset,
                 glyph.y_offset,
                 ch,
-                ch
+                ch_quoted
             ))
             ch = ch + 1
         f.write("\n};\n\n")
