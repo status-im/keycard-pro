@@ -30,6 +30,13 @@ struct eip712_type {
   uint8_t type_hash[SHA3_256_DIGEST_LENGTH];
 };
 
+struct eip712_ctx {
+  struct eip712_tokens index;
+  int token_count;
+  jsmntok_t* tokens;
+  const char* json;
+};
+
 // ugly stuff
 #define ALIGN_HEAP(__HEAP__, __HEAP_SIZE__) __HEAP__ = (uint8_t*) (((uint32_t)(__HEAP__ + 3)) & ~0x3); __HEAP_SIZE__ &= ~0x3
 
@@ -480,29 +487,34 @@ static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_
 
 app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len) {
   ALIGN_HEAP(heap, heap_size);
-  jsmntok_t* tokens = (jsmntok_t *) heap;
+  struct eip712_ctx *ctx = (struct eip712_ctx *) heap;
+  heap += sizeof(struct eip712_ctx);
+  heap_size -= sizeof(struct eip712_ctx);
+  ctx->json = json;
+  memset(ctx, 0, sizeof(struct eip712_ctx));
+  ALIGN_HEAP(heap, heap_size);
+  ctx->tokens = (jsmntok_t *) heap;
   jsmn_parser parser;
   jsmn_init(&parser);
-  int token_count = jsmn_parse(&parser, json, json_len, tokens, heap_size/sizeof(jsmntok_t));
+  ctx->token_count = jsmn_parse(&parser, json, json_len, ctx->tokens, heap_size/sizeof(jsmntok_t));
 
-  if (token_count < 0) {
+  if (ctx->token_count < 0) {
     return ERR_DATA;
   }
 
-  size_t token_size = token_count * sizeof(jsmntok_t);
+  size_t token_size = ctx->token_count * sizeof(jsmntok_t);
   heap += token_size;
   heap_size -= token_size;
 
-  if (!((tokens[0].type == JSMN_OBJECT) && (tokens[0].size == 4))) {
+  if (!((ctx->tokens[0].type == JSMN_OBJECT) && (ctx->tokens[0].size == 4))) {
     return ERR_DATA;
   }
 
-  struct eip712_tokens eip712 = {0};
-  if (eip712_top_level(&eip712, tokens, token_count, json) != ERR_OK) {
+  if (eip712_top_level(&ctx->index, ctx->tokens, ctx->token_count, json) != ERR_OK) {
     return ERR_DATA;
   }
 
-  size_t types_len = tokens[eip712.types].size * sizeof(struct eip712_type);
+  size_t types_len = ctx->tokens[ctx->index.types].size * sizeof(struct eip712_type);
   ALIGN_HEAP(heap, heap_size);
 
   if (heap_size < types_len) {
@@ -514,7 +526,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   heap_size -= types_len;
   memset(types, 0, types_len);
 
-  int fields_size = eip712_parse_types(heap, heap_size, eip712.types, types, tokens[eip712.types].size, tokens, token_count, json);
+  int fields_size = eip712_parse_types(heap, heap_size, ctx->index.types, types, ctx->tokens[ctx->index.types].size, ctx->tokens, ctx->token_count, json);
 
   if (fields_size < 0) {
     return ERR_DATA;
@@ -523,7 +535,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   heap += fields_size;
   heap_size -= fields_size;
 
-  if (eip712_hash_types(heap, heap_size, types, tokens[eip712.types].size) != ERR_OK) {
+  if (eip712_hash_types(heap, heap_size, types, ctx->tokens[ctx->index.types].size) != ERR_OK) {
     return ERR_DATA;
   }
 
@@ -531,7 +543,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   tmpstr.str = "EIP712Domain";
   tmpstr.len = 12;
 
-  int struct_idx = eip712_find_type(types, tokens[eip712.types].size, &tmpstr);
+  int struct_idx = eip712_find_type(types, ctx->tokens[ctx->index.types].size, &tmpstr);
 
   if (struct_idx == -1) {
     return ERR_DATA;
@@ -539,18 +551,18 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
 
   uint8_t tmp[32];
 
-  eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, tokens[eip712.types].size, eip712.domain, tokens, token_count, json);
+  eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, ctx->tokens[ctx->index.types].size, ctx->index.domain, ctx->tokens, ctx->token_count, json);
   keccak_Update(sha3, tmp, 32);
 
-  tmpstr.str = &json[tokens[eip712.primary_type].start];
-  tmpstr.len = (tokens[eip712.primary_type].end - tokens[eip712.primary_type].start);
-  struct_idx = eip712_find_type(types, tokens[eip712.types].size, &tmpstr);
+  tmpstr.str = &json[ctx->tokens[ctx->index.primary_type].start];
+  tmpstr.len = (ctx->tokens[ctx->index.primary_type].end - ctx->tokens[ctx->index.primary_type].start);
+  struct_idx = eip712_find_type(types, ctx->tokens[ctx->index.types].size, &tmpstr);
 
   if (struct_idx == -1) {
     return ERR_DATA;
   }
 
-  app_err_t err = eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, tokens[eip712.types].size, eip712.message, tokens, token_count, json);
+  app_err_t err = eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, ctx->tokens[ctx->index.types].size, ctx->index.message, ctx->tokens, ctx->token_count, json);
   keccak_Update(sha3, tmp, 32);
 
   return err;
