@@ -33,47 +33,47 @@ struct eip712_type {
 struct eip712_ctx {
   struct eip712_tokens index;
   int token_count;
-  jsmntok_t* tokens;
+  const jsmntok_t* tokens;
   const char* json;
 };
 
 // ugly stuff
 #define ALIGN_HEAP(__HEAP__, __HEAP_SIZE__) __HEAP__ = (uint8_t*) (((uint32_t)(__HEAP__ + 3)) & ~0x3); __HEAP_SIZE__ &= ~0x3
 
-static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json);
+static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const struct eip712_ctx* ctx);
 
-static app_err_t eip712_top_level(struct eip712_tokens* eip712, const jsmntok_t tokens[], int token_count, const char* json) {
+static app_err_t eip712_top_level(struct eip712_ctx* ctx) {
   int found = 0;
 
-  for (int i = 1; (i < (token_count - 1)) && (found != 0xf); i++) {
-    if ((tokens[i].parent == 0) && (tokens[i].type == JSMN_STRING)) {
-      switch(json[tokens[i].start]) {
+  for (int i = 1; (i < (ctx->token_count - 1)) && (found != 0xf); i++) {
+    if ((ctx->tokens[i].parent == 0) && (ctx->tokens[i].type == JSMN_STRING)) {
+      switch(ctx->json[ctx->tokens[i].start]) {
       case 't': // types
-        if (tokens[++i].type != JSMN_OBJECT) {
+        if (ctx->tokens[++i].type != JSMN_OBJECT) {
           return ERR_DATA;
         }
-        eip712->types = i;
+        ctx->index.types = i;
         found |= 1;
         break;
       case 'p': // primaryType
-        if (tokens[++i].type != JSMN_STRING) {
+        if (ctx->tokens[++i].type != JSMN_STRING) {
           return ERR_DATA;
         }
-        eip712->primary_type = i;
+        ctx->index.primary_type = i;
         found |= 2;
         break;
       case 'd': // domain
-        if (tokens[++i].type != JSMN_OBJECT) {
+        if (ctx->tokens[++i].type != JSMN_OBJECT) {
           return ERR_DATA;
         }
-        eip712->domain = i;
+        ctx->index.domain = i;
         found |= 4;
         break;
       case 'm': // message
-        if (tokens[++i].type != JSMN_OBJECT) {
+        if (ctx->tokens[++i].type != JSMN_OBJECT) {
           return ERR_DATA;
         }
-        eip712->message = i;
+        ctx->index.message = i;
         found |= 8;
         break;
       default:
@@ -85,24 +85,24 @@ static app_err_t eip712_top_level(struct eip712_tokens* eip712, const jsmntok_t 
   return found == 0xf ? ERR_OK : ERR_DATA;
 }
 
-static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
+static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, struct eip712_type types[], int types_count, const struct eip712_ctx* ctx) {
   int current_type = 0;
   int fields_size = 0;
 
   int i = types_token;
   while (current_type < types_count) {
-    if (!(tokens[++i].parent == types_token && tokens[i].type == JSMN_STRING)) {
+    if (!(ctx->tokens[++i].parent == types_token && ctx->tokens[i].type == JSMN_STRING)) {
       return -1;
     }
 
-    types[current_type].name.len = (tokens[i].end - tokens[i].start);
-    types[current_type].name.str = &json[tokens[i].start];
+    types[current_type].name.len = (ctx->tokens[i].end - ctx->tokens[i].start);
+    types[current_type].name.str = &ctx->json[ctx->tokens[i].start];
 
-    if (tokens[++i].type != JSMN_ARRAY) {
+    if (ctx->tokens[++i].type != JSMN_ARRAY) {
       return -1;
     }
 
-    types[current_type].field_count = tokens[i].size;
+    types[current_type].field_count = ctx->tokens[i].size;
     size_t field_size = types[current_type].field_count * sizeof(struct eip712_field);
     fields_size += field_size;
 
@@ -118,31 +118,31 @@ static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, 
     int fields_token = i;
 
     for (int j = 0; j < types[current_type].field_count; j++) {
-      if (!(tokens[++i].parent == fields_token && tokens[i].type == JSMN_OBJECT)) {
+      if (!(ctx->tokens[++i].parent == fields_token && ctx->tokens[i].type == JSMN_OBJECT)) {
         return -1;
       }
 
       int field_obj_token = i;
 
       for (int k = 0; k < 2; k++) {
-        if (!(tokens[++i].parent == field_obj_token && tokens[i].type == JSMN_STRING)) {
+        if (!(ctx->tokens[++i].parent == field_obj_token && ctx->tokens[i].type == JSMN_STRING)) {
           return -1;
         }
 
-        char p = json[tokens[i].start];
+        char p = ctx->json[ctx->tokens[i].start];
 
-        if (tokens[++i].type != JSMN_STRING) {
+        if (ctx->tokens[++i].type != JSMN_STRING) {
           return -1;
         }
 
         switch(p) {
         case 'n':
-          types[current_type].fields[j].name.len = tokens[i].end - tokens[i].start;
-          types[current_type].fields[j].name.str = &json[tokens[i].start];
+          types[current_type].fields[j].name.len = ctx->tokens[i].end - ctx->tokens[i].start;
+          types[current_type].fields[j].name.str = &ctx->json[ctx->tokens[i].start];
           break;
         case 't':
-          types[current_type].fields[j].type.len = tokens[i].end - tokens[i].start;
-          types[current_type].fields[j].type.str = &json[tokens[i].start];
+          types[current_type].fields[j].type.len = ctx->tokens[i].end - ctx->tokens[i].start;
+          types[current_type].fields[j].type.str = &ctx->json[ctx->tokens[i].start];
           break;
         default:
           return -1;
@@ -305,17 +305,17 @@ static app_err_t eip712_hash_types(uint8_t* heap, size_t heap_size, struct eip71
   return ERR_OK;
 }
 
-static int eip712_hash_find_data(const struct eip712_string* name, int start, const jsmntok_t tokens[], int token_count, const char* json) {
+static int eip712_hash_find_data(const struct eip712_string* name, int start, const struct eip712_ctx* ctx) {
 
-  for (int i = start + 1; i < token_count; i++) {
-    if (tokens[i].parent == start) {
-      if (tokens[i].type != JSMN_STRING) {
+  for (int i = start + 1; i < ctx->token_count; i++) {
+    if (ctx->tokens[i].parent == start) {
+      if (ctx->tokens[i].type != JSMN_STRING) {
         return -1;
       }
 
       struct eip712_string key_name;
-      key_name.str = &json[tokens[i].start];
-      key_name.len = tokens[i].end - tokens[i].start;
+      key_name.str = &ctx->json[ctx->tokens[i].start];
+      key_name.len = ctx->tokens[i].end - ctx->tokens[i].start;
 
       if (eip712_streq(name, &key_name)) {
         return i + 1;
@@ -337,9 +337,9 @@ static int eip712_hash_find_data(const struct eip712_string* name, int start, co
   heap_size -= sizeof(SHA3_CTX); \
   keccak_256_Init(sha3)
 
-static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, const struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const jsmntok_t tokens[], int token_count, const char* json) {
+static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, const struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const struct eip712_ctx* ctx) {
   if (eip712_is_array(field_type)) {
-    if (tokens[field_val].type != JSMN_ARRAY) {
+    if (ctx->tokens[field_val].type != JSMN_ARRAY) {
       return ERR_DATA;
     }
 
@@ -354,14 +354,14 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
 
     int inner_field = field_val + 1;
 
-    for (int i = 0; i < tokens[field_val].size; i++) {
-      while(tokens[inner_field].parent != field_val) {
-        if (++inner_field == token_count) {
+    for (int i = 0; i < ctx->tokens[field_val].size; i++) {
+      while(ctx->tokens[inner_field].parent != field_val) {
+        if (++inner_field == ctx->token_count) {
           return ERR_DATA;
         }
       }
 
-      if (eip712_encode_field(tmp, heap, heap_size, &inner_type, inner_field++, types, types_count, tokens, token_count, json) != ERR_OK) {
+      if (eip712_encode_field(tmp, heap, heap_size, &inner_type, inner_field++, types, types_count, ctx) != ERR_OK) {
         return ERR_DATA;
       }
 
@@ -376,26 +376,26 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
       return ERR_DATA;
     }
 
-    if (eip712_hash_struct(out, heap, heap_size, type, types, types_count, field_val, tokens, token_count, json) != ERR_OK) {
+    if (eip712_hash_struct(out, heap, heap_size, type, types, types_count, field_val, ctx) != ERR_OK) {
       return ERR_DATA;
     }
   } else if (field_type->len == 6 && !strncmp(field_type->str, "string", 6)) {
-    if (tokens[field_val].type != JSMN_STRING) {
+    if (ctx->tokens[field_val].type != JSMN_STRING) {
       return ERR_DATA;
     }
 
     __DECL_SHA3_CTX();
 
-    keccak_Update(sha3, (uint8_t*) &json[tokens[field_val].start], tokens[field_val].end - tokens[field_val].start);
+    keccak_Update(sha3, (uint8_t*) &ctx->json[ctx->tokens[field_val].start], ctx->tokens[field_val].end - ctx->tokens[field_val].start);
     keccak_Final(sha3, out);
   } else if (field_type->len == 5 && !strncmp(field_type->str, "bytes", 5)) {
-    if (tokens[field_val].type != JSMN_STRING) {
+    if (ctx->tokens[field_val].type != JSMN_STRING) {
       return ERR_DATA;
     }
 
     struct eip712_string tmpstr;
-    tmpstr.str = &json[tokens[field_val].start];
-    tmpstr.len = tokens[field_val].end - tokens[field_val].start;
+    tmpstr.str = &ctx->json[ctx->tokens[field_val].start];
+    tmpstr.len = ctx->tokens[field_val].end - ctx->tokens[field_val].start;
 
     __DECL_SHA3_CTX();
 
@@ -421,16 +421,16 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
       keccak_Final(sha3, out);
     }
   } else if (field_type->len == 4 && !strncmp(field_type->str, "bool", 4)) {
-    if (tokens[field_val].type != JSMN_PRIMITIVE) {
+    if (ctx->tokens[field_val].type != JSMN_PRIMITIVE) {
       return ERR_DATA;
     }
 
     memset(out, 0, 32);
-    out[31] = json[tokens[field_val].start] == 't';
+    out[31] = ctx->json[ctx->tokens[field_val].start] == 't';
   } else {
     struct eip712_string tmpstr;
-    tmpstr.str = &json[tokens[field_val].start];
-    tmpstr.len = tokens[field_val].end - tokens[field_val].start;
+    tmpstr.str = &ctx->json[ctx->tokens[field_val].start];
+    tmpstr.len = ctx->tokens[field_val].end - ctx->tokens[field_val].start;
 
     if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
       int out_len = ((tmpstr.len - 1) >> 1);
@@ -459,7 +459,7 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
   return ERR_OK;
 }
 
-static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const jsmntok_t tokens[], int token_count, const char* json) {
+static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const struct eip712_ctx* ctx) {
   const struct eip712_type *t = &types[type];
 
   __DECL_SHA3_CTX();
@@ -467,13 +467,13 @@ static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_
   keccak_Update(sha3, t->type_hash, SHA3_256_DIGEST_LENGTH);
 
   for (int i = 0; i < t->field_count; i++) {
-    int field_val = eip712_hash_find_data(&t->fields[i].name, data, tokens, token_count, json);
+    int field_val = eip712_hash_find_data(&t->fields[i].name, data, ctx);
     if (field_val == -1) {
       return ERR_DATA;
     }
 
     APP_ALIGNED(uint8_t field[32], 4);
-    if (eip712_encode_field(field, heap, heap_size, &t->fields[i].type, field_val, types, types_count, tokens, token_count, json) != ERR_OK) {
+    if (eip712_encode_field(field, heap, heap_size, &t->fields[i].type, field_val, types, types_count, ctx) != ERR_OK) {
       return ERR_DATA;
     }
 
@@ -488,15 +488,15 @@ static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_
 app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len) {
   ALIGN_HEAP(heap, heap_size);
   struct eip712_ctx *ctx = (struct eip712_ctx *) heap;
+  memset(ctx, 0, sizeof(struct eip712_ctx));
   heap += sizeof(struct eip712_ctx);
   heap_size -= sizeof(struct eip712_ctx);
   ctx->json = json;
-  memset(ctx, 0, sizeof(struct eip712_ctx));
   ALIGN_HEAP(heap, heap_size);
   ctx->tokens = (jsmntok_t *) heap;
   jsmn_parser parser;
   jsmn_init(&parser);
-  ctx->token_count = jsmn_parse(&parser, json, json_len, ctx->tokens, heap_size/sizeof(jsmntok_t));
+  ctx->token_count = jsmn_parse(&parser, json, json_len, (jsmntok_t*) ctx->tokens, heap_size/sizeof(jsmntok_t));
 
   if (ctx->token_count < 0) {
     return ERR_DATA;
@@ -510,11 +510,12 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
     return ERR_DATA;
   }
 
-  if (eip712_top_level(&ctx->index, ctx->tokens, ctx->token_count, json) != ERR_OK) {
+  if (eip712_top_level(ctx) != ERR_OK) {
     return ERR_DATA;
   }
 
-  size_t types_len = ctx->tokens[ctx->index.types].size * sizeof(struct eip712_type);
+  int types_count = ctx->tokens[ctx->index.types].size;
+  size_t types_len = types_count * sizeof(struct eip712_type);
   ALIGN_HEAP(heap, heap_size);
 
   if (heap_size < types_len) {
@@ -526,7 +527,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   heap_size -= types_len;
   memset(types, 0, types_len);
 
-  int fields_size = eip712_parse_types(heap, heap_size, ctx->index.types, types, ctx->tokens[ctx->index.types].size, ctx->tokens, ctx->token_count, json);
+  int fields_size = eip712_parse_types(heap, heap_size, ctx->index.types, types, types_count, ctx);
 
   if (fields_size < 0) {
     return ERR_DATA;
@@ -535,7 +536,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   heap += fields_size;
   heap_size -= fields_size;
 
-  if (eip712_hash_types(heap, heap_size, types, ctx->tokens[ctx->index.types].size) != ERR_OK) {
+  if (eip712_hash_types(heap, heap_size, types, types_count) != ERR_OK) {
     return ERR_DATA;
   }
 
@@ -543,7 +544,7 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
   tmpstr.str = "EIP712Domain";
   tmpstr.len = 12;
 
-  int struct_idx = eip712_find_type(types, ctx->tokens[ctx->index.types].size, &tmpstr);
+  int struct_idx = eip712_find_type(types, types_count, &tmpstr);
 
   if (struct_idx == -1) {
     return ERR_DATA;
@@ -551,18 +552,18 @@ app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const cha
 
   uint8_t tmp[32];
 
-  eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, ctx->tokens[ctx->index.types].size, ctx->index.domain, ctx->tokens, ctx->token_count, json);
+  eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, types_count, ctx->index.domain, ctx);
   keccak_Update(sha3, tmp, 32);
 
   tmpstr.str = &json[ctx->tokens[ctx->index.primary_type].start];
   tmpstr.len = (ctx->tokens[ctx->index.primary_type].end - ctx->tokens[ctx->index.primary_type].start);
-  struct_idx = eip712_find_type(types, ctx->tokens[ctx->index.types].size, &tmpstr);
+  struct_idx = eip712_find_type(types, types_count, &tmpstr);
 
   if (struct_idx == -1) {
     return ERR_DATA;
   }
 
-  app_err_t err = eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, ctx->tokens[ctx->index.types].size, ctx->index.message, ctx->tokens, ctx->token_count, json);
+  app_err_t err = eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, types_count, ctx->index.message, ctx);
   keccak_Update(sha3, tmp, 32);
 
   return err;
