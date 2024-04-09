@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "ethereum/ethUstream.h"
+#include "ethereum/eip712.h"
 #include "menu.h"
 #include "ur/eip4527_types.h"
 #include "ur/ur.h"
@@ -21,6 +22,7 @@ core_evt_t ui_qrscan(ur_type_t type, void* out);
 core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selected, i18n_str_id_t marked, uint8_t allow_usb);
 core_evt_t ui_display_tx(const uint8_t* address, const txContent_t* tx);
 core_evt_t ui_display_msg(const uint8_t* address, const uint8_t* msg, uint32_t len);
+core_evt_t ui_display_eip712(const uint8_t* address, const eip712_ctx_t* eip712);
 core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type);
 core_evt_t ui_info(const char* title, const char* msg, uint8_t dismissable);
 

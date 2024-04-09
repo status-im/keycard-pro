@@ -303,6 +303,10 @@ app_err_t dialog_confirm_msg() {
   }
 }
 
+app_err_t dialog_confirm_eip712() {
+  return ERR_OK;
+}
+
 static app_err_t dialog_wait_dismiss() {
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {

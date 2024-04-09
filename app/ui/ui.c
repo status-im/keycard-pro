@@ -35,6 +35,13 @@ core_evt_t ui_display_msg(const uint8_t* address, const uint8_t* msg, uint32_t l
   return ui_signal_wait(0);
 }
 
+core_evt_t ui_display_eip712(const uint8_t* address, const eip712_ctx_t* eip712) {
+  g_ui_cmd.type = UI_CMD_DISPLAY_EIP712;
+  g_ui_cmd.params.eip712.addr = address;
+  g_ui_cmd.params.eip712.data = eip712;
+  return ui_signal_wait(0);
+}
+
 core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type) {
   g_ui_cmd.type = UI_CMD_DISPLAY_QR;
   g_ui_cmd.params.qrout.data = data;
