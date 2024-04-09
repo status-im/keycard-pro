@@ -3,7 +3,6 @@
 #include "crypto/address.h"
 #include "crypto/ripemd160.h"
 #include "crypto/util.h"
-#include "ethereum/eip712.h"
 #include "ethereum/eth_db.h"
 #include "mem.h"
 #include "keycard/secure_channel.h"
@@ -242,7 +241,8 @@ static app_err_t core_process_eip712(const uint8_t* data, uint32_t len) {
   app_err_t err;
 
   keccak_Update(&g_core.hash_ctx, ETH_EIP712_MAGIC, ETH_EIP712_MAGIC_LEN);
-  err = eip712_hash(&g_core.hash_ctx, heap, heap_size, (const char*) data, len);
+  err = eip712_hash(&g_core.data.eip712, &g_core.hash_ctx, heap, heap_size, (const char*) data, len);
+  memset(&g_core.data.eip712, 0, sizeof(eip712_ctx_t));
 
   if (err != ERR_OK) {
     return err;

@@ -4,14 +4,6 @@
 #include "common.h"
 #include "crypto/util.h"
 #include "eip712.h"
-#include "json/jsmn.h"
-
-struct eip712_tokens {
-  int types;
-  int primary_type;
-  int domain;
-  int message;
-};
 
 struct eip712_string {
   const char *str;
@@ -30,19 +22,12 @@ struct eip712_type {
   uint8_t type_hash[SHA3_256_DIGEST_LENGTH];
 };
 
-struct eip712_ctx {
-  struct eip712_tokens index;
-  int token_count;
-  const jsmntok_t* tokens;
-  const char* json;
-};
-
 // ugly stuff
 #define ALIGN_HEAP(__HEAP__, __HEAP_SIZE__) __HEAP__ = (uint8_t*) (((uint32_t)(__HEAP__ + 3)) & ~0x3); __HEAP_SIZE__ &= ~0x3
 
-static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const struct eip712_ctx* ctx);
+static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const eip712_ctx_t* ctx);
 
-static app_err_t eip712_top_level(struct eip712_ctx* ctx) {
+static app_err_t eip712_top_level(eip712_ctx_t* ctx) {
   int found = 0;
 
   for (int i = 1; (i < (ctx->token_count - 1)) && (found != 0xf); i++) {
@@ -85,7 +70,7 @@ static app_err_t eip712_top_level(struct eip712_ctx* ctx) {
   return found == 0xf ? ERR_OK : ERR_DATA;
 }
 
-static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, struct eip712_type types[], int types_count, const struct eip712_ctx* ctx) {
+static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, struct eip712_type types[], int types_count, const eip712_ctx_t* ctx) {
   int current_type = 0;
   int fields_size = 0;
 
@@ -305,7 +290,7 @@ static app_err_t eip712_hash_types(uint8_t* heap, size_t heap_size, struct eip71
   return ERR_OK;
 }
 
-static int eip712_hash_find_data(const struct eip712_string* name, int start, const struct eip712_ctx* ctx) {
+static int eip712_hash_find_data(const struct eip712_string* name, int start, const eip712_ctx_t* ctx) {
 
   for (int i = start + 1; i < ctx->token_count; i++) {
     if (ctx->tokens[i].parent == start) {
@@ -337,7 +322,7 @@ static int eip712_hash_find_data(const struct eip712_string* name, int start, co
   heap_size -= sizeof(SHA3_CTX); \
   keccak_256_Init(sha3)
 
-static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, const struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const struct eip712_ctx* ctx) {
+static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap_size, const struct eip712_string *field_type, int field_val, const struct eip712_type types[], int types_count, const eip712_ctx_t* ctx) {
   if (eip712_is_array(field_type)) {
     if (ctx->tokens[field_val].type != JSMN_ARRAY) {
       return ERR_DATA;
@@ -459,7 +444,7 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
   return ERR_OK;
 }
 
-static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const struct eip712_ctx* ctx) {
+static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const eip712_ctx_t* ctx) {
   const struct eip712_type *t = &types[type];
 
   __DECL_SHA3_CTX();
@@ -485,12 +470,7 @@ static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_
   return ERR_OK;
 }
 
-app_err_t eip712_hash(SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len) {
-  ALIGN_HEAP(heap, heap_size);
-  struct eip712_ctx *ctx = (struct eip712_ctx *) heap;
-  memset(ctx, 0, sizeof(struct eip712_ctx));
-  heap += sizeof(struct eip712_ctx);
-  heap_size -= sizeof(struct eip712_ctx);
+app_err_t eip712_hash(eip712_ctx_t *ctx, SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len) {
   ctx->json = json;
   ALIGN_HEAP(heap, heap_size);
   ctx->tokens = (jsmntok_t *) heap;

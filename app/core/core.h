@@ -7,6 +7,7 @@
 #include "app_tasks.h"
 #include "crypto/sha3.h"
 #include "ethereum/ethUstream.h"
+#include "ethereum/eip712.h"
 #include "ethereum/ethUtils.h"
 #include "keycard/keycard.h"
 #include "iso7816/smartcard.h"
@@ -49,6 +50,7 @@ typedef struct {
 typedef union {
   core_tx_t tx;
   core_msg_t msg;
+  eip712_ctx_t eip712;
   core_sig_t sig;
   core_key_t key;
 } core_data_t;

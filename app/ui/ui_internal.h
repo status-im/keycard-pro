@@ -54,6 +54,11 @@ struct cmd_msg {
   uint32_t len;
 };
 
+struct cmd_eip712 {
+  const uint8_t* addr;
+  eip712_ctx_t* eip712;
+};
+
 struct cmd_qrout {
   const uint8_t* data;
   uint32_t len;
