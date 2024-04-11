@@ -144,7 +144,11 @@ hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels) {
 
 const glyph_t *screen_lookup_glyph(const font_t* font, char c) {
   if (c < font->first || c > font->last) {
-    c = 0x0a; // '*' for now, substitute with placeholder later
+    if (c == '\t') {
+      c = ' ' - font->first;
+    } else {
+      c = '*' - font->first; // substitute with placeholder later
+    }
   } else {
     c -= font->first;
   }

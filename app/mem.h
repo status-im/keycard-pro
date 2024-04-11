@@ -10,6 +10,7 @@
 
 extern uint8_t g_mem_heap[MEM_HEAP_SIZE];
 extern uint8_t g_flash_swap[HAL_FLASH_BLOCK_SIZE];
+extern uint8_t g_camera_fb[CAMERA_FB_COUNT][CAMERA_FB_SIZE];
 
 extern uint32_t g_bootcmd;
 

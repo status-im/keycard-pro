@@ -21,5 +21,6 @@ typedef struct {
 } eip712_ctx_t;
 
 app_err_t eip712_hash(eip712_ctx_t *ctx, SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len);
+size_t eip712_to_string(const eip712_ctx_t* ctx, uint8_t* out);
 
 #endif

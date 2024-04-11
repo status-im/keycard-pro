@@ -6,6 +6,7 @@
 #include "ethereum/eth_db.h"
 #include "ethereum/ethUstream.h"
 #include "ethereum/ethUtils.h"
+#include "mem.h"
 #include "theme.h"
 #include "ui/ui_internal.h"
 
@@ -228,7 +229,7 @@ static inline void _dialog_paged_title(const char* base, char title[MAX_MSG_TITL
   title[base_len] = '\0';
 }
 
-app_err_t dialog_confirm_msg() {
+app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len) {
   size_t pages[MAX_PAGE_COUNT];
   size_t last_page = 0;
   pages[0] = 0;
@@ -244,8 +245,8 @@ app_err_t dialog_confirm_msg() {
     ctx.y = last_page ? (TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN) : (TH_TITLE_HEIGHT + TH_DATA_HEIGHT + (TH_LABEL_HEIGHT * 2));
 
     size_t offset = pages[last_page];
-    size_t to_display = g_ui_cmd.params.msg.len - offset;
-    size_t remaining = screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &g_ui_cmd.params.msg.data[offset], to_display, true);
+    size_t to_display = len - offset;
+    size_t remaining = screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], to_display, true);
 
     if (!remaining || last_page == (MAX_PAGE_COUNT - 1)) {
       break;
@@ -265,7 +266,7 @@ app_err_t dialog_confirm_msg() {
 
     if (page == 0) {
       ctx.y = TH_TITLE_HEIGHT;
-      dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.txn.addr);
+      dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.msg.addr);
       dialog_label(&ctx, LSTR(MSG_LABEL));
       ctx.font = TH_FONT_TEXT;
       ctx.fg = TH_COLOR_TEXT_FG;
@@ -278,7 +279,7 @@ app_err_t dialog_confirm_msg() {
       dialog_footer(TH_TITLE_HEIGHT);
     }
 
-    screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &g_ui_cmd.params.msg.data[offset], (g_ui_cmd.params.msg.len - offset), false);
+    screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], (len - offset), false);
 
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
     case KEYPAD_KEY_LEFT:
@@ -303,8 +304,13 @@ app_err_t dialog_confirm_msg() {
   }
 }
 
+app_err_t dialog_confirm_msg() {
+  return dialog_confirm_text_based(g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len);
+}
+
 app_err_t dialog_confirm_eip712() {
-  return ERR_OK;
+  size_t len = eip712_to_string(g_ui_cmd.params.eip712.data, g_camera_fb[0]);
+  return dialog_confirm_text_based(g_camera_fb[0], len);
 }
 
 static app_err_t dialog_wait_dismiss() {

@@ -26,6 +26,7 @@ struct eip712_type {
 #define ALIGN_HEAP(__HEAP__, __HEAP_SIZE__) __HEAP__ = (uint8_t*) (((uint32_t)(__HEAP__ + 3)) & ~0x3); __HEAP_SIZE__ &= ~0x3
 
 static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_size, int type, const struct eip712_type types[], int types_count, int data, const eip712_ctx_t* ctx);
+static size_t eip712_encode_token(const eip712_ctx_t* ctx, uint8_t* out, int* token, int indent);
 
 static app_err_t eip712_top_level(eip712_ctx_t* ctx) {
   int found = 0;
@@ -471,9 +472,9 @@ static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_
 }
 
 app_err_t eip712_hash(eip712_ctx_t *ctx, SHA3_CTX *sha3, uint8_t* heap, size_t heap_size, const char* json, size_t json_len) {
-  ctx->json = json;
   ALIGN_HEAP(heap, heap_size);
   ctx->tokens = (jsmntok_t *) heap;
+  ctx->json = json;
   jsmn_parser parser;
   jsmn_init(&parser);
   ctx->token_count = jsmn_parse(&parser, json, json_len, (jsmntok_t*) ctx->tokens, heap_size/sizeof(jsmntok_t));
@@ -547,4 +548,80 @@ app_err_t eip712_hash(eip712_ctx_t *ctx, SHA3_CTX *sha3, uint8_t* heap, size_t h
   keccak_Update(sha3, tmp, 32);
 
   return err;
+}
+
+static inline size_t eip712_indent(uint8_t* out, int indent) {
+  for(int i = 0; i < indent; i++) {
+    *(out++) = '\t';
+  }
+
+  return indent;
+}
+
+static inline size_t eip712_encode_primitive(const eip712_ctx_t* ctx, uint8_t* out, int token) {
+  size_t len = ctx->tokens[token].end - ctx->tokens[token].start;
+  memcpy(out, &ctx->json[ctx->tokens[token].start], len);
+  return len;
+}
+
+static size_t eip712_encode_array(const eip712_ctx_t* ctx, uint8_t* out, int* array, int indent) {
+  int i = *array + 1;
+  int size = 0;
+
+  while((ctx->tokens[i].parent == *array) && (i < ctx->token_count)) {
+    size += eip712_indent(&out[size], indent);
+    size += eip712_encode_token(ctx, &out[size], &i, indent);
+    out[size++] = '\n';
+  }
+
+  *array = i;
+  return size;
+}
+
+static size_t eip712_encode_object(const eip712_ctx_t* ctx, uint8_t* out, int* obj, int indent) {
+  int i = *obj + 1;
+  int size = 0;
+
+  while((ctx->tokens[i].parent == *obj) && (i < ctx->token_count)) {
+    size += eip712_indent(&out[size], indent);
+    size += eip712_encode_primitive(ctx, &out[size], i++);
+    out[size++] = ':';
+    out[size++] = ' ';
+    size += eip712_encode_token(ctx, &out[size], &i, indent);
+    out[size++] = '\n';
+  }
+
+  *obj = i;
+  return size;
+}
+
+static size_t eip712_encode_token(const eip712_ctx_t* ctx, uint8_t* out, int* token, int indent) {
+  int size = 0;
+  switch(ctx->tokens[*token].type) {
+  case JSMN_OBJECT:
+    out[size++] = '{';
+    out[size++] = '\n';
+    size += eip712_encode_object(ctx, &out[size], token, indent + 1);
+    size += eip712_indent(&out[size], indent);
+    out[size++] = '}';
+    break;
+  case JSMN_ARRAY:
+    out[size++] = '[';
+    out[size++] = '\n';
+    size += eip712_encode_array(ctx, &out[size], token, indent + 1);
+    size += eip712_indent(&out[size], indent);
+    out[size++] = ']';
+    break;
+  default:
+    size = eip712_encode_primitive(ctx, out, *token);
+    *token = *token + 1;
+    break;
+  }
+
+  return size;
+}
+
+size_t eip712_to_string(const eip712_ctx_t* ctx, uint8_t* out) {
+  int root = ctx->index.message;
+  return eip712_encode_object(ctx, out, &root, 0);
 }

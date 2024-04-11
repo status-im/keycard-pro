@@ -241,15 +241,14 @@ static app_err_t core_process_eip712(const uint8_t* data, uint32_t len) {
   app_err_t err;
 
   keccak_Update(&g_core.hash_ctx, ETH_EIP712_MAGIC, ETH_EIP712_MAGIC_LEN);
-  err = eip712_hash(&g_core.data.eip712, &g_core.hash_ctx, heap, heap_size, (const char*) data, len);
   memset(&g_core.data.eip712, 0, sizeof(eip712_ctx_t));
+  err = eip712_hash(&g_core.data.eip712, &g_core.hash_ctx, heap, heap_size, (const char*) data, len);
 
   if (err != ERR_OK) {
     return err;
   }
 
-  // TODO: replace with proper visualization
-  return core_wait_msg_confirmation(data, len);
+  return ui_display_eip712(g_core.address, &g_core.data.eip712) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static app_err_t core_usb_get_app_config(apdu_t* cmd) {
