@@ -606,6 +606,7 @@ void core_qr_run() {
   }
 
   if (core_eip4527_init_sign(&qr_request) != ERR_OK) {
+    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_WRONG_CARD), 1);
     return;
   }
 
@@ -630,14 +631,20 @@ void core_qr_run() {
       break;
   }
 
-  if(err != ERR_OK) {
-    //TODO: handle this
+  switch(err) {
+  case ERR_OK:
+    break;
+  case ERR_CANCEL:
+    return;
+  default:
+    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_MALFORMED_DATA), 1);
     return;
   }
 
   uint32_t v = core_get_tx_v_base();
 
   if (core_sign(&g_core.keycard, g_core.data.sig.plain_sig) != ERR_OK) {
+    ui_card_transport_error();
     return;
   }
 
@@ -716,7 +723,7 @@ void core_display_public() {
   struct hd_key key;
 
   if (encode_hd_key(&key) != ERR_OK) {
-    //TODO: handle
+    ui_card_transport_error();
     return;
   }
 

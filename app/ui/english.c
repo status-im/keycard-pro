@@ -91,6 +91,8 @@ const char *const i18n_english_strings[] = {
     "Initialize your Keycard",
     "We will now proceed initializing your Keycard.\n\nYou will be required to choose a PIN for your card.\n\nPress OK to continue.",
     "This card has no free pairing slots and thus cannot be used with Keycard Pro at the moment.\n\nPlease remove the card and free a pairing slot or press OK to factory reset the card.",
+    "This QR is not for this account. Please check that you are using the correct Keycard.",
+    "The content of this QR is malformed or unsupported. Please generate a new one.",
 
     // DB Update
     "Updating database...",
@@ -114,6 +116,7 @@ const char *const i18n_english_strings[] = {
     "I want a new seed",
     "Enter word #",
     "Write down and keep safe!",
+    "Word does not match, please try again.",
 
     // Device authentication
     "Invalid verification QR. Please check the website you are on and try again.",

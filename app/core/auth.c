@@ -29,7 +29,7 @@ void device_auth_run() {
       auth._dev_auth_auth_time_present ||
       auth._dev_auth_auth_count_present ||
       auth._dev_auth_signature_present) {
-    //TODO: error
+    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DEV_AUTH_INVALID_CHALLENGE), 1);
     return;
   }
 
