@@ -409,8 +409,6 @@ static void core_usb_message_reassemble(keycard_t* kc, apdu_t* cmd, uint8_t** se
   uint8_t* data = APDU_DATA(cmd);
   *len = APDU_LC(cmd);
   *first_segment = APDU_P1(cmd) == 0;
-  g_core.data.msg.content = g_mem_heap;
-
   if (*first_segment) {
     if (core_usb_init_sign(data) != ERR_OK) {
       core_usb_err_sw(cmd, 0x6a, 0x80);
@@ -434,6 +432,7 @@ static void core_usb_message_reassemble(keycard_t* kc, apdu_t* cmd, uint8_t** se
     return;
   }
 
+  g_core.data.msg.content = g_mem_heap;
   *segment = &g_core.data.msg.content[g_core.data.msg.received];
   memcpy(*segment, data, *len);
 }
