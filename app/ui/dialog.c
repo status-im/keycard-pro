@@ -126,8 +126,8 @@ app_err_t dialog_confirm_tx() {
   erc20_desc_t token;
   chain.chain_id = g_ui_cmd.params.txn.tx->chainID;
 
+  uint8_t num[11];
   if (eth_db_lookup_chain(&chain) != ERR_OK) {
-    uint8_t num[11];
     chain.name = (char*) u32toa(chain.chain_id, num, 11);
     chain.ticker = "???";
   }
@@ -229,7 +229,7 @@ static inline void _dialog_paged_title(const char* base, char title[MAX_MSG_TITL
   title[base_len] = '\0';
 }
 
-app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len) {
+app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_domain_t* eip712) {
   size_t pages[MAX_PAGE_COUNT];
   size_t last_page = 0;
   pages[0] = 0;
@@ -242,7 +242,14 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len) {
 
   while(1) {
     ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
-    ctx.y = last_page ? (TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN) : (TH_TITLE_HEIGHT + TH_DATA_HEIGHT + (TH_LABEL_HEIGHT * 2));
+
+    if (last_page > 0) {
+      ctx.y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN;
+    } else if (eip712) {
+      ctx.y = TH_TITLE_HEIGHT + (TH_DATA_HEIGHT * 4) + (TH_LABEL_HEIGHT * 4);
+    } else {
+      ctx.y = TH_TITLE_HEIGHT + (TH_DATA_HEIGHT * 1) + (TH_LABEL_HEIGHT * 2);
+    }
 
     size_t offset = pages[last_page];
     size_t to_display = len - offset;
@@ -260,14 +267,34 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len) {
   while(1) {
     size_t offset = pages[page];
     char title[MAX_MSG_TITLE_LEN];
-    _dialog_paged_title(LSTR(MSG_CONFIRM_TITLE), title, page, last_page);
+    _dialog_paged_title(LSTR(eip712 ? EIP712_CONFIRM_TITLE : MSG_CONFIRM_TITLE), title, page, last_page);
 
     dialog_title(title);
 
     if (page == 0) {
       ctx.y = TH_TITLE_HEIGHT;
       dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.msg.addr);
-      dialog_label(&ctx, LSTR(MSG_LABEL));
+
+      if (eip712) {
+        dialog_label(&ctx, LSTR(TX_CHAIN));
+
+        chain_desc_t chain;
+        chain.chain_id = eip712->chainID;
+
+        uint8_t num[11];
+        if (eth_db_lookup_chain(&chain) != ERR_OK) {
+          chain.name = (char*) u32toa(chain.chain_id, num, 11);
+        }
+
+        dialog_data(&ctx, chain.name);
+        dialog_label(&ctx, LSTR(EIP712_NAME));
+        dialog_data(&ctx, eip712->name);
+        dialog_label(&ctx, LSTR(EIP712_CONTRACT));
+        dialog_data(&ctx, eip712->address);
+      } else {
+        dialog_label(&ctx, LSTR(MSG_LABEL));
+      }
+
       ctx.font = TH_FONT_TEXT;
       ctx.fg = TH_COLOR_TEXT_FG;
       ctx.bg = TH_COLOR_TEXT_BG;
@@ -305,12 +332,14 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len) {
 }
 
 app_err_t dialog_confirm_msg() {
-  return dialog_confirm_text_based(g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len);
+  return dialog_confirm_text_based(g_ui_cmd.params.msg.data, g_ui_cmd.params.msg.len, NULL);
 }
 
 app_err_t dialog_confirm_eip712() {
   size_t len = eip712_to_string(g_ui_cmd.params.eip712.data, g_camera_fb[0]);
-  return dialog_confirm_text_based(g_camera_fb[0], len);
+  eip712_domain_t domain;
+  eip712_extract_domain(g_ui_cmd.params.eip712.data, &domain);
+  return dialog_confirm_text_based(g_camera_fb[0], len, &domain);
 }
 
 static app_err_t dialog_wait_dismiss() {

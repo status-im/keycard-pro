@@ -291,7 +291,7 @@ static app_err_t eip712_hash_types(uint8_t* heap, size_t heap_size, struct eip71
   return ERR_OK;
 }
 
-static int eip712_hash_find_data(const struct eip712_string* name, int start, const eip712_ctx_t* ctx) {
+static int eip712_find_data(const struct eip712_string* name, int start, const eip712_ctx_t* ctx) {
 
   for (int i = start + 1; i < ctx->token_count; i++) {
     if (ctx->tokens[i].parent == start) {
@@ -453,7 +453,7 @@ static app_err_t eip712_hash_struct(uint8_t out[32], uint8_t* heap, size_t heap_
   keccak_Update(sha3, t->type_hash, SHA3_256_DIGEST_LENGTH);
 
   for (int i = 0; i < t->field_count; i++) {
-    int field_val = eip712_hash_find_data(&t->fields[i].name, data, ctx);
+    int field_val = eip712_find_data(&t->fields[i].name, data, ctx);
     if (field_val == -1) {
       return ERR_DATA;
     }
@@ -624,4 +624,66 @@ static size_t eip712_encode_token(const eip712_ctx_t* ctx, uint8_t* out, int* to
 size_t eip712_to_string(const eip712_ctx_t* ctx, uint8_t* out) {
   int root = ctx->index.message;
   return eip712_encode_object(ctx, out, &root, 0);
+}
+
+static inline int eip712_find_domain_data(const eip712_ctx_t* ctx, const char* key) {
+  struct eip712_string k;
+  k.str = key;
+  k.len = strlen(key);
+  return eip712_find_data(&k, ctx->index.domain, ctx);
+}
+
+static app_err_t eip712_extract_domain_string(const eip712_ctx_t* ctx, const char* key, char** out) {
+  int found = eip712_find_domain_data(ctx, key);
+
+  if (found == -1) {
+    return ERR_DATA;
+  }
+
+  *out = (char*) &ctx->json[ctx->tokens[found].start];
+  ((char *)ctx->json)[ctx->tokens[found].end] = '\0';
+
+  return ERR_OK;
+}
+
+app_err_t eip712_extract_domain(const eip712_ctx_t* ctx, eip712_domain_t* out) {
+  if (eip712_extract_domain_string(ctx, "verifyingContract", (char**) &out->address) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  out->address = &out->address[2];
+
+  if (eip712_extract_domain_string(ctx, "name", (char**) &out->name) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  int found = eip712_find_domain_data(ctx, "chainId");
+
+  if (found == -1) {
+    return ERR_DATA;
+  }
+
+  struct eip712_string tmpstr;
+  tmpstr.str = &ctx->json[ctx->tokens[found].start];
+  tmpstr.len = ctx->tokens[found].end - ctx->tokens[found].start;
+
+  uint8_t chain_bytes[32];
+
+  if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
+    int out_len = ((tmpstr.len - 1) >> 1);
+    int padding = 32 - out_len;
+    memset(chain_bytes, 0, padding);
+
+    if (!base16_decode(&tmpstr.str[2], &chain_bytes[padding], (tmpstr.len - 2))) {
+      return ERR_DATA;
+    }
+  } else {
+    if (!atoi256BE(tmpstr.str, tmpstr.len, chain_bytes)) {
+      return ERR_DATA;
+    }
+  }
+
+  out->chainID = (chain_bytes[28] << 24) | (chain_bytes[29] << 16) | (chain_bytes[30] << 8) | chain_bytes[31];
+
+  return ERR_OK;
 }

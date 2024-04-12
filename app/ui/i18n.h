@@ -46,6 +46,11 @@ typedef enum {
   MSG_CONFIRM_TITLE,
   MSG_LABEL,
 
+  // EIP712 Confirmation
+  EIP712_CONFIRM_TITLE,
+  EIP712_CONTRACT,
+  EIP712_NAME,
+
   // QR output
   QR_OUTPUT_TITLE,
 

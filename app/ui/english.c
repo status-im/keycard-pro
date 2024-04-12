@@ -43,6 +43,11 @@ const char *const i18n_english_strings[] = {
     "Sign message",
     "Message",
 
+    // EIP712 Confirmation
+    "Sign EIP712",
+    "Contract",
+    "Name",
+
     // QR output
     "Scan with your wallet",
 

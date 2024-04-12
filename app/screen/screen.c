@@ -293,6 +293,10 @@ size_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, 
   uint16_t start_x = ctx->x;
 
   while(len) {
+    if (ctx->y > max_y) {
+      return len;
+    }
+
     if (text[0] == '\r' || text[0] == ' ') {
       text++;
       if (!--len) {
@@ -344,10 +348,6 @@ size_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, 
 
     ctx->x = start_x;
     ctx->y += ctx->font->yAdvance;
-
-    if (ctx->y > max_y) {
-      return len;
-    }
   }
 
   return 0;
