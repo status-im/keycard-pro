@@ -15,6 +15,7 @@ app_err_t dialog_confirm_tx();
 app_err_t dialog_confirm_msg();
 app_err_t dialog_confirm_eip712();
 
+app_err_t dialog_internal_info(const char* title, const char* msg);
 app_err_t dialog_info();
 app_err_t dialog_dev_auth();
 

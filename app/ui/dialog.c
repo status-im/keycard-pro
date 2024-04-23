@@ -356,6 +356,11 @@ static app_err_t dialog_wait_dismiss() {
   }
 }
 
+app_err_t dialog_internal_info(const char* title, const char* msg) {
+  dialog_draw_message(title, msg, strlen(msg));
+  return dialog_wait_dismiss();
+}
+
 app_err_t dialog_info() {
   dialog_draw_message(g_ui_cmd.params.info.title, g_ui_cmd.params.info.msg, strlen(g_ui_cmd.params.info.msg));
 

@@ -373,6 +373,7 @@ static uint16_t input_mnemonic_lookup(char* word, int len, uint16_t idx) {
 
 static app_err_t input_mnemonic_get_word(int i, uint16_t* idx) {
   input_mnemonic_title(i);
+  dialog_footer(TH_TITLE_HEIGHT);
 
   char word[WORD_MAX_LEN];
   int len = 0;
@@ -479,7 +480,7 @@ static app_err_t input_backup_confirm_mnemonic(uint8_t positions[WORDS_TO_CONFIR
       if (idx == g_ui_cmd.params.mnemo.indexes[positions[i]]) {
         i++;
       } else {
-        ui_info(LSTR(INFO_ERROR_TITLE), LSTR(MNENO_MISMATCH), 1);
+        dialog_internal_info(LSTR(INFO_ERROR_TITLE), LSTR(MNENO_MISMATCH));
       }
     } else if (i > 0) {
       i--;
