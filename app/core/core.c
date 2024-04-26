@@ -3,11 +3,13 @@
 #include "crypto/address.h"
 #include "crypto/ripemd160.h"
 #include "crypto/util.h"
+#include "crypto/secp256k1.h"
 #include "ethereum/eth_db.h"
 #include "mem.h"
 #include "keycard/secure_channel.h"
 #include "keycard/keycard_cmdset.h"
 #include "keycard/keycard.h"
+#include "storage/keys.h"
 #include "ui/ui_internal.h"
 #include "ur/eip4527_encode.h"
 #include "util/tlv.h"
@@ -264,9 +266,17 @@ static app_err_t core_usb_get_app_config(apdu_t* cmd) {
   data[4] = (db_version >> 16) & 0xff;
   data[5] = (db_version >> 8) & 0xff;
   data[6] = db_version & 0xff;
-  data[7] = 0x90;
-  data[8] = 0x00;
-  cmd->lr = 9;
+
+  hal_device_uid(&data[7]);
+
+  uint8_t key[32];
+  key_read_private(DEV_AUTH_PRIV_KEY, key);
+  ecdsa_get_public_key33(&secp256k1, key, &data[7 + HAL_DEVICE_UID_LEN]);
+  memset(key, 0, 32);
+
+  data[7 + HAL_DEVICE_UID_LEN + 33] = 0x90;
+  data[8 + HAL_DEVICE_UID_LEN + 33] = 0x00;
+  cmd->lr = 9 + HAL_DEVICE_UID_LEN + 33;
 
   return ERR_OK;
 }

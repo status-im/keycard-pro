@@ -65,19 +65,19 @@ static char* append_sn(char* dst, const char* label, uint8_t uid[HAL_DEVICE_UID_
   dst += 8;
   *(dst++) = '-';
 
-  base16_encode(&uid[3], dst, 2);
+  base16_encode(&uid[4], dst, 2);
   dst += 4;
   *(dst++) = '-';
 
-  base16_encode(&uid[5], dst, 2);
+  base16_encode(&uid[6], dst, 2);
   dst += 4;
   *(dst++) = '-';
 
-  base16_encode(&uid[7], dst, 2);
+  base16_encode(&uid[8], dst, 2);
   dst += 4;
   *(dst++) = '-';
 
-  base16_encode(&uid[9], dst, 6);
+  base16_encode(&uid[10], dst, 6);
   dst += 12;
 
   *(dst++) = '\n';

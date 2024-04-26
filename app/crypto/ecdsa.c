@@ -66,6 +66,12 @@ int ecdsa_get_public_key65(const ecdsa_curve *curve, const uint8_t *priv_key, ui
   return 0;
 }
 
+int ecdsa_get_public_key33(const ecdsa_curve *curve, const uint8_t *priv_key, uint8_t *pub_key) {
+  ecdsa_get_public_key65(curve, priv_key, pub_key);
+  pub_key[0] = 0x02 | (pub_key[64] & 1);
+  return 0;
+}
+
 int ecdsa_recover_pub_from_sig(const ecdsa_curve *curve, uint8_t *pub_key, const uint8_t *sig, const uint8_t *digest, int recid) {
   //TODO: sanity check on input
   const uint8_t* r = sig;
