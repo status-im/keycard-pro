@@ -200,12 +200,18 @@ app_err_t menu_run() {
         if (selected[depth] > 0) {
           selected[depth]--;
           draw = MENU_NEXT;
+        } else {
+          selected[depth] = menu->len - 1;
+          draw = MENU_ALL;
         }
         break;
       case KEYPAD_KEY_DOWN:
         if (selected[depth] < (menu->len - 1)) {
           selected[depth]++;
           draw = MENU_PREV;
+        } else {
+          selected[depth] = 0;
+          draw = MENU_ALL;
         }
         break;
       case KEYPAD_KEY_CONFIRM:

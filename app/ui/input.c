@@ -267,6 +267,8 @@ static char input_keyboard(int *idx, bool show_space) {
         *idx -= KEYBOARD_ROW2_LEN;
       } else if (*idx >= KEYBOARD_ROW1_LIMIT) {
         *idx -= KEYBOARD_ROW1_LEN;
+      } else {
+        *idx = APP_MIN(*idx + KEYBOARD_ROW2_LIMIT, (KEYBOARD_ROW3_LIMIT(show_space) - 1));
       }
       break;
     case KEYPAD_KEY_LEFT:
@@ -274,6 +276,14 @@ static char input_keyboard(int *idx, bool show_space) {
           ((*idx > KEYBOARD_ROW1_LIMIT) && (*idx < KEYBOARD_ROW2_LIMIT)) ||
           ((*idx > 0) && (*idx < KEYBOARD_ROW1_LIMIT))) {
         (*idx)--;
+      } else {
+        if (*idx == 0) {
+          *idx = KEYBOARD_ROW1_LIMIT - 1;
+        } else if (*idx == KEYBOARD_ROW1_LIMIT) {
+          *idx = KEYBOARD_ROW2_LIMIT - 1;
+        } else {
+          *idx = KEYBOARD_ROW3_LIMIT(show_space) - 1;
+        }
       }
       break;
     case KEYPAD_KEY_RIGHT:
@@ -281,6 +291,14 @@ static char input_keyboard(int *idx, bool show_space) {
           ((*idx < (KEYBOARD_ROW2_LIMIT - 1)) && (*idx >= KEYBOARD_ROW1_LIMIT)) ||
           ((*idx < (KEYBOARD_ROW3_LIMIT(show_space) - 1)) && (*idx >= KEYBOARD_ROW2_LIMIT))) {
         (*idx)++;
+      }  else {
+        if (*idx == KEYBOARD_ROW1_LIMIT - 1) {
+          *idx = 0;
+        } else if (*idx == KEYBOARD_ROW2_LIMIT - 1) {
+          *idx = KEYBOARD_ROW1_LIMIT;
+        } else {
+          *idx = KEYBOARD_ROW2_LIMIT;
+        }
       }
       break;
     case KEYPAD_KEY_DOWN:
@@ -288,6 +306,8 @@ static char input_keyboard(int *idx, bool show_space) {
         *idx = APP_MIN(*idx + KEYBOARD_ROW1_LEN, (KEYBOARD_ROW2_LIMIT - 1));
       } else if (*idx < KEYBOARD_ROW2_LIMIT) {
         *idx = APP_MIN(*idx + KEYBOARD_ROW2_LEN, (KEYBOARD_ROW3_LIMIT(show_space) - 1));
+      } else {
+        *idx -= KEYBOARD_ROW2_LIMIT;
       }
       break;
     case KEYPAD_KEY_BACK:

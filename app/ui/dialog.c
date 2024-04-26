@@ -312,11 +312,15 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
     case KEYPAD_KEY_LEFT:
       if (page > 0) {
         page--;
+      } else {
+        page = last_page;
       }
       break;
     case KEYPAD_KEY_RIGHT:
       if (page < last_page) {
         page++;
+      } else {
+        page = 0;
       }
       break;
     case KEYPAD_KEY_CANCEL:
