@@ -443,6 +443,26 @@ app_err_t input_mnemonic() {
   return ERR_OK;
 }
 
+static void input_render_mnemonic_word(int word_num, const char* str, screen_area_t* field_area, int len) {
+  screen_text_ctx_t ctx = {
+      .font = TH_FONT_TEXT,
+      .fg = TH_TEXT_FIELD_FG,
+      .bg = TH_TEXT_FIELD_BG,
+      .x = field_area->x + TH_TEXT_FIELD_INNER_LEFT_MARGIN,
+      .y = field_area->y
+  };
+
+  screen_fill_area(field_area, ctx.bg);
+
+  char num[4];
+  num[0] = word_num >= 10 ? (word_num / 10) + '0' : ' ';
+  num[1] = (word_num % 10) + '0';
+  num[2] = '.';
+  num[3] = ' ';
+  screen_draw_chars(&ctx, num, 4);
+  screen_draw_chars(&ctx, str, len);
+}
+
 static app_err_t input_backup_show_mnemonic() {
   dialog_title(LSTR(MNEMO_BACKUP_TITLE));
   dialog_footer(TH_TITLE_HEIGHT);
@@ -462,8 +482,9 @@ static app_err_t input_backup_show_mnemonic() {
     field_area.x = TH_MNEMONIC_LEFT_MARGIN;
 
     for (int j = 0; j < 3; j++) {
-      const char* word = BIP39_WORDLIST_ENGLISH[g_ui_cmd.params.mnemo.indexes[(i * 3) + j]];
-      input_render_text_field(word, &field_area, strlen(word), 0);
+      int word_num = (i * 3) + j;
+      const char* word = BIP39_WORDLIST_ENGLISH[g_ui_cmd.params.mnemo.indexes[word_num]];
+      input_render_mnemonic_word(word_num + 1, word, &field_area, strlen(word));
       field_area.x += TH_MNEMONIC_FIELD_WIDTH + TH_MNEMONIC_LEFT_MARGIN;
     }
 
