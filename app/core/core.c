@@ -571,16 +571,16 @@ void core_usb_run() {
 }
 
 static app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
-  g_core.bip44_path_len = qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component_count * 4;
+  g_core.bip44_path_len = qr_request->eth_sign_request_derivation_path.crypto_keypath_components_path_component_m_count * 4;
 
   if (g_core.bip44_path_len > BIP44_MAX_PATH_LEN) {
     g_core.bip44_path_len = 0;
     return ERR_DATA;
   }
 
-  for (int i = 0; i < qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component_count; i++) {
-    uint32_t idx = qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component[i]._path_component__child_index;
-    if (qr_request->_eth_sign_request_derivation_path._crypto_keypath_components__path_component[i]._path_component__is_hardened) {
+  for (int i = 0; i < qr_request->eth_sign_request_derivation_path.crypto_keypath_components_path_component_m_count; i++) {
+    uint32_t idx = qr_request->eth_sign_request_derivation_path.crypto_keypath_components_path_component_m[i].path_component_child_index_m;
+    if (qr_request->eth_sign_request_derivation_path.crypto_keypath_components_path_component_m[i].path_component_is_hardened_m) {
       idx |= 0x80000000;
     }
 
@@ -597,8 +597,8 @@ static app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
     return err;
   }
 
-  if (!(qr_request->_eth_sign_request_derivation_path._crypto_keypath_source_fingerprint_present &&
-      (qr_request->_eth_sign_request_derivation_path._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint == fingerprint))) {
+  if (!(qr_request->eth_sign_request_derivation_path.crypto_keypath_source_fingerprint_present &&
+      (qr_request->eth_sign_request_derivation_path.crypto_keypath_source_fingerprint.crypto_keypath_source_fingerprint == fingerprint))) {
     return ERR_MISMATCH;
   }
 
@@ -621,19 +621,19 @@ void core_qr_run() {
 
   app_err_t err;
 
-  switch(qr_request._eth_sign_request_data_type._sign_data_type_choice) {
-    case _sign_data_type__eth_transaction_data:
-    case _sign_data_type__eth_typed_transaction:
-      g_core.data.tx.content.chainID = qr_request._eth_sign_request_chain_id_present ? (uint32_t) qr_request._eth_sign_request_chain_id._eth_sign_request_chain_id : 1;
-      err = core_process_tx(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len, 1);
+  switch(qr_request.eth_sign_request_data_type.sign_data_type_choice) {
+    case sign_data_type_eth_transaction_data_m_c:
+    case sign_data_type_eth_typed_transaction_m_c:
+      g_core.data.tx.content.chainID = qr_request.eth_sign_request_chain_id_present ? (uint32_t) qr_request.eth_sign_request_chain_id.eth_sign_request_chain_id : 1;
+      err = core_process_tx(qr_request.eth_sign_request_sign_data.value, qr_request.eth_sign_request_sign_data.len, 1);
       break;
-    case _sign_data_type__eth_raw_bytes:
-      g_core.data.msg.content = (uint8_t*) qr_request._eth_sign_request_sign_data.value;
-      g_core.data.msg.len = qr_request._eth_sign_request_sign_data.len;
-      err = core_process_msg(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len, 1);
+    case sign_data_type_eth_raw_bytes_m_c:
+      g_core.data.msg.content = (uint8_t*) qr_request.eth_sign_request_sign_data.value;
+      g_core.data.msg.len = qr_request.eth_sign_request_sign_data.len;
+      err = core_process_msg(qr_request.eth_sign_request_sign_data.value, qr_request.eth_sign_request_sign_data.len, 1);
       break;
-    case _sign_data_type__eth_typed_data:
-      err = core_process_eip712(qr_request._eth_sign_request_sign_data.value, qr_request._eth_sign_request_sign_data.len);
+    case sign_data_type_eth_typed_data_m_c:
+      err = core_process_eip712(qr_request.eth_sign_request_sign_data.value, qr_request.eth_sign_request_sign_data.len);
       break;
     default:
       err = ERR_UNSUPPORTED;
@@ -658,34 +658,34 @@ void core_qr_run() {
   }
 
   struct eth_signature sig = {0};
-  sig._eth_signature_request_id_present = qr_request._eth_sign_request_request_id_present;
-  if (sig._eth_signature_request_id_present) {
-    sig._eth_signature_request_id._eth_signature_request_id.value = qr_request._eth_sign_request_request_id._eth_sign_request_request_id.value;
-    sig._eth_signature_request_id._eth_signature_request_id.len = qr_request._eth_sign_request_request_id._eth_sign_request_request_id.len;
+  sig.eth_signature_request_id_present = qr_request.eth_sign_request_request_id_present;
+  if (sig.eth_signature_request_id_present) {
+    sig.eth_signature_request_id.eth_signature_request_id.value = qr_request.eth_sign_request_request_id.eth_sign_request_request_id.value;
+    sig.eth_signature_request_id.eth_signature_request_id.len = qr_request.eth_sign_request_request_id.eth_sign_request_request_id.len;
   }
-  sig._eth_signature_signature.value = g_core.data.sig.plain_sig;
-  sig._eth_signature_signature.len = SIGNATURE_LEN;
+  sig.eth_signature_signature.value = g_core.data.sig.plain_sig;
+  sig.eth_signature_signature.len = SIGNATURE_LEN;
 
   v += g_core.data.sig.plain_sig[SIGNATURE_LEN];
 
   if (v <= 0xff) {
     g_core.data.sig.plain_sig[SIGNATURE_LEN] = v;
-    sig._eth_signature_signature.len += 1;
+    sig.eth_signature_signature.len += 1;
   } else if (v <= 0xffff) {
     g_core.data.sig.plain_sig[SIGNATURE_LEN] = (v >> 8) & 0xff;
     g_core.data.sig.plain_sig[SIGNATURE_LEN + 1] = v & 0xff;
-    sig._eth_signature_signature.len += 2;
+    sig.eth_signature_signature.len += 2;
   } else if (v <= 0xffffff) {
     g_core.data.sig.plain_sig[SIGNATURE_LEN] = (v >> 16) & 0xff;
     g_core.data.sig.plain_sig[SIGNATURE_LEN + 1] = (v >> 8) & 0xff;
     g_core.data.sig.plain_sig[SIGNATURE_LEN + 2] = v & 0xff;
-    sig._eth_signature_signature.len += 3;
+    sig.eth_signature_signature.len += 3;
   } else if (v <= 0xffffffff) {
     g_core.data.sig.plain_sig[SIGNATURE_LEN] = v >> 24;
     g_core.data.sig.plain_sig[SIGNATURE_LEN + 1] = (v >> 16) & 0xff;
     g_core.data.sig.plain_sig[SIGNATURE_LEN + 2] = (v >> 8) & 0xff;
     g_core.data.sig.plain_sig[SIGNATURE_LEN + 3] = v & 0xff;
-    sig._eth_signature_signature.len += 4;
+    sig.eth_signature_signature.len += 4;
   }
 
   cbor_encode_eth_signature(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &sig, &g_core.data.sig.cbor_len);
@@ -693,21 +693,21 @@ void core_qr_run() {
 }
 
 static app_err_t encode_hd_key(struct hd_key* key) {
-  key->_hd_key_is_master = 0;
-  key->_hd_key_is_private = 0;
-  key->_hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
-  key->_hd_key_key_data.value = g_core.data.key.pub;
-  key->_hd_key_chain_code.len = CHAINCODE_LEN;
-  key->_hd_key_chain_code.value = g_core.data.key.chain;
-  key->_hd_key_use_info_present = 0;
-  key->_hd_key_origin._crypto_keypath_depth_present = 1;
-  key->_hd_key_origin._crypto_keypath_depth._crypto_keypath_depth = ETH_DEFAULT_BIP44_LEN;
-  key->_hd_key_origin._crypto_keypath_source_fingerprint_present = 1;
-  key->_hd_key_origin._crypto_keypath_components__path_component_count = ETH_DEFAULT_BIP44_LEN;
-  key->_hd_key_name.len = EIP4527_NAME_LEN;
-  key->_hd_key_name.value = EIP4527_NAME;
-  key->_hd_key_source.len = EIP4527_SOURCE_LEN;
-  key->_hd_key_source.value = EIP4527_SOURCE;
+  key->hd_key_is_master = 0;
+  key->hd_key_is_private = 0;
+  key->hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
+  key->hd_key_key_data.value = g_core.data.key.pub;
+  key->hd_key_chain_code.len = CHAINCODE_LEN;
+  key->hd_key_chain_code.value = g_core.data.key.chain;
+  key->hd_key_use_info_present = 0;
+  key->hd_key_origin.crypto_keypath_depth_present = 1;
+  key->hd_key_origin.crypto_keypath_depth.crypto_keypath_depth = ETH_DEFAULT_BIP44_LEN;
+  key->hd_key_origin.crypto_keypath_source_fingerprint_present = 1;
+  key->hd_key_origin.crypto_keypath_components_path_component_m_count = ETH_DEFAULT_BIP44_LEN;
+  key->hd_key_name.len = EIP4527_NAME_LEN;
+  key->hd_key_name.value = EIP4527_NAME;
+  key->hd_key_source.len = EIP4527_SOURCE_LEN;
+  key->hd_key_source.value = EIP4527_SOURCE;
 
   for (int i = 0; i < ETH_DEFAULT_BIP44_LEN; i++) {
     uint32_t c = ETH_DEFAULT_BIP44[i];
@@ -715,13 +715,13 @@ static app_err_t encode_hd_key(struct hd_key* key) {
     g_core.bip44_path[(i * 4) + 1] = (c >> 16) & 0xff;
     g_core.bip44_path[(i * 4) + 2] = (c >> 8) & 0xff;
     g_core.bip44_path[(i * 4) + 3] = (c & 0xff);
-    key->_hd_key_origin._crypto_keypath_components__path_component[i]._path_component__child_index = c & 0x7fffffff;
-    key->_hd_key_origin._crypto_keypath_components__path_component[i]._path_component__is_hardened = c > 0x7fffffff;
+    key->hd_key_origin.crypto_keypath_components_path_component_m[i].path_component_child_index_m = c & 0x7fffffff;
+    key->hd_key_origin.crypto_keypath_components_path_component_m[i].path_component_is_hardened_m = c > 0x7fffffff;
   }
 
   g_core.bip44_path_len = ETH_DEFAULT_BIP44_LEN * 4;
 
-  if (core_export_public(&key->_hd_key_origin._crypto_keypath_source_fingerprint._crypto_keypath_source_fingerprint, &key->_hd_key_parent_fingerprint) != ERR_OK) {
+  if (core_export_public(&key->hd_key_origin.crypto_keypath_source_fingerprint.crypto_keypath_source_fingerprint, &key->hd_key_parent_fingerprint) != ERR_OK) {
     return ERR_HW;
   }
 

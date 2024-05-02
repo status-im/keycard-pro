@@ -59,7 +59,7 @@ chain-code-bytes = bstr .size 32
 ; Crypto Multi Accounts
 crypto-multi-accounts = {
     master-fingerprint: uint32,
-    keys: [0*3 #6.303(hd-key)],
+    keys: [0*10 #6.303(hd-key)],
     ? device: text,
     ? device-id: device-id-str,
     ? version: text

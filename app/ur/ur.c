@@ -37,9 +37,9 @@ static app_err_t ur_process_simple(ur_t* ur, uint8_t* parts, uint8_t* part_data,
   ur->part_desc[desc_idx] = (1 << desc_idx);
   ur->part_mask |= (1 << desc_idx);
 
-  if (part->_ur_part_seqLen == __builtin_popcount(ur->part_mask)) {
+  if (part->ur_part_seqLen == __builtin_popcount(ur->part_mask)) {
     ur->data = parts;
-    ur->data_len = part->_ur_part_messageLen;
+    ur->data_len = part->ur_part_messageLen;
     return ERR_OK;
   }
 
@@ -99,31 +99,31 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
 
   struct ur_part part;
   if ((cbor_decode_ur_part(ur->data, part_len, &part, NULL) != ZCBOR_SUCCESS) ||
-      (part._ur_part_seqLen > UR_MAX_PART_COUNT) ||
-      (part._ur_part_messageLen > (ur->data_max_len - part_len))) {
+      (part.ur_part_seqLen > UR_MAX_PART_COUNT) ||
+      (part.ur_part_messageLen > (ur->data_max_len - part_len))) {
     ur->crc = 0;
     return ERR_DATA;
   }
 
-  if (part._ur_part_checksum != ur->crc) {
-    ur->crc = part._ur_part_checksum;
+  if (part.ur_part_checksum != ur->crc) {
+    ur->crc = part.ur_part_checksum;
     ur->part_mask = 0;
     for (int i = 0; i < UR_PART_DESC_COUNT; i++) {
       ur->part_desc[i] = 0;
     }
 
-    random_sampler_init(part._ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
+    random_sampler_init(part.ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
   }
 
-  part_len = part._ur_part_data.len;
+  part_len = part.ur_part_data.len;
   uint8_t* parts = &ur->data[part_len + MAX_CBOR_HEADER_LEN];
-  uint8_t* part_data = (uint8_t*) part._ur_part_data.value;
+  uint8_t* part_data = (uint8_t*) part.ur_part_data.value;
 
-  if (part._ur_part_seqNum <= part._ur_part_seqLen) {
-    return ur_process_simple(ur, parts, part_data, part_len, part._ur_part_seqNum - 1, &part);
+  if (part.ur_part_seqNum <= part.ur_part_seqLen) {
+    return ur_process_simple(ur, parts, part_data, part_len, part.ur_part_seqNum - 1, &part);
   }
 
-  uint32_t indexes = fountain_part_indexes(part._ur_part_seqNum, ur->crc, part._ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
+  uint32_t indexes = fountain_part_indexes(part.ur_part_seqNum, ur->crc, part.ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
   if ((indexes & (~ur->part_mask)) == 0) {
     return ERR_NEED_MORE_DATA;
   }
@@ -144,7 +144,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
     }
 
     if (ur->part_desc[desc_idx] == 0) {
-      if (desc_idx >= part._ur_part_seqLen) {
+      if (desc_idx >= part.ur_part_seqLen) {
         store_idx = desc_idx;
       }
     } else if ((ur->part_desc[desc_idx] & indexes) == (ur->part_desc[desc_idx])) {
@@ -167,7 +167,7 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   if (store_idx == -1) {
     int worst_count = __builtin_popcount(indexes);
 
-    desc_idx = part._ur_part_seqLen;
+    desc_idx = part.ur_part_seqLen;
 
     while(desc_idx < UR_PART_DESC_COUNT) {
       int count = __builtin_popcount(ur->part_desc[desc_idx]);
@@ -185,13 +185,13 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
     }
   }
 
-  if (store_idx >= part._ur_part_seqLen) {
+  if (store_idx >= part.ur_part_seqLen) {
     memcpy(&parts[store_idx * part_len], part_data, part_len);
     ur->part_desc[store_idx] = indexes;
   }
 
   //reduce existing parts by new part
-  desc_idx = part._ur_part_seqLen;
+  desc_idx = part.ur_part_seqLen;
 
   while(desc_idx < UR_PART_DESC_COUNT) {
     if ((desc_idx != store_idx) && ((ur->part_desc[desc_idx] & indexes) == indexes)) {

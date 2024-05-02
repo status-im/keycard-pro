@@ -13,3 +13,11 @@ int _close(int file) {
 int _lseek(int file, int ptr, int dir) {
   return -1;
 }
+
+int _fstat(int fd, void *buf) {
+  return -1;
+}
+
+int _isatty(int fd) {
+  return -1;
+}
