@@ -35,9 +35,10 @@ const menu_t menu_settings = {
 };
 
 const menu_t menu_mainmenu = {
-  5, {
+  6, {
     {MENU_QRCODE, NULL},
-    {MENU_DISPLAY_PUBLIC, NULL},
+    {MENU_DISPLAY_PUBLIC_EIP4527, NULL},
+    {MENU_DISPLAY_PUBLIC_MULTICOIN, NULL},
     {MENU_KEYCARD, &menu_keycard},
     {MENU_DEVICE, &menu_device},
     {MENU_SETTINGS, &menu_settings},

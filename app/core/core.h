@@ -73,7 +73,8 @@ core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb);
 void core_usb_run();
 
 void core_qr_run();
-void core_display_public();
+void core_display_public_eip4527();
+void core_display_public_multicoin();
 void updater_database_run();
 void device_auth_run();
 void device_info();

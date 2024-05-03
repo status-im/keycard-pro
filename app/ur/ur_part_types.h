@@ -4,8 +4,8 @@
  * Generated with a --default-max-qty of 3
  */
 
-#ifndef UR_PART_DECODE_TYPES_H__
-#define UR_PART_DECODE_TYPES_H__
+#ifndef UR_PART_TYPES_H__
+#define UR_PART_TYPES_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -37,4 +37,4 @@ struct ur_part {
 }
 #endif
 
-#endif /* UR_PART_DECODE_TYPES_H__ */
+#endif /* UR_PART_TYPES_H__ */

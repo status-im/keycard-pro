@@ -13,8 +13,11 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_QRCODE:
     core_qr_run();
     break;
-  case MENU_DISPLAY_PUBLIC:
-    core_display_public();
+  case MENU_DISPLAY_PUBLIC_EIP4527:
+    core_display_public_eip4527();
+    break;
+  case MENU_DISPLAY_PUBLIC_MULTICOIN:
+    core_display_public_multicoin();
     break;
   // Keycard
   case MENU_CARD_NAME:

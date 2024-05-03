@@ -25,6 +25,24 @@ extern "C" {
 int cbor_decode_eth_sign_request(
 		const uint8_t *payload, size_t payload_len,
 		struct eth_sign_request *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_eth_signature(
+		const uint8_t *payload, size_t payload_len,
+		struct eth_signature *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_hd_key(
+		const uint8_t *payload, size_t payload_len,
+		struct hd_key *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_crypto_multi_accounts(
+		const uint8_t *payload, size_t payload_len,
+		struct crypto_multi_accounts *result,
 		size_t *payload_len_out);
 
 

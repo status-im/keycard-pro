@@ -4,7 +4,8 @@ const char *const i18n_english_strings[] = {
     // Main menu
     "Keycard Pro",
     "Scan QR transaction",
-    "Connect software wallet",
+    "Connect Ethereum wallet",
+    "Connect multicoin wallet",
     "Keycard",
     "Device",
     "Settings",
