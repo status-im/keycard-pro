@@ -803,6 +803,8 @@ void core_display_public_multicoin() {
   accounts.crypto_multi_accounts_device_id.crypto_multi_accounts_device_id.value = (const uint8_t*) "0123456789012345678901234567890123456789";
   accounts.crypto_multi_accounts_device_id.crypto_multi_accounts_device_id.len = 40;
 
+  accounts.crypto_multi_accounts_version_present = 0;
+
   uint8_t* tmp_keys = g_camera_fb[0];
   size_t keys_off = 0;
 
