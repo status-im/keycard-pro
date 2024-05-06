@@ -59,6 +59,7 @@ typedef struct {
   bool ready;
   keycard_t keycard;
   command_t usb_command;
+  uint32_t master_fingerprint;
 
   uint8_t address[ADDRESS_LENGTH];
   uint8_t bip44_path[BIP44_MAX_PATH_LEN];

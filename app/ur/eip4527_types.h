@@ -111,6 +111,10 @@ struct hd_key_use_info {
 	struct coininfo hd_key_use_info;
 };
 
+struct hd_key_source {
+	struct zcbor_string hd_key_source;
+};
+
 struct hd_key {
 	bool hd_key_is_master;
 	bool hd_key_is_private;
@@ -121,7 +125,8 @@ struct hd_key {
 	struct crypto_keypath hd_key_origin;
 	uint32_t hd_key_parent_fingerprint;
 	struct zcbor_string hd_key_name;
-	struct zcbor_string hd_key_source;
+	struct hd_key_source hd_key_source;
+	bool hd_key_source_present;
 };
 
 struct crypto_multi_accounts_device {

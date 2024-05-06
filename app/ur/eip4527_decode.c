@@ -30,6 +30,7 @@ static bool decode_repeated_eth_sign_request_address(zcbor_state_t *state, struc
 static bool decode_repeated_eth_sign_request_request_origin(zcbor_state_t *state, struct eth_sign_request_request_origin *result);
 static bool decode_coininfo(zcbor_state_t *state, struct coininfo *result);
 static bool decode_repeated_hd_key_use_info(zcbor_state_t *state, struct hd_key_use_info *result);
+static bool decode_repeated_hd_key_source(zcbor_state_t *state, struct hd_key_source *result);
 static bool decode_repeated_crypto_multi_accounts_device(zcbor_state_t *state, struct crypto_multi_accounts_device *result);
 static bool decode_repeated_crypto_multi_accounts_device_id(zcbor_state_t *state, struct crypto_multi_accounts_device_id *result);
 static bool decode_repeated_crypto_multi_accounts_version(zcbor_state_t *state, struct crypto_multi_accounts_version *result);
@@ -304,6 +305,24 @@ static bool decode_repeated_hd_key_use_info(
 	return tmp_result;
 }
 
+static bool decode_repeated_hd_key_source(
+		zcbor_state_t *state, struct hd_key_source *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (10))))
+	&& (zcbor_tstr_decode(state, (&(*result).hd_key_source)))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
 static bool decode_repeated_crypto_multi_accounts_device(
 		zcbor_state_t *state, struct crypto_multi_accounts_device *result)
 {
@@ -328,9 +347,7 @@ static bool decode_repeated_crypto_multi_accounts_device_id(
 	zcbor_log("%s\r\n", __func__);
 
 	bool tmp_result = ((((zcbor_uint32_expect(state, (4))))
-	&& (zcbor_bstr_decode(state, (&(*result).crypto_multi_accounts_device_id)))
-	&& ((((((*result).crypto_multi_accounts_device_id.len >= 20)
-	&& ((*result).crypto_multi_accounts_device_id.len <= 20)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
+	&& (zcbor_tstr_decode(state, (&(*result).crypto_multi_accounts_device_id)))));
 
 	if (!tmp_result) {
 		zcbor_trace_file(state);
@@ -410,8 +427,7 @@ static bool decode_hd_key(
 	&& ((((((*result).hd_key_parent_fingerprint <= UINT32_MAX)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false)))
 	&& (((zcbor_uint32_expect(state, (9))))
 	&& (zcbor_tstr_decode(state, (&(*result).hd_key_name))))
-	&& (((zcbor_uint32_expect(state, (10))))
-	&& (zcbor_tstr_decode(state, (&(*result).hd_key_source))))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_map_end_decode(state))));
+	&& zcbor_present_decode(&((*result).hd_key_source_present), (zcbor_decoder_t *)decode_repeated_hd_key_source, state, (&(*result).hd_key_source))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_map_end_decode(state))));
 
 	if (!tmp_result) {
 		zcbor_trace_file(state);
