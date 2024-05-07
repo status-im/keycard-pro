@@ -16,27 +16,48 @@
 #error "The type file was generated with a different default_max_qty than this file"
 #endif
 
-static bool encode_uuid(zcbor_state_t *state, const struct zcbor_string *input);
-static bool encode_repeated_eth_signature_request_id(zcbor_state_t *state, const struct eth_signature_request_id *input);
-static bool encode_repeated_eth_signature_signature_origin(zcbor_state_t *state, const struct eth_signature_signature_origin *input);
-static bool encode_repeated_eth_sign_request_request_id(zcbor_state_t *state, const struct eth_sign_request_request_id *input);
-static bool encode_sign_data_type(zcbor_state_t *state, const struct sign_data_type_r *input);
-static bool encode_repeated_eth_sign_request_chain_id(zcbor_state_t *state, const struct eth_sign_request_chain_id *input);
-static bool encode_path_component(zcbor_state_t *state, const struct path_component *input);
-static bool encode_repeated_crypto_keypath_source_fingerprint(zcbor_state_t *state, const struct crypto_keypath_source_fingerprint *input);
-static bool encode_repeated_crypto_keypath_depth(zcbor_state_t *state, const struct crypto_keypath_depth *input);
-static bool encode_crypto_keypath(zcbor_state_t *state, const struct crypto_keypath *input);
-static bool encode_repeated_eth_sign_request_address(zcbor_state_t *state, const struct eth_sign_request_address *input);
-static bool encode_repeated_eth_sign_request_request_origin(zcbor_state_t *state, const struct eth_sign_request_request_origin *input);
-static bool encode_coininfo(zcbor_state_t *state, const struct coininfo *input);
-static bool encode_repeated_hd_key_use_info(zcbor_state_t *state, const struct hd_key_use_info *input);
-static bool encode_repeated_hd_key_source(zcbor_state_t *state, const struct hd_key_source *input);
-static bool encode_repeated_crypto_multi_accounts_device(zcbor_state_t *state, const struct crypto_multi_accounts_device *input);
-static bool encode_repeated_crypto_multi_accounts_device_id(zcbor_state_t *state, const struct crypto_multi_accounts_device_id *input);
-static bool encode_repeated_crypto_multi_accounts_version(zcbor_state_t *state, const struct crypto_multi_accounts_version *input);
-static bool encode_crypto_multi_accounts(zcbor_state_t *state, const struct crypto_multi_accounts *input);
-static bool encode_hd_key(zcbor_state_t *state, const struct hd_key *input);
-static bool encode_eth_signature(zcbor_state_t *state, const struct eth_signature *input);
+static bool encode_uuid(zcbor_state_t *state, const struct zcbor_string *input);
+
+static bool encode_repeated_eth_signature_request_id(zcbor_state_t *state, const struct eth_signature_request_id *input);
+
+static bool encode_repeated_eth_signature_signature_origin(zcbor_state_t *state, const struct eth_signature_signature_origin *input);
+
+static bool encode_repeated_eth_sign_request_request_id(zcbor_state_t *state, const struct eth_sign_request_request_id *input);
+
+static bool encode_sign_data_type(zcbor_state_t *state, const struct sign_data_type_r *input);
+
+static bool encode_repeated_eth_sign_request_chain_id(zcbor_state_t *state, const struct eth_sign_request_chain_id *input);
+
+static bool encode_path_component(zcbor_state_t *state, const struct path_component *input);
+
+static bool encode_repeated_crypto_keypath_source_fingerprint(zcbor_state_t *state, const struct crypto_keypath_source_fingerprint *input);
+
+static bool encode_repeated_crypto_keypath_depth(zcbor_state_t *state, const struct crypto_keypath_depth *input);
+
+static bool encode_crypto_keypath(zcbor_state_t *state, const struct crypto_keypath *input);
+
+static bool encode_repeated_eth_sign_request_address(zcbor_state_t *state, const struct eth_sign_request_address *input);
+
+static bool encode_repeated_eth_sign_request_request_origin(zcbor_state_t *state, const struct eth_sign_request_request_origin *input);
+
+static bool encode_coininfo(zcbor_state_t *state, const struct coininfo *input);
+
+static bool encode_repeated_hd_key_use_info(zcbor_state_t *state, const struct hd_key_use_info *input);
+
+static bool encode_repeated_hd_key_source(zcbor_state_t *state, const struct hd_key_source *input);
+
+static bool encode_repeated_crypto_multi_accounts_device(zcbor_state_t *state, const struct crypto_multi_accounts_device *input);
+
+static bool encode_repeated_crypto_multi_accounts_device_id(zcbor_state_t *state, const struct crypto_multi_accounts_device_id *input);
+
+static bool encode_repeated_crypto_multi_accounts_version(zcbor_state_t *state, const struct crypto_multi_accounts_version *input);
+
+static bool encode_crypto_multi_accounts(zcbor_state_t *state, const struct crypto_multi_accounts *input);
+
+static bool encode_hd_key(zcbor_state_t *state, const struct hd_key *input);
+
+static bool encode_eth_signature(zcbor_state_t *state, const struct eth_signature *input);
+
 static bool encode_eth_sign_request(zcbor_state_t *state, const struct eth_sign_request *input);
 
 
@@ -56,7 +77,8 @@ static bool encode_uuid(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_eth_signature_request_id(
 		zcbor_state_t *state, const struct eth_signature_request_id *input)
@@ -74,7 +96,8 @@ static bool encode_repeated_eth_signature_request_id(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_eth_signature_signature_origin(
 		zcbor_state_t *state, const struct eth_signature_signature_origin *input)
@@ -92,7 +115,8 @@ static bool encode_repeated_eth_signature_signature_origin(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_eth_sign_request_request_id(
 		zcbor_state_t *state, const struct eth_sign_request_request_id *input)
@@ -110,7 +134,8 @@ static bool encode_repeated_eth_sign_request_request_id(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_sign_data_type(
 		zcbor_state_t *state, const struct sign_data_type_r *input)
@@ -131,7 +156,8 @@ static bool encode_sign_data_type(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_eth_sign_request_chain_id(
 		zcbor_state_t *state, const struct eth_sign_request_chain_id *input)
@@ -149,7 +175,8 @@ static bool encode_repeated_eth_sign_request_chain_id(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_path_component(
 		zcbor_state_t *state, const struct path_component *input)
@@ -168,7 +195,8 @@ static bool encode_path_component(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_crypto_keypath_source_fingerprint(
 		zcbor_state_t *state, const struct crypto_keypath_source_fingerprint *input)
@@ -187,7 +215,8 @@ static bool encode_repeated_crypto_keypath_source_fingerprint(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_crypto_keypath_depth(
 		zcbor_state_t *state, const struct crypto_keypath_depth *input)
@@ -206,7 +235,8 @@ static bool encode_repeated_crypto_keypath_depth(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_crypto_keypath(
 		zcbor_state_t *state, const struct crypto_keypath *input)
@@ -226,7 +256,8 @@ static bool encode_crypto_keypath(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_eth_sign_request_address(
 		zcbor_state_t *state, const struct eth_sign_request_address *input)
@@ -246,7 +277,8 @@ static bool encode_repeated_eth_sign_request_address(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_eth_sign_request_request_origin(
 		zcbor_state_t *state, const struct eth_sign_request_request_origin *input)
@@ -264,7 +296,8 @@ static bool encode_repeated_eth_sign_request_request_origin(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_coininfo(
 		zcbor_state_t *state, const struct coininfo *input)
@@ -285,7 +318,8 @@ static bool encode_coininfo(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_hd_key_use_info(
 		zcbor_state_t *state, const struct hd_key_use_info *input)
@@ -304,7 +338,8 @@ static bool encode_repeated_hd_key_use_info(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_hd_key_source(
 		zcbor_state_t *state, const struct hd_key_source *input)
@@ -322,7 +357,8 @@ static bool encode_repeated_hd_key_source(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_crypto_multi_accounts_device(
 		zcbor_state_t *state, const struct crypto_multi_accounts_device *input)
@@ -340,7 +376,8 @@ static bool encode_repeated_crypto_multi_accounts_device(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_crypto_multi_accounts_device_id(
 		zcbor_state_t *state, const struct crypto_multi_accounts_device_id *input)
@@ -358,7 +395,8 @@ static bool encode_repeated_crypto_multi_accounts_device_id(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_repeated_crypto_multi_accounts_version(
 		zcbor_state_t *state, const struct crypto_multi_accounts_version *input)
@@ -376,7 +414,8 @@ static bool encode_repeated_crypto_multi_accounts_version(
 	}
 
 	return tmp_result;
-}
+}
+
 static bool encode_crypto_multi_accounts_key(
     zcbor_state_t *state, const struct hd_key *input)
 {
@@ -406,16 +445,15 @@ static bool encode_crypto_multi_accounts(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_hd_key(
 		zcbor_state_t *state, const struct hd_key *input)
 {
 	zcbor_log("%s\r\n", __func__);
 
-	bool tmp_result = (((zcbor_map_start_encode(state, 9) && (((((zcbor_uint32_put(state, (1))))
-	&& (zcbor_bool_encode(state, (&(*input).hd_key_is_master))))
-	&& (((zcbor_uint32_put(state, (2))))
+	bool tmp_result = (((zcbor_map_start_encode(state, 8) && (((((zcbor_uint32_put(state, (2))))
 	&& (zcbor_bool_encode(state, (&(*input).hd_key_is_private))))
 	&& (((zcbor_uint32_put(state, (3))))
 	&& ((((((*input).hd_key_key_data.len >= 33)
@@ -434,7 +472,7 @@ static bool encode_hd_key(
 	&& (zcbor_uint32_encode(state, (&(*input).hd_key_parent_fingerprint))))
 	&& (((zcbor_uint32_put(state, (9))))
 	&& (zcbor_tstr_encode(state, (&(*input).hd_key_name))))
-	&& (!(*input).hd_key_source_present || encode_repeated_hd_key_source(state, (&(*input).hd_key_source)))) || (zcbor_list_map_end_force_encode(state), false)) && zcbor_map_end_encode(state, 9))));
+	&& (!(*input).hd_key_source_present || encode_repeated_hd_key_source(state, (&(*input).hd_key_source)))) || (zcbor_list_map_end_force_encode(state), false)) && zcbor_map_end_encode(state, 8))));
 
 	if (!tmp_result) {
 		zcbor_trace_file(state);
@@ -444,7 +482,8 @@ static bool encode_hd_key(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_eth_signature(
 		zcbor_state_t *state, const struct eth_signature *input)
@@ -464,7 +503,8 @@ static bool encode_eth_signature(
 	}
 
 	return tmp_result;
-}
+}
+
 
 static bool encode_eth_sign_request(
 		zcbor_state_t *state, const struct eth_sign_request *input)
@@ -504,7 +544,8 @@ int cbor_encode_eth_sign_request(
 
 	return zcbor_entry_function(payload, payload_len, (void *)input, payload_len_out, states,
 		(zcbor_decoder_t *)encode_eth_sign_request, sizeof(states) / sizeof(zcbor_state_t), 1);
-}
+}
+
 
 
 int cbor_encode_eth_signature(
@@ -516,7 +557,8 @@ int cbor_encode_eth_signature(
 
 	return zcbor_entry_function(payload, payload_len, (void *)input, payload_len_out, states,
 		(zcbor_decoder_t *)encode_eth_signature, sizeof(states) / sizeof(zcbor_state_t), 1);
-}
+}
+
 
 
 int cbor_encode_hd_key(
@@ -528,7 +570,8 @@ int cbor_encode_hd_key(
 
 	return zcbor_entry_function(payload, payload_len, (void *)input, payload_len_out, states,
 		(zcbor_decoder_t *)encode_hd_key, sizeof(states) / sizeof(zcbor_state_t), 1);
-}
+}
+
 
 
 int cbor_encode_crypto_multi_accounts(

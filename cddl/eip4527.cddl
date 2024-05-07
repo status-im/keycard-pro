@@ -30,7 +30,7 @@ network = 2
 
 ; Crypto HDKey
 hd-key = {
-    is-master: bool,
+    ;? is-master: bool,
     is-private: bool,
     key-data: key-data-bytes,
     chain-code: chain-code-bytes,

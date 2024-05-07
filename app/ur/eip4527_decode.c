@@ -406,9 +406,7 @@ static bool decode_hd_key(
 {
 	zcbor_log("%s\r\n", __func__);
 
-	bool tmp_result = (((zcbor_map_start_decode(state) && (((((zcbor_uint32_expect(state, (1))))
-	&& (zcbor_bool_decode(state, (&(*result).hd_key_is_master))))
-	&& (((zcbor_uint32_expect(state, (2))))
+	bool tmp_result = (((zcbor_map_start_decode(state) && (((((zcbor_uint32_expect(state, (2))))
 	&& (zcbor_bool_decode(state, (&(*result).hd_key_is_private))))
 	&& (((zcbor_uint32_expect(state, (3))))
 	&& (zcbor_bstr_decode(state, (&(*result).hd_key_key_data)))

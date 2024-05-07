@@ -116,7 +116,6 @@ struct hd_key_source {
 };
 
 struct hd_key {
-	bool hd_key_is_master;
 	bool hd_key_is_private;
 	struct zcbor_string hd_key_key_data;
 	struct zcbor_string hd_key_chain_code;
