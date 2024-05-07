@@ -22,6 +22,12 @@ extern "C" {
 #endif
 
 
+int cbor_encode_eth_sign_request(
+		uint8_t *payload, size_t payload_len,
+		const struct eth_sign_request *input,
+		size_t *payload_len_out);
+
+
 int cbor_encode_eth_signature(
 		uint8_t *payload, size_t payload_len,
 		const struct eth_signature *input,

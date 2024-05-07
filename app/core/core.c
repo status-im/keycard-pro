@@ -16,6 +16,9 @@
 
 #define ETH_MSG_MAGIC_LEN 26
 #define ETH_EIP712_MAGIC_LEN 2
+
+#define CRYPTO_MULTIACCOUNT_SN_LEN 40
+
 #define USB_MORE_DATA_TIMEOUT 100
 
 const uint8_t *const ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
@@ -23,6 +26,33 @@ const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
 
 const uint32_t ETH_DEFAULT_BIP44[] = { 0x8000002c, 0x8000003c, 0x80000000 };
 const uint32_t ETH_DEFAULT_BIP44_LEN = 3;
+
+const uint32_t ETH_LEDGER_LIVE_PATH[] = { 0x8000002c, 0x8000003c };
+const uint32_t ETH_LEDGER_LIVE_PATH_LEN = 2;
+
+const uint32_t BTC_LEGACY_PATH[] = { 0x8000002c, 0x80000000, 0x80000000 };
+const uint32_t BTC_LEGACY_PATH_LEN = 3;
+
+const uint32_t BTC_SEGWIT_PATH[] = { 0x80000031, 0x80000000, 0x80000000 };
+const uint32_t BTC_SEGWIT_PATH_LEN = 3;
+
+const uint32_t BTC_NATIVE_SEGWIT_PATH[] = { 0x80000054, 0x80000000, 0x80000000 };
+const uint32_t BTC_NATIVE_SEGWIT_PATH_LEN = 3;
+
+const uint32_t BTC_TAPROOT_PATH[] = { 0x80000056, 0x80000000, 0x80000000 };
+const uint32_t BTC_TAPROOT_PATH_LEN = 3;
+
+const uint32_t TRX_PATH[] = { 0x8000002c, 0x800000c3, 0x80000000 };
+const uint32_t TRX_PATH_LEN = 3;
+
+const uint32_t LTC_PATH[] = { 0x80000031, 0x80000002, 0x80000000 };
+const uint32_t LTC_PATH_LEN = 3;
+
+const uint32_t BCH_PATH[] = { 0x8000002c, 0x80000091, 0x80000000 };
+const uint32_t BCH_PATH_LEN = 3;
+
+const uint32_t DASH_PATH[] = { 0x8000002c, 0x80000005, 0x80000000 };
+const uint32_t DASH_PATH_LEN = 3;
 
 const uint8_t *const EIP4527_NAME = (uint8_t*) "Keycard Pro";
 const uint32_t EIP4527_NAME_LEN = 11;
@@ -70,6 +100,11 @@ static app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uin
 }
 
 static app_err_t core_get_fingerprint(uint8_t* path, size_t len, uint32_t* fingerprint) {
+  if (len == 0 && g_core.master_fingerprint != 0) {
+    *fingerprint = g_core.master_fingerprint;
+    return ERR_OK;
+  }
+
   app_err_t err = core_export_key(&g_core.keycard, path, len, g_core.data.key.pub, NULL);
 
   if (err != ERR_OK) {
@@ -82,10 +117,15 @@ static app_err_t core_get_fingerprint(uint8_t* path, size_t len, uint32_t* finge
   ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
 
   *fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
+
+  if (len == 0)  {
+    g_core.master_fingerprint = *fingerprint;
+  }
+
   return ERR_OK;
 }
 
-static app_err_t core_export_public(uint32_t* fingerprint, uint32_t* parent_fingerprint) {
+static app_err_t core_export_public(uint8_t* pub, uint8_t* chain, uint32_t* fingerprint, uint32_t* parent_fingerprint) {
   SC_BUF(path, BIP44_MAX_PATH_LEN);
   app_err_t err;
 
@@ -105,13 +145,13 @@ static app_err_t core_export_public(uint32_t* fingerprint, uint32_t* parent_fing
   }
 
   memcpy(path, g_core.bip44_path, g_core.bip44_path_len);
-  err = core_export_key(&g_core.keycard, path, g_core.bip44_path_len, g_core.data.key.pub, g_core.data.key.chain);
+  err = core_export_key(&g_core.keycard, path, g_core.bip44_path_len, pub, chain);
 
   if (err != ERR_OK) {
     return err;
   }
 
-  g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
+  pub[0] = 0x02 | (pub[PUBKEY_LEN - 1] & 1);
 
   return ERR_OK;
 }
@@ -119,7 +159,7 @@ static app_err_t core_export_public(uint32_t* fingerprint, uint32_t* parent_fing
 static inline app_err_t core_init_sign(uint32_t* fingerprint) {
   keccak_256_Init(&g_core.hash_ctx);
 
-  if (core_export_public(fingerprint, NULL) != ERR_OK) {
+  if (core_export_public(g_core.data.key.pub, g_core.data.key.chain, fingerprint, NULL) != ERR_OK) {
     return ERR_HW;
   }
 
@@ -692,25 +732,30 @@ void core_qr_run() {
   ui_display_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGNATURE);
 }
 
-static app_err_t encode_hd_key(struct hd_key* key) {
-  key->hd_key_is_master = 0;
+static app_err_t encode_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, const uint32_t bip32_path[], size_t bip32_len, bool add_source) {
   key->hd_key_is_private = 0;
   key->hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
-  key->hd_key_key_data.value = g_core.data.key.pub;
+  key->hd_key_key_data.value = pub;
   key->hd_key_chain_code.len = CHAINCODE_LEN;
-  key->hd_key_chain_code.value = g_core.data.key.chain;
+  key->hd_key_chain_code.value = chain;
   key->hd_key_use_info_present = 0;
   key->hd_key_origin.crypto_keypath_depth_present = 1;
-  key->hd_key_origin.crypto_keypath_depth.crypto_keypath_depth = ETH_DEFAULT_BIP44_LEN;
+  key->hd_key_origin.crypto_keypath_depth.crypto_keypath_depth = bip32_len;
   key->hd_key_origin.crypto_keypath_source_fingerprint_present = 1;
-  key->hd_key_origin.crypto_keypath_components_path_component_m_count = ETH_DEFAULT_BIP44_LEN;
+  key->hd_key_origin.crypto_keypath_components_path_component_m_count = bip32_len;
   key->hd_key_name.len = EIP4527_NAME_LEN;
   key->hd_key_name.value = EIP4527_NAME;
-  key->hd_key_source.len = EIP4527_SOURCE_LEN;
-  key->hd_key_source.value = EIP4527_SOURCE;
 
-  for (int i = 0; i < ETH_DEFAULT_BIP44_LEN; i++) {
-    uint32_t c = ETH_DEFAULT_BIP44[i];
+  if (add_source) {
+    key->hd_key_source_present = 1;
+    key->hd_key_source.hd_key_source.len = EIP4527_SOURCE_LEN;
+    key->hd_key_source.hd_key_source.value = EIP4527_SOURCE;
+  } else {
+    key->hd_key_source_present = 0;
+  }
+
+  for (int i = 0; i < bip32_len; i++) {
+    uint32_t c = bip32_path[i];
     g_core.bip44_path[(i * 4)] = c >> 24;
     g_core.bip44_path[(i * 4) + 1] = (c >> 16) & 0xff;
     g_core.bip44_path[(i * 4) + 2] = (c >> 8) & 0xff;
@@ -719,25 +764,66 @@ static app_err_t encode_hd_key(struct hd_key* key) {
     key->hd_key_origin.crypto_keypath_components_path_component_m[i].path_component_is_hardened_m = c > 0x7fffffff;
   }
 
-  g_core.bip44_path_len = ETH_DEFAULT_BIP44_LEN * 4;
+  g_core.bip44_path_len = bip32_len * 4;
 
-  if (core_export_public(&key->hd_key_origin.crypto_keypath_source_fingerprint.crypto_keypath_source_fingerprint, &key->hd_key_parent_fingerprint) != ERR_OK) {
+  if (core_export_public(pub, chain, &key->hd_key_origin.crypto_keypath_source_fingerprint.crypto_keypath_source_fingerprint, &key->hd_key_parent_fingerprint) != ERR_OK) {
     return ERR_HW;
   }
 
   return ERR_OK;
 }
 
-void core_display_public() {
+void core_display_public_eip4527() {
   struct hd_key key;
 
-  if (encode_hd_key(&key) != ERR_OK) {
+  if (encode_hd_key(&key, g_core.data.key.pub, g_core.data.key.chain, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true) != ERR_OK) {
     ui_card_transport_error();
     return;
   }
 
   cbor_encode_hd_key(g_core.data.key.cbor_key, CBOR_KEY_MAX_LEN, &key, &g_core.data.key.cbor_len);
   ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
+}
+
+// this macro can only be used in core_display_public_multicoin()
+#define CORE_MULTICOIN_EXPORT(__NUM__, __PATH__, __PATH_LEN__, __SOURCE___) \
+  if (encode_hd_key(&accounts.crypto_multi_accounts_keys_hd_key_m[__NUM__], &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, __SOURCE___) != ERR_OK) { \
+    ui_card_transport_error(); \
+    return; \
+  } \
+  keys_off += PUBKEY_LEN + CHAINCODE_LEN
+
+void core_display_public_multicoin() {
+  struct crypto_multi_accounts accounts;
+
+  accounts.crypto_multi_accounts_device.crypto_multi_accounts_device.len = EIP4527_NAME_LEN;
+  accounts.crypto_multi_accounts_device.crypto_multi_accounts_device.value = EIP4527_NAME;
+  accounts.crypto_multi_accounts_device_present = 1;
+
+  uint8_t uid[CRYPTO_MULTIACCOUNT_SN_LEN/2];
+  memset(uid, 0, CRYPTO_MULTIACCOUNT_SN_LEN/20);
+  hal_device_uid(uid);
+  uint8_t sn[CRYPTO_MULTIACCOUNT_SN_LEN];
+  base16_encode(uid, (char*) sn, (CRYPTO_MULTIACCOUNT_SN_LEN/2));
+
+  accounts.crypto_multi_accounts_device_id.crypto_multi_accounts_device_id.len = CRYPTO_MULTIACCOUNT_SN_LEN;
+  accounts.crypto_multi_accounts_device_id.crypto_multi_accounts_device_id.value = sn;
+  accounts.crypto_multi_accounts_device_id_present = 1;
+
+  accounts.crypto_multi_accounts_version_present = 0;
+
+  size_t keys_off = 0;
+
+  CORE_MULTICOIN_EXPORT(0, BTC_LEGACY_PATH, BTC_LEGACY_PATH_LEN, false);
+  CORE_MULTICOIN_EXPORT(1, BTC_SEGWIT_PATH, BTC_SEGWIT_PATH_LEN, false);
+  CORE_MULTICOIN_EXPORT(2, BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN, false);
+  CORE_MULTICOIN_EXPORT(3, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true);
+
+  accounts.crypto_multi_accounts_keys_hd_key_m_count = 4;
+  accounts.crypto_multi_accounts_master_fingerprint = g_core.master_fingerprint;
+
+  cbor_encode_crypto_multi_accounts(&g_mem_heap[keys_off], MEM_HEAP_SIZE, &accounts, &g_core.data.key.cbor_len);
+  ui_display_qr(&g_mem_heap[keys_off], g_core.data.key.cbor_len, CRYPTO_MULTI_ACCOUNTS);
 }
 
 core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb) {

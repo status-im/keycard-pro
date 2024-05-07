@@ -30,7 +30,7 @@ network = 2
 
 ; Crypto HDKey
 hd-key = {
-    is-master: bool,
+    ;? is-master: bool,
     is-private: bool,
     key-data: key-data-bytes,
     chain-code: chain-code-bytes,
@@ -39,7 +39,7 @@ hd-key = {
     ;? children: #6.304(crypto-keypath),
     parent-fingerprint: uint32 .gt 0,
     name: text,
-    source: text
+    ? source: text
 }
 
 is-master = 1
@@ -61,7 +61,7 @@ crypto-multi-accounts = {
     master-fingerprint: uint32,
     keys: [0*10 #6.303(hd-key)],
     ? device: text,
-    ? device-id: device-id-str,
+    ? device-id: text,
     ? version: text
 }
 
@@ -70,7 +70,6 @@ keys = 2
 device = 3
 device-id = 4
 version = 5
-device-id-str = bstr .size 20
 
 ; Sign data type
 sign-data-type = eth-transaction-data / eth-typed-data / eth-raw-bytes / eth-typed-transaction

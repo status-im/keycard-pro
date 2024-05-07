@@ -4,8 +4,8 @@
  * Generated with a --default-max-qty of 3
  */
 
-#ifndef UR_PART_DECODE_H__
-#define UR_PART_DECODE_H__
+#ifndef UR_PART_ENCODE_H__
+#define UR_PART_ENCODE_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -22,9 +22,9 @@ extern "C" {
 #endif
 
 
-int cbor_decode_ur_part(
-		const uint8_t *payload, size_t payload_len,
-		struct ur_part *result,
+int cbor_encode_ur_part(
+		uint8_t *payload, size_t payload_len,
+		const struct ur_part *input,
 		size_t *payload_len_out);
 
 
@@ -32,4 +32,4 @@ int cbor_decode_ur_part(
 }
 #endif
 
-#endif /* UR_PART_DECODE_H__ */
+#endif /* UR_PART_ENCODE_H__ */
