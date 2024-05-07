@@ -17,6 +17,8 @@
 #define ETH_MSG_MAGIC_LEN 26
 #define ETH_EIP712_MAGIC_LEN 2
 
+#define CRYPTO_MULTIACCOUNT_SN_LEN 40
+
 #define USB_MORE_DATA_TIMEOUT 100
 
 const uint8_t *const ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
@@ -785,11 +787,11 @@ void core_display_public_eip4527() {
 
 // this macro can only be used in core_display_public_multicoin()
 #define CORE_MULTICOIN_EXPORT(__NUM__, __PATH__, __PATH_LEN__, __SOURCE___) \
-  if (encode_hd_key(&accounts.crypto_multi_accounts_keys_hd_key_m[__NUM__], &tmp_keys[keys_off], &tmp_keys[keys_off + PUBKEY_COMPRESSED_LEN], __PATH__, __PATH_LEN__, __SOURCE___) != ERR_OK) { \
+  if (encode_hd_key(&accounts.crypto_multi_accounts_keys_hd_key_m[__NUM__], &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, __SOURCE___) != ERR_OK) { \
     ui_card_transport_error(); \
     return; \
   } \
-  keys_off += PUBKEY_COMPRESSED_LEN + CHAINCODE_LEN
+  keys_off += PUBKEY_LEN + CHAINCODE_LEN
 
 void core_display_public_multicoin() {
   struct crypto_multi_accounts accounts;
@@ -798,26 +800,30 @@ void core_display_public_multicoin() {
   accounts.crypto_multi_accounts_device.crypto_multi_accounts_device.value = EIP4527_NAME;
   accounts.crypto_multi_accounts_device_present = 1;
 
+  uint8_t uid[CRYPTO_MULTIACCOUNT_SN_LEN/2];
+  memset(uid, 0, CRYPTO_MULTIACCOUNT_SN_LEN/20);
+  hal_device_uid(uid);
+  uint8_t sn[CRYPTO_MULTIACCOUNT_SN_LEN];
+  base16_encode(uid, (char*) sn, (CRYPTO_MULTIACCOUNT_SN_LEN/2));
+
+  accounts.crypto_multi_accounts_device_id.crypto_multi_accounts_device_id.len = CRYPTO_MULTIACCOUNT_SN_LEN;
+  accounts.crypto_multi_accounts_device_id.crypto_multi_accounts_device_id.value = sn;
   accounts.crypto_multi_accounts_device_id_present = 1;
-  accounts.crypto_multi_accounts_device_id.crypto_multi_accounts_device_id.value = (const uint8_t*) "0123456789012345678901234567890123456789";
-  accounts.crypto_multi_accounts_device_id.crypto_multi_accounts_device_id.len = 40;
 
   accounts.crypto_multi_accounts_version_present = 0;
 
-  uint8_t* tmp_keys = g_camera_fb[0];
   size_t keys_off = 0;
 
   CORE_MULTICOIN_EXPORT(0, BTC_LEGACY_PATH, BTC_LEGACY_PATH_LEN, false);
   CORE_MULTICOIN_EXPORT(1, BTC_SEGWIT_PATH, BTC_SEGWIT_PATH_LEN, false);
   CORE_MULTICOIN_EXPORT(2, BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN, false);
-  CORE_MULTICOIN_EXPORT(3, BTC_TAPROOT_PATH, BTC_TAPROOT_PATH_LEN, false);
-  //CORE_MULTICOIN_EXPORT(4, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true);
+  CORE_MULTICOIN_EXPORT(3, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true);
 
   accounts.crypto_multi_accounts_keys_hd_key_m_count = 4;
   accounts.crypto_multi_accounts_master_fingerprint = g_core.master_fingerprint;
 
-  cbor_encode_crypto_multi_accounts(g_mem_heap, MEM_HEAP_SIZE, &accounts, &g_core.data.key.cbor_len);
-  ui_display_qr(g_mem_heap, g_core.data.key.cbor_len, CRYPTO_MULTI_ACCOUNTS);
+  cbor_encode_crypto_multi_accounts(&g_mem_heap[keys_off], MEM_HEAP_SIZE, &accounts, &g_core.data.key.cbor_len);
+  ui_display_qr(&g_mem_heap[keys_off], g_core.data.key.cbor_len, CRYPTO_MULTI_ACCOUNTS);
 }
 
 core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb) {
