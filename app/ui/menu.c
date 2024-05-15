@@ -88,20 +88,18 @@ void menu_render_entry(const menu_entry_t* entry, uint8_t is_selected, uint16_t 
   ctx.x = TH_MENU_LEFT_MARGIN;
   ctx.y = yOff;
 
-  dialog_line(&ctx, LSTR(entry->label_id), (TH_MENU_HEIGHT - TH_SEP_HEIGHT));
+  dialog_line(&ctx, LSTR(entry->label_id), TH_MENU_HEIGHT);
 
   if (g_ui_cmd.params.menu.marked == entry->label_id) {
     screen_area_t mark = {
         .width = TH_MENU_MARK_WIDTH,
         .height = TH_MENU_MARK_HEIGHT,
         .x = SCREEN_WIDTH - TH_MENU_RIGHT_MARGIN - TH_MENU_MARK_WIDTH,
-        .y = yOff + (((TH_MENU_HEIGHT - TH_SEP_HEIGHT)/ 2) - (TH_MENU_MARK_HEIGHT / 2))
+        .y = yOff + ((TH_MENU_HEIGHT / 2) - (TH_MENU_MARK_HEIGHT / 2))
     };
 
     screen_fill_area(&mark, TH_COLOR_MENU_MARK);
   }
-
-  dialog_separator(yOff + (TH_MENU_HEIGHT - TH_SEP_HEIGHT));
 }
 
 enum menu_draw_mode {
@@ -112,13 +110,14 @@ enum menu_draw_mode {
 };
 
 void menu_render(const menu_t* menu, const char* title, uint8_t selected, enum menu_draw_mode mode) {
-  uint16_t yOff = TH_TITLE_HEIGHT;
+  uint16_t yOff = TH_TITLE_HEIGHT + TH_MENU_VERTICAL_MARGIN;
 
   int i, l;
 
   switch(mode) {
   case MENU_ALL:
     dialog_title(title);
+    dialog_margin(TH_TITLE_HEIGHT, TH_MENU_VERTICAL_MARGIN);
     i = 0;
     l = menu->len;
     break;

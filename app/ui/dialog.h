@@ -10,6 +10,7 @@ app_err_t dialog_separator(uint16_t yOff);
 
 app_err_t dialog_title(const char* title);
 app_err_t dialog_footer(uint16_t yOff);
+app_err_t dialog_margin(uint16_t yOff, uint16_t height);
 
 app_err_t dialog_confirm_tx();
 app_err_t dialog_confirm_msg();

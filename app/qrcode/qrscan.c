@@ -11,11 +11,14 @@
 #include "ur/eip4527_decode.h"
 #include "ur/auth_decode.h"
 
-const static screen_area_t indicator_area = { .x = 10, .y = 10, .width = 10, .height = 10 };
+#define QR_INDICATOR_WIDTH ((SCREEN_WIDTH - CAM_OUT_WIDTH) / 2)
+
+const static screen_area_t indicator_area_left = { .x = 0, .y = 0, .width = QR_INDICATOR_WIDTH, .height = SCREEN_HEIGHT };
+const static screen_area_t indicator_area_right = { .x = QR_INDICATOR_WIDTH + CAM_OUT_WIDTH, .y = 0, .width = QR_INDICATOR_WIDTH, .height = SCREEN_HEIGHT };
 
 #define QR_SCORE_RED 1
 #define QR_SCORE_YELLOW 3
-#define QR_SCORE_GREEN 4
+#define QR_SCORE_GREEN 5
 
 app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
   struct quirc_code qrcode;
@@ -134,7 +137,8 @@ app_err_t qrscan_scan() {
     }
 
     if (prev_color != indicator_color) {
-      screen_fill_area(&indicator_area, indicator_color);
+      screen_fill_area(&indicator_area_left, indicator_color);
+      screen_fill_area(&indicator_area_right, indicator_color);
     }
 
     keypad_key_t k = ui_wait_keypress(0);

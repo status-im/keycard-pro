@@ -59,6 +59,9 @@ extern const screen_area_t screen_fullarea;
 #define SCREEN_COLOR_GREENYELLOW SCREEN_RGB(173, 255,  41)
 #define SCREEN_COLOR_PINK        SCREEN_RGB(255, 130, 198)
 
+#define CAM_OUT_WIDTH (CAMERA_WIDTH/2)
+#define CAM_OUT_HEIGHT (CAMERA_HEIGHT/2)
+
 // Low level API
 hal_err_t screen_init();
 hal_err_t screen_wait();

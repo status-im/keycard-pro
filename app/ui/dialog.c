@@ -40,6 +40,7 @@ app_err_t dialog_title(const char* title) {
   }
 
   ctx.font = TH_FONT_ICONS;
+  ctx.fg = TH_COLOR_TITLE_ICON_FG;
   ctx.y = ((TH_TITLE_HEIGHT - ctx.font->yAdvance) / 2);
   ctx.x = 280;
 
@@ -55,6 +56,11 @@ app_err_t dialog_title(const char* title) {
 
 app_err_t dialog_footer(uint16_t yOff) {
   screen_area_t area = { 0, yOff, SCREEN_WIDTH, SCREEN_HEIGHT - yOff };
+  return screen_fill_area(&area, TH_COLOR_BG);
+}
+
+app_err_t dialog_margin(uint16_t yOff, uint16_t height) {
+  screen_area_t area = { 0, yOff, SCREEN_WIDTH, height };
   return screen_fill_area(&area, TH_COLOR_BG);
 }
 

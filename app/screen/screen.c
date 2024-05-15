@@ -7,9 +7,6 @@
 
 #define SCREEN_TIMEOUT 100
 
-#define CAM_OUT_WIDTH (CAMERA_WIDTH/2)
-#define CAM_OUT_HEIGHT (CAMERA_HEIGHT/2)
-
 #define MAX_GLYPHS_PER_LINE 50
 
 const screen_area_t screen_fullarea = { 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT };
