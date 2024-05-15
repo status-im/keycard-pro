@@ -24,8 +24,8 @@ const char *const i18n_english_strings[] = {
 
     // Settings menu
     "Set brightness",
-    "Auto off time",
-    "USB data",
+    "Auto-off time",
+    "USB-data",
 
     // TX
     "Sign transaction",
