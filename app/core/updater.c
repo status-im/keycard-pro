@@ -100,7 +100,7 @@ void device_info() {
 
   append_sn(p, LSTR(DEVICE_INFO_SN), device_uid);
 
-  ui_info(LSTR(MENU_INFO), info, 1);
+  ui_prompt(LSTR(MENU_INFO), info);
 }
 
 static app_err_t updater_verify_db(uint8_t* data, size_t data_len) {
@@ -123,7 +123,7 @@ static app_err_t updater_confirm_database_update(uint32_t db_ver) {
 
   append_db_version(&info[len], LSTR(DEVICE_INFO_NEW_DB), db_ver);
 
-  if (ui_info(LSTR(DB_UPDATE_TITLE), info, 1) != CORE_EVT_UI_OK) {
+  if (ui_prompt(LSTR(DB_UPDATE_TITLE), info) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
 
@@ -136,7 +136,7 @@ static app_err_t updater_database_update(uint8_t* data, size_t len) {
   if ((len < MIN_DB_LEN) ||
       (updater_verify_db(data, len) != ERR_OK) ||
       (eth_db_extract_version(data, &version) != ERR_OK)) {
-    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DB_UPDATE_INVALID), 1);
+    ui_info(LSTR(DB_UPDATE_INVALID), 1);
     return ERR_DATA;
   }
 
@@ -145,10 +145,10 @@ static app_err_t updater_database_update(uint8_t* data, size_t len) {
   }
 
   if (eth_db_update(data, len - SIG_LEN) != ERR_OK) {
-    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DB_UPDATE_ERROR), 1);
+    ui_info(LSTR(DB_UPDATE_ERROR), 1);
     return ERR_DATA;
   } else {
-    ui_info(LSTR(INFO_SUCCESS_TITLE), LSTR(DB_UPDATE_OK), 1);
+    ui_info(LSTR(DB_UPDATE_OK), 1);
   }
 
   return ERR_OK;
@@ -157,7 +157,7 @@ static app_err_t updater_database_update(uint8_t* data, size_t len) {
 static app_err_t updater_prompt_version() {
   uint32_t db_ver;
   if (eth_db_lookup_version(&db_ver) != ERR_OK) {
-    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(DB_UPDATE_NO_DB), 1);
+    ui_info(LSTR(DB_UPDATE_NO_DB), 1);
     return ERR_CANCEL;
   }
 
@@ -169,7 +169,7 @@ static app_err_t updater_prompt_version() {
 
   append_db_version(&info[len], LSTR(DEVICE_INFO_DB), db_ver);
 
-  if (ui_info(LSTR(DB_UPDATE_TITLE), info, 1) != CORE_EVT_UI_OK) {
+  if (ui_prompt(LSTR(DB_UPDATE_TITLE), info) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
 
@@ -239,7 +239,7 @@ static app_err_t updater_confirm_fw_upgrade() {
   uint32_t ver_off = ((uint32_t ) FW_VERSION) - HAL_FLASH_FW_START_ADDR;
   append_fw_version(&info[len], LSTR(DEVICE_INFO_NEW_FW), (uint8_t*)(HAL_FLASH_FW_UPGRADE_AREA + ver_off));
 
-  if (ui_info(LSTR(FW_UPGRADE_TITLE), info, 1) != CORE_EVT_UI_OK) {
+  if (ui_prompt(LSTR(FW_UPGRADE_TITLE), info) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
 
@@ -281,7 +281,7 @@ app_err_t updater_usb_fw_upgrade(command_t *cmd, apdu_t* apdu) {
     if (updater_verify_firmware() != ERR_OK) {
       updater_clear_flash_area();
       core_usb_err_sw(apdu, 0x6a, 0x80);
-      ui_info(LSTR(INFO_ERROR_TITLE), LSTR(FW_UPGRADE_INVALID), 1);
+      ui_info(LSTR(FW_UPGRADE_INVALID), 1);
       return ERR_DATA;
     }
 

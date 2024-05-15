@@ -200,7 +200,7 @@ app_err_t dialog_confirm_tx() {
   }
 }
 
-static void dialog_draw_message(const char* title, const char* txt, size_t len) {
+static void dialog_draw_message(const char* title, const char* txt) {
   dialog_title(title);
   dialog_footer(TH_TITLE_HEIGHT);
 
@@ -212,6 +212,7 @@ static void dialog_draw_message(const char* title, const char* txt, size_t len) 
       .y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN
   };
 
+  size_t len = strlen(txt);
   screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, (uint8_t*) txt, len, false);
 }
 
@@ -370,13 +371,13 @@ static app_err_t dialog_wait_dismiss() {
   }
 }
 
-app_err_t dialog_internal_info(const char* title, const char* msg) {
-  dialog_draw_message(title, msg, strlen(msg));
+app_err_t dialog_internal_info(const char* msg) {
+  dialog_draw_message("", msg);
   return dialog_wait_dismiss();
 }
 
 app_err_t dialog_info() {
-  dialog_draw_message(g_ui_cmd.params.info.title, g_ui_cmd.params.info.msg, strlen(g_ui_cmd.params.info.msg));
+  dialog_draw_message(g_ui_cmd.params.info.title, g_ui_cmd.params.info.msg);
 
   if (!g_ui_cmd.params.info.dismissable) {
     vTaskSuspend(NULL);
@@ -388,9 +389,9 @@ app_err_t dialog_info() {
 
 app_err_t dialog_dev_auth() {
   if (g_ui_cmd.params.auth.auth_count > 1) {
-    dialog_draw_message(LSTR(DEV_AUTH_TITLE_WARNING), LSTR(DEV_AUTH_INFO_WARNING), strlen(LSTR(DEV_AUTH_INFO_WARNING)));
+    dialog_draw_message("", LSTR(DEV_AUTH_INFO_WARNING));
   } else {
-    dialog_draw_message(LSTR(DEV_AUTH_TITLE_SUCCESS), LSTR(DEV_AUTH_INFO_SUCCESS), strlen(LSTR(DEV_AUTH_INFO_SUCCESS)));
+    dialog_draw_message("", LSTR(DEV_AUTH_INFO_SUCCESS));
   }
 
   return dialog_wait_dismiss();

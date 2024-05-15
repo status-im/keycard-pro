@@ -521,7 +521,7 @@ static app_err_t input_backup_confirm_mnemonic(uint8_t positions[WORDS_TO_CONFIR
       if (idx == g_ui_cmd.params.mnemo.indexes[positions[i]]) {
         i++;
       } else {
-        dialog_internal_info(LSTR(INFO_ERROR_TITLE), LSTR(MNENO_MISMATCH));
+        dialog_internal_info(LSTR(MNENO_MISMATCH));
       }
     } else if (i > 0) {
       i--;

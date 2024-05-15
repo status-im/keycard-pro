@@ -655,7 +655,7 @@ void core_qr_run() {
   }
 
   if (core_eip4527_init_sign(&qr_request) != ERR_OK) {
-    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_WRONG_CARD), 1);
+    ui_info(LSTR(INFO_WRONG_CARD), 1);
     return;
   }
 
@@ -686,7 +686,7 @@ void core_qr_run() {
   case ERR_CANCEL:
     return;
   default:
-    ui_info(LSTR(INFO_ERROR_TITLE), LSTR(INFO_MALFORMED_DATA), 1);
+    ui_info(LSTR(INFO_MALFORMED_DATA), 1);
     return;
   }
 
