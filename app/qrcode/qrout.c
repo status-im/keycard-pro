@@ -18,7 +18,7 @@ app_err_t qrout_run() {
   uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
   char urstr[qrcodegen_BUFFER_LEN_MAX/2];
 
-  dialog_title(LSTR(QR_OUTPUT_TITLE));
+  dialog_title_colors(LSTR(QR_OUTPUT_TITLE), SCREEN_COLOR_WHITE, SCREEN_COLOR_BLACK, SCREEN_COLOR_BLACK);
   screen_area_t bgarea = { 0, TH_TITLE_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - TH_TITLE_HEIGHT };
   screen_fill_area(&bgarea, SCREEN_COLOR_WHITE);
 

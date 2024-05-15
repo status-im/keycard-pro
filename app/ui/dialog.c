@@ -33,16 +33,16 @@ app_err_t dialog_separator(uint16_t yOff) {
   return screen_fill_area(&fillarea, TH_COLOR_SEP) == HAL_SUCCESS? ERR_OK : ERR_HW;
 }
 
-app_err_t dialog_title(const char* title) {
-  screen_text_ctx_t ctx = { TH_FONT_TITLE, TH_COLOR_TITLE_FG, TH_COLOR_TITLE_BG, TH_TITLE_LEFT_MARGIN, 0 };
+app_err_t dialog_title_colors(const char* title, uint16_t bg, uint16_t fg, uint16_t icon) {
+  screen_text_ctx_t ctx = { TH_FONT_TITLE, fg, bg, TH_TITLE_LEFT_MARGIN, 0 };
   if (dialog_line(&ctx, title, TH_TITLE_HEIGHT) != ERR_OK) {
     return ERR_HW;
   }
 
   ctx.font = TH_FONT_ICONS;
-  ctx.fg = TH_COLOR_TITLE_ICON_FG;
+  ctx.fg = icon;
   ctx.y = ((TH_TITLE_HEIGHT - ctx.font->yAdvance) / 2);
-  ctx.x = 280;
+  ctx.x = TH_TITLE_ICON_POSITION;
 
   uint8_t i = g_ui_ctx.battery / 25;
   if (i > 5) {
@@ -52,6 +52,10 @@ app_err_t dialog_title(const char* title) {
   }
 
   return screen_draw_glyph(&ctx, &ctx.font->glyph[i]) == HAL_SUCCESS? ERR_OK : ERR_HW;
+}
+
+app_err_t dialog_title(const char* title) {
+  return dialog_title_colors(title, TH_COLOR_TITLE_BG, TH_COLOR_TITLE_FG, TH_COLOR_TITLE_ICON_FG);
 }
 
 app_err_t dialog_footer(uint16_t yOff) {
