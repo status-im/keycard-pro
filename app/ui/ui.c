@@ -53,16 +53,14 @@ core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type) {
 core_evt_t ui_info(const char* msg, uint8_t dismissable) {
   g_ui_cmd.type = UI_CMD_INFO;
   g_ui_cmd.params.info.dismissable = dismissable;
-  g_ui_cmd.params.info.title = "";
   g_ui_cmd.params.info.msg = msg;
   return ui_signal_wait(0);
 }
 
 core_evt_t ui_prompt(const char* title, const char* msg) {
-  g_ui_cmd.type = UI_CMD_INFO;
-  g_ui_cmd.params.info.dismissable = 1;
-  g_ui_cmd.params.info.title = title;
-  g_ui_cmd.params.info.msg = msg;
+  g_ui_cmd.type = UI_CMD_PROMPT;
+  g_ui_cmd.params.prompt.title = title;
+  g_ui_cmd.params.prompt.msg = msg;
   return ui_signal_wait(0);
 }
 
@@ -142,7 +140,7 @@ core_evt_t ui_prompt_try_puk() {
 }
 
 core_evt_t ui_confirm_factory_reset() {
-  return ui_info(LSTR(FACTORY_RESET_WARNING), 1);
+  return ui_prompt(LSTR(FACTORY_RESET_TITLE), LSTR(FACTORY_RESET_WARNING));
 }
 
 core_evt_t ui_keycard_no_pairing_slots() {

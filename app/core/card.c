@@ -75,6 +75,7 @@ void card_change_pairing() {
 }
 
 void card_reset() {
-  keycard_factoryreset(&g_core.keycard);
-  pwr_reboot();
+  if (keycard_factoryreset(&g_core.keycard) == ERR_OK) {
+    pwr_reboot();
+  }
 }

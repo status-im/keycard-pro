@@ -81,6 +81,7 @@ typedef enum {
   CARD_NAME_CHANGE_SUCCESS,
 
   // Factory reset
+  FACTORY_RESET_TITLE,
   FACTORY_RESET_WARNING,
 
   // Info messages

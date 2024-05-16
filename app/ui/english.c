@@ -78,6 +78,7 @@ const char *const i18n_english_strings[] = {
     "Card name changed successfully",
 
     // Factory reset
+    "Card factory reset",
     "Factory resetting your card completely destroys all keys on it with no way to recover them.\nMake sure you have a backup of the mnemonic.\n\nAfter factory reset the device will restart",
 
     // Info messages
