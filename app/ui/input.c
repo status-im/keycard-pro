@@ -40,18 +40,23 @@ const char KEYBOARD_MAP[] = {
 };
 
 static app_err_t input_render_secret(uint16_t yOff, int len, int pos) {
-  uint16_t width = (len * (TH_PIN_FIELD_WIDTH + TH_PIN_FIELD_DIGIT_MARGIN)) - TH_PIN_FIELD_DIGIT_MARGIN;
-  screen_area_t area = { .x = (SCREEN_WIDTH - width)/2, .y = yOff, .width = TH_PIN_FIELD_WIDTH, .height = TH_PIN_FIELD_HEIGHT};
+  char secret[len + 1];
 
   for (int i = 0; i < len; i++) {
-    if (screen_fill_area(&area, (i < pos) ? TH_COLOR_PIN_FIELD_SELECTED_BG : TH_COLOR_PIN_FIELD_BG) != HAL_SUCCESS) {
-      return ERR_HW;
-    }
-
-    area.x += TH_PIN_FIELD_WIDTH + TH_PIN_FIELD_DIGIT_MARGIN;
+    secret[i] = i < pos ? 0x86 : 0x85;
   }
 
-  return ERR_OK;
+  secret[len] = '\0';
+
+  screen_text_ctx_t ctx = {
+      .bg = TH_COLOR_TEXT_BG,
+      .fg = TH_COLOR_TEXT_FG,
+      .font = TH_FONT_ICONS,
+      .x = 0,
+      .y = yOff
+  };
+
+  return screen_draw_centered_string(&ctx, secret);
 }
 
 app_err_t input_new_pin() {
@@ -215,7 +220,7 @@ static inline void input_keyboard_render_key(char c, uint16_t x, uint16_t y, boo
   screen_area_t key_area = { .x = x, .y = y, .width = TH_KEYBOARD_KEY_SIZE, .height = TH_KEYBOARD_KEY_SIZE };
   screen_text_ctx_t ctx = { .font = TH_FONT_TEXT, .fg = TH_COLOR_TEXT_FG, .y = y };
 
-  const glyph_t* glyph = screen_lookup_glyph(ctx.font, c);
+  const glyph_t* glyph = screen_lookup_glyph(ctx.font, (uint32_t) c);
   ctx.bg = selected ? TH_KEYBOARD_KEY_SELECTED_BG : TH_KEYBOARD_KEY_BG;
   ctx.x = x + ((TH_KEYBOARD_KEY_SIZE - glyph->width) / 2);
 

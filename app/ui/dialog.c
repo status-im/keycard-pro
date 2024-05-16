@@ -41,7 +41,7 @@ app_err_t dialog_title_colors(const char* title, uint16_t bg, uint16_t fg, uint1
 
   ctx.font = TH_FONT_ICONS;
   ctx.fg = icon;
-  ctx.y = ((TH_TITLE_HEIGHT - ctx.font->yAdvance) / 2);
+  ctx.y = 0;
   ctx.x = TH_TITLE_ICON_POSITION;
 
   uint8_t i = g_ui_ctx.battery / 25;

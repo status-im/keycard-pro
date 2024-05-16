@@ -67,7 +67,7 @@ hal_err_t screen_init();
 hal_err_t screen_wait();
 hal_err_t screen_set_drawing_window(const screen_area_t* area);
 hal_err_t screen_draw_pixels(const uint16_t* pixels, size_t count, void (*cb)());
-const glyph_t *screen_lookup_glyph(const font_t* font, char c);
+const glyph_t *screen_lookup_glyph(const font_t* font, uint32_t c);
 hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph);
 
 // High level API
