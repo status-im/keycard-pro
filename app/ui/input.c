@@ -43,7 +43,13 @@ static app_err_t input_render_secret(uint16_t yOff, int len, int pos) {
   char secret[len + 1];
 
   for (int i = 0; i < len; i++) {
-    secret[i] = i < pos ? 0x86 : 0x85;
+    if (i < pos) {
+      secret[i] = ICON_CIRCLE_FULL;
+    } else if (i == pos) {
+      secret[i] = ICON_CIRCLE_EMPTY_LARGE;
+    } else {
+      secret[i] = ICON_CIRCLE_EMPTY;
+    }
   }
 
   secret[len] = '\0';
