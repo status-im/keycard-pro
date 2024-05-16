@@ -4,6 +4,7 @@
 #include "qrcode/qrcodegen.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include <string.h>
 
 #define SCREEN_TIMEOUT 100
 
@@ -272,6 +273,10 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
   }
 
   return HAL_SUCCESS;
+}
+
+hal_err_t screen_draw_centered_string(screen_text_ctx_t* ctx, const char* str) {
+  return screen_draw_text(ctx, (SCREEN_WIDTH - ctx->x), (ctx->y + ctx->font->yAdvance), (uint8_t*) str, strlen(str), false, true) == 0 ? ERR_OK : ERR_FULL;
 }
 
 hal_err_t screen_draw_glyphs(screen_text_ctx_t* ctx, const glyph_t* glyphs[], size_t len) {
