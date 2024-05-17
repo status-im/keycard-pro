@@ -74,12 +74,12 @@ app_err_t input_new_pin() {
       .fg = TH_COLOR_TEXT_FG,
       .font = TH_FONT_TEXT,
       .x = TH_LABEL_LEFT_MARGIN,
-      .y = TH_TITLE_HEIGHT + TH_PIN_FIELD_HEIGHT + (TH_PIN_FIELD_VERTICAL_MARGIN * 2)
+      .y = TH_TITLE_HEIGHT + (TH_FONT_ICONS)->yAdvance + (TH_PIN_FIELD_VERTICAL_MARGIN * 2)
   };
 
   screen_draw_string(&ctx, LSTR(PIN_LABEL_REPEAT));
 
-  ctx.y = TH_TITLE_HEIGHT + (TH_PIN_FIELD_HEIGHT * 2) + (TH_PIN_FIELD_VERTICAL_MARGIN * 4) + TH_LABEL_HEIGHT;
+  ctx.y = TH_TITLE_HEIGHT + ((TH_FONT_ICONS)->yAdvance * 2) + (TH_PIN_FIELD_VERTICAL_MARGIN * 4) + TH_LABEL_HEIGHT;
 
   screen_area_t mismatch_area = {
       .width = SCREEN_WIDTH,
@@ -95,7 +95,7 @@ app_err_t input_new_pin() {
 
   while(1) {
     input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN, PIN_LEN, position);
-    input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_HEIGHT + (TH_PIN_FIELD_VERTICAL_MARGIN * 3) + TH_LABEL_HEIGHT, PIN_LEN, APP_MAX(0, (position - PIN_LEN)));
+    input_render_secret(TH_TITLE_HEIGHT + (TH_FONT_ICONS)->yAdvance + (TH_PIN_FIELD_VERTICAL_MARGIN * 3) + TH_LABEL_HEIGHT, PIN_LEN, APP_MAX(0, (position - PIN_LEN)));
 
     keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
 
@@ -132,29 +132,24 @@ app_err_t input_new_pin() {
 }
 
 app_err_t input_pin() {
-  if (g_ui_cmd.params.input_pin.retries == PIN_NEW_CODE) {
-    return input_new_pin();
-  }
-
-  dialog_title(LSTR(PIN_INPUT_TITLE));
+  dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
 
   screen_text_ctx_t ctx = {
       .bg = TH_COLOR_TEXT_BG,
       .fg = TH_COLOR_TEXT_FG,
       .font = TH_FONT_TEXT,
-      .x = TH_LABEL_LEFT_MARGIN,
-      .y = TH_TITLE_HEIGHT + TH_PIN_FIELD_HEIGHT + (TH_PIN_FIELD_VERTICAL_MARGIN * 2)
+      .x = 0,
+      .y = (SCREEN_HEIGHT - ((TH_FONT_TEXT)->yAdvance + TH_PIN_FIELD_VERTICAL_MARGIN + (TH_FONT_ICONS)->yAdvance)) / 2
   };
 
-  screen_draw_string(&ctx, LSTR(PIN_LABEL_REMAINING_ATTEMPTS));
-  screen_draw_char(&ctx, (g_ui_cmd.params.input_pin.retries + '0'));
+  screen_draw_centered_string(&ctx, LSTR(PIN_INPUT_TITLE));
 
   char* out = (char *) g_ui_cmd.params.input_pin.out;
   uint8_t position = 0;
 
   while(1) {
-    input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN, PIN_LEN, position);
+    input_render_secret(ctx.y + TH_PIN_FIELD_VERTICAL_MARGIN, PIN_LEN, position);
     keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
     if (key == KEYPAD_KEY_BACK) {
       if (position > 0) {
@@ -187,7 +182,7 @@ app_err_t input_puk() {
         .fg = TH_COLOR_TEXT_FG,
         .font = TH_FONT_TEXT,
         .x = TH_LABEL_LEFT_MARGIN,
-        .y = TH_TITLE_HEIGHT + (TH_PIN_FIELD_HEIGHT * 3) + (TH_PIN_FIELD_VERTICAL_MARGIN * 2) + (TH_PUK_FIELD_VERTICAL_MARGIN * 4)
+        .y = TH_TITLE_HEIGHT + ((TH_FONT_ICONS)->yAdvance * 3) + (TH_PIN_FIELD_VERTICAL_MARGIN * 2) + (TH_PUK_FIELD_VERTICAL_MARGIN * 4)
     };
 
     screen_draw_string(&ctx, LSTR(PIN_LABEL_REMAINING_ATTEMPTS));
@@ -199,8 +194,8 @@ app_err_t input_puk() {
 
   while(1) {
     input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN, 4, position);
-    input_render_secret((TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN) + (TH_PIN_FIELD_HEIGHT + TH_PUK_FIELD_VERTICAL_MARGIN) , 4, position - 4);
-    input_render_secret((TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN) + ((TH_PIN_FIELD_HEIGHT + TH_PUK_FIELD_VERTICAL_MARGIN) * 2), 4, position - 8);
+    input_render_secret((TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN) + ((TH_FONT_ICONS)->yAdvance + TH_PUK_FIELD_VERTICAL_MARGIN) , 4, position - 4);
+    input_render_secret((TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN) + (((TH_FONT_ICONS)->yAdvance + TH_PUK_FIELD_VERTICAL_MARGIN) * 2), 4, position - 8);
 
     keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
     if (key == KEYPAD_KEY_BACK) {

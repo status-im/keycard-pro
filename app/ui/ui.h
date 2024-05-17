@@ -43,10 +43,10 @@ void ui_keycard_pairing_failed();
 void ui_keycard_flash_failed();
 void ui_keycard_secure_channel_failed();
 void ui_keycard_secure_channel_ok();
-void ui_keycard_wrong_pin();
 void ui_keycard_pin_ok();
 void ui_keycard_puk_ok();
-void ui_keycard_wrong_puk();
+void ui_keycard_wrong_pin(uint8_t retries);
+void ui_keycard_wrong_puk(uint8_t retries);
 void ui_seed_loaded();
 
 core_evt_t ui_prompt_try_puk();

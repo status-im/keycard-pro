@@ -417,3 +417,32 @@ app_err_t dialog_dev_auth() {
 
   return dialog_wait_dismiss();
 }
+
+app_err_t dialog_wrong_auth() {
+  dialog_title("");
+  dialog_footer(TH_TITLE_HEIGHT);
+
+  screen_text_ctx_t ctx = {
+      .font = TH_FONT_TEXT,
+      .fg = TH_COLOR_TEXT_FG,
+      .bg = TH_COLOR_TEXT_BG,
+      .x = 0,
+      .y = (SCREEN_HEIGHT - ((TH_FONT_TEXT)->yAdvance + TH_TEXT_VERTICAL_MARGIN + (TH_FONT_TEXT)->yAdvance)) / 2
+  };
+
+  screen_draw_centered_string(&ctx, g_ui_cmd.params.wrong_auth.msg);
+
+  ctx.x = 0;
+  ctx.y += TH_TEXT_VERTICAL_MARGIN;
+  ctx.fg = TH_COLOR_ERROR;
+
+  size_t label_len = strlen(LSTR(PIN_LABEL_REMAINING_ATTEMPTS));
+  char remaining_attempts[label_len + 2];
+  memcpy(remaining_attempts, LSTR(PIN_LABEL_REMAINING_ATTEMPTS), label_len);
+  remaining_attempts[label_len] = g_ui_cmd.params.wrong_auth.retries + '0';
+  remaining_attempts[label_len + 1] = '\0';
+
+  screen_draw_centered_string(&ctx, remaining_attempts);
+
+  return dialog_wait_dismiss();
+}

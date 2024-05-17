@@ -184,8 +184,8 @@ static app_err_t keycard_unblock(keycard_t* kc, uint8_t pukRetries) {
       ui_keycard_puk_ok();
       return ERR_OK;
     } else if ((sw & 0x63c0) == 0x63c0) {
-      ui_keycard_wrong_puk();
       pukRetries = (sw & 0xf);
+      ui_keycard_wrong_puk(pukRetries);
     } else {
       return sw;
     }    
@@ -220,8 +220,8 @@ static app_err_t keycard_authenticate(keycard_t* kc, uint8_t* pin, uint8_t* cach
       ui_keycard_pin_ok();
       return ERR_OK;
     } else if ((sw & 0x63c0) == 0x63c0) {
-      ui_keycard_wrong_pin();
       pinStatus.pin_retries = (sw & 0xf);
+      ui_keycard_wrong_pin(pinStatus.pin_retries);
     } else {
       return sw;
     }

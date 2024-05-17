@@ -117,18 +117,24 @@ void ui_keycard_secure_channel_failed() {
 void ui_keycard_secure_channel_ok() {
 }
 
-void ui_keycard_wrong_pin() {
-  ui_info(LSTR(PIN_WRONG_WARNING), 1);
-}
-
 void ui_keycard_pin_ok() {
 }
 
 void ui_keycard_puk_ok() {
 }
 
-void ui_keycard_wrong_puk() {
-  ui_info(LSTR(PUK_WRONG_WARNING), 1);
+void ui_keycard_wrong_pin(uint8_t retries) {
+  g_ui_cmd.type = UI_CMD_WRONG_AUTH;
+  g_ui_cmd.params.wrong_auth.msg = LSTR(PIN_WRONG_WARNING);
+  g_ui_cmd.params.wrong_auth.retries = retries;
+  ui_signal_wait(0);
+}
+
+void ui_keycard_wrong_puk(uint8_t retries) {
+  g_ui_cmd.type = UI_CMD_WRONG_AUTH;
+  g_ui_cmd.params.wrong_auth.msg = LSTR(PUK_WRONG_WARNING);
+  g_ui_cmd.params.wrong_auth.retries = retries;
+  ui_signal_wait(0);
 }
 
 core_evt_t ui_keycard_not_genuine() {

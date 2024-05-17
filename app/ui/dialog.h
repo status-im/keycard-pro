@@ -22,4 +22,6 @@ app_err_t dialog_info();
 app_err_t dialog_prompt();
 app_err_t dialog_dev_auth();
 
+app_err_t dialog_wrong_auth();
+
 #endif
