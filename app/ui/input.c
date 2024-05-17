@@ -132,6 +132,10 @@ app_err_t input_new_pin() {
 }
 
 app_err_t input_pin() {
+  if (g_ui_cmd.params.input_pin.retries == PIN_NEW_CODE) {
+    return input_new_pin();
+  }
+
   dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
 
