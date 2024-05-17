@@ -65,104 +65,43 @@ static app_err_t input_render_secret(uint16_t yOff, int len, int pos) {
   return screen_draw_centered_string(&ctx, secret);
 }
 
-app_err_t input_new_pin() {
-  dialog_title(LSTR(PIN_CREATE_TITLE));
-  dialog_footer(TH_TITLE_HEIGHT);
-
-  screen_text_ctx_t ctx = {
-      .bg = TH_COLOR_TEXT_BG,
-      .fg = TH_COLOR_TEXT_FG,
-      .font = TH_FONT_TEXT,
-      .x = TH_LABEL_LEFT_MARGIN,
-      .y = TH_TITLE_HEIGHT + (TH_FONT_ICONS)->yAdvance + (TH_PIN_FIELD_VERTICAL_MARGIN * 2)
-  };
-
-  screen_draw_string(&ctx, LSTR(PIN_LABEL_REPEAT));
-
-  ctx.y = TH_TITLE_HEIGHT + ((TH_FONT_ICONS)->yAdvance * 2) + (TH_PIN_FIELD_VERTICAL_MARGIN * 4) + TH_LABEL_HEIGHT;
-
-  screen_area_t mismatch_area = {
-      .width = SCREEN_WIDTH,
-      .height = ctx.font->yAdvance,
-      .x = 0,
-      .y = ctx.y
-  };
-
-  char* out = (char *) g_ui_cmd.params.input_pin.out;
-  int8_t position = 0;
-  char repeat[PIN_LEN];
-  uint8_t matches = 0;
-
-  while(1) {
-    input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN, PIN_LEN, position);
-    input_render_secret(TH_TITLE_HEIGHT + (TH_FONT_ICONS)->yAdvance + (TH_PIN_FIELD_VERTICAL_MARGIN * 3) + TH_LABEL_HEIGHT, PIN_LEN, APP_MAX(0, (position - PIN_LEN)));
-
-    keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
-
-    if (key == KEYPAD_KEY_BACK) {
-      if (position > 0) {
-        position--;
-      } else if (g_ui_cmd.params.input_pin.dismissable) {
-        return ERR_CANCEL;
-      }
-    } else if (key == KEYPAD_KEY_CONFIRM) {
-      if ((position == (PIN_LEN * 2)) && matches) {
-        memset(repeat, 0, PIN_LEN);
-        return ERR_OK;
-      }
-    } else if (position < (PIN_LEN * 2)) {
-      char digit = KEYPAD_TO_DIGIT[key];
-      if (digit != DIG_INV) {
-        if (position < PIN_LEN) {
-          out[position++] = digit;
-        } else {
-          repeat[(position++) - PIN_LEN] = digit;
-        }
-      }
-    }
-
-    matches = !strncmp(out, repeat, PIN_LEN);
-    if (matches || (position <= PIN_LEN)) {
-      screen_fill_area(&mismatch_area, TH_COLOR_TEXT_BG);
-    } else {
-      ctx.x = TH_LABEL_LEFT_MARGIN;
-      screen_draw_string(&ctx, LSTR(PIN_LABEL_MISMATCH));
-    }
-  }
-}
-
-app_err_t input_pin() {
-  if (g_ui_cmd.params.input_pin.retries == PIN_NEW_CODE) {
-    return input_new_pin();
-  }
-
+static app_err_t input_pin_entry(const char* title, char* out, char* compare, bool dismissable) {
   dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
 
+  uint8_t position = 0;
+  bool comparison_failed = false;
+  uint16_t start_y = (SCREEN_HEIGHT - ((TH_FONT_TEXT)->yAdvance + TH_PIN_FIELD_VERTICAL_MARGIN + (TH_FONT_ICONS)->yAdvance)) / 2;
+
   screen_text_ctx_t ctx = {
       .bg = TH_COLOR_TEXT_BG,
-      .fg = TH_COLOR_TEXT_FG,
       .font = TH_FONT_TEXT,
-      .x = 0,
-      .y = (SCREEN_HEIGHT - ((TH_FONT_TEXT)->yAdvance + TH_PIN_FIELD_VERTICAL_MARGIN + (TH_FONT_ICONS)->yAdvance)) / 2
   };
 
-  screen_draw_centered_string(&ctx, LSTR(PIN_INPUT_TITLE));
-
-  char* out = (char *) g_ui_cmd.params.input_pin.out;
-  uint8_t position = 0;
+  screen_area_t label_area = { .width = SCREEN_WIDTH, .height = (TH_FONT_TEXT)->yAdvance, .x = 0, .y = start_y};
 
   while(1) {
+    ctx.x = 0;
+    ctx.y = start_y;
+
+    if (comparison_failed) {
+      ctx.fg = TH_COLOR_ERROR;
+      screen_draw_centered_string(&ctx, LSTR(PIN_LABEL_MISMATCH));
+    } else {
+      ctx.fg = TH_COLOR_TEXT_FG;
+      screen_draw_centered_string(&ctx, title);
+    }
+
     input_render_secret(ctx.y + TH_PIN_FIELD_VERTICAL_MARGIN, PIN_LEN, position);
     keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
     if (key == KEYPAD_KEY_BACK) {
       if (position > 0) {
         position--;
-      } else if (g_ui_cmd.params.input_pin.dismissable) {
+      } else if (dismissable) {
         return ERR_CANCEL;
       }
     } else if (key == KEYPAD_KEY_CONFIRM) {
-      if (position == PIN_LEN) {
+      if ((position == PIN_LEN) && !comparison_failed) {
         return ERR_OK;
       }
     } else if (position < PIN_LEN) {
@@ -171,6 +110,34 @@ app_err_t input_pin() {
         out[position++] = digit;
       }
     }
+
+    if (compare && (position == PIN_LEN)) {
+      comparison_failed = strncmp(out, compare, PIN_LEN) != 0;
+    } else {
+      if (comparison_failed) {
+        screen_fill_area(&label_area, TH_COLOR_TEXT_BG);
+      }
+
+      comparison_failed = false;
+    }
+  }
+}
+
+app_err_t input_pin() {
+  if (g_ui_cmd.params.input_pin.retries == PIN_NEW_CODE) {
+    while(1) {
+      if (input_pin_entry(LSTR(PIN_CREATE_TITLE), (char *) g_ui_cmd.params.input_pin.out, NULL, g_ui_cmd.params.input_pin.dismissable) != ERR_OK) {
+        return ERR_CANCEL;
+      }
+
+      char repeat[PIN_LEN];
+
+      if (input_pin_entry(LSTR(PIN_LABEL_REPEAT), repeat, (char *) g_ui_cmd.params.input_pin.out, true) == ERR_OK) {
+        return ERR_OK;
+      }
+    }
+  } else {
+    return input_pin_entry(LSTR(PIN_INPUT_TITLE), (char *) g_ui_cmd.params.input_pin.out, NULL, g_ui_cmd.params.input_pin.dismissable);
   }
 }
 
