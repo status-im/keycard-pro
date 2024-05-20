@@ -208,25 +208,10 @@ static inline void input_keyboard_render(int idx, bool show_space) {
     i++;
   }
 
-  screen_area_t padding = {
-      .x = KEYBOARD_ROW2_LEN * TH_KEYBOARD_KEY_SIZE,
-      .y = KEYBOARD_TOP_Y + TH_KEYBOARD_KEY_SIZE,
-      .width = TH_KEYBOARD_KEY_SIZE,
-      .height = TH_KEYBOARD_KEY_SIZE
-  };
-
-  screen_fill_area(&padding, TH_KEYBOARD_KEY_BG);
-
   while (i < KEYBOARD_ROW3_LIMIT(show_space)) {
     input_keyboard_render_key(KEYBOARD_MAP[i], ((i - 19) * TH_KEYBOARD_KEY_SIZE), (KEYBOARD_TOP_Y + (TH_KEYBOARD_KEY_SIZE * 2)), idx == i);
     i++;
   }
-
-  padding.x = KEYBOARD_ROW3_LEN(show_space) * TH_KEYBOARD_KEY_SIZE;
-  padding.y = KEYBOARD_TOP_Y + (TH_KEYBOARD_KEY_SIZE * 2);
-  padding.width = (TH_KEYBOARD_KEY_SIZE * 3);
-
-  screen_fill_area(&padding, TH_KEYBOARD_KEY_BG);
 }
 
 static char input_keyboard(int *idx, bool show_space) {
