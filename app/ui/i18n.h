@@ -147,6 +147,9 @@ typedef enum {
   DEVICE_INFO_NEW_FW,
   DEVICE_INFO_NEW_DB,
 
+  // Hints
+  HINT_CANCEL,
+  HINT_CONFIRM,
 } i18n_str_id_t;
 
 //TODO: replace with proper lookup

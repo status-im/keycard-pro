@@ -143,4 +143,8 @@ const char *const i18n_english_strings[] = {
     "S/N: ",
     "New firmware version: ",
     "New database version: ",
+
+    // Hints
+    "Long press C to cancel",
+    "Long press OK to confirm",
 };

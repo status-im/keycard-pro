@@ -282,13 +282,22 @@ static void input_render_text_field(const char* str, screen_area_t* field_area, 
       .font = TH_FONT_TEXT,
       .fg = TH_TEXT_FIELD_FG,
       .bg = TH_TEXT_FIELD_BG,
-      .x = field_area->x + TH_TEXT_FIELD_INNER_LEFT_MARGIN,
+      .x = field_area->x,
       .y = field_area->y
   };
 
   screen_fill_area(field_area, ctx.bg);
 
   screen_draw_chars(&ctx, str, len);
+
+  screen_area_t cursor_area = {
+      .x = ctx.x,
+      .y = field_area->y,
+      .width = TH_TEXT_FIELD_CURSOR_WIDTH,
+      .height = field_area->height
+  };
+
+  screen_fill_area(&cursor_area, TH_TEXT_FIELD_CURSOR_COLOR);
   ctx.fg = TH_TEXT_FIELD_SUGGESTION_FG;
   screen_draw_chars(&ctx, &str[len], suggestion_len);
 }
@@ -307,12 +316,27 @@ static void input_mnemonic_title(uint8_t i) {
 static void input_render_editable_text_field(const char* str, int len, int suggestion_len) {
   screen_area_t field_area = {
       .x = TH_TEXT_FIELD_MARGIN,
-      .y = TH_TITLE_HEIGHT + TH_TEXT_FIELD_MARGIN,
+      .y = TH_TEXT_FIELD_TOP,
       .width = SCREEN_WIDTH - (TH_TEXT_FIELD_MARGIN * 2),
       .height = TH_TEXT_FIELD_HEIGHT
   };
 
   input_render_text_field(str, &field_area, len, suggestion_len);
+  const char* action_hint = (suggestion_len == 0) && (len == 0) ? LSTR(HINT_CANCEL) : LSTR(HINT_CONFIRM);
+
+  screen_text_ctx_t ctx = {
+      .font = TH_FONT_TEXT,
+      .fg = TH_COLOR_INACTIVE,
+      .bg = TH_COLOR_BG,
+      .x = field_area.x,
+      .y = field_area.y + field_area.height + TH_TEXT_FIELD_HINT_MARGIN
+  };
+
+  screen_draw_string(&ctx, action_hint);
+  field_area.y = ctx.y;
+  field_area.x = ctx.x;
+  field_area.width = SCREEN_WIDTH - ctx.x;
+  screen_fill_area(&field_area, ctx.bg);
 }
 
 static void input_mnemonic_render(const char* word, int len, uint16_t idx) {
@@ -405,7 +429,7 @@ static void input_render_mnemonic_word(int word_num, const char* str, screen_are
       .font = TH_FONT_TEXT,
       .fg = TH_TEXT_FIELD_FG,
       .bg = TH_TEXT_FIELD_BG,
-      .x = field_area->x + TH_TEXT_FIELD_INNER_LEFT_MARGIN,
+      .x = field_area->x,
       .y = field_area->y
   };
 
