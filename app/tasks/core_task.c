@@ -13,10 +13,15 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_QRCODE:
     core_qr_run();
     break;
-  case MENU_DISPLAY_PUBLIC_EIP4527:
+  case MENU_ADDRESSES:
+    break;
+  case MENU_HELP:
+    break;
+  // Connect
+  case MENU_CONNECT_EIP4527:
     core_display_public_eip4527();
     break;
-  case MENU_DISPLAY_PUBLIC_MULTICOIN:
+  case MENU_CONNECT_MULTICOIN:
     core_display_public_multicoin();
     break;
   // Keycard
@@ -45,7 +50,6 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_DEV_AUTH:
     device_auth_run();
     break;
-  // Settings
   case MENU_BRIGHTNESS:
     settings_lcd_brightness();
     break;

@@ -19,29 +19,37 @@ const menu_t menu_keycard = {
 };
 
 const menu_t menu_device = {
-  3, {
+  6, {
     {MENU_INFO, NULL},
     {MENU_DEV_AUTH, NULL},
     {MENU_DB_UPDATE, NULL},
-  }
-};
-
-const menu_t menu_settings = {
-  3, {
     {MENU_BRIGHTNESS, NULL},
     {MENU_SET_OFF_TIME, NULL},
     {MENU_USB, NULL},
   }
 };
 
-const menu_t menu_mainmenu = {
-  6, {
-    {MENU_QRCODE, NULL},
-    {MENU_DISPLAY_PUBLIC_EIP4527, NULL},
-    {MENU_DISPLAY_PUBLIC_MULTICOIN, NULL},
+const menu_t menu_connect = {
+  2, {
+    {MENU_CONNECT_EIP4527, NULL},
+    {MENU_CONNECT_MULTICOIN, NULL},
+  }
+};
+
+const menu_t menu_settings = {
+  2, {
     {MENU_KEYCARD, &menu_keycard},
     {MENU_DEVICE, &menu_device},
+  }
+};
+
+const menu_t menu_mainmenu = {
+  5, {
+    {MENU_QRCODE, NULL},
+    {MENU_CONNECT, &menu_connect},
+    {MENU_ADDRESSES, NULL},
     {MENU_SETTINGS, &menu_settings},
+    {MENU_HELP, NULL},
   }
 };
 
@@ -71,7 +79,7 @@ const menu_t menu_onoff = {
   }
 };
 
-#define MENU_MAX_DEPTH 3
+#define MENU_MAX_DEPTH 5
 
 void menu_render_entry(const menu_entry_t* entry, uint8_t is_selected, uint16_t yOff) {
   screen_text_ctx_t ctx;

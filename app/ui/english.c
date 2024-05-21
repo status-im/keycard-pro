@@ -4,11 +4,18 @@ const char *const i18n_english_strings[] = {
     // Main menu
     "Keycard Pro",
     "Scan QR transaction",
-    "Connect EVM-chain wallet",
-    "Connect OKX Wallet",
-    "Keycard",
-    "Device",
+    "Connect software wallet",
+    "Addresses",
     "Settings",
+    "Help",
+
+    // Connect menu
+    "EVM-chain wallet",
+    "OKX Wallet",
+
+    // Settings menu
+    "Device",
+    "Keycard",
 
     // Keycard menu
     "Set card name",
@@ -21,8 +28,6 @@ const char *const i18n_english_strings[] = {
     "Device info",
     "Device authentication",
     "Update ERC20 db",
-
-    // Settings menu
     "Set brightness",
     "Auto-off time",
     "USB-data",
