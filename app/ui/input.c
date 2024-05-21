@@ -71,6 +71,7 @@ static app_err_t input_pin_entry(const char* title, char* out, char* compare, bo
 
   uint8_t position = 0;
   bool comparison_failed = false;
+  bool prev_comparison = comparison_failed;
   uint16_t start_y = (SCREEN_HEIGHT - ((TH_FONT_TEXT)->yAdvance + TH_PIN_FIELD_VERTICAL_MARGIN + (TH_FONT_ICONS)->yAdvance)) / 2;
 
   screen_text_ctx_t ctx = {
@@ -83,6 +84,10 @@ static app_err_t input_pin_entry(const char* title, char* out, char* compare, bo
   while(1) {
     ctx.x = 0;
     ctx.y = start_y;
+
+    if (prev_comparison != comparison_failed) {
+      screen_fill_area(&label_area, ctx.bg);
+    }
 
     if (comparison_failed) {
       ctx.fg = TH_COLOR_ERROR;
@@ -111,14 +116,9 @@ static app_err_t input_pin_entry(const char* title, char* out, char* compare, bo
       }
     }
 
-    if (compare && (position == PIN_LEN)) {
-      comparison_failed = strncmp(out, compare, PIN_LEN) != 0;
-    } else {
-      if (comparison_failed) {
-        screen_fill_area(&label_area, TH_COLOR_TEXT_BG);
-      }
-
-      comparison_failed = false;
+    if (compare) {
+      prev_comparison = comparison_failed;
+      comparison_failed = strncmp(out, compare, position) != 0;
     }
   }
 }
