@@ -426,6 +426,8 @@ static app_err_t core_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
       core_usb_err_sw(cmd, 0x6a, 0x80);
       return ERR_DATA;
     }
+
+    g_core.data.tx.content.data = g_mem_heap;
   }
 
   app_err_t err = core_process_tx(data, len, first);
@@ -664,6 +666,7 @@ void core_qr_run() {
   switch(qr_request.eth_sign_request_data_type.sign_data_type_choice) {
     case sign_data_type_eth_transaction_data_m_c:
     case sign_data_type_eth_typed_transaction_m_c:
+      g_core.data.tx.content.data = NULL;
       g_core.data.tx.content.chainID = qr_request.eth_sign_request_chain_id_present ? (uint32_t) qr_request.eth_sign_request_chain_id.eth_sign_request_chain_id : 1;
       err = core_process_tx(qr_request.eth_sign_request_sign_data.value, qr_request.eth_sign_request_sign_data.len, 1);
       break;

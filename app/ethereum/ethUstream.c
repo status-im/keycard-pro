@@ -27,14 +27,12 @@
 
 #define EXCEPTION 0x100
 
-const uint8_t ETH_ERC20_SIGNATURE[] = { 0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-
 void initTx(txContext_t *context, SHA3_CTX *sha3, txContent_t *content) {
   memset(context, 0, sizeof(txContext_t));
+  memset(content->destination, 0, ADDRESS_LENGTH);
   context->sha3 = sha3;
   context->content = content;
   context->currentField = RLP_NONE + 1;
-  context->content->dataType = DATA_NONE;
 }
 
 uint16_t readTxByte(txContext_t *context) {
@@ -235,14 +233,14 @@ static uint16_t processTo(txContext_t *context) {
   }
 
   if (context->currentFieldPos < context->currentFieldLength) {
+    int padding = MAX_ADDRESS - context->currentFieldLength;
     uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
-    if (copyTxData(context, context->content->destination + context->currentFieldPos, copySize) == EXCEPTION) {
+    if (copyTxData(context, context->content->destination + padding + context->currentFieldPos, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
   }
 
   if (context->currentFieldPos == context->currentFieldLength) {
-    context->content->destinationLength = context->currentFieldLength;
     context->currentField++;
     context->processingField = false;
   }
@@ -255,25 +253,30 @@ static uint16_t processData(txContext_t *context) {
     return EXCEPTION;
   }
 
-  const uint8_t* dataBuf = context->workBuffer;
+  if (context->currentFieldPos == 0) {
+    if (context->content->data == NULL) {
+      context->content->data = context->workBuffer;
+    }
+
+    context->content->dataLength = 0;
+  }
 
   if (context->currentFieldPos < context->currentFieldLength) {
     uint32_t copySize = APP_MIN(context->commandLength, context->currentFieldLength - context->currentFieldPos);
-    if (copyTxData(context, NULL, copySize) == EXCEPTION) {
+    uint8_t* copyBuffer = (uint8_t*) (context->content->data + context->content->dataLength);
+
+    if (context->workBuffer == copyBuffer) {
+      copyBuffer = NULL;
+    }
+
+    if (copyTxData(context, copyBuffer, copySize) == EXCEPTION) {
       return EXCEPTION;
     }
+
+    context->content->dataLength += copySize;
   }
 
   if (context->currentFieldPos == context->currentFieldLength) {
-    if (!context->content->value.length && (context->currentFieldLength == 68) && !memcmp(dataBuf, ETH_ERC20_SIGNATURE, 16)) {
-      context->content->dataType = DATA_ERC20;
-      memmove(context->content->finalRecipient, &dataBuf[16], MAX_ADDRESS);
-      memmove(context->content->value.value, &dataBuf[36], MAX_INT256);
-      context->content->value.length = MAX_INT256;
-    } else if (context->currentFieldLength > 0) {
-      context->content->dataType = DATA_UNKNOWN;
-    }
-
     context->currentField++;
     context->processingField = false;
   }

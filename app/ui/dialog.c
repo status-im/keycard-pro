@@ -17,6 +17,12 @@
 #define MESSAGE_MAX_Y (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN)
 #define MAX_MSG_TITLE_LEN 80
 
+const uint8_t ETH_ERC20_SIGNATURE[] = { 0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+#define ETH_ERC20_SIGNATURE_LEN 16
+#define ETH_ERC20_ADDR_OFF 16
+#define ETH_ERC20_VALUE_OFF 36
+#define ETH_ERC20_TRANSFER_LEN 68
+
 app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_height) {
   screen_area_t fillarea = { 0, ctx->y, SCREEN_WIDTH, line_height };
   screen_fill_area(&fillarea, ctx->bg);
@@ -131,6 +137,17 @@ static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const bi
   dialog_inline_data(ctx, tmp);
 }
 
+// TODO: move this to more general function to recognize data and display correct data accordingly
+static i18n_str_id_t dialog_recognize_data(const txContent_t* tx) {
+  if (tx->dataLength == 0) {
+    return TX_DATA_NONE;
+  } else if (tx->value.length == 0 && tx->dataLength == ETH_ERC20_TRANSFER_LEN && !memcmp(tx->data, ETH_ERC20_SIGNATURE, ETH_ERC20_SIGNATURE_LEN)) {
+    return TX_DATA_ERC20;
+  } else {
+    return TX_DATA_PRESENT;
+  }
+}
+
 app_err_t dialog_confirm_tx() {
   chain_desc_t chain;
   erc20_desc_t token;
@@ -144,14 +161,17 @@ app_err_t dialog_confirm_tx() {
 
   i18n_str_id_t title;
   const uint8_t* to;
-  i18n_str_id_t data_type;
+  i18n_str_id_t data_type = dialog_recognize_data(g_ui_cmd.params.txn.tx);
 
-  if (g_ui_cmd.params.txn.tx->dataType == DATA_ERC20) {
+  if (data_type == TX_DATA_ERC20) {
     title = TX_CONFIRM_ERC20_TITLE;
     token.chain = chain.chain_id;
     token.addr = g_ui_cmd.params.txn.tx->destination;
 
-    to = g_ui_cmd.params.txn.tx->finalRecipient;
+    memmove((uint8_t*) g_ui_cmd.params.txn.tx->value.value, &g_ui_cmd.params.txn.tx->data[ETH_ERC20_VALUE_OFF], INT256_LENGTH);
+    ((txContent_t*) g_ui_cmd.params.txn.tx)->value.length = INT256_LENGTH;
+
+    to = &g_ui_cmd.params.txn.tx->data[ETH_ERC20_ADDR_OFF];
 
     if (eth_db_lookup_erc20(&token) != ERR_OK) {
       token.ticker = "???";
@@ -164,7 +184,6 @@ app_err_t dialog_confirm_tx() {
     token.ticker = chain.ticker;
     token.decimals = 18;
     to = g_ui_cmd.params.txn.tx->destination;
-    data_type = g_ui_cmd.params.txn.tx->dataType == DATA_NONE ? TX_DATA_NONE : TX_DATA_PRESENT;
   }
 
   dialog_title(LSTR(title));

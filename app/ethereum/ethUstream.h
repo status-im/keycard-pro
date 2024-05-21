@@ -110,22 +110,15 @@ typedef struct txInt256_t {
   uint8_t length;
 } txInt256_t;
 
-typedef enum {
-  DATA_NONE,
-  DATA_ERC20,
-  DATA_UNKNOWN
-} dataType_e;
-
 typedef struct txContent_t {
   txInt256_t gasprice;  // Used as MaxFeePerGas when dealing with EIP1559 transactions.
   txInt256_t startgas;  // Also known as `gasLimit`.
   txInt256_t value;
   uint32_t chainID;
   uint8_t destination[ADDRESS_LENGTH];
-  uint8_t destinationLength;
-  uint8_t finalRecipient[ADDRESS_LENGTH];
+  const uint8_t* data;
+  size_t dataLength;
   uint32_t v;
-  dataType_e dataType;
 } txContent_t;
 
 typedef struct txContext_t {
