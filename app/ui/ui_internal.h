@@ -22,6 +22,7 @@ extern struct ui_ctx g_ui_ctx;
 
 enum cmd_type {
   UI_CMD_INFO,
+  UI_CMD_PROMPT,
   UI_CMD_MENU,
   UI_CMD_DISPLAY_TXN,
   UI_CMD_DISPLAY_MSG,
@@ -30,6 +31,7 @@ enum cmd_type {
   UI_CMD_QRSCAN,
   UI_CMD_INPUT_PIN,
   UI_CMD_INPUT_PUK,
+  UI_CMD_WRONG_AUTH,
   UI_CMD_INPUT_STRING,
   UI_CMD_INPUT_MNEMO,
   UI_CMD_BACKUP_MNEMO,
@@ -39,9 +41,18 @@ enum cmd_type {
 };
 
 struct cmd_info {
-  const char* title;
   const char* msg;
   uint8_t dismissable;
+};
+
+struct cmd_prompt {
+  const char* title;
+  const char* msg;
+};
+
+struct cmd_wrong_auth {
+  const char* msg;
+  uint8_t retries;
 };
 
 struct cmd_txn {
@@ -112,6 +123,8 @@ struct cmd_progress {
 
 union cmd_params {
   struct cmd_info info;
+  struct cmd_prompt prompt;
+  struct cmd_wrong_auth wrong_auth;
   struct cmd_txn txn;
   struct cmd_msg msg;
   struct cmd_eip712 eip712;

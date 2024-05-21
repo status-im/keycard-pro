@@ -40,119 +40,68 @@ const char KEYBOARD_MAP[] = {
 };
 
 static app_err_t input_render_secret(uint16_t yOff, int len, int pos) {
-  uint16_t width = (len * (TH_PIN_FIELD_WIDTH + TH_PIN_FIELD_DIGIT_MARGIN)) - TH_PIN_FIELD_DIGIT_MARGIN;
-  screen_area_t area = { .x = (SCREEN_WIDTH - width)/2, .y = yOff, .width = TH_PIN_FIELD_WIDTH, .height = TH_PIN_FIELD_HEIGHT};
+  char secret[len + 1];
 
   for (int i = 0; i < len; i++) {
-    if (screen_fill_area(&area, (i < pos) ? TH_COLOR_PIN_FIELD_SELECTED_BG : TH_COLOR_PIN_FIELD_BG) != HAL_SUCCESS) {
-      return ERR_HW;
-    }
-
-    area.x += TH_PIN_FIELD_WIDTH + TH_PIN_FIELD_DIGIT_MARGIN;
-  }
-
-  return ERR_OK;
-}
-
-app_err_t input_new_pin() {
-  dialog_title(LSTR(PIN_CREATE_TITLE));
-  dialog_footer(TH_TITLE_HEIGHT);
-
-  screen_text_ctx_t ctx = {
-      .bg = TH_COLOR_TEXT_BG,
-      .fg = TH_COLOR_TEXT_FG,
-      .font = TH_FONT_TEXT,
-      .x = TH_LABEL_LEFT_MARGIN,
-      .y = TH_TITLE_HEIGHT + TH_PIN_FIELD_HEIGHT + (TH_PIN_FIELD_VERTICAL_MARGIN * 2)
-  };
-
-  screen_draw_string(&ctx, LSTR(PIN_LABEL_REPEAT));
-
-  ctx.y = TH_TITLE_HEIGHT + (TH_PIN_FIELD_HEIGHT * 2) + (TH_PIN_FIELD_VERTICAL_MARGIN * 4) + TH_LABEL_HEIGHT;
-
-  screen_area_t mismatch_area = {
-      .width = SCREEN_WIDTH,
-      .height = ctx.font->yAdvance,
-      .x = 0,
-      .y = ctx.y
-  };
-
-  char* out = (char *) g_ui_cmd.params.input_pin.out;
-  int8_t position = 0;
-  char repeat[PIN_LEN];
-  uint8_t matches = 0;
-
-  while(1) {
-    input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN, PIN_LEN, position);
-    input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_HEIGHT + (TH_PIN_FIELD_VERTICAL_MARGIN * 3) + TH_LABEL_HEIGHT, PIN_LEN, APP_MAX(0, (position - PIN_LEN)));
-
-    keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
-
-    if (key == KEYPAD_KEY_BACK) {
-      if (position > 0) {
-        position--;
-      } else if (g_ui_cmd.params.input_pin.dismissable) {
-        return ERR_CANCEL;
-      }
-    } else if (key == KEYPAD_KEY_CONFIRM) {
-      if ((position == (PIN_LEN * 2)) && matches) {
-        memset(repeat, 0, PIN_LEN);
-        return ERR_OK;
-      }
-    } else if (position < (PIN_LEN * 2)) {
-      char digit = KEYPAD_TO_DIGIT[key];
-      if (digit != DIG_INV) {
-        if (position < PIN_LEN) {
-          out[position++] = digit;
-        } else {
-          repeat[(position++) - PIN_LEN] = digit;
-        }
-      }
-    }
-
-    matches = !strncmp(out, repeat, PIN_LEN);
-    if (matches || (position <= PIN_LEN)) {
-      screen_fill_area(&mismatch_area, TH_COLOR_TEXT_BG);
+    if (i < pos) {
+      secret[i] = ICON_CIRCLE_FULL;
+    } else if (i == pos) {
+      secret[i] = ICON_CIRCLE_EMPTY_LARGE;
     } else {
-      ctx.x = TH_LABEL_LEFT_MARGIN;
-      screen_draw_string(&ctx, LSTR(PIN_LABEL_MISMATCH));
+      secret[i] = ICON_CIRCLE_EMPTY;
     }
   }
-}
 
-app_err_t input_pin() {
-  if (g_ui_cmd.params.input_pin.retries == PIN_NEW_CODE) {
-    return input_new_pin();
-  }
-
-  dialog_title(LSTR(PIN_INPUT_TITLE));
-  dialog_footer(TH_TITLE_HEIGHT);
+  secret[len] = '\0';
 
   screen_text_ctx_t ctx = {
       .bg = TH_COLOR_TEXT_BG,
       .fg = TH_COLOR_TEXT_FG,
-      .font = TH_FONT_TEXT,
-      .x = TH_LABEL_LEFT_MARGIN,
-      .y = TH_TITLE_HEIGHT + TH_PIN_FIELD_HEIGHT + (TH_PIN_FIELD_VERTICAL_MARGIN * 2)
+      .font = TH_FONT_ICONS,
+      .x = 0,
+      .y = yOff
   };
 
-  screen_draw_string(&ctx, LSTR(PIN_LABEL_REMAINING_ATTEMPTS));
-  screen_draw_char(&ctx, (g_ui_cmd.params.input_pin.retries + '0'));
+  return screen_draw_centered_string(&ctx, secret);
+}
 
-  char* out = (char *) g_ui_cmd.params.input_pin.out;
+static app_err_t input_pin_entry(const char* title, char* out, char* compare, bool dismissable) {
+  dialog_title("");
+  dialog_footer(TH_TITLE_HEIGHT);
+
   uint8_t position = 0;
+  bool comparison_failed = false;
+  uint16_t start_y = (SCREEN_HEIGHT - ((TH_FONT_TEXT)->yAdvance + TH_PIN_FIELD_VERTICAL_MARGIN + (TH_FONT_ICONS)->yAdvance)) / 2;
+
+  screen_text_ctx_t ctx = {
+      .bg = TH_COLOR_TEXT_BG,
+      .font = TH_FONT_TEXT,
+  };
+
+  screen_area_t label_area = { .width = SCREEN_WIDTH, .height = (TH_FONT_TEXT)->yAdvance, .x = 0, .y = start_y};
 
   while(1) {
-    input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN, PIN_LEN, position);
+    ctx.x = 0;
+    ctx.y = start_y;
+
+    if (comparison_failed) {
+      ctx.fg = TH_COLOR_ERROR;
+      screen_draw_centered_string(&ctx, LSTR(PIN_LABEL_MISMATCH));
+    } else {
+      ctx.fg = TH_COLOR_TEXT_FG;
+      screen_draw_centered_string(&ctx, title);
+    }
+
+    input_render_secret(ctx.y + TH_PIN_FIELD_VERTICAL_MARGIN, PIN_LEN, position);
     keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
     if (key == KEYPAD_KEY_BACK) {
       if (position > 0) {
         position--;
-      } else if (g_ui_cmd.params.input_pin.dismissable) {
+      } else if (dismissable) {
         return ERR_CANCEL;
       }
     } else if (key == KEYPAD_KEY_CONFIRM) {
-      if (position == PIN_LEN) {
+      if ((position == PIN_LEN) && !comparison_failed) {
         return ERR_OK;
       }
     } else if (position < PIN_LEN) {
@@ -161,35 +110,58 @@ app_err_t input_pin() {
         out[position++] = digit;
       }
     }
+
+    if (compare && (position == PIN_LEN)) {
+      comparison_failed = strncmp(out, compare, PIN_LEN) != 0;
+    } else {
+      if (comparison_failed) {
+        screen_fill_area(&label_area, TH_COLOR_TEXT_BG);
+      }
+
+      comparison_failed = false;
+    }
+  }
+}
+
+app_err_t input_pin() {
+  if (g_ui_cmd.params.input_pin.retries == PIN_NEW_CODE) {
+    while(1) {
+      if (input_pin_entry(LSTR(PIN_CREATE_TITLE), (char *) g_ui_cmd.params.input_pin.out, NULL, g_ui_cmd.params.input_pin.dismissable) != ERR_OK) {
+        return ERR_CANCEL;
+      }
+
+      char repeat[PIN_LEN];
+
+      if (input_pin_entry(LSTR(PIN_LABEL_REPEAT), repeat, (char *) g_ui_cmd.params.input_pin.out, true) == ERR_OK) {
+        return ERR_OK;
+      }
+    }
+  } else {
+    return input_pin_entry(LSTR(PIN_INPUT_TITLE), (char *) g_ui_cmd.params.input_pin.out, NULL, g_ui_cmd.params.input_pin.dismissable);
   }
 }
 
 app_err_t input_puk() {
+  dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
 
-  if (g_ui_cmd.params.input_pin.retries == PUK_NEW_CODE) {
-    dialog_title(LSTR(PUK_CREATE_TITLE));
-  } else {
-    dialog_title(LSTR(PUK_INPUT_TITLE));
-    screen_text_ctx_t ctx = {
-        .bg = TH_COLOR_TEXT_BG,
-        .fg = TH_COLOR_TEXT_FG,
-        .font = TH_FONT_TEXT,
-        .x = TH_LABEL_LEFT_MARGIN,
-        .y = TH_TITLE_HEIGHT + (TH_PIN_FIELD_HEIGHT * 3) + (TH_PIN_FIELD_VERTICAL_MARGIN * 2) + (TH_PUK_FIELD_VERTICAL_MARGIN * 4)
-    };
+  screen_text_ctx_t ctx = {
+      .bg = TH_COLOR_TEXT_BG,
+      .fg = TH_COLOR_TEXT_FG,
+      .font = TH_FONT_TEXT,
+      .x = 0,
+      .y = (SCREEN_HEIGHT - ((TH_FONT_TEXT)->yAdvance + TH_PIN_FIELD_VERTICAL_MARGIN + ((TH_FONT_ICONS)->yAdvance) * 3) + (TH_PUK_FIELD_VERTICAL_MARGIN * 2)) / 2
+  };
 
-    screen_draw_string(&ctx, LSTR(PIN_LABEL_REMAINING_ATTEMPTS));
-    screen_draw_char(&ctx, (g_ui_cmd.params.input_pin.retries + '0'));
-  }
+  screen_draw_centered_string(&ctx, (g_ui_cmd.params.input_pin.retries == PUK_NEW_CODE) ? LSTR(PUK_CREATE_TITLE) : LSTR(PUK_INPUT_TITLE));
 
   char* out = (char *) g_ui_cmd.params.input_pin.out;
   uint8_t position = 0;
 
   while(1) {
-    input_render_secret(TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN, 4, position);
-    input_render_secret((TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN) + (TH_PIN_FIELD_HEIGHT + TH_PUK_FIELD_VERTICAL_MARGIN) , 4, position - 4);
-    input_render_secret((TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN) + ((TH_PIN_FIELD_HEIGHT + TH_PUK_FIELD_VERTICAL_MARGIN) * 2), 4, position - 8);
+    input_render_secret(ctx.y + TH_PIN_FIELD_VERTICAL_MARGIN, 4, position);
+    input_render_secret((ctx.y + TH_PIN_FIELD_VERTICAL_MARGIN) + ((TH_FONT_ICONS)->yAdvance + TH_PUK_FIELD_VERTICAL_MARGIN) , 4, position - 4);
+    input_render_secret((ctx.y + TH_PIN_FIELD_VERTICAL_MARGIN) + (((TH_FONT_ICONS)->yAdvance + TH_PUK_FIELD_VERTICAL_MARGIN) * 2), 4, position - 8);
 
     keypad_key_t key = ui_wait_keypress(portMAX_DELAY);
     if (key == KEYPAD_KEY_BACK) {
@@ -215,7 +187,7 @@ static inline void input_keyboard_render_key(char c, uint16_t x, uint16_t y, boo
   screen_area_t key_area = { .x = x, .y = y, .width = TH_KEYBOARD_KEY_SIZE, .height = TH_KEYBOARD_KEY_SIZE };
   screen_text_ctx_t ctx = { .font = TH_FONT_TEXT, .fg = TH_COLOR_TEXT_FG, .y = y };
 
-  const glyph_t* glyph = screen_lookup_glyph(ctx.font, c);
+  const glyph_t* glyph = screen_lookup_glyph(ctx.font, (uint32_t) c);
   ctx.bg = selected ? TH_KEYBOARD_KEY_SELECTED_BG : TH_KEYBOARD_KEY_BG;
   ctx.x = x + ((TH_KEYBOARD_KEY_SIZE - glyph->width) / 2);
 
@@ -236,25 +208,10 @@ static inline void input_keyboard_render(int idx, bool show_space) {
     i++;
   }
 
-  screen_area_t padding = {
-      .x = KEYBOARD_ROW2_LEN * TH_KEYBOARD_KEY_SIZE,
-      .y = KEYBOARD_TOP_Y + TH_KEYBOARD_KEY_SIZE,
-      .width = TH_KEYBOARD_KEY_SIZE,
-      .height = TH_KEYBOARD_KEY_SIZE
-  };
-
-  screen_fill_area(&padding, TH_KEYBOARD_KEY_BG);
-
   while (i < KEYBOARD_ROW3_LIMIT(show_space)) {
     input_keyboard_render_key(KEYBOARD_MAP[i], ((i - 19) * TH_KEYBOARD_KEY_SIZE), (KEYBOARD_TOP_Y + (TH_KEYBOARD_KEY_SIZE * 2)), idx == i);
     i++;
   }
-
-  padding.x = KEYBOARD_ROW3_LEN(show_space) * TH_KEYBOARD_KEY_SIZE;
-  padding.y = KEYBOARD_TOP_Y + (TH_KEYBOARD_KEY_SIZE * 2);
-  padding.width = (TH_KEYBOARD_KEY_SIZE * 3);
-
-  screen_fill_area(&padding, TH_KEYBOARD_KEY_BG);
 }
 
 static char input_keyboard(int *idx, bool show_space) {
@@ -325,13 +282,22 @@ static void input_render_text_field(const char* str, screen_area_t* field_area, 
       .font = TH_FONT_TEXT,
       .fg = TH_TEXT_FIELD_FG,
       .bg = TH_TEXT_FIELD_BG,
-      .x = field_area->x + TH_TEXT_FIELD_INNER_LEFT_MARGIN,
+      .x = field_area->x,
       .y = field_area->y
   };
 
   screen_fill_area(field_area, ctx.bg);
 
   screen_draw_chars(&ctx, str, len);
+
+  screen_area_t cursor_area = {
+      .x = ctx.x,
+      .y = field_area->y,
+      .width = TH_TEXT_FIELD_CURSOR_WIDTH,
+      .height = field_area->height
+  };
+
+  screen_fill_area(&cursor_area, TH_TEXT_FIELD_CURSOR_COLOR);
   ctx.fg = TH_TEXT_FIELD_SUGGESTION_FG;
   screen_draw_chars(&ctx, &str[len], suggestion_len);
 }
@@ -350,12 +316,27 @@ static void input_mnemonic_title(uint8_t i) {
 static void input_render_editable_text_field(const char* str, int len, int suggestion_len) {
   screen_area_t field_area = {
       .x = TH_TEXT_FIELD_MARGIN,
-      .y = TH_TITLE_HEIGHT + TH_TEXT_FIELD_MARGIN,
+      .y = TH_TEXT_FIELD_TOP,
       .width = SCREEN_WIDTH - (TH_TEXT_FIELD_MARGIN * 2),
       .height = TH_TEXT_FIELD_HEIGHT
   };
 
   input_render_text_field(str, &field_area, len, suggestion_len);
+  const char* action_hint = (suggestion_len == 0) && (len == 0) ? LSTR(HINT_CANCEL) : LSTR(HINT_CONFIRM);
+
+  screen_text_ctx_t ctx = {
+      .font = TH_FONT_TEXT,
+      .fg = TH_COLOR_INACTIVE,
+      .bg = TH_COLOR_BG,
+      .x = field_area.x,
+      .y = field_area.y + field_area.height + TH_TEXT_FIELD_HINT_MARGIN
+  };
+
+  screen_draw_string(&ctx, action_hint);
+  field_area.y = ctx.y;
+  field_area.x = ctx.x;
+  field_area.width = SCREEN_WIDTH - ctx.x;
+  screen_fill_area(&field_area, ctx.bg);
 }
 
 static void input_mnemonic_render(const char* word, int len, uint16_t idx) {
@@ -448,7 +429,7 @@ static void input_render_mnemonic_word(int word_num, const char* str, screen_are
       .font = TH_FONT_TEXT,
       .fg = TH_TEXT_FIELD_FG,
       .bg = TH_TEXT_FIELD_BG,
-      .x = field_area->x + TH_TEXT_FIELD_INNER_LEFT_MARGIN,
+      .x = field_area->x,
       .y = field_area->y
   };
 
@@ -521,7 +502,7 @@ static app_err_t input_backup_confirm_mnemonic(uint8_t positions[WORDS_TO_CONFIR
       if (idx == g_ui_cmd.params.mnemo.indexes[positions[i]]) {
         i++;
       } else {
-        dialog_internal_info(LSTR(INFO_ERROR_TITLE), LSTR(MNENO_MISMATCH));
+        dialog_internal_info(LSTR(MNENO_MISMATCH));
       }
     } else if (i > 0) {
       i--;

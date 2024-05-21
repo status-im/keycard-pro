@@ -24,8 +24,8 @@ const char *const i18n_english_strings[] = {
 
     // Settings menu
     "Set brightness",
-    "Auto off time",
-    "USB data",
+    "Auto-off time",
+    "USB-data",
 
     // TX
     "Sign transaction",
@@ -65,7 +65,6 @@ const char *const i18n_english_strings[] = {
     "Insert your PUK",
     "Wrong PUK. Please try again.",
     "Choose a new PUK",
-    "Card blocked",
     "The card is blocked. If you have setup a PUK press OK to insert it, otherwise press Cancel to factory reset the card.",
     "PUK changed successfully",
 
@@ -83,13 +82,10 @@ const char *const i18n_english_strings[] = {
     "Factory resetting your card completely destroys all keys on it with no way to recover them.\nMake sure you have a backup of the mnemonic.\n\nAfter factory reset the device will restart",
 
     // Info messages
-    "Error",
-    "Success",
     "Communication with the card lost.\n\nPlease remove it and insert it again",
     "The inserted card does not appear to be a Keycard. Please replace it with a Keycard",
     "Failed to verify genuineness of this card. Do not press OK unless you loaded a custom Keycard applet on this card yourself",
     "This Keycard has an old version of the applet installed. Please replace it with a newer one",
-    "Initialize your Keycard",
     "We will now proceed initializing your Keycard.\n\nYou will be required to choose a PIN for your card.\n\nPress OK to continue.",
     "This card has no free pairing slots and thus cannot be used with Keycard Pro at the moment.\n\nPlease remove the card and free a pairing slot or press OK to factory reset the card.",
     "This QR is not for this account. Please check that you are using the correct Keycard.",
@@ -122,8 +118,6 @@ const char *const i18n_english_strings[] = {
     // Device authentication
     "Invalid verification QR. Please check the website you are on and try again.",
     "The response from the server is invalid. Ignore the verification results, make sure you go on the correct site and try again.",
-    "Verification successful!",
-    "Verification warning",
     "The verification was successful and this was the first time this unit has been verified. You can safely use the device.",
     "The verification succeeded, however this wasn't the first time the unit has been verified. If you remember already verifying this device before, then there is nothing to worry about. Otherwise please contact us.",
 
@@ -149,4 +143,8 @@ const char *const i18n_english_strings[] = {
     "S/N: ",
     "New firmware version: ",
     "New database version: ",
+
+    // Hints
+    "Long press C to cancel",
+    "Long press OK to confirm",
 };

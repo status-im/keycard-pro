@@ -76,11 +76,10 @@ uint16_t copyTxData(txContext_t *context, uint8_t *out, uint32_t length) {
 }
 
 static uint16_t processContent(txContext_t *context) {
-  // Keep the full length for sanity checks, move to the next field
   if (!context->currentFieldIsList) {
     return EXCEPTION;
   }
-  context->dataLength = context->currentFieldLength;
+
   context->currentField++;
   context->processingField = false;
   return 0;

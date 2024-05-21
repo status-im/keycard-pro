@@ -44,6 +44,9 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_INFO:
       g_ui_cmd.result = dialog_info();
       break;
+    case UI_CMD_PROMPT:
+      g_ui_cmd.result = dialog_prompt();
+      break;
     case UI_CMD_MENU:
       g_ui_cmd.result = menu_run();
       break;
@@ -67,6 +70,9 @@ void ui_task_entry(void* pvParameters) {
       break;
     case UI_CMD_INPUT_PUK:
       g_ui_cmd.result = input_puk();
+      break;
+    case UI_CMD_WRONG_AUTH:
+      g_ui_cmd.result = dialog_wrong_auth();
       break;
     case UI_CMD_INPUT_STRING:
       g_ui_cmd.result = input_string();

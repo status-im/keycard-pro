@@ -4,11 +4,9 @@
 #include "qrcode/qrcodegen.h"
 #include "FreeRTOS.h"
 #include "task.h"
+#include <string.h>
 
 #define SCREEN_TIMEOUT 100
-
-#define CAM_OUT_WIDTH (CAMERA_WIDTH/2)
-#define CAM_OUT_HEIGHT (CAMERA_HEIGHT/2)
 
 #define MAX_GLYPHS_PER_LINE 50
 
@@ -142,7 +140,7 @@ hal_err_t screen_draw_area(const screen_area_t* area, const uint16_t* pixels) {
   return screen_wait();
 }
 
-const glyph_t *screen_lookup_glyph(const font_t* font, char c) {
+const glyph_t *screen_lookup_glyph(const font_t* font, uint32_t c) {
   if (c < font->first || c > font->last) {
     if (c == '\t') {
       c = ' ' - font->first;
@@ -153,7 +151,7 @@ const glyph_t *screen_lookup_glyph(const font_t* font, char c) {
     c -= font->first;
   }
 
-  return &font->glyph[(int)c];
+  return &font->glyph[c];
 }
 
 static inline hal_err_t _screen_char_flush(uint16_t* to_write, uint16_t threshold) {
@@ -244,12 +242,12 @@ hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph) 
 }
 
 hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, char c) {
-  return screen_draw_glyph(ctx, screen_lookup_glyph(ctx->font, c));
+  return screen_draw_glyph(ctx, screen_lookup_glyph(ctx->font, (uint32_t) c));
 }
 
 hal_err_t screen_draw_chars(screen_text_ctx_t* ctx, const char* str, int len) {
   while(len--) {
-    const glyph_t* glyph = screen_lookup_glyph(ctx->font, *(str++));
+    const glyph_t* glyph = screen_lookup_glyph(ctx->font, (uint32_t) *(str++));
 
     if (screen_draw_glyph(ctx, glyph) != HAL_SUCCESS) {
       return HAL_FAIL;
@@ -265,7 +263,7 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
   char c;
 
   while((c = *(str++))) {
-    const glyph_t* glyph = screen_lookup_glyph(ctx->font, c);
+    const glyph_t* glyph = screen_lookup_glyph(ctx->font, (uint32_t) c);
 
     if (screen_draw_glyph(ctx, glyph) != HAL_SUCCESS) {
       return HAL_FAIL;
@@ -275,6 +273,10 @@ hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str) {
   }
 
   return HAL_SUCCESS;
+}
+
+hal_err_t screen_draw_centered_string(screen_text_ctx_t* ctx, const char* str) {
+  return screen_draw_text(ctx, (SCREEN_WIDTH - ctx->x), (ctx->y + ctx->font->yAdvance), (uint8_t*) str, strlen(str), false, true) == 0 ? ERR_OK : ERR_FULL;
 }
 
 hal_err_t screen_draw_glyphs(screen_text_ctx_t* ctx, const glyph_t* glyphs[], size_t len) {
@@ -289,7 +291,7 @@ hal_err_t screen_draw_glyphs(screen_text_ctx_t* ctx, const glyph_t* glyphs[], si
   return HAL_SUCCESS;
 }
 
-size_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, const uint8_t* text, size_t len, bool dry_run) {
+size_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, const uint8_t* text, size_t len, bool dry_run, bool centered) {
   uint16_t start_x = ctx->x;
 
   while(len) {
@@ -305,7 +307,8 @@ size_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, 
     }
 
     size_t line_len = 0;
-    size_t line_width = start_x;
+    size_t current_x = start_x;
+    size_t line_end_x = 0;
     const glyph_t* line[MAX_GLYPHS_PER_LINE];
 
     size_t lim = APP_MIN(MAX_GLYPHS_PER_LINE, len);
@@ -315,18 +318,21 @@ size_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, 
       char c = (char) text[i];
       if (c == '\n') {
         line_len = i;
+        line_end_x = current_x;
         wrapped = 1;
         text++;
         len--;
         break;
       } else if (c == ' ') {
         line_len = i;
+        line_end_x = current_x;
       }
 
-      line[i] = screen_lookup_glyph(ctx->font, c);
-      line_width += line[i]->xAdvance;
-      if (line_width > max_x) {
+      line[i] = screen_lookup_glyph(ctx->font, (uint32_t) c);
+      current_x += line[i]->xAdvance;
+      if (current_x > max_x) {
         if (line_len == 0) {
+          line_end_x = current_x - line[i]->xAdvance;
           line_len = i - 1;
         }
 
@@ -336,11 +342,18 @@ size_t screen_draw_text(screen_text_ctx_t* ctx, uint16_t max_x, uint16_t max_y, 
     }
 
     if (!wrapped) {
+      line_end_x = current_x;
       line_len = lim;
     }
 
-    if (!dry_run && (screen_draw_glyphs(ctx, line, line_len) != HAL_SUCCESS)) {
-      return UINT32_MAX;
+    if (!dry_run) {
+      if (centered) {
+        ctx->x = (SCREEN_WIDTH - line_end_x) / 2;
+      }
+
+      if (screen_draw_glyphs(ctx, line, line_len) != HAL_SUCCESS) {
+        return UINT32_MAX;
+      }
     }
 
     text += line_len;

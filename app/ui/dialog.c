@@ -33,15 +33,16 @@ app_err_t dialog_separator(uint16_t yOff) {
   return screen_fill_area(&fillarea, TH_COLOR_SEP) == HAL_SUCCESS? ERR_OK : ERR_HW;
 }
 
-app_err_t dialog_title(const char* title) {
-  screen_text_ctx_t ctx = { TH_FONT_TITLE, TH_COLOR_TITLE_FG, TH_COLOR_TITLE_BG, TH_TITLE_LEFT_MARGIN, 0 };
+app_err_t dialog_title_colors(const char* title, uint16_t bg, uint16_t fg, uint16_t icon) {
+  screen_text_ctx_t ctx = { TH_FONT_TITLE, fg, bg, TH_TITLE_LEFT_MARGIN, 0 };
   if (dialog_line(&ctx, title, TH_TITLE_HEIGHT) != ERR_OK) {
     return ERR_HW;
   }
 
   ctx.font = TH_FONT_ICONS;
-  ctx.y = ((TH_TITLE_HEIGHT - ctx.font->yAdvance) / 2);
-  ctx.x = 280;
+  ctx.fg = icon;
+  ctx.y = 0;
+  ctx.x = TH_TITLE_ICON_POSITION;
 
   uint8_t i = g_ui_ctx.battery / 25;
   if (i > 5) {
@@ -53,8 +54,17 @@ app_err_t dialog_title(const char* title) {
   return screen_draw_glyph(&ctx, &ctx.font->glyph[i]) == HAL_SUCCESS? ERR_OK : ERR_HW;
 }
 
+app_err_t dialog_title(const char* title) {
+  return dialog_title_colors(title, TH_COLOR_TITLE_BG, TH_COLOR_TITLE_FG, TH_COLOR_TITLE_ICON_FG);
+}
+
 app_err_t dialog_footer(uint16_t yOff) {
   screen_area_t area = { 0, yOff, SCREEN_WIDTH, SCREEN_HEIGHT - yOff };
+  return screen_fill_area(&area, TH_COLOR_BG);
+}
+
+app_err_t dialog_margin(uint16_t yOff, uint16_t height) {
+  screen_area_t area = { 0, yOff, SCREEN_WIDTH, height };
   return screen_fill_area(&area, TH_COLOR_BG);
 }
 
@@ -190,8 +200,8 @@ app_err_t dialog_confirm_tx() {
   }
 }
 
-static void dialog_draw_message(const char* title, const char* txt, size_t len) {
-  dialog_title(title);
+static void dialog_draw_message(const char* txt) {
+  dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
 
   screen_text_ctx_t ctx = {
@@ -199,10 +209,14 @@ static void dialog_draw_message(const char* title, const char* txt, size_t len) 
       .fg = TH_COLOR_TEXT_FG,
       .bg = TH_COLOR_TEXT_BG,
       .x = TH_TEXT_HORIZONTAL_MARGIN,
-      .y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN
+      .y = 0
   };
 
-  screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, (uint8_t*) txt, len, false);
+  size_t len = strlen(txt);
+  screen_draw_text(&ctx, MESSAGE_MAX_X, SCREEN_HEIGHT, (uint8_t*) txt, len, true, true);
+  ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
+  ctx.y = (SCREEN_HEIGHT - ctx.y) / 2;
+  screen_draw_text(&ctx, MESSAGE_MAX_X, SCREEN_HEIGHT, (uint8_t*) txt, len, false, true);
 }
 
 static inline void _dialog_paged_title(const char* base, char title[MAX_MSG_TITLE_LEN], size_t page, size_t last_page) {
@@ -253,7 +267,7 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
 
     size_t offset = pages[last_page];
     size_t to_display = len - offset;
-    size_t remaining = screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], to_display, true);
+    size_t remaining = screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], to_display, true, false);
 
     if (!remaining || last_page == (MAX_PAGE_COUNT - 1)) {
       break;
@@ -306,7 +320,7 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
       dialog_footer(TH_TITLE_HEIGHT);
     }
 
-    screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], (len - offset), false);
+    screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], (len - offset), false, false);
 
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
     case KEYPAD_KEY_LEFT:
@@ -360,13 +374,13 @@ static app_err_t dialog_wait_dismiss() {
   }
 }
 
-app_err_t dialog_internal_info(const char* title, const char* msg) {
-  dialog_draw_message(title, msg, strlen(msg));
+app_err_t dialog_internal_info(const char* msg) {
+  dialog_draw_message(msg);
   return dialog_wait_dismiss();
 }
 
 app_err_t dialog_info() {
-  dialog_draw_message(g_ui_cmd.params.info.title, g_ui_cmd.params.info.msg, strlen(g_ui_cmd.params.info.msg));
+  dialog_draw_message(g_ui_cmd.params.info.msg);
 
   if (!g_ui_cmd.params.info.dismissable) {
     vTaskSuspend(NULL);
@@ -376,12 +390,59 @@ app_err_t dialog_info() {
   return dialog_wait_dismiss();
 }
 
+app_err_t dialog_prompt() {
+  dialog_title(g_ui_cmd.params.prompt.title);
+  dialog_footer(TH_TITLE_HEIGHT);
+
+  screen_text_ctx_t ctx = {
+      .font = TH_FONT_TEXT,
+      .fg = TH_COLOR_TEXT_FG,
+      .bg = TH_COLOR_TEXT_BG,
+      .x = TH_TEXT_HORIZONTAL_MARGIN,
+      .y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN
+  };
+
+  size_t len = strlen(g_ui_cmd.params.prompt.msg);
+  screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, (uint8_t*) g_ui_cmd.params.prompt.msg, len, false, false);
+
+  return dialog_wait_dismiss();
+}
+
 app_err_t dialog_dev_auth() {
   if (g_ui_cmd.params.auth.auth_count > 1) {
-    dialog_draw_message(LSTR(DEV_AUTH_TITLE_WARNING), LSTR(DEV_AUTH_INFO_WARNING), strlen(LSTR(DEV_AUTH_INFO_WARNING)));
+    dialog_draw_message(LSTR(DEV_AUTH_INFO_WARNING));
   } else {
-    dialog_draw_message(LSTR(DEV_AUTH_TITLE_SUCCESS), LSTR(DEV_AUTH_INFO_SUCCESS), strlen(LSTR(DEV_AUTH_INFO_SUCCESS)));
+    dialog_draw_message(LSTR(DEV_AUTH_INFO_SUCCESS));
   }
+
+  return dialog_wait_dismiss();
+}
+
+app_err_t dialog_wrong_auth() {
+  dialog_title("");
+  dialog_footer(TH_TITLE_HEIGHT);
+
+  screen_text_ctx_t ctx = {
+      .font = TH_FONT_TEXT,
+      .fg = TH_COLOR_TEXT_FG,
+      .bg = TH_COLOR_TEXT_BG,
+      .x = 0,
+      .y = (SCREEN_HEIGHT - ((TH_FONT_TEXT)->yAdvance + TH_TEXT_VERTICAL_MARGIN + (TH_FONT_TEXT)->yAdvance)) / 2
+  };
+
+  screen_draw_centered_string(&ctx, g_ui_cmd.params.wrong_auth.msg);
+
+  ctx.x = 0;
+  ctx.y += TH_TEXT_VERTICAL_MARGIN;
+  ctx.fg = TH_COLOR_ERROR;
+
+  size_t label_len = strlen(LSTR(PIN_LABEL_REMAINING_ATTEMPTS));
+  char remaining_attempts[label_len + 2];
+  memcpy(remaining_attempts, LSTR(PIN_LABEL_REMAINING_ATTEMPTS), label_len);
+  remaining_attempts[label_len] = g_ui_cmd.params.wrong_auth.retries + '0';
+  remaining_attempts[label_len + 1] = '\0';
+
+  screen_draw_centered_string(&ctx, remaining_attempts);
 
   return dialog_wait_dismiss();
 }

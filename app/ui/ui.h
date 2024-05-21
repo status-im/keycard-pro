@@ -24,7 +24,8 @@ core_evt_t ui_display_tx(const uint8_t* address, const txContent_t* tx);
 core_evt_t ui_display_msg(const uint8_t* address, const uint8_t* msg, uint32_t len);
 core_evt_t ui_display_eip712(const uint8_t* address, const eip712_ctx_t* eip712);
 core_evt_t ui_display_qr(const uint8_t* data, uint32_t len, ur_type_t type);
-core_evt_t ui_info(const char* title, const char* msg, uint8_t dismissable);
+core_evt_t ui_info(const char* msg, uint8_t dismissable);
+core_evt_t ui_prompt(const char* title, const char* msg);
 
 void ui_card_inserted();
 void ui_card_removed();
@@ -42,10 +43,10 @@ void ui_keycard_pairing_failed();
 void ui_keycard_flash_failed();
 void ui_keycard_secure_channel_failed();
 void ui_keycard_secure_channel_ok();
-void ui_keycard_wrong_pin();
 void ui_keycard_pin_ok();
 void ui_keycard_puk_ok();
-void ui_keycard_wrong_puk();
+void ui_keycard_wrong_pin(uint8_t retries);
+void ui_keycard_wrong_puk(uint8_t retries);
 void ui_seed_loaded();
 
 core_evt_t ui_prompt_try_puk();
