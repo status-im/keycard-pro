@@ -136,13 +136,11 @@ typedef struct txContext_t {
   bool currentFieldIsList;
   bool processingField;
   bool fieldSingleByte;
-  uint32_t dataLength;
   uint8_t rlpBuffer[5];
   uint32_t rlpBufferPos;
   const uint8_t *workBuffer;
   uint32_t commandLength;
   txContent_t *content;
-  void *extra;
   uint8_t txType;
 } txContext_t;
 
