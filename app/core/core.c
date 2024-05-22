@@ -19,7 +19,11 @@
 
 #define CRYPTO_MULTIACCOUNT_SN_LEN 40
 
+#define CORE_ADDR_STR_MAX_LEN 91 // Bech32 max length
+
 #define USB_MORE_DATA_TIMEOUT 100
+
+typedef void (*core_addr_encoder_t)(const uint8_t* key, char* addr);
 
 const uint8_t *const ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
 const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
@@ -732,7 +736,7 @@ void core_qr_run() {
   }
 
   cbor_encode_eth_signature(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &sig, &g_core.data.sig.cbor_len);
-  ui_display_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGNATURE);
+  ui_display_ur_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGNATURE);
 }
 
 static app_err_t encode_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, const uint32_t bip32_path[], size_t bip32_len, bool add_source) {
@@ -785,7 +789,7 @@ void core_display_public_eip4527() {
   }
 
   cbor_encode_hd_key(g_core.data.key.cbor_key, CBOR_KEY_MAX_LEN, &key, &g_core.data.key.cbor_len);
-  ui_display_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
+  ui_display_ur_qr(g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
 }
 
 // this macro can only be used in core_display_public_multicoin()
@@ -826,19 +830,56 @@ void core_display_public_multicoin() {
   accounts.crypto_multi_accounts_master_fingerprint = g_core.master_fingerprint;
 
   cbor_encode_crypto_multi_accounts(&g_mem_heap[keys_off], MEM_HEAP_SIZE, &accounts, &g_core.data.key.cbor_len);
-  ui_display_qr(&g_mem_heap[keys_off], g_core.data.key.cbor_len, CRYPTO_MULTI_ACCOUNTS);
+  ui_display_ur_qr(&g_mem_heap[keys_off], g_core.data.key.cbor_len, CRYPTO_MULTI_ACCOUNTS);
 }
 
-void core_addresses(const uint32_t* base_path, size_t base_len, void* addr_func) {
+static void core_addresses(const uint32_t* base_path, size_t base_len, core_addr_encoder_t encoder) {
+  uint32_t index = 0;
 
+  for (int i = 0; i < base_len; i++) {
+    uint32_t c = base_path[i];
+    g_core.bip44_path[(i * 4)] = c >> 24;
+    g_core.bip44_path[(i * 4) + 1] = (c >> 16) & 0xff;
+    g_core.bip44_path[(i * 4) + 2] = (c >> 8) & 0xff;
+    g_core.bip44_path[(i * 4) + 3] = (c & 0xff);
+  }
+
+  g_core.bip44_path_len = (base_len + 1) * 4;
+
+  do {
+    g_core.bip44_path[(base_len * 4)] = index >> 24;
+    g_core.bip44_path[(base_len * 4) + 1] = (index >> 16) & 0xff;
+    g_core.bip44_path[(base_len * 4) + 2] = (index >> 8) & 0xff;
+    g_core.bip44_path[(base_len * 4) + 3] = (index & 0xff);
+
+    if (core_export_public(g_core.data.key.pub, NULL, NULL, NULL) != ERR_OK) {
+      ui_info(LSTR(INFO_CARD_ERROR_MSG), 0);
+    }
+
+    char address[CORE_ADDR_STR_MAX_LEN];
+    encoder(g_core.data.key.pub, address);
+    ui_display_address_qr(address, &index);
+  } while(index != UINT32_MAX);
+}
+
+static void core_eth_addr_encoder(const uint8_t* key, char* addr) {
+  addr[0] = '0';
+  addr[1] = 'x';
+  ethereum_address(key, g_core.address);
+  ethereum_address_checksum(g_core.address, &addr[2]);
+}
+
+static void core_btc_addr_encoder(const uint8_t* key, char* addr) {
+  //TODO: this is just a stub, implement Bech32 encoding
+  base16_encode(key, addr, PUBKEY_COMPRESSED_LEN);
 }
 
 void core_addresses_ethereum() {
-  core_addresses(ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, NULL);
+  core_addresses(ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, core_eth_addr_encoder);
 }
 
 void core_addresses_bitcoin() {
-  core_addresses(BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN, NULL);
+  core_addresses(BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN, core_btc_addr_encoder);
 }
 
 core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb) {

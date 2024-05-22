@@ -130,7 +130,7 @@ typedef enum {
   MNEMO_BACKUP_TITLE,
   MNENO_MISMATCH,
 
-  // Device authentication
+  // Device verification
   DEV_AUTH_INVALID_CHALLENGE,
   DEV_AUTH_INVALID_AUTH,
   DEV_AUTH_INFO_SUCCESS,

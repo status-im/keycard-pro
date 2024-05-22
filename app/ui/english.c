@@ -31,7 +31,7 @@ const char *const i18n_english_strings[] = {
 
     // Device menu
     "Device info",
-    "Device authentication",
+    "Device verification",
     "Update ERC20 db",
     "Set brightness",
     "Auto-off time",
@@ -125,7 +125,7 @@ const char *const i18n_english_strings[] = {
     "Write down and keep safe!",
     "Word does not match, please try again.",
 
-    // Device authentication
+    // Device verification
     "Invalid verification QR. Please check the website you are on and try again.",
     "The response from the server is invalid. Ignore the verification results, make sure you go on the correct site and try again.",
     "The verification was successful and this was the first time this unit has been verified. You can safely use the device.",
