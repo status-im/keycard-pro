@@ -79,6 +79,13 @@ const menu_t menu_onoff = {
   }
 };
 
+const menu_t menu_keycard_blocked = {
+  2, {
+    {MENU_UNBLOCK_PUK, NULL},
+    {MENU_RESET_CARD, NULL},
+  }
+};
+
 #define MENU_MAX_DEPTH 5
 
 void menu_render_entry(const menu_entry_t* entry, uint8_t is_selected, uint16_t yOff) {

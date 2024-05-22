@@ -23,6 +23,7 @@ const char *const i18n_english_strings[] = {
     "Change PUK",
     "Change pairing pass",
     "Factory reset card",
+    "Unblock with PUK",
 
     // Device menu
     "Device info",
@@ -70,7 +71,6 @@ const char *const i18n_english_strings[] = {
     "Insert your PUK",
     "Wrong PUK. Please try again.",
     "Choose a new PUK",
-    "The card is blocked. If you have setup a PUK press OK to insert it, otherwise press Cancel to factory reset the card.",
     "PUK changed successfully",
 
     // Pairing input
@@ -95,6 +95,7 @@ const char *const i18n_english_strings[] = {
     "This card has no free pairing slots and thus cannot be used with Keycard Pro at the moment.\n\nPlease remove the card and free a pairing slot or press OK to factory reset the card.",
     "This QR is not for this account. Please check that you are using the correct Keycard.",
     "The content of this QR is malformed or unsupported. Please generate a new one.",
+    "Keycard blocked",
 
     // DB Update
     "Updating database...",

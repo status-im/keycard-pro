@@ -26,6 +26,7 @@ typedef enum {
   MENU_CHANGE_PUK,
   MENU_CHANGE_PAIRING,
   MENU_RESET_CARD,
+  MENU_UNBLOCK_PUK,
 
   // Device menu
   MENU_INFO,
@@ -75,7 +76,6 @@ typedef enum {
   PUK_INPUT_TITLE,
   PUK_WRONG_WARNING,
   PUK_CREATE_TITLE,
-  PUK_PROMPT,
   PUK_CHANGE_SUCCESS,
 
   // Pairing input
@@ -100,6 +100,7 @@ typedef enum {
   INFO_NO_PAIRING_SLOTS,
   INFO_WRONG_CARD,
   INFO_MALFORMED_DATA,
+  INFO_KEYCARD_BLOCKED,
 
   // DB Update
   DB_UPDATE_TITLE,

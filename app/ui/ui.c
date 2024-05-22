@@ -124,10 +124,14 @@ void ui_keycard_puk_ok() {
 }
 
 void ui_keycard_wrong_pin(uint8_t retries) {
-  g_ui_cmd.type = UI_CMD_WRONG_AUTH;
-  g_ui_cmd.params.wrong_auth.msg = LSTR(PIN_WRONG_WARNING);
-  g_ui_cmd.params.wrong_auth.retries = retries;
-  ui_signal_wait(0);
+  if (retries > 0) {
+    g_ui_cmd.type = UI_CMD_WRONG_AUTH;
+    g_ui_cmd.params.wrong_auth.msg = LSTR(PIN_WRONG_WARNING);
+    g_ui_cmd.params.wrong_auth.retries = retries;
+    ui_signal_wait(0);
+  } else {
+    ui_info(LSTR(INFO_KEYCARD_BLOCKED), 1);
+  }
 }
 
 void ui_keycard_wrong_puk(uint8_t retries) {
@@ -138,11 +142,16 @@ void ui_keycard_wrong_puk(uint8_t retries) {
 }
 
 core_evt_t ui_keycard_not_genuine() {
-  return ui_info(LSTR(INFO_NOT_GENUINE), 1);
+  return ui_prompt("", LSTR(INFO_NOT_GENUINE));
 }
 
 core_evt_t ui_prompt_try_puk() {
-  return ui_info(LSTR(PUK_PROMPT), 1);
+  i18n_str_id_t selected = MENU_UNBLOCK_PUK;
+  while (ui_menu(LSTR(INFO_KEYCARD_BLOCKED), &menu_keycard_blocked, &selected, -1, 0) != CORE_EVT_UI_OK) {
+    ;
+  }
+
+  return selected == MENU_RESET_CARD ? CORE_EVT_UI_CANCELLED : CORE_EVT_UI_OK;
 }
 
 core_evt_t ui_confirm_factory_reset() {

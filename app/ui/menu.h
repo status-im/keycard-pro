@@ -21,6 +21,7 @@ extern const menu_t menu_mainmenu;
 extern const menu_t menu_mnemonic;
 extern const menu_t menu_autooff;
 extern const menu_t menu_onoff;
+extern const menu_t menu_keycard_blocked;
 
 app_err_t menu_run();
 
