@@ -16,6 +16,10 @@ typedef enum {
   MENU_CONNECT_EIP4527,
   MENU_CONNECT_MULTICOIN,
 
+  // Addresses menu
+  MENU_ETHEREUM,
+  MENU_BITCOIN,
+
   // Settings menu
   MENU_DEVICE,
   MENU_KEYCARD,

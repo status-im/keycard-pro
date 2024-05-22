@@ -13,6 +13,10 @@ const char *const i18n_english_strings[] = {
     "EVM-chain wallet",
     "OKX Wallet",
 
+    // Addresses menu
+    "Ethereum",
+    "Bitcoin",
+
     // Settings menu
     "Device",
     "Keycard",

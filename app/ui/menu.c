@@ -36,6 +36,13 @@ const menu_t menu_connect = {
   }
 };
 
+const menu_t menu_addresses = {
+  2, {
+    {MENU_ETHEREUM, NULL},
+    {MENU_BITCOIN, NULL},
+  }
+};
+
 const menu_t menu_settings = {
   2, {
     {MENU_KEYCARD, &menu_keycard},
@@ -47,7 +54,7 @@ const menu_t menu_mainmenu = {
   5, {
     {MENU_QRCODE, NULL},
     {MENU_CONNECT, &menu_connect},
-    {MENU_ADDRESSES, NULL},
+    {MENU_ADDRESSES, &menu_addresses},
     {MENU_SETTINGS, &menu_settings},
     {MENU_HELP, NULL},
   }

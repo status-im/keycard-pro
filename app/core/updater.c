@@ -103,6 +103,10 @@ void device_info() {
   ui_prompt(LSTR(MENU_INFO), info);
 }
 
+void device_help() {
+
+}
+
 static app_err_t updater_verify_db(uint8_t* data, size_t data_len) {
   uint8_t digest[SHA256_DIGEST_LENGTH];
   size_t len = data_len - SIG_LEN;

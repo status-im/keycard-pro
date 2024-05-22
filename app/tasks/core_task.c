@@ -13,9 +13,8 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_QRCODE:
     core_qr_run();
     break;
-  case MENU_ADDRESSES:
-    break;
   case MENU_HELP:
+    device_help();
     break;
   // Connect
   case MENU_CONNECT_EIP4527:
@@ -23,6 +22,13 @@ static inline void core_action_run(i18n_str_id_t menu) {
     break;
   case MENU_CONNECT_MULTICOIN:
     core_display_public_multicoin();
+    break;
+  // Addresses
+  case MENU_ETHEREUM:
+    core_addresses_ethereum();
+    break;
+  case MENU_BITCOIN:
+    core_addresses_bitcoin();
     break;
   // Keycard
   case MENU_CARD_NAME:

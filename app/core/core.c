@@ -829,6 +829,18 @@ void core_display_public_multicoin() {
   ui_display_qr(&g_mem_heap[keys_off], g_core.data.key.cbor_len, CRYPTO_MULTI_ACCOUNTS);
 }
 
+void core_addresses(const uint32_t* base_path, size_t base_len, void* addr_func) {
+
+}
+
+void core_addresses_ethereum() {
+  core_addresses(ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, NULL);
+}
+
+void core_addresses_bitcoin() {
+  core_addresses(BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN, NULL);
+}
+
 core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb) {
   uint32_t events;
 
