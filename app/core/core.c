@@ -19,8 +19,6 @@
 
 #define CRYPTO_MULTIACCOUNT_SN_LEN 40
 
-#define CORE_ADDR_STR_MAX_LEN 91 // Bech32 max length
-
 #define USB_MORE_DATA_TIMEOUT 100
 
 typedef void (*core_addr_encoder_t)(const uint8_t* key, char* addr);
@@ -844,6 +842,13 @@ static void core_addresses(const uint32_t* base_path, size_t base_len, core_addr
     g_core.bip44_path[(i * 4) + 3] = (c & 0xff);
   }
 
+  g_core.bip44_path[(base_len * 4)] = index >> 24;
+  g_core.bip44_path[(base_len * 4) + 1] = (index >> 16) & 0xff;
+  g_core.bip44_path[(base_len * 4) + 2] = (index >> 8) & 0xff;
+  g_core.bip44_path[(base_len * 4) + 3] = (index & 0xff);
+
+  base_len++;
+
   g_core.bip44_path_len = (base_len + 1) * 4;
 
   do {
@@ -856,9 +861,8 @@ static void core_addresses(const uint32_t* base_path, size_t base_len, core_addr
       ui_info(LSTR(INFO_CARD_ERROR_MSG), 0);
     }
 
-    char address[CORE_ADDR_STR_MAX_LEN];
-    encoder(g_core.data.key.pub, address);
-    ui_display_address_qr(address, &index);
+    encoder(g_core.data.key.pub, (char*) g_mem_heap);
+    ui_display_address_qr((char*) g_mem_heap, &index);
   } while(index != UINT32_MAX);
 }
 
