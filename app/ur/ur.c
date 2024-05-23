@@ -37,7 +37,10 @@ static app_err_t ur_process_simple(ur_t* ur, uint8_t* parts, uint8_t* part_data,
   ur->part_desc[desc_idx] = (1 << desc_idx);
   ur->part_mask |= (1 << desc_idx);
 
-  if (part->ur_part_seqLen == __builtin_popcount(ur->part_mask)) {
+  uint32_t part_count = __builtin_popcount(ur->part_mask);
+  ur->percent_done = (part_count * 100) / part->ur_part_seqLen;
+
+  if (part->ur_part_seqLen == part_count) {
     ur->data = parts;
     ur->data_len = part->ur_part_messageLen;
     return ERR_OK;

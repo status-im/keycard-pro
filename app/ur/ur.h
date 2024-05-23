@@ -29,6 +29,7 @@ typedef struct {
   size_t data_max_len;
   size_t data_len;
   uint8_t* data;
+  uint8_t percent_done;
 } ur_t;
 
 app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len);
