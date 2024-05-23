@@ -8,7 +8,7 @@
 
 #define QR_DISPLAY_TIMEOUT 60000
 
-app_err_t qrout_display(const char* str, const char* title) {
+app_err_t qrout_display(const char* str, const char* title, uint16_t max_y) {
   uint8_t tmpBuf[qrcodegen_BUFFER_LEN_MAX];
   uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
 
@@ -21,7 +21,7 @@ app_err_t qrout_display(const char* str, const char* title) {
   }
 
   screen_area_t qrarea;
-  qrarea.height = SCREEN_HEIGHT - (TH_TITLE_HEIGHT + (TH_QRCODE_VERTICAL_MARGIN * 2));
+  qrarea.height = max_y - (TH_TITLE_HEIGHT + TH_QRCODE_VERTICAL_MARGIN);
 
   int qrsize = qrcodegen_getSize(qrcode);
   int scale = qrarea.height / qrsize;
@@ -29,7 +29,7 @@ app_err_t qrout_display(const char* str, const char* title) {
 
   qrarea.width = qrarea.height;
   qrarea.x = (SCREEN_WIDTH - qrarea.width) / 2;
-  qrarea.y = TH_TITLE_HEIGHT + (((SCREEN_HEIGHT - TH_TITLE_HEIGHT) - qrarea.height) / 2);
+  qrarea.y = TH_TITLE_HEIGHT + (((max_y - TH_TITLE_HEIGHT) - qrarea.height) / 2);
 
   screen_draw_qrcode(&qrarea, qrcode, qrsize, scale);
 
@@ -48,7 +48,7 @@ app_err_t qrout_display_ur() {
     return ERR_DATA;
   }
 
-  if (qrout_display(urstr, g_ui_cmd.params.qrout.title) != ERR_OK) {
+  if (qrout_display(urstr, g_ui_cmd.params.qrout.title, (SCREEN_HEIGHT - TH_QRCODE_VERTICAL_MARGIN)) != ERR_OK) {
     return ERR_DATA;
   }
 
@@ -68,9 +68,19 @@ app_err_t qrout_display_ur() {
 }
 
 app_err_t qrout_display_address() {
-  if (qrout_display(g_ui_cmd.params.address.address, "") != ERR_OK) {
+  screen_text_ctx_t ctx = {
+      .bg = SCREEN_COLOR_WHITE,
+      .fg = SCREEN_COLOR_BLACK,
+      .font = TH_FONT_DATA,
+      .x = TH_QRCODE_ADDR_MARGIN,
+      .y = (SCREEN_HEIGHT - TH_QRCODE_VERTICAL_MARGIN - (TH_DATA_HEIGHT * 2) - TH_TEXT_VERTICAL_MARGIN)
+  };
+
+  if (qrout_display(g_ui_cmd.params.address.address, "", ctx.y) != ERR_OK) {
     return ERR_DATA;
   }
+
+  screen_draw_centered_string(&ctx, g_ui_cmd.params.address.address);
 
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {
