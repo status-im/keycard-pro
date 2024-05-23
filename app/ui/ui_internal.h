@@ -28,6 +28,7 @@ enum cmd_type {
   UI_CMD_DISPLAY_MSG,
   UI_CMD_DISPLAY_EIP712,
   UI_CMD_DISPLAY_QR,
+  UI_CMD_DISPLAY_ADDRESS_QR,
   UI_CMD_QRSCAN,
   UI_CMD_INPUT_PIN,
   UI_CMD_INPUT_PUK,
@@ -72,9 +73,15 @@ struct cmd_eip712 {
 };
 
 struct cmd_qrout {
+  const char* title;
   const uint8_t* data;
   uint32_t len;
   ur_type_t type;
+};
+
+struct cmd_address_qr {
+  const char* address;
+  uint32_t* index;
 };
 
 struct cmd_menu {
@@ -129,6 +136,7 @@ union cmd_params {
   struct cmd_msg msg;
   struct cmd_eip712 eip712;
   struct cmd_qrout qrout;
+  struct cmd_address_qr address;
   struct cmd_menu menu;
   struct cmd_qrscan qrscan;
   struct cmd_input_pin input_pin;

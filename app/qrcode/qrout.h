@@ -5,7 +5,8 @@
 #include "error.h"
 #include "screen/screen.h"
 
-app_err_t qrout_run();
+app_err_t qrout_display_ur();
+app_err_t qrout_display_address();
 
 #endif
 

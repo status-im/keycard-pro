@@ -60,7 +60,10 @@ void ui_task_entry(void* pvParameters) {
       g_ui_cmd.result = dialog_confirm_eip712();
       break;
     case UI_CMD_DISPLAY_QR:
-      g_ui_cmd.result = qrout_run();
+      g_ui_cmd.result = qrout_display_ur();
+      break;
+    case UI_CMD_DISPLAY_ADDRESS_QR:
+      g_ui_cmd.result = qrout_display_address();
       break;
     case UI_CMD_QRSCAN:
       g_ui_cmd.result = qrscan_scan();

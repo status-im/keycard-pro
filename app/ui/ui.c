@@ -42,8 +42,9 @@ core_evt_t ui_display_eip712(const uint8_t* address, const eip712_ctx_t* eip712)
   return ui_signal_wait(0);
 }
 
-core_evt_t ui_display_ur_qr(const uint8_t* data, uint32_t len, ur_type_t type) {
+core_evt_t ui_display_ur_qr(const char* title, const uint8_t* data, uint32_t len, ur_type_t type) {
   g_ui_cmd.type = UI_CMD_DISPLAY_QR;
+  g_ui_cmd.params.qrout.title = title;
   g_ui_cmd.params.qrout.data = data;
   g_ui_cmd.params.qrout.len = len;
   g_ui_cmd.params.qrout.type = type;
@@ -51,10 +52,11 @@ core_evt_t ui_display_ur_qr(const uint8_t* data, uint32_t len, ur_type_t type) {
 }
 
 core_evt_t ui_display_address_qr(const char* address, uint32_t* index) {
-  //TODO: implement
-  ui_info(address, 1);
-  *index = UINT32_MAX;
-  return CORE_EVT_UI_CANCELLED;
+  g_ui_cmd.type = UI_CMD_DISPLAY_ADDRESS_QR;
+  g_ui_cmd.params.address.address = address;
+  g_ui_cmd.params.address.index = index;
+
+  return ui_signal_wait(0);
 }
 
 core_evt_t ui_info(const char* msg, uint8_t dismissable) {

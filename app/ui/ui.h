@@ -23,7 +23,7 @@ core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selecte
 core_evt_t ui_display_tx(const uint8_t* address, const txContent_t* tx);
 core_evt_t ui_display_msg(const uint8_t* address, const uint8_t* msg, uint32_t len);
 core_evt_t ui_display_eip712(const uint8_t* address, const eip712_ctx_t* eip712);
-core_evt_t ui_display_ur_qr(const uint8_t* data, uint32_t len, ur_type_t type);
+core_evt_t ui_display_ur_qr(const char* title, const uint8_t* data, uint32_t len, ur_type_t type);
 core_evt_t ui_display_address_qr(const char* address, uint32_t* index);
 core_evt_t ui_info(const char* msg, uint8_t dismissable);
 core_evt_t ui_prompt(const char* title, const char* msg);

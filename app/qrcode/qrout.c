@@ -8,25 +8,15 @@
 
 #define QR_DISPLAY_TIMEOUT 60000
 
-app_err_t qrout_run() {
-  ur_t ur;
-  ur.data = (uint8_t*) g_ui_cmd.params.qrout.data;
-  ur.data_len = g_ui_cmd.params.qrout.len;
-  ur.type = g_ui_cmd.params.qrout.type;
-
+app_err_t qrout_display(const char* str, const char* title) {
   uint8_t tmpBuf[qrcodegen_BUFFER_LEN_MAX];
   uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
-  char urstr[qrcodegen_BUFFER_LEN_MAX/2];
 
-  dialog_title_colors(LSTR(QR_OUTPUT_TITLE), SCREEN_COLOR_WHITE, SCREEN_COLOR_BLACK, SCREEN_COLOR_BLACK);
+  dialog_title_colors(title, SCREEN_COLOR_WHITE, SCREEN_COLOR_BLACK, SCREEN_COLOR_BLACK);
   screen_area_t bgarea = { 0, TH_TITLE_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - TH_TITLE_HEIGHT };
   screen_fill_area(&bgarea, SCREEN_COLOR_WHITE);
 
-  if (ur_encode(&ur, urstr, sizeof(urstr)) != ERR_OK) {
-    return ERR_DATA;
-  }
-
-  if (!qrcodegen_encodeText(urstr, tmpBuf, qrcode, qrcodegen_Ecc_LOW, 1, 40, qrcodegen_Mask_AUTO, 1)) {
+  if (!qrcodegen_encodeText(str, tmpBuf, qrcode, qrcodegen_Ecc_LOW, 1, 40, qrcodegen_Mask_AUTO, 1)) {
     return ERR_DATA;
   }
 
@@ -43,6 +33,25 @@ app_err_t qrout_run() {
 
   screen_draw_qrcode(&qrarea, qrcode, qrsize, scale);
 
+  return ERR_OK;
+}
+
+app_err_t qrout_display_ur() {
+  ur_t ur;
+  ur.data = (uint8_t*) g_ui_cmd.params.qrout.data;
+  ur.data_len = g_ui_cmd.params.qrout.len;
+  ur.type = g_ui_cmd.params.qrout.type;
+
+  char urstr[qrcodegen_BUFFER_LEN_MAX/2];
+
+  if (ur_encode(&ur, urstr, sizeof(urstr)) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  if (qrout_display(urstr, g_ui_cmd.params.qrout.title) != ERR_OK) {
+    return ERR_DATA;
+  }
+
   while(1) {
     switch(ui_wait_keypress(pdMS_TO_TICKS(QR_DISPLAY_TIMEOUT))) {
     case KEYPAD_KEY_CANCEL:
@@ -56,4 +65,36 @@ app_err_t qrout_run() {
   }
 
   return ERR_OK;
+}
+
+app_err_t qrout_display_address() {
+  if (qrout_display(g_ui_cmd.params.address.address, "") != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  while(1) {
+    switch(ui_wait_keypress(portMAX_DELAY)) {
+    case KEYPAD_KEY_CANCEL:
+    case KEYPAD_KEY_BACK:
+    case KEYPAD_KEY_INVALID:
+    case KEYPAD_KEY_CONFIRM:
+      *g_ui_cmd.params.address.index = UINT32_MAX;
+      return ERR_OK;
+    case KEYPAD_KEY_LEFT:
+      if (*g_ui_cmd.params.address.index) {
+        (*g_ui_cmd.params.address.index)--;
+        return ERR_OK;
+      }
+
+      break;
+    case KEYPAD_KEY_RIGHT:
+      if (*g_ui_cmd.params.address.index < INT32_MAX) {
+        (*g_ui_cmd.params.address.index)++;
+        return ERR_OK;
+      }
+      break;
+    default:
+      break;
+    }
+  }
 }

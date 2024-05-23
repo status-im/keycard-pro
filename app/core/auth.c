@@ -64,7 +64,7 @@ void device_auth_run() {
 
   cbor_encode_dev_auth(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &auth, &g_core.data.sig.cbor_len);
 
-  ui_display_ur_qr(g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, DEV_AUTH);
+  ui_display_ur_qr(LSTR(QR_DEVAUTH_TITLE), g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, DEV_AUTH);
 
   sha256_Init(&sha256);
   sha256_Update(&sha256, uid, HAL_DEVICE_UID_LEN);

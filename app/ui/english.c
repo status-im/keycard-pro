@@ -60,7 +60,10 @@ const char *const i18n_english_strings[] = {
     "Name",
 
     // QR output
-    "Scan with your wallet",
+    "Scan signature QR with your wallet",
+    "Scan to verify",
+    "Scan with your EVM-chain wallet",
+    "Scan with your OKX wallet",
 
     // PIN input
     "Insert your PIN",
