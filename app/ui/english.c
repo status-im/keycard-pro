@@ -30,8 +30,8 @@ const char *const i18n_english_strings[] = {
     "Unblock with PUK",
 
     // Device menu
-    "Device info",
-    "Device verification",
+    "Information",
+    "Verification",
     "Update ERC20 db",
     "Set brightness",
     "Auto-off time",
@@ -91,7 +91,7 @@ const char *const i18n_english_strings[] = {
 
     // Factory reset
     "Card factory reset",
-    "Factory resetting your card completely destroys all keys on it with no way to recover them.\nMake sure you have a backup of the mnemonic.\n\nAfter factory reset the device will restart",
+    "Factory reset will permanently erase all keys on your card.\nEnsure you back up your seed phrase. The device will restart after resetting.",
 
     // Info messages
     "Communication with the card lost.\n\nPlease remove it and insert it again",
@@ -100,7 +100,7 @@ const char *const i18n_english_strings[] = {
     "This Keycard has an old version of the applet installed. Please replace it with a newer one",
     "We will now proceed initializing your Keycard.\n\nYou will be required to choose a PIN for your card.\n\nPress OK to continue.",
     "This card has no free pairing slots and thus cannot be used with Keycard Pro at the moment.\n\nPlease remove the card and free a pairing slot or press OK to factory reset the card.",
-    "This QR is not for this account. Please check that you are using the correct Keycard.",
+    "This QR is not for this key pair.\nTry again using a different Keycard.",
     "The content of this QR is malformed or unsupported. Please generate a new one.",
     "Keycard blocked",
 
