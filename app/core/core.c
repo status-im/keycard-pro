@@ -4,6 +4,7 @@
 #include "crypto/ripemd160.h"
 #include "crypto/util.h"
 #include "crypto/secp256k1.h"
+#include "crypto/segwit_addr.h"
 #include "ethereum/eth_db.h"
 #include "mem.h"
 #include "keycard/secure_channel.h"
@@ -17,11 +18,15 @@
 #define ETH_MSG_MAGIC_LEN 26
 #define ETH_EIP712_MAGIC_LEN 2
 
+#define BTC_SEGWIT_VER 0
+
 #define CRYPTO_MULTIACCOUNT_SN_LEN 40
 
 #define USB_MORE_DATA_TIMEOUT 100
 
 typedef void (*core_addr_encoder_t)(const uint8_t* key, char* addr);
+
+const char *const BTC_BECH32_HRP = "bc";
 
 const uint8_t *const ETH_MSG_MAGIC = (uint8_t *) "\031Ethereum Signed Message:\n";
 const uint8_t ETH_EIP712_MAGIC[] = { 0x19, 0x01 };
@@ -874,8 +879,10 @@ static void core_eth_addr_encoder(const uint8_t* key, char* addr) {
 }
 
 static void core_btc_addr_encoder(const uint8_t* key, char* addr) {
-  //TODO: this is just a stub, implement Bech32 encoding
-  base16_encode(key, addr, PUBKEY_COMPRESSED_LEN);
+  sha256_Raw(key, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
+  ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.address);
+
+  segwit_addr_encode(addr, BTC_BECH32_HRP, BTC_SEGWIT_VER, g_core.address, RIPEMD160_DIGEST_LENGTH);
 }
 
 void core_addresses_ethereum() {
