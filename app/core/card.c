@@ -53,6 +53,10 @@ void card_change_puk() {
 }
 
 void card_change_pairing() {
+  if (ui_prompt(LSTR(PAIRING_CHANGE_TITLE), LSTR(PAIRING_CHANGE_PROMPT)) != CORE_EVT_UI_OK) {
+    return;
+  }
+
   SC_BUF(password, KEYCARD_PAIRING_PASS_MAX_LEN);
   uint8_t len = KEYCARD_PAIRING_PASS_MAX_LEN;
 

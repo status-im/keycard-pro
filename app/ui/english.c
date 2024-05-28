@@ -82,8 +82,10 @@ const char *const i18n_english_strings[] = {
 
     // Pairing input
     "Insert your pairing password",
-    "Choose your pairing password",
+    "Input new pairing password",
     "Pairing password changed successfully",
+    "If you change the pairing pass from the default, you will have to manually enter it on pairing requests between your current Keycard and any other wallet and app.",
+    "Change pairing password",
 
     // Name input
     "Set the Keycard name",
