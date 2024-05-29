@@ -24,19 +24,25 @@
 
 #define KEYBOARD_TOP_Y (SCREEN_HEIGHT - (TH_KEYBOARD_KEY_SIZE * 3))
 
+#define KEYBOARD_ROW0_LEN 10
 #define KEYBOARD_ROW1_LEN 10
 #define KEYBOARD_ROW2_LEN 9
-#define KEYBOARD_ROW3_LEN(__HAS_SPACE__) (7 + __HAS_SPACE__)
+#define KEYBOARD_ROW3_LEN 7
 
-#define KEYBOARD_ROW1_LIMIT KEYBOARD_ROW1_LEN
+#define KEYBOARD_ROW0_LIMIT KEYBOARD_ROW0_LEN
+#define KEYBOARD_ROW1_LIMIT (KEYBOARD_ROW0_LIMIT + KEYBOARD_ROW1_LEN)
 #define KEYBOARD_ROW2_LIMIT (KEYBOARD_ROW1_LIMIT + KEYBOARD_ROW2_LEN)
-#define KEYBOARD_ROW3_LIMIT(__HAS_SPACE__) (KEYBOARD_ROW2_LIMIT + KEYBOARD_ROW3_LEN(__HAS_SPACE__))
+#define KEYBOARD_ROW3_LIMIT (KEYBOARD_ROW2_LIMIT + KEYBOARD_ROW3_LEN)
+
+#define KEYBOARD_EXT_FIRST_KEY 0
+#define KEYBOARD_FIRST_KEY KEYBOARD_ROW0_LIMIT
 
 const char KEYPAD_TO_DIGIT[] = {'1', '2', '3', '4', '5', '6', '7', '8', '9', DIG_INV, '0', DIG_INV, DIG_INV, DIG_INV};
 const char KEYBOARD_MAP[] = {
+    '1', '2', '3', '4', '5', '6', '7', '8', '9', '0',
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p',
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l',
-    'z', 'x', 'c', 'v', 'b', 'n', 'm', ' '
+    'z', 'x', 'c', 'v', 'b', 'n', 'm'
 };
 
 static app_err_t input_render_secret(uint16_t yOff, int len, int pos) {
@@ -195,28 +201,28 @@ static inline void input_keyboard_render_key(char c, uint16_t x, uint16_t y, boo
   screen_draw_glyph(&ctx, glyph);
 }
 
-static inline void input_keyboard_render(int idx, bool show_space) {
-  int i = 0;
+static inline void input_keyboard_render(int idx, bool extended) {
+  int i = KEYBOARD_ROW0_LIMIT;
 
   while (i < KEYBOARD_ROW1_LIMIT) {
-    input_keyboard_render_key(KEYBOARD_MAP[i], (i * TH_KEYBOARD_KEY_SIZE), KEYBOARD_TOP_Y, idx == i);
+    input_keyboard_render_key(KEYBOARD_MAP[i], ((i - KEYBOARD_ROW0_LIMIT) * TH_KEYBOARD_KEY_SIZE), KEYBOARD_TOP_Y, idx == i);
     i++;
   }
 
   while (i < KEYBOARD_ROW2_LIMIT) {
-    input_keyboard_render_key(KEYBOARD_MAP[i], ((i - 10) * TH_KEYBOARD_KEY_SIZE), (KEYBOARD_TOP_Y + TH_KEYBOARD_KEY_SIZE), idx == i);
+    input_keyboard_render_key(KEYBOARD_MAP[i], ((i - KEYBOARD_ROW1_LIMIT) * TH_KEYBOARD_KEY_SIZE) + (TH_KEYBOARD_KEY_SIZE / 2), (KEYBOARD_TOP_Y + TH_KEYBOARD_KEY_SIZE), idx == i);
     i++;
   }
 
-  while (i < KEYBOARD_ROW3_LIMIT(show_space)) {
-    input_keyboard_render_key(KEYBOARD_MAP[i], ((i - 19) * TH_KEYBOARD_KEY_SIZE), (KEYBOARD_TOP_Y + (TH_KEYBOARD_KEY_SIZE * 2)), idx == i);
+  while (i < KEYBOARD_ROW3_LIMIT) {
+    input_keyboard_render_key(KEYBOARD_MAP[i], ((i - KEYBOARD_ROW2_LIMIT)* TH_KEYBOARD_KEY_SIZE) + TH_KEYBOARD_KEY_SIZE, (KEYBOARD_TOP_Y + (TH_KEYBOARD_KEY_SIZE * 2)), idx == i);
     i++;
   }
 }
 
-static char input_keyboard(int *idx, bool show_space) {
+static char input_keyboard(int *idx, bool extended) {
   while(1) {
-    input_keyboard_render(*idx, show_space);
+    input_keyboard_render(*idx, extended);
 
     switch(ui_wait_keypress(portMAX_DELAY)) {
     case KEYPAD_KEY_UP:
@@ -224,33 +230,37 @@ static char input_keyboard(int *idx, bool show_space) {
         *idx -= KEYBOARD_ROW2_LEN;
       } else if (*idx >= KEYBOARD_ROW1_LIMIT) {
         *idx -= KEYBOARD_ROW1_LEN;
+      } else if (*idx >= KEYBOARD_ROW0_LIMIT) {
+        *idx -= KEYBOARD_ROW0_LEN;
       } else {
-        *idx = APP_MIN(*idx + KEYBOARD_ROW2_LIMIT, (KEYBOARD_ROW3_LIMIT(show_space) - 1));
+        *idx = APP_MIN(*idx + KEYBOARD_ROW2_LIMIT, (KEYBOARD_ROW3_LIMIT - 1));
       }
       break;
     case KEYPAD_KEY_LEFT:
       if ((*idx > KEYBOARD_ROW2_LIMIT) ||
           ((*idx > KEYBOARD_ROW1_LIMIT) && (*idx < KEYBOARD_ROW2_LIMIT)) ||
-          ((*idx > 0) && (*idx < KEYBOARD_ROW1_LIMIT))) {
+          ((*idx > KEYBOARD_ROW0_LIMIT) && (*idx < KEYBOARD_ROW1_LIMIT)) ||
+          ((*idx > 0) && (*idx < KEYBOARD_ROW0_LIMIT))) {
         (*idx)--;
       } else {
-        if (*idx == 0) {
+        if (*idx == KEYBOARD_ROW0_LIMIT) {
           *idx = KEYBOARD_ROW1_LIMIT - 1;
         } else if (*idx == KEYBOARD_ROW1_LIMIT) {
           *idx = KEYBOARD_ROW2_LIMIT - 1;
         } else {
-          *idx = KEYBOARD_ROW3_LIMIT(show_space) - 1;
+          *idx = KEYBOARD_ROW3_LIMIT - 1;
         }
       }
       break;
     case KEYPAD_KEY_RIGHT:
-      if ((*idx < (KEYBOARD_ROW1_LIMIT - 1)) ||
+      if ((*idx < (KEYBOARD_ROW0_LIMIT - 1)) ||
+          ((*idx < (KEYBOARD_ROW1_LIMIT - 1)) && (*idx >= KEYBOARD_ROW0_LIMIT)) ||
           ((*idx < (KEYBOARD_ROW2_LIMIT - 1)) && (*idx >= KEYBOARD_ROW1_LIMIT)) ||
-          ((*idx < (KEYBOARD_ROW3_LIMIT(show_space) - 1)) && (*idx >= KEYBOARD_ROW2_LIMIT))) {
+          ((*idx < (KEYBOARD_ROW3_LIMIT - 1)) && (*idx >= KEYBOARD_ROW2_LIMIT))) {
         (*idx)++;
       }  else {
         if (*idx == KEYBOARD_ROW1_LIMIT - 1) {
-          *idx = 0;
+          *idx = KEYBOARD_ROW0_LIMIT;
         } else if (*idx == KEYBOARD_ROW2_LIMIT - 1) {
           *idx = KEYBOARD_ROW1_LIMIT;
         } else {
@@ -259,10 +269,12 @@ static char input_keyboard(int *idx, bool show_space) {
       }
       break;
     case KEYPAD_KEY_DOWN:
-      if (*idx < KEYBOARD_ROW1_LIMIT) {
+      if (*idx < KEYBOARD_ROW0_LIMIT) {
+        *idx = APP_MIN(*idx + KEYBOARD_ROW0_LEN, (KEYBOARD_ROW1_LIMIT - 1));
+      } else if (*idx < KEYBOARD_ROW1_LIMIT) {
         *idx = APP_MIN(*idx + KEYBOARD_ROW1_LEN, (KEYBOARD_ROW2_LIMIT - 1));
       } else if (*idx < KEYBOARD_ROW2_LIMIT) {
-        *idx = APP_MIN(*idx + KEYBOARD_ROW2_LEN, (KEYBOARD_ROW3_LIMIT(show_space) - 1));
+        *idx = APP_MIN(*idx + KEYBOARD_ROW2_LEN, (KEYBOARD_ROW3_LIMIT - 1));
       } else {
         *idx -= KEYBOARD_ROW2_LIMIT;
       }
@@ -378,7 +390,7 @@ static app_err_t input_mnemonic_get_word(int i, uint16_t* idx) {
 
   char word[WORD_MAX_LEN];
   int len = 0;
-  int key_idx = 0;
+  int key_idx = KEYBOARD_FIRST_KEY;
 
   while(1) {
     input_mnemonic_render(word, len, *idx);
@@ -533,7 +545,7 @@ app_err_t input_string() {
   dialog_footer(TH_TITLE_HEIGHT);
 
   int len = 0;
-  int key_idx = 0;
+  int key_idx = KEYBOARD_EXT_FIRST_KEY;
 
   while(1) {
     input_render_editable_text_field(g_ui_cmd.params.input_string.out, len, 0);
