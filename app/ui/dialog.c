@@ -69,6 +69,29 @@ app_err_t dialog_footer(uint16_t yOff) {
   return screen_fill_area(&area, TH_COLOR_BG);
 }
 
+app_err_t dialog_nav_hints(icons_t left, icons_t right) {
+  screen_text_ctx_t ctx = {
+      .bg = TH_COLOR_BG,
+      .fg = TH_COLOR_FG,
+      .font = TH_FONT_ICONS,
+      .x = TH_DEF_LEFT_MARGIN,
+      .y = SCREEN_HEIGHT - TH_DEF_LEFT_MARGIN - 28
+  };
+
+  if (left != 0) {
+    screen_draw_char(&ctx, left);
+  }
+
+  ctx.fg = TH_COLOR_ACCENT;
+  ctx.x = SCREEN_WIDTH - 28 - TH_DEF_LEFT_MARGIN;
+
+  if (right != 0) {
+    screen_draw_char(&ctx, right);
+  }
+
+  return ERR_OK;
+}
+
 app_err_t dialog_margin(uint16_t yOff, uint16_t height) {
   screen_area_t area = { 0, yOff, SCREEN_WIDTH, height };
   return screen_fill_area(&area, TH_COLOR_BG);
@@ -204,6 +227,7 @@ app_err_t dialog_confirm_tx() {
   dialog_amount(&ctx, TX_FEE, &data, 18, chain.ticker);
 
   dialog_footer(ctx.y);
+  dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
 
   while(1) {
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
@@ -222,6 +246,7 @@ app_err_t dialog_confirm_tx() {
 static void dialog_draw_message(const char* txt) {
   dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
+  dialog_nav_hints(0, ICON_NAV_NEXT);
 
   screen_text_ctx_t ctx = {
       .font = TH_FONT_TEXT,
@@ -340,6 +365,7 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
     }
 
     screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], (len - offset), false, false);
+    dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
 
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
     case KEYPAD_KEY_LEFT:
@@ -440,6 +466,7 @@ app_err_t dialog_dev_auth() {
 app_err_t dialog_wrong_auth() {
   dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
+  dialog_nav_hints(0, ICON_NAV_NEXT);
 
   screen_text_ctx_t ctx = {
       .font = TH_FONT_TEXT,

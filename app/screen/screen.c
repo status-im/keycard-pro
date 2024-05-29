@@ -241,8 +241,8 @@ hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph) 
   return _screen_char_flush(&to_write, 1);
 }
 
-hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, char c) {
-  return screen_draw_glyph(ctx, screen_lookup_glyph(ctx->font, (uint32_t) c));
+hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, uint32_t c) {
+  return screen_draw_glyph(ctx, screen_lookup_glyph(ctx->font, c));
 }
 
 hal_err_t screen_draw_chars(screen_text_ctx_t* ctx, const char* str, int len) {

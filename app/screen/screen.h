@@ -71,7 +71,7 @@ const glyph_t *screen_lookup_glyph(const font_t* font, uint32_t c);
 hal_err_t screen_draw_glyph(const screen_text_ctx_t* ctx, const glyph_t* glyph);
 
 // High level API
-hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, char c);
+hal_err_t screen_draw_char(const screen_text_ctx_t* ctx, uint32_t c);
 hal_err_t screen_draw_chars(screen_text_ctx_t* ctx, const char* str, int len);
 hal_err_t screen_draw_string(screen_text_ctx_t* ctx, const char* str);
 hal_err_t screen_draw_centered_string(screen_text_ctx_t* ctx, const char* str);

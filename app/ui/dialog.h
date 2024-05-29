@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include "error.h"
 #include "screen/screen.h"
+#include "font/font.h"
 
 app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_height);
 app_err_t dialog_separator(uint16_t yOff);
@@ -11,6 +12,7 @@ app_err_t dialog_separator(uint16_t yOff);
 app_err_t dialog_title(const char* title);
 app_err_t dialog_title_colors(const char* title, uint16_t bg, uint16_t fg, uint16_t icon);
 app_err_t dialog_footer(uint16_t yOff);
+app_err_t dialog_nav_hints(icons_t left, icons_t right);
 app_err_t dialog_margin(uint16_t yOff, uint16_t height);
 
 app_err_t dialog_confirm_tx();
