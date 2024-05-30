@@ -126,6 +126,14 @@ static app_err_t input_pin_entry(const char* title, char* out, char* compare, bo
       prev_comparison = comparison_failed;
       comparison_failed = strncmp(out, compare, position) != 0;
     }
+
+    if (position == PIN_LEN) {
+      dialog_nav_hints(ICON_NAV_BACKSPACE, ICON_NAV_NEXT);
+    } else if (position > 0) {
+      dialog_nav_hints(ICON_NAV_BACKSPACE, 0);
+    } else {
+      dialog_nav_hints(dismissable ? ICON_NAV_CANCEL : 0, 0);
+    }
   }
 }
 

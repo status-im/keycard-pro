@@ -74,16 +74,28 @@ app_err_t dialog_nav_hints(icons_t left, icons_t right) {
       .bg = TH_COLOR_BG,
       .fg = TH_COLOR_FG,
       .font = TH_FONT_ICONS,
-      .x = TH_DEF_LEFT_MARGIN,
-      .y = SCREEN_HEIGHT - TH_DEF_LEFT_MARGIN - 28
+      .x = TH_NAV_HINT_LEFT_X,
+      .y = TH_NAV_HINT_TOP
   };
+
+  screen_area_t hint_area = {
+      .x = 0,
+      .y = SCREEN_HEIGHT - TH_NAV_HINT_HEIGHT,
+      .width = TH_NAV_HINT_WIDTH,
+      .height = TH_NAV_HINT_HEIGHT
+  };
+
+  screen_fill_area(&hint_area, TH_COLOR_BG);
 
   if (left != 0) {
     screen_draw_char(&ctx, left);
   }
 
   ctx.fg = TH_COLOR_ACCENT;
-  ctx.x = SCREEN_WIDTH - 28 - TH_DEF_LEFT_MARGIN;
+  ctx.x = TH_NAV_HINT_RIGHT_X;
+  hint_area.x = SCREEN_WIDTH - TH_NAV_HINT_WIDTH;
+
+  screen_fill_area(&hint_area, TH_COLOR_BG);
 
   if (right != 0) {
     screen_draw_char(&ctx, right);
