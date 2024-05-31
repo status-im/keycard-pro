@@ -12,10 +12,10 @@
 
 #define TX_CONFIRM_TIMEOUT 30000
 #define BIGNUM_STRING_LEN 84
+#define UINT32_STRING_LEN 11
 #define MAX_PAGE_COUNT 50
 #define MESSAGE_MAX_X (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN)
-#define MESSAGE_MAX_Y (SCREEN_HEIGHT - TH_TEXT_VERTICAL_MARGIN)
-#define MAX_MSG_TITLE_LEN 80
+#define MESSAGE_MAX_Y (SCREEN_HEIGHT - TH_NAV_HINT_HEIGHT)
 
 const uint8_t ETH_ERC20_SIGNATURE[] = { 0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 #define ETH_ERC20_SIGNATURE_LEN 16
@@ -97,6 +97,36 @@ app_err_t dialog_nav_hints_colors(icons_t left, icons_t right, uint16_t bg, uint
     screen_draw_char(&ctx, right);
   }
 
+  return ERR_OK;
+}
+
+static app_err_t dialog_pager(size_t page, size_t last_page) {
+  uint8_t page_indicator[UINT32_STRING_LEN * 2];
+  size_t total_len = 0;
+
+  uint8_t page_str[UINT32_STRING_LEN];
+  uint8_t* p = u32toa(page + 1, page_str, UINT32_STRING_LEN);
+  uint8_t p_len = strlen((char *) p);
+  memcpy(&page_indicator[total_len], p, p_len);
+  total_len += p_len;
+
+  page_indicator[total_len++] = '/';
+
+  p = u32toa(last_page + 1, page_str, UINT32_STRING_LEN);
+  p_len = strlen((char *) p);
+  memcpy(&page_indicator[total_len], p, p_len);
+  total_len += p_len;
+  page_indicator[total_len] = '\0';
+
+  screen_text_ctx_t ctx = {
+      .x = 0,
+      .y = SCREEN_HEIGHT - (TH_FONT_TITLE)->yAdvance,
+      .font = TH_FONT_TITLE,
+      .bg = TH_COLOR_BG,
+      .fg = TH_COLOR_FG,
+  };
+
+  screen_draw_centered_string(&ctx, (char*) page_indicator);
   return ERR_OK;
 }
 
@@ -254,7 +284,6 @@ app_err_t dialog_confirm_tx() {
 static void dialog_draw_message(const char* txt) {
   dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
-  dialog_nav_hints(0, ICON_NAV_NEXT);
 
   screen_text_ctx_t ctx = {
       .font = TH_FONT_TEXT,
@@ -269,30 +298,6 @@ static void dialog_draw_message(const char* txt) {
   ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
   ctx.y = (SCREEN_HEIGHT - ctx.y) / 2;
   screen_draw_text(&ctx, MESSAGE_MAX_X, SCREEN_HEIGHT, (uint8_t*) txt, len, false, true);
-}
-
-static inline void _dialog_paged_title(const char* base, char title[MAX_MSG_TITLE_LEN], size_t page, size_t last_page) {
-  size_t base_len = strlen(base);
-  assert(base_len < (MAX_MSG_TITLE_LEN - 9));
-
-  memcpy(title, base, base_len);
-  title[base_len++] = ' ';
-  title[base_len++] = '(';
-
-  uint8_t page_str[4];
-  uint8_t* p = u32toa(page + 1, page_str, 4);
-  uint8_t p_len = strlen((char *) p);
-  memcpy(&title[base_len], p, p_len);
-  base_len += p_len;
-
-  title[base_len++] = '/';
-
-  p = u32toa(last_page + 1, page_str, 4);
-  p_len = strlen((char *) p);
-  memcpy(&title[base_len], p, p_len);
-  base_len += p_len;
-  title[base_len++] = ')';
-  title[base_len] = '\0';
 }
 
 app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_domain_t* eip712) {
@@ -332,10 +337,8 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
 
   while(1) {
     size_t offset = pages[page];
-    char title[MAX_MSG_TITLE_LEN];
-    _dialog_paged_title(LSTR(eip712 ? EIP712_CONFIRM_TITLE : MSG_CONFIRM_TITLE), title, page, last_page);
 
-    dialog_title(title);
+    dialog_title(LSTR(eip712 ? EIP712_CONFIRM_TITLE : MSG_CONFIRM_TITLE));
 
     if (page == 0) {
       ctx.y = TH_TITLE_HEIGHT;
@@ -374,6 +377,7 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
 
     screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], (len - offset), false, false);
     dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
+    dialog_pager(page, last_page);
 
     switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
     case KEYPAD_KEY_LEFT:
@@ -413,7 +417,9 @@ app_err_t dialog_confirm_eip712() {
   return dialog_confirm_text_based(g_camera_fb[0], len, &domain);
 }
 
-static inline app_err_t dialog_wait_dismiss() {
+static app_err_t dialog_wait_dismiss() {
+  dialog_nav_hints(0, ICON_NAV_NEXT);
+
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {
     case KEYPAD_KEY_CONFIRM:
@@ -424,7 +430,9 @@ static inline app_err_t dialog_wait_dismiss() {
   }
 }
 
-static inline app_err_t dialog_wait_dismiss_cancellable() {
+static app_err_t dialog_wait_dismiss_cancellable() {
+  dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
+
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {
     case KEYPAD_KEY_CANCEL:
@@ -457,7 +465,6 @@ app_err_t dialog_info() {
 app_err_t dialog_prompt() {
   dialog_title(g_ui_cmd.params.prompt.title);
   dialog_footer(TH_TITLE_HEIGHT);
-  dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
 
   screen_text_ctx_t ctx = {
       .font = TH_FONT_TEXT,
@@ -486,7 +493,6 @@ app_err_t dialog_dev_auth() {
 app_err_t dialog_wrong_auth() {
   dialog_title("");
   dialog_footer(TH_TITLE_HEIGHT);
-  dialog_nav_hints(0, ICON_NAV_NEXT);
 
   screen_text_ctx_t ctx = {
       .font = TH_FONT_TEXT,
