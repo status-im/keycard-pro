@@ -123,7 +123,7 @@ static app_err_t dialog_pager(size_t page, size_t last_page) {
       .y = SCREEN_HEIGHT - (TH_FONT_TITLE)->yAdvance,
       .font = TH_FONT_TITLE,
       .bg = TH_COLOR_BG,
-      .fg = TH_COLOR_FG,
+      .fg = TH_COLOR_INACTIVE,
   };
 
   screen_draw_centered_string(&ctx, (char*) page_indicator);
