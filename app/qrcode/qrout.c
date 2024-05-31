@@ -13,8 +13,7 @@ app_err_t qrout_display(const char* str, const char* title, uint16_t max_y) {
   uint8_t qrcode[qrcodegen_BUFFER_LEN_MAX];
 
   dialog_title_colors(title, SCREEN_COLOR_WHITE, SCREEN_COLOR_BLACK, SCREEN_COLOR_BLACK);
-  screen_area_t bgarea = { 0, TH_TITLE_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT - TH_TITLE_HEIGHT };
-  screen_fill_area(&bgarea, SCREEN_COLOR_WHITE);
+  dialog_footer_colors(TH_TITLE_HEIGHT, SCREEN_COLOR_WHITE);
 
   if (!qrcodegen_encodeText(str, tmpBuf, qrcode, qrcodegen_Ecc_LOW, 1, 40, qrcodegen_Mask_AUTO, 1)) {
     return ERR_DATA;
@@ -32,6 +31,7 @@ app_err_t qrout_display(const char* str, const char* title, uint16_t max_y) {
   qrarea.y = TH_TITLE_HEIGHT + (((max_y - TH_TITLE_HEIGHT) - qrarea.height) / 2);
 
   screen_draw_qrcode(&qrarea, qrcode, qrsize, scale);
+  dialog_nav_hints_colors(0, ICON_NAV_NEXT, SCREEN_COLOR_WHITE, SCREEN_COLOR_BLACK);
 
   return ERR_OK;
 }
@@ -54,8 +54,6 @@ app_err_t qrout_display_ur() {
 
   while(1) {
     switch(ui_wait_keypress(pdMS_TO_TICKS(QR_DISPLAY_TIMEOUT))) {
-    case KEYPAD_KEY_CANCEL:
-    case KEYPAD_KEY_BACK:
     case KEYPAD_KEY_INVALID:
     case KEYPAD_KEY_CONFIRM:
       return ERR_OK;

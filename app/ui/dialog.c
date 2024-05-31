@@ -60,19 +60,15 @@ app_err_t dialog_title_colors(const char* title, uint16_t bg, uint16_t fg, uint1
   return screen_draw_glyph(&ctx, &ctx.font->glyph[i]) == HAL_SUCCESS? ERR_OK : ERR_HW;
 }
 
-app_err_t dialog_title(const char* title) {
-  return dialog_title_colors(title, TH_COLOR_TITLE_BG, TH_COLOR_TITLE_FG, TH_COLOR_TITLE_ICON_FG);
-}
-
-app_err_t dialog_footer(uint16_t yOff) {
+app_err_t dialog_footer_colors(uint16_t yOff, uint16_t bg) {
   screen_area_t area = { 0, yOff, SCREEN_WIDTH, SCREEN_HEIGHT - yOff };
-  return screen_fill_area(&area, TH_COLOR_BG);
+  return screen_fill_area(&area, bg);
 }
 
-app_err_t dialog_nav_hints(icons_t left, icons_t right) {
+app_err_t dialog_nav_hints_colors(icons_t left, icons_t right, uint16_t bg, uint16_t fg) {
   screen_text_ctx_t ctx = {
-      .bg = TH_COLOR_BG,
-      .fg = TH_COLOR_FG,
+      .bg = bg,
+      .fg = fg,
       .font = TH_FONT_ICONS,
       .x = TH_NAV_HINT_LEFT_X,
       .y = TH_NAV_HINT_TOP
@@ -85,7 +81,7 @@ app_err_t dialog_nav_hints(icons_t left, icons_t right) {
       .height = TH_NAV_HINT_HEIGHT
   };
 
-  screen_fill_area(&hint_area, TH_COLOR_BG);
+  screen_fill_area(&hint_area, bg);
 
   if (left != 0) {
     screen_draw_char(&ctx, left);
@@ -95,7 +91,7 @@ app_err_t dialog_nav_hints(icons_t left, icons_t right) {
   ctx.x = TH_NAV_HINT_RIGHT_X;
   hint_area.x = SCREEN_WIDTH - TH_NAV_HINT_WIDTH;
 
-  screen_fill_area(&hint_area, TH_COLOR_BG);
+  screen_fill_area(&hint_area, bg);
 
   if (right != 0) {
     screen_draw_char(&ctx, right);
@@ -417,7 +413,18 @@ app_err_t dialog_confirm_eip712() {
   return dialog_confirm_text_based(g_camera_fb[0], len, &domain);
 }
 
-static app_err_t dialog_wait_dismiss() {
+static inline app_err_t dialog_wait_dismiss() {
+  while(1) {
+    switch(ui_wait_keypress(portMAX_DELAY)) {
+    case KEYPAD_KEY_CONFIRM:
+      return ERR_OK;
+    default:
+      break;
+    }
+  }
+}
+
+static inline app_err_t dialog_wait_dismiss_cancellable() {
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {
     case KEYPAD_KEY_CANCEL:
@@ -450,6 +457,7 @@ app_err_t dialog_info() {
 app_err_t dialog_prompt() {
   dialog_title(g_ui_cmd.params.prompt.title);
   dialog_footer(TH_TITLE_HEIGHT);
+  dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
 
   screen_text_ctx_t ctx = {
       .font = TH_FONT_TEXT,
@@ -462,7 +470,7 @@ app_err_t dialog_prompt() {
   size_t len = strlen(g_ui_cmd.params.prompt.msg);
   screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, (uint8_t*) g_ui_cmd.params.prompt.msg, len, false, false);
 
-  return dialog_wait_dismiss();
+  return dialog_wait_dismiss_cancellable();
 }
 
 app_err_t dialog_dev_auth() {

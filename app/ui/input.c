@@ -132,7 +132,7 @@ static app_err_t input_pin_entry(const char* title, char* out, char* compare, bo
     } else if (position > 0) {
       dialog_nav_hints(ICON_NAV_BACKSPACE, 0);
     } else {
-      dialog_nav_hints(dismissable ? ICON_NAV_CANCEL : 0, 0);
+      dialog_nav_hints(dismissable ? ICON_NAV_BACK : 0, 0);
     }
   }
 }
