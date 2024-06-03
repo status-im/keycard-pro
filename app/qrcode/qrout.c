@@ -1,5 +1,6 @@
 #include "qrcodegen.h"
 #include "qrout.h"
+#include "crypto/util.h"
 #include "screen/screen.h"
 #include "ur/ur.h"
 #include "ui/dialog.h"
@@ -79,6 +80,15 @@ app_err_t qrout_display_address() {
   }
 
   screen_draw_centered_string(&ctx, g_ui_cmd.params.address.address);
+
+  ctx.x = 0;
+  ctx.y = SCREEN_HEIGHT - (TH_FONT_TITLE)->yAdvance;
+  ctx.font = TH_FONT_TITLE;
+
+  uint8_t index_buf[UINT32_STRING_LEN];
+  uint8_t* index_str = u32toa(*g_ui_cmd.params.address.index, index_buf, UINT32_STRING_LEN);
+
+  screen_draw_centered_string(&ctx, (char*) index_str);
 
   while(1) {
     switch(ui_wait_keypress(portMAX_DELAY)) {

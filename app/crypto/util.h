@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define UINT32_STRING_LEN 11
+
 extern const char* const HEX_DIGITS;
 
 uint32_t pad_iso9797_m1(uint8_t* data, uint8_t plen, uint32_t size);
