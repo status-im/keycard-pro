@@ -61,11 +61,17 @@ const menu_t menu_mainmenu = {
 };
 
 const menu_t menu_mnemonic = {
-  4, {
+  2, {
+    {MENU_MNEMO_IMPORT, NULL},
+    {MENU_MNEMO_GENERATE, NULL},
+  }
+};
+
+const menu_t menu_mnemonic_size = {
+  3, {
     {MENU_MNEMO_12WORDS, NULL},
     {MENU_MNEMO_18WORDS, NULL},
     {MENU_MNEMO_24WORDS, NULL},
-    {MENU_MNEMO_GENERATE, NULL},
   }
 };
 

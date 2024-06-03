@@ -210,27 +210,32 @@ void ui_seed_loaded() {
 }
 
 core_evt_t ui_read_mnemonic_len(uint32_t* len) {
-  i18n_str_id_t selected = MENU_MNEMO_12WORDS;
+  i18n_str_id_t mode_selected = MENU_MNEMO_IMPORT;
+  core_evt_t ret;
 
-  while (ui_menu(LSTR(MNEMO_TITLE), &menu_mnemonic, &selected, -1, 0) != CORE_EVT_UI_OK);
+  while(1) {
+    if (ui_menu(LSTR(MNEMO_TITLE), &menu_mnemonic, &mode_selected, -1, 0) == CORE_EVT_UI_OK) {
+      ret = mode_selected == MENU_MNEMO_IMPORT ? CORE_EVT_UI_OK : CORE_EVT_UI_CANCELLED;
 
-  switch(selected) {
-  case MENU_MNEMO_12WORDS:
-    *len = 12;
-    break;
-  case MENU_MNEMO_18WORDS:
-    *len = 18;
-    break;
-  case MENU_MNEMO_24WORDS:
-    *len = 24;
-    break;
-  case MENU_MNEMO_GENERATE:
-  default:
-    *len = 12;
-    return CORE_EVT_UI_CANCELLED;
+      i18n_str_id_t selected = MENU_MNEMO_12WORDS;
+      if (ui_menu(LSTR(mode_selected), &menu_mnemonic_size, &selected, -1, 0) == CORE_EVT_UI_OK) {
+        switch(selected) {
+        case MENU_MNEMO_12WORDS:
+          *len = 12;
+          break;
+        case MENU_MNEMO_18WORDS:
+          *len = 18;
+          break;
+        case MENU_MNEMO_24WORDS:
+        default:
+          *len = 24;
+          break;
+        }
+
+        return ret;
+      }
+    }
   }
-
-  return CORE_EVT_UI_OK;
 }
 
 core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len) {

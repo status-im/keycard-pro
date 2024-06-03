@@ -121,11 +121,12 @@ const char *const i18n_english_strings[] = {
     "Do you want to upgrade your firmware?\n\n",
 
     // Mnemonic input
-    "Seed loading",
-    "I have a 12 word seed",
-    "I have a 18 word seed",
-    "I have a 24 word seed",
-    "I want a new seed",
+    "Add key pair",
+    "12 words",
+    "18 words",
+    "24 words",
+    "Import recovery phrase",
+    "Generate new key pair",
     "Enter word #",
     "Write down and keep safe!",
     "Word does not match, please try again.",
