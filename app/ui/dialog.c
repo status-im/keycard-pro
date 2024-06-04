@@ -99,7 +99,7 @@ app_err_t dialog_nav_hints_colors(icons_t left, icons_t right, uint16_t bg, uint
   return ERR_OK;
 }
 
-static app_err_t dialog_pager(size_t page, size_t last_page) {
+app_err_t dialog_pager(size_t page, size_t last_page) {
   uint8_t page_indicator[UINT32_STRING_LEN * 2];
   size_t total_len = 0;
 

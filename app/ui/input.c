@@ -466,43 +466,54 @@ static void input_render_mnemonic_word(int word_num, const char* str, screen_are
 
 static app_err_t input_backup_show_mnemonic() {
   dialog_title(LSTR(MNEMO_BACKUP_TITLE));
-  dialog_footer(TH_TITLE_HEIGHT);
-
-  //TODO: change if we need to support different lengths
-  if (g_ui_cmd.params.mnemo.len != 12) {
-    return ERR_CANCEL;
-  }
-
-  screen_area_t field_area = {
-      .y = TH_TITLE_HEIGHT + TH_MNEMONIC_TOP_MARGIN,
-      .width = TH_MNEMONIC_FIELD_WIDTH,
-      .height = TH_TEXT_FIELD_HEIGHT
-  };
-
-  for (int i = 0; i < 4; i++) {
-    field_area.x = TH_MNEMONIC_LEFT_MARGIN;
-
-    for (int j = 0; j < 3; j++) {
-      int word_num = (i * 3) + j;
-      const char* word = BIP39_WORDLIST_ENGLISH[g_ui_cmd.params.mnemo.indexes[word_num]];
-      input_render_mnemonic_word(word_num + 1, word, &field_area, strlen(word));
-      field_area.x += TH_MNEMONIC_FIELD_WIDTH + TH_MNEMONIC_LEFT_MARGIN;
-    }
-
-    field_area.y += TH_TEXT_FIELD_HEIGHT + TH_MNEMONIC_TOP_MARGIN;
-  }
+  int page = 0;
+  int last_page = g_ui_cmd.params.mnemo.len == 12 ? 0 : 1;
 
   while(1) {
+    dialog_footer(TH_TITLE_HEIGHT);
+
+    screen_area_t field_area = {
+        .y = TH_TITLE_HEIGHT + TH_MNEMONIC_TOP_MARGIN,
+        .width = TH_MNEMONIC_FIELD_WIDTH,
+        .height = TH_TEXT_FIELD_HEIGHT
+    };
+
+    for (int i = 0; i < 6; i++) {
+      field_area.x = TH_MNEMONIC_LEFT_MARGIN;
+
+      for (int j = 0; j < 2; j++) {
+        int word_num = (page * 12) + ((i * 2) + j);
+        const char* word = BIP39_WORDLIST_ENGLISH[g_ui_cmd.params.mnemo.indexes[word_num]];
+        input_render_mnemonic_word(word_num + 1, word, &field_area, strlen(word));
+        field_area.x += TH_MNEMONIC_FIELD_WIDTH + TH_MNEMONIC_LEFT_MARGIN;
+      }
+
+      field_area.y += TH_TEXT_FIELD_HEIGHT + TH_MNEMONIC_TOP_MARGIN;
+    }
+
+    dialog_nav_hints(ICON_NAV_BACK, page == last_page ? ICON_NAV_NEXT : 0);
+
+    if (last_page > 0) {
+      dialog_pager(page, last_page);
+    }
+
     switch(ui_wait_keypress(portMAX_DELAY)) {
-    case KEYPAD_KEY_CANCEL:
-      return ERR_CANCEL;
-    case KEYPAD_KEY_BACK:
-      if (g_ui_ctx.keypad.last_key_long) {
-        return ERR_CANCEL;
+    case KEYPAD_KEY_LEFT:
+      page = 0;
+      break;
+    case KEYPAD_KEY_RIGHT:
+      if (last_page > 0) {
+        page = 1;
       }
       break;
+    case KEYPAD_KEY_CANCEL:
+    case KEYPAD_KEY_BACK:
+      return ERR_CANCEL;
     case KEYPAD_KEY_CONFIRM:
-      return ERR_OK;
+      if (page == last_page) {
+        return ERR_OK;
+      }
+      break;
     default:
       break;
     }

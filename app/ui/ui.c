@@ -214,11 +214,19 @@ core_evt_t ui_read_mnemonic_len(uint32_t* len) {
   core_evt_t ret;
 
   while(1) {
+    const menu_t* word_menu;
+
     if (ui_menu(LSTR(MNEMO_TITLE), &menu_mnemonic, &mode_selected, -1, 0) == CORE_EVT_UI_OK) {
-      ret = mode_selected == MENU_MNEMO_IMPORT ? CORE_EVT_UI_OK : CORE_EVT_UI_CANCELLED;
+      if (mode_selected == MENU_MNEMO_IMPORT) {
+        ret = CORE_EVT_UI_OK;
+        word_menu = &menu_mnemonic_import;
+      } else {
+        ret = CORE_EVT_UI_CANCELLED;
+        word_menu = &menu_mnemonic_generate;
+      }
 
       i18n_str_id_t selected = MENU_MNEMO_12WORDS;
-      if (ui_menu(LSTR(mode_selected), &menu_mnemonic_size, &selected, -1, 0) == CORE_EVT_UI_OK) {
+      if (ui_menu(LSTR(mode_selected), word_menu, &selected, -1, 0) == CORE_EVT_UI_OK) {
         switch(selected) {
         case MENU_MNEMO_12WORDS:
           *len = 12;
@@ -239,6 +247,8 @@ core_evt_t ui_read_mnemonic_len(uint32_t* len) {
 }
 
 core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len) {
+  ui_info(LSTR(MENU_BACKUP_PROMPT), 1);
+
   g_ui_cmd.type = UI_CMD_BACKUP_MNEMO;
   g_ui_cmd.params.mnemo.indexes = indexes;
   g_ui_cmd.params.mnemo.len = len;

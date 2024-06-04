@@ -129,6 +129,7 @@ const char *const i18n_english_strings[] = {
     "Generate new key pair",
     "Enter word #",
     "Write down and keep safe!",
+    "Prepare your pen and paper",
     "Word does not match, please try again.",
 
     // Device verification

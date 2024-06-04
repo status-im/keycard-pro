@@ -134,6 +134,7 @@ typedef enum {
   MENU_MNEMO_GENERATE,
   MNEMO_WORD_TITLE,
   MNEMO_BACKUP_TITLE,
+  MENU_BACKUP_PROMPT,
   MNENO_MISMATCH,
 
   // Device verification
