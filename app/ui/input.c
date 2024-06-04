@@ -533,7 +533,7 @@ static app_err_t input_backup_confirm_mnemonic(uint8_t positions[WORDS_TO_CONFIR
       if (idx == g_ui_cmd.params.mnemo.indexes[positions[i]]) {
         i++;
       } else {
-        dialog_internal_info(LSTR(MNENO_MISMATCH));
+        dialog_internal_info(LSTR(MNEMO_MISMATCH));
       }
     } else if (i > 0) {
       i--;
@@ -549,8 +549,13 @@ app_err_t input_backup_mnemonic() {
   uint8_t positions[WORDS_TO_CONFIRM];
 
   do {
+mnemo_backup_start:
     if (input_backup_show_mnemonic() == ERR_CANCEL) {
       return ERR_CANCEL;
+    }
+
+    if (dialog_internal_prompt(LSTR(MNEMO_BACKUP_TITLE), LSTR(MNEMO_VERIFY_PROMPT)) == ERR_CANCEL) {
+      goto mnemo_backup_start;
     }
 
     random_unique_in_range(g_ui_cmd.params.mnemo.len, WORDS_TO_CONFIRM, positions);

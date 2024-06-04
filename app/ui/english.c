@@ -128,9 +128,10 @@ const char *const i18n_english_strings[] = {
     "Import recovery phrase",
     "Generate new key pair",
     "Enter word #",
-    "Write down and keep safe!",
+    "Write down and keep safe",
     "Prepare your pen and paper",
-    "Word does not match, please try again.",
+    "Wrong answer",
+    "Ensure your recovery phrase is written down and stored securely. You will need to complete a quiz to confirm the integrity of your backup.",
 
     // Device verification
     "Invalid verification QR. Please check the website you are on and try again.",

@@ -22,6 +22,7 @@ app_err_t dialog_confirm_eip712();
 
 app_err_t dialog_internal_info(const char* msg);
 app_err_t dialog_info();
+app_err_t dialog_internal_prompt(const char* title, const char* msg);
 app_err_t dialog_prompt();
 app_err_t dialog_dev_auth();
 

@@ -247,7 +247,7 @@ core_evt_t ui_read_mnemonic_len(uint32_t* len) {
 }
 
 core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len) {
-  ui_info(LSTR(MENU_BACKUP_PROMPT), 1);
+  ui_info(LSTR(MNEMO_BACKUP_PROMPT), 1);
 
   g_ui_cmd.type = UI_CMD_BACKUP_MNEMO;
   g_ui_cmd.params.mnemo.indexes = indexes;
