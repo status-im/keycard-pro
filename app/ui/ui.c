@@ -1,8 +1,14 @@
 #include "app_tasks.h"
 #include "core/core.h"
+#include "crypto/rand.h"
+#include "crypto/bip39.h"
+#include "mem.h"
 #include "error.h"
 #include "ui.h"
 #include "ui_internal.h"
+
+#define MNEMO_WORDS_TO_CONFIRM 4
+#define MNEMO_CHOICE_COUNT 3
 
 core_evt_t ui_qrscan(ur_type_t type, void* out) {
   g_ui_cmd.type = UI_CMD_QRSCAN;
@@ -245,15 +251,66 @@ core_evt_t ui_read_mnemonic_len(uint32_t* len) {
     }
   }
 }
-
-core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len) {
-  ui_info(LSTR(MNEMO_BACKUP_PROMPT), 1);
-
-  g_ui_cmd.type = UI_CMD_BACKUP_MNEMO;
+core_evt_t ui_display_mnemonic(uint16_t* indexes, uint32_t len) {
+  g_ui_cmd.type = UI_CMD_DISPLAY_MNEMO;
   g_ui_cmd.params.mnemo.indexes = indexes;
   g_ui_cmd.params.mnemo.len = len;
 
   return ui_signal_wait(0);
+}
+
+static app_err_t ui_backup_confirm_mnemonic(uint16_t* indexes, uint32_t len) {
+  const char* const* tmp = *i18n_strings;
+
+  if (ui_prompt(LSTR(MNEMO_BACKUP_TITLE), LSTR(MNEMO_VERIFY_PROMPT)) != CORE_EVT_UI_OK) {
+    return ERR_OK;
+  }
+
+  uint8_t positions[MNEMO_WORDS_TO_CONFIRM];
+  random_unique_in_range(len, MNEMO_WORDS_TO_CONFIRM, positions);
+
+  const char* base_title = LSTR(MNEMO_WORD_TITLE);
+
+  menu_t* choices = (menu_t*)g_mem_heap;
+  choices->len = MNEMO_CHOICE_COUNT;
+
+  for (int i = 0; i < MNEMO_WORDS_TO_CONFIRM; i++) {
+    for (int j = 0; j < MNEMO_CHOICE_COUNT; j++) {
+      choices->entries[j].label_id = random_uniform(BIP39_WORD_COUNT);
+      choices->entries[j].submenu = NULL;
+    }
+
+    choices->entries[random_uniform(MNEMO_CHOICE_COUNT)].label_id = indexes[positions[i]];
+
+    i18n_str_id_t selected = choices->entries[0].label_id;
+
+    i18n_set_strings(BIP39_WORDLIST_ENGLISH);
+    core_evt_t err = ui_menu(base_title, choices, &selected, -1, 0);
+    i18n_set_strings(tmp);
+
+    if (err != CORE_EVT_UI_OK) {
+      return ERR_CANCEL;
+    }
+
+    if (selected != indexes[positions[i]]) {
+      //TODO: add warning
+      i--;
+    }
+  }
+
+  return ERR_OK;
+}
+
+core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len) {
+  ui_info(LSTR(MNEMO_BACKUP_PROMPT), 1);
+
+  do {
+    if (ui_display_mnemonic(indexes, len) == CORE_EVT_UI_CANCELLED) {
+      return CORE_EVT_UI_CANCELLED;
+    }
+  } while(ui_backup_confirm_mnemonic(indexes, len) != ERR_OK);
+
+  return ERR_OK;
 }
 
 core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t len) {

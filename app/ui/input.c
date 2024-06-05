@@ -20,7 +20,6 @@
 #define KEY_ESCAPE 0x1b
 
 #define WORD_MAX_LEN 8
-#define WORDS_TO_CONFIRM 4
 
 #define KEYBOARD_TOP_Y (SCREEN_HEIGHT - (TH_KEYBOARD_KEY_SIZE * 3))
 
@@ -464,7 +463,7 @@ static void input_render_mnemonic_word(int word_num, const char* str, screen_are
   screen_draw_chars(&ctx, str, len);
 }
 
-static app_err_t input_backup_show_mnemonic() {
+app_err_t input_display_mnemonic() {
   dialog_title(LSTR(MNEMO_BACKUP_TITLE));
   int page = 0;
   int last_page = g_ui_cmd.params.mnemo.len == 12 ? 0 : 1;
@@ -518,50 +517,6 @@ static app_err_t input_backup_show_mnemonic() {
       break;
     }
   }
-}
-
-static app_err_t input_backup_confirm_mnemonic(uint8_t positions[WORDS_TO_CONFIRM]) {
-  dialog_footer(TH_TITLE_HEIGHT);
-
-  int i = 0;
-
-  while (i < WORDS_TO_CONFIRM) {
-    uint16_t idx = UINT16_MAX;
-    app_err_t err = input_mnemonic_get_word(positions[i], &idx);
-
-    if (err == ERR_OK) {
-      if (idx == g_ui_cmd.params.mnemo.indexes[positions[i]]) {
-        i++;
-      } else {
-        dialog_internal_info(LSTR(MNEMO_MISMATCH));
-      }
-    } else if (i > 0) {
-      i--;
-    } else {
-      return ERR_CANCEL;
-    }
-  }
-
-  return ERR_OK;
-}
-
-app_err_t input_backup_mnemonic() {
-  uint8_t positions[WORDS_TO_CONFIRM];
-
-  do {
-mnemo_backup_start:
-    if (input_backup_show_mnemonic() == ERR_CANCEL) {
-      return ERR_CANCEL;
-    }
-
-    if (dialog_internal_prompt(LSTR(MNEMO_BACKUP_TITLE), LSTR(MNEMO_VERIFY_PROMPT)) == ERR_CANCEL) {
-      goto mnemo_backup_start;
-    }
-
-    random_unique_in_range(g_ui_cmd.params.mnemo.len, WORDS_TO_CONFIRM, positions);
-  } while(input_backup_confirm_mnemonic(positions) != ERR_OK);
-
-  return ERR_OK;
 }
 
 app_err_t input_string() {

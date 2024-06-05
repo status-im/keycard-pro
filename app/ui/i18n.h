@@ -171,6 +171,8 @@ typedef enum {
   // Hints
   HINT_CANCEL,
   HINT_CONFIRM,
+
+  INVALID_STR = 0xffff
 } i18n_str_id_t;
 
 #define LSTR(__ID__) (*i18n_strings)[__ID__]

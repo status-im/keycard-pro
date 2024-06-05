@@ -181,7 +181,7 @@ void menu_render(const menu_t* menu, const char* title, uint8_t selected, enum m
   }
 }
 
-static uint8_t menu_scan(const menu_t* menu, const char* title, uint8_t to_find, const menu_t* menus[MENU_MAX_DEPTH], const char* titles[MENU_MAX_DEPTH], uint8_t selected[MENU_MAX_DEPTH], uint8_t depth) {
+static uint8_t menu_scan(const menu_t* menu, const char* title, i18n_str_id_t to_find, const menu_t* menus[MENU_MAX_DEPTH], const char* titles[MENU_MAX_DEPTH], uint8_t selected[MENU_MAX_DEPTH], uint8_t depth) {
   int found = -1;
   int res = 0xff;
 

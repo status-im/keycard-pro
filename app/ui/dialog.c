@@ -445,11 +445,6 @@ static app_err_t dialog_wait_dismiss_cancellable() {
   }
 }
 
-app_err_t dialog_internal_info(const char* msg) {
-  dialog_draw_message(msg);
-  return dialog_wait_dismiss();
-}
-
 app_err_t dialog_info() {
   dialog_draw_message(g_ui_cmd.params.info.msg);
 
@@ -461,8 +456,8 @@ app_err_t dialog_info() {
   return dialog_wait_dismiss();
 }
 
-app_err_t dialog_internal_prompt(const char* title, const char* msg) {
-  dialog_title(title);
+app_err_t dialog_prompt() {
+  dialog_title(g_ui_cmd.params.prompt.title);
   dialog_footer(TH_TITLE_HEIGHT);
 
   screen_text_ctx_t ctx = {
@@ -473,14 +468,10 @@ app_err_t dialog_internal_prompt(const char* title, const char* msg) {
       .y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN
   };
 
-  size_t len = strlen(msg);
-  screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, (uint8_t*) msg, len, false, false);
+  size_t len = strlen(g_ui_cmd.params.prompt.msg);
+  screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, (uint8_t*) g_ui_cmd.params.prompt.msg, len, false, false);
 
   return dialog_wait_dismiss_cancellable();
-}
-
-app_err_t dialog_prompt() {
-  return dialog_internal_prompt(g_ui_cmd.params.prompt.title, g_ui_cmd.params.prompt.msg);
 }
 
 app_err_t dialog_dev_auth() {
