@@ -1,6 +1,7 @@
 #include "settings.h"
 #include "storage/fs.h"
 #include "ui/ui.h"
+#include "ui/i18n.h"
 #include "usb/usb.h"
 
 #include <string.h>
@@ -20,6 +21,7 @@ fs_action_t _settings_match_settings(void* ctx, fs_entry_t* entry) {
 }
 
 void settings_load() {
+  i18n_set_strings(i18n_english_strings);
   _settings_entry = (struct settings_entry*) fs_find(_settings_match_settings, NULL);
 
   if (!_settings_entry) {

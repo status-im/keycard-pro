@@ -1,6 +1,7 @@
 #ifndef __I18N__
 #define __I18N__
 
+extern const char** const i18n_strings[];
 extern const char *const i18n_english_strings[];
 
 typedef enum {
@@ -172,7 +173,8 @@ typedef enum {
   HINT_CONFIRM,
 } i18n_str_id_t;
 
-//TODO: replace with proper lookup
-#define LSTR(__ID__) i18n_english_strings[__ID__]
+#define LSTR(__ID__) (*i18n_strings)[__ID__]
+
+void i18n_set_strings(const char *const strings[]);
 
 #endif
