@@ -27,6 +27,7 @@ core_evt_t ui_display_ur_qr(const char* title, const uint8_t* data, uint32_t len
 core_evt_t ui_display_address_qr(const char* address, uint32_t* index);
 core_evt_t ui_info(const char* msg, uint8_t dismissable);
 core_evt_t ui_prompt(const char* title, const char* msg);
+core_evt_t ui_wrong_auth(const char* msg, uint8_t retries);
 
 void ui_card_inserted();
 void ui_card_removed();

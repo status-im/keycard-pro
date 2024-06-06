@@ -23,7 +23,7 @@ const uint8_t KEYCARD_DEFAULT_PSK[] = {0x67, 0x5d, 0xea, 0xbb, 0x0d, 0x7c, 0x72,
 
 static void keycard_random_puk(uint8_t puk[KEYCARD_PUK_LEN]) {
   for (int i = 0; i < KEYCARD_PUK_LEN; i++) {
-    puk[i] = '0' + random_uniform(9);
+    puk[i] = '0' + random_uniform(10);
   }
 }
 

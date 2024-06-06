@@ -321,6 +321,7 @@ static void input_render_text_field(const char* str, screen_area_t* field_area, 
   screen_draw_chars(&ctx, &str[len], suggestion_len);
 }
 
+
 static void input_mnemonic_title(uint8_t i) {
   const char* base_title = LSTR(MNEMO_WORD_TITLE);
   int base_len = strlen(base_title);

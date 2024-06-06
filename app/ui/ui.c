@@ -7,7 +7,7 @@
 #include "ui.h"
 #include "ui_internal.h"
 
-#define MNEMO_WORDS_TO_CONFIRM 4
+#define MNEMO_WORDS_TO_CONFIRM 6
 #define MNEMO_CHOICE_COUNT 3
 
 core_evt_t ui_qrscan(ur_type_t type, void* out) {
@@ -79,6 +79,13 @@ core_evt_t ui_prompt(const char* title, const char* msg) {
   return ui_signal_wait(0);
 }
 
+core_evt_t ui_wrong_auth(const char* msg, uint8_t retries) {
+  g_ui_cmd.type = UI_CMD_WRONG_AUTH;
+  g_ui_cmd.params.wrong_auth.msg = msg;
+  g_ui_cmd.params.wrong_auth.retries = retries;
+  return ui_signal_wait(0);
+}
+
 void ui_card_inserted() {
 
 }
@@ -102,7 +109,6 @@ void ui_keycard_old_card() {
 }
 
 void ui_keycard_not_initialized() {
-  ui_info(LSTR(INFO_NEW_CARD), 1);
 }
 
 void ui_keycard_init_failed() {
@@ -140,20 +146,14 @@ void ui_keycard_puk_ok() {
 
 void ui_keycard_wrong_pin(uint8_t retries) {
   if (retries > 0) {
-    g_ui_cmd.type = UI_CMD_WRONG_AUTH;
-    g_ui_cmd.params.wrong_auth.msg = LSTR(PIN_WRONG_WARNING);
-    g_ui_cmd.params.wrong_auth.retries = retries;
-    ui_signal_wait(0);
+    ui_wrong_auth(LSTR(PIN_WRONG_WARNING), retries);
   } else {
     ui_info(LSTR(INFO_KEYCARD_BLOCKED), 1);
   }
 }
 
 void ui_keycard_wrong_puk(uint8_t retries) {
-  g_ui_cmd.type = UI_CMD_WRONG_AUTH;
-  g_ui_cmd.params.wrong_auth.msg = LSTR(PUK_WRONG_WARNING);
-  g_ui_cmd.params.wrong_auth.retries = retries;
-  ui_signal_wait(0);
+  ui_wrong_auth(LSTR(PUK_WRONG_WARNING), retries);
 }
 
 core_evt_t ui_keycard_not_genuine() {
@@ -269,33 +269,79 @@ static app_err_t ui_backup_confirm_mnemonic(uint16_t* indexes, uint32_t len) {
   uint8_t positions[MNEMO_WORDS_TO_CONFIRM];
   random_unique_in_range(len, MNEMO_WORDS_TO_CONFIRM, positions);
 
-  const char* base_title = LSTR(MNEMO_WORD_TITLE);
+  const char* base_title = LSTR(MNEMO_WORD_BACKUP_TITLE);
+  size_t base_len = strlen(base_title);
+  char title[strlen(base_title) + 4];
+  memcpy(title, base_title, base_len);
+  title[base_len + 2] = '\0';
 
   menu_t* choices = (menu_t*)g_mem_heap;
   choices->len = MNEMO_CHOICE_COUNT;
 
+  int retries = 3;
+
   for (int i = 0; i < MNEMO_WORDS_TO_CONFIRM; i++) {
+    uint8_t pos = positions[i] + 1;
+
+    if (pos > 9) {
+      title[base_len] = (pos / 10) + '0';
+      title[base_len+1] = (pos % 10) + '0';
+    } else {
+      title[base_len] = (pos % 10) + '0';
+      title[base_len+1] = '\0';
+    }
+
+    bool correct_included = false;
+
     for (int j = 0; j < MNEMO_CHOICE_COUNT; j++) {
-      choices->entries[j].label_id = random_uniform(BIP39_WORD_COUNT);
       choices->entries[j].submenu = NULL;
+
+      bool duplicate;
+
+      do {
+        duplicate = false;
+        choices->entries[j].label_id = random_uniform(BIP39_WORD_COUNT);
+        for(int k = 0; k < j; k++) {
+          if (choices->entries[j].label_id == choices->entries[k].label_id) {
+            duplicate = true;
+            break;
+          }
+        }
+      } while(duplicate);
+
+      if (choices->entries[j].label_id == indexes[pos - 1]) {
+        correct_included = true;
+      }
     }
 
-    choices->entries[random_uniform(MNEMO_CHOICE_COUNT)].label_id = indexes[positions[i]];
-
-    i18n_str_id_t selected = choices->entries[0].label_id;
-
-    i18n_set_strings(BIP39_WORDLIST_ENGLISH);
-    core_evt_t err = ui_menu(base_title, choices, &selected, -1, 0);
-    i18n_set_strings(tmp);
-
-    if (err != CORE_EVT_UI_OK) {
-      return ERR_CANCEL;
+    if (!correct_included) {
+      choices->entries[random_uniform(MNEMO_CHOICE_COUNT)].label_id = indexes[pos - 1];
     }
 
-    if (selected != indexes[positions[i]]) {
-      //TODO: add warning
-      i--;
-    }
+    bool correct = false;
+
+    do {
+      i18n_str_id_t selected = choices->entries[0].label_id;
+
+      i18n_set_strings(BIP39_WORDLIST_ENGLISH);
+      core_evt_t err = ui_menu(title, choices, &selected, -1, 0);
+      i18n_set_strings(tmp);
+
+      if (err != CORE_EVT_UI_OK) {
+        return ERR_CANCEL;
+      }
+
+      if (selected != indexes[pos - 1]) {
+        if (--retries == 0) {
+          ui_info(LSTR(MNEMO_MISMATCH_LIMIT), 1);
+          return ERR_CANCEL;
+        } else {
+          ui_wrong_auth(LSTR(MNEMO_MISMATCH), retries);
+        }
+      } else {
+        correct = true;
+      }
+    } while(!correct);
   }
 
   return ERR_OK;
@@ -310,7 +356,7 @@ core_evt_t ui_backup_mnemonic(uint16_t* indexes, uint32_t len) {
     }
   } while(ui_backup_confirm_mnemonic(indexes, len) != ERR_OK);
 
-  return ERR_OK;
+  return CORE_EVT_UI_OK;
 }
 
 core_evt_t ui_read_mnemonic(uint16_t* indexes, uint32_t len) {

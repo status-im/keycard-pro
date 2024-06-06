@@ -22,6 +22,7 @@
  */
 
 #include "rand.h"
+#include "common.h"
 
 uint32_t random32(void) {
   uint32_t val;
@@ -30,16 +31,17 @@ uint32_t random32(void) {
   return val;
 }
 
+// Result in range [0-n)
 uint32_t random_uniform(uint32_t n) {
   uint32_t x = 0, max = 0xFFFFFFFF - (0xFFFFFFFF % n);
   while ((x = random32()) >= max)
     ;
-  return x / (max / n);
+  return APP_MIN(x / (max / n), n - 1);
 }
 
 void random_unique_in_range(uint8_t max, uint8_t count, uint8_t* out) {
-  assert(max < 32);
-  assert(count < max);
+  assert(max <= 32);
+  assert(count <= max);
 
   uint32_t selected = 0;
   while(__builtin_popcount(selected) < count) {

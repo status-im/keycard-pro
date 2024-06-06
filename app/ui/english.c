@@ -100,7 +100,6 @@ const char *const i18n_english_strings[] = {
     "The inserted card does not appear to be a Keycard. Please replace it with a Keycard",
     "Failed to verify genuineness of this card. Do not press OK unless you loaded a custom Keycard applet on this card yourself",
     "This Keycard has an old version of the applet installed. Please replace it with a newer one",
-    "We will now proceed initializing your Keycard.\n\nYou will be required to choose a PIN for your card.\n\nPress OK to continue.",
     "You can't connect this Keycard to new devices because all pairing slots are full.\nPlease use it with a device with which you used it previously or factory reset the card.",
     "This QR is not for this key pair.\nTry again using a different Keycard.",
     "The content of this QR is malformed or unsupported. Please generate a new one.",
@@ -128,9 +127,11 @@ const char *const i18n_english_strings[] = {
     "Import recovery phrase",
     "Generate new key pair",
     "Enter word #",
+    "Select word #",
     "Write down and keep safe",
     "Prepare your pen and paper",
     "Wrong answer",
+    "Recovery phrase was incorrectly written",
     "Ensure your recovery phrase is written down and stored securely. You will need to complete a quiz to confirm the integrity of your backup.",
 
     // Device verification
