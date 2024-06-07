@@ -7,7 +7,7 @@
 #include "ui.h"
 #include "ui_internal.h"
 
-#define MNEMO_WORDS_TO_CONFIRM 6
+#define MNEMO_WORDS_TO_CONFIRM 4
 #define MNEMO_CHOICE_COUNT 3
 
 core_evt_t ui_qrscan(ur_type_t type, void* out) {
