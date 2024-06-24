@@ -372,7 +372,53 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
 
     __DECL_SHA3_CTX();
 
-    keccak_Update(sha3, (uint8_t*) &ctx->json[ctx->tokens[field_val].start], ctx->tokens[field_val].end - ctx->tokens[field_val].start);
+    for (int i = ctx->tokens[field_val].start; i < ctx->tokens[field_val].end; i++) {
+      char c = ctx->json[i];
+      if (c == '\\') {
+        c = ctx->json[++i];
+        switch(c) {
+        case 'b':
+          c = '\b';
+          break;
+        case 'f':
+          c = '\f';
+          break;
+        case 'n':
+          c = '\n';
+          break;
+        case 'r':
+          c = '\r';
+          break;
+        case 't':
+          c = '\t';
+          break;
+        case 'u':
+          uint16_t codepoint;
+          base16_decode(&ctx->json[++i], (uint8_t*) &codepoint, 4);
+          i += 3;
+          codepoint = rev16(codepoint);
+          if (codepoint < 0x80) {
+            c = codepoint & 0x7f;
+          } else if (codepoint < 0x0800) {
+            c = 0xc0 | (codepoint >> 6);
+            keccak_Update(sha3, (uint8_t*) &c, 1);
+            c = 0x80 | (codepoint & 0x3f);
+          } else {
+            c = 0xe0 | (codepoint >> 12);
+            keccak_Update(sha3, (uint8_t*) &c, 1);
+            c = 0x80 | (codepoint >> 6);
+            keccak_Update(sha3, (uint8_t*) &c, 1);
+            c = 0x80 | (uint8_t) (codepoint & 0x3f);
+          }
+          break;
+        default:
+          break;
+        }
+      }
+
+      keccak_Update(sha3, (uint8_t*) &c, 1);
+    }
+
     keccak_Final(sha3, out);
   } else if (field_type->len == 5 && !strncmp(field_type->str, "bytes", 5)) {
     if (ctx->tokens[field_val].type != JSMN_STRING) {
