@@ -37,7 +37,13 @@ app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
 }
 
 app_err_t qrscan_deserialize(ur_t* ur) {
-  if (ur->type != g_ui_cmd.params.qrscan.type) {
+  if (g_ui_cmd.params.qrscan.type == UR_ANY_TX) {
+    if (ur->type == ETH_SIGN_REQUEST || ur->type == CRYPTO_PSBT) {
+      g_ui_cmd.params.qrscan.type = ur->type;
+    } else {
+      return ERR_DATA;
+    }
+  } else if (ur->type != g_ui_cmd.params.qrscan.type) {
     return ERR_DATA;
   }
 

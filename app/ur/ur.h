@@ -19,6 +19,7 @@ typedef enum {
   FW_UPDATE = 11,
   CRYPTO_PSBT = 14,
   CRYPTO_HDKEY = 15,
+  UR_ANY_TX = 255
 } ur_type_t;
 
 typedef struct {
