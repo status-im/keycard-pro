@@ -17,6 +17,12 @@ core_evt_t ui_qrscan(ur_type_t type, void* out) {
   return ui_signal_wait(0);
 }
 
+core_evt_t ui_qrscan_tx(ur_type_t* type, void* out) {
+  core_evt_t res = ui_qrscan(UR_ANY_TX, out);
+  *type = g_ui_cmd.params.qrscan.type;
+  return res;
+}
+
 core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selected, i18n_str_id_t marked, uint8_t allow_usb) {
   g_ui_cmd.type = UI_CMD_MENU;
   g_ui_cmd.params.menu.title = title;

@@ -69,6 +69,11 @@ const uint32_t EIP4527_SOURCE_LEN = 16;
 
 core_ctx_t g_core;
 
+union qr_tx_data {
+  struct eth_sign_request eth_sign_request;
+  struct zcbor_string crypto_psbt;
+};
+
 static app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain) {
   uint8_t export_type;
 
@@ -656,34 +661,28 @@ static app_err_t core_eip4527_init_sign(struct eth_sign_request *qr_request) {
   return ERR_OK;
 }
 
-void core_qr_run() {
-  struct eth_sign_request qr_request;
-
-  if (ui_qrscan(UR_ANY_TX, &qr_request) != CORE_EVT_UI_OK) {
-    return;
-  }
-
-  if (core_eip4527_init_sign(&qr_request) != ERR_OK) {
+static void core_eip4527_run(struct eth_sign_request* qr_request) {
+  if (core_eip4527_init_sign(qr_request) != ERR_OK) {
     ui_info(LSTR(INFO_WRONG_CARD), 1);
     return;
   }
 
   app_err_t err;
 
-  switch(qr_request.eth_sign_request_data_type.sign_data_type_choice) {
+  switch(qr_request->eth_sign_request_data_type.sign_data_type_choice) {
     case sign_data_type_eth_transaction_data_m_c:
     case sign_data_type_eth_typed_transaction_m_c:
       g_core.data.tx.content.data = NULL;
-      g_core.data.tx.content.chainID = qr_request.eth_sign_request_chain_id_present ? (uint32_t) qr_request.eth_sign_request_chain_id.eth_sign_request_chain_id : 1;
-      err = core_process_tx(qr_request.eth_sign_request_sign_data.value, qr_request.eth_sign_request_sign_data.len, 1);
+      g_core.data.tx.content.chainID = qr_request->eth_sign_request_chain_id_present ? (uint32_t) qr_request->eth_sign_request_chain_id.eth_sign_request_chain_id : 1;
+      err = core_process_tx(qr_request->eth_sign_request_sign_data.value, qr_request->eth_sign_request_sign_data.len, 1);
       break;
     case sign_data_type_eth_raw_bytes_m_c:
-      g_core.data.msg.content = (uint8_t*) qr_request.eth_sign_request_sign_data.value;
-      g_core.data.msg.len = qr_request.eth_sign_request_sign_data.len;
-      err = core_process_msg(qr_request.eth_sign_request_sign_data.value, qr_request.eth_sign_request_sign_data.len, 1);
+      g_core.data.msg.content = (uint8_t*) qr_request->eth_sign_request_sign_data.value;
+      g_core.data.msg.len = qr_request->eth_sign_request_sign_data.len;
+      err = core_process_msg(qr_request->eth_sign_request_sign_data.value, qr_request->eth_sign_request_sign_data.len, 1);
       break;
     case sign_data_type_eth_typed_data_m_c:
-      err = core_process_eip712(qr_request.eth_sign_request_sign_data.value, qr_request.eth_sign_request_sign_data.len);
+      err = core_process_eip712(qr_request->eth_sign_request_sign_data.value, qr_request->eth_sign_request_sign_data.len);
       break;
     default:
       err = ERR_UNSUPPORTED;
@@ -708,10 +707,10 @@ void core_qr_run() {
   }
 
   struct eth_signature sig = {0};
-  sig.eth_signature_request_id_present = qr_request.eth_sign_request_request_id_present;
+  sig.eth_signature_request_id_present = qr_request->eth_sign_request_request_id_present;
   if (sig.eth_signature_request_id_present) {
-    sig.eth_signature_request_id.eth_signature_request_id.value = qr_request.eth_sign_request_request_id.eth_sign_request_request_id.value;
-    sig.eth_signature_request_id.eth_signature_request_id.len = qr_request.eth_sign_request_request_id.eth_sign_request_request_id.len;
+    sig.eth_signature_request_id.eth_signature_request_id.value = qr_request->eth_sign_request_request_id.eth_sign_request_request_id.value;
+    sig.eth_signature_request_id.eth_signature_request_id.len = qr_request->eth_sign_request_request_id.eth_sign_request_request_id.len;
   }
   sig.eth_signature_signature.value = g_core.data.sig.plain_sig;
   sig.eth_signature_signature.len = SIGNATURE_LEN;
@@ -740,6 +739,30 @@ void core_qr_run() {
 
   cbor_encode_eth_signature(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &sig, &g_core.data.sig.cbor_len);
   ui_display_ur_qr(LSTR(QR_SIGNATURE_TITLE), g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, ETH_SIGNATURE);
+}
+
+static void core_psbt_run(struct zcbor_string* qr_request) {
+  return;
+}
+
+void core_qr_run() {
+  union qr_tx_data qr_request;
+  ur_type_t tx_type;
+
+  if (ui_qrscan_tx(&tx_type, &qr_request) != CORE_EVT_UI_OK) {
+    return;
+  }
+
+  switch(tx_type) {
+  case ETH_SIGN_REQUEST:
+    core_eip4527_run(&qr_request.eth_sign_request);
+    break;
+  case CRYPTO_PSBT:
+    core_psbt_run(&qr_request.crypto_psbt);
+    break;
+  default:
+    break;
+  }
 }
 
 static app_err_t encode_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, const uint32_t bip32_path[], size_t bip32_len, bool add_source) {

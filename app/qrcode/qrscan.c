@@ -10,6 +10,7 @@
 #include "ur/ur.h"
 #include "ur/eip4527_decode.h"
 #include "ur/auth_decode.h"
+#include "ur/btc_decode.h"
 
 #define QR_INDICATOR_WIDTH ((SCREEN_WIDTH - CAM_OUT_WIDTH) / 2)
 #define QR_INDICATOR_HEIGHT 40
@@ -57,6 +58,9 @@ app_err_t qrscan_deserialize(ur_t* ur) {
   switch(ur->type) {
   case ETH_SIGN_REQUEST:
     err = cbor_decode_eth_sign_request(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
+    break;
+  case CRYPTO_PSBT:
+    err = cbor_decode_psbt(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
     break;
   case FS_DATA:
     data = g_ui_cmd.params.qrscan.out;
