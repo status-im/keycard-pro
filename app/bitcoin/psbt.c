@@ -305,12 +305,16 @@ psbt_result_t psbt_read(const unsigned char *src, size_t src_size, psbt_t *tx, p
       }
       break;
     case PSBT_ST_OUTPUTS_NEW:
-      assert(*tx->write_pos == 0);
+      if (*tx->write_pos != 0) {
+        return PSBT_READ_ERROR;
+      }
       tx->write_pos++;
       tx->state = PSBT_ST_OUTPUTS;
       break;
     case PSBT_ST_INPUTS_NEW:
-      assert(*tx->write_pos == 0);
+      if (*tx->write_pos != 0) {
+        return PSBT_READ_ERROR;
+      }
       tx->write_pos++;
       tx->state = PSBT_ST_INPUTS;
       break;
