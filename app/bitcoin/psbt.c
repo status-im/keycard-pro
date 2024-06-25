@@ -248,8 +248,9 @@ psbt_result_t psbt_read(const unsigned char *src, size_t src_size, psbt_t *tx, p
     switch(tx->state) {
     case PSBT_ST_INIT:
       res = psbt_read_header(tx);
-      if (res != PSBT_OK)
+      if (res != PSBT_OK) {
         return res;
+      }
       break;
     case PSBT_ST_GLOBAL:
     case PSBT_ST_INPUTS:
@@ -259,27 +260,25 @@ psbt_result_t psbt_read(const unsigned char *src, size_t src_size, psbt_t *tx, p
         case PSBT_ST_GLOBAL:
           tx->state = PSBT_ST_INPUTS_NEW;
           break;
-
         case PSBT_ST_INPUTS:
           if (++kvs >= counter.inputs) {
             tx->state = PSBT_ST_OUTPUTS_NEW;
             kvs = 0;
-          } else
+          } else {
             tx->state = PSBT_ST_INPUTS_NEW;
+          }
           break;
-
         case PSBT_ST_OUTPUTS:
-          if (++kvs >= counter.outputs)
+          if (++kvs >= counter.outputs) {
             tx->state = PSBT_ST_FINALIZED;
-          else
+          } else {
             tx->state = PSBT_ST_OUTPUTS_NEW;
+          }
           break;
-
         default:
           return PSBT_READ_ERROR;
         }
-      }
-      else {
+      } else {
         res = psbt_read_record(tx, src_size, &rec);
 
         if (res != PSBT_OK) {
@@ -325,7 +324,7 @@ psbt_result_t psbt_read(const unsigned char *src, size_t src_size, psbt_t *tx, p
 
   if (tx->state != PSBT_ST_FINALIZED) {
     return PSBT_INVALID_STATE;
-  } else if (tx->state == PSBT_ST_FINALIZED && *tx->write_pos != 0) {
+  } else if (*tx->write_pos != 0) {
     return PSBT_READ_ERROR;
   }
 
@@ -403,8 +402,7 @@ psbt_result_t psbt_write_output_record(psbt_t *tx, psbt_record_t *rec) {
       return res;
     }
     tx->state = PSBT_ST_OUTPUTS;
-  }
-  else if (tx->state != PSBT_ST_OUTPUTS && tx->state != PSBT_ST_OUTPUTS_NEW) {
+  } else if (tx->state != PSBT_ST_OUTPUTS && tx->state != PSBT_ST_OUTPUTS_NEW) {
     return PSBT_INVALID_STATE;
   }
 
