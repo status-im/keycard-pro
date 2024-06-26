@@ -19,7 +19,7 @@ static inline uint64_t parse_le64(const uint8_t *cursor) {
 
 static psbt_result_t parse_txin(uint8_t **cursor, uint8_t *data, uint32_t data_size, psbt_txin_t *txin) {
   uint64_t script_len;
-  int size_len;
+  size_t size_len;
   psbt_result_t res = PSBT_OK;
 
   uint8_t *p = *cursor;

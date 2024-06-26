@@ -1,8 +1,8 @@
-
 #ifndef PSBT_TX_H
 #define PSBT_TX_H
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef enum {
   PSBT_OK,
@@ -15,29 +15,29 @@ typedef enum {
 } psbt_result_t;
 
 typedef struct {
-  unsigned char *txid;
-  unsigned int index; /* output number referred to by above */
-  unsigned char *script;
-  unsigned int script_len;
-  unsigned int sequence_number;
+  uint8_t *txid;
+  uint32_t index; /* output number referred to by above */
+  uint8_t *script;
+  size_t script_len;
+  uint32_t sequence_number;
 } psbt_txin_t;
 
 typedef struct {
   uint64_t amount;
-  unsigned char *script;
-  unsigned int script_len;
+  uint8_t *script;
+  size_t script_len;
 } psbt_txout_t;
 
 typedef struct {
-  int input_index;
-  int item_index;
-  unsigned char *item;
-  unsigned int item_len;
+  uint32_t input_index;
+  uint32_t item_index;
+  uint8_t *item;
+  size_t item_len;
 } psbt_witness_item_t;
 
 typedef struct {
-  unsigned int version;
-  unsigned int lock_time;
+  uint32_t version;
+  uint32_t lock_time;
 } psbt_tx_t;
 
 enum psbt_txelem_type {

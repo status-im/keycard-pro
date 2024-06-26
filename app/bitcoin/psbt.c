@@ -4,7 +4,7 @@
 #include "compactsize.h"
 #include "psbt_tx.h"
 
-const unsigned char PSBT_MAGIC[4] = {0x70, 0x73, 0x62, 0x74};
+const uint8_t PSBT_MAGIC[4] = {0x70, 0x73, 0x62, 0x74};
 
 #define ASSERT_SPACE(s) \
   if (tx->write_pos+(s) > tx->data + tx->data_capacity) { \
@@ -29,7 +29,7 @@ static psbt_result_t psbt_write_header(psbt_t *tx) {
   return PSBT_OK;
 }
 
-psbt_result_t psbt_init(psbt_t *tx, unsigned char *dest, size_t dest_size) {
+psbt_result_t psbt_init(psbt_t *tx, uint8_t *dest, size_t dest_size) {
   tx->write_pos = dest;
   tx->data = dest;
   tx->data_capacity = dest_size;
@@ -204,7 +204,7 @@ static void tx_counter(psbt_txelem_t *elem) {
   }
 }
 
-psbt_result_t psbt_read(const unsigned char *src, size_t src_size, psbt_t *tx, psbt_elem_handler_t *elem_handler, void* user_data) {
+psbt_result_t psbt_read(const uint8_t *src, size_t src_size, psbt_t *tx, psbt_elem_handler_t *elem_handler, void* user_data) {
   psbt_record_t rec;
   psbt_result_t res;
 

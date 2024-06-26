@@ -45,17 +45,17 @@ enum psbt_state {
 
 typedef struct {
   enum psbt_state state;
-  unsigned char *data;
-  unsigned char *write_pos;
+  uint8_t *data;
+  uint8_t *write_pos;
   size_t data_capacity;
 } psbt_t;
 
 typedef struct {
-  unsigned char type;
-  unsigned char *key;
-  unsigned int key_size;
-  unsigned char *val;
-  unsigned int val_size;
+  uint8_t type;
+  uint8_t *key;
+  size_t key_size;
+  uint8_t *val;
+  size_t val_size;
   enum psbt_scope scope;
 } psbt_record_t;
 
@@ -85,7 +85,7 @@ typedef struct {
 
 
 size_t psbt_size(psbt_t *tx);
-psbt_result_t psbt_read(const unsigned char *src, size_t src_size, psbt_t *psbt, psbt_elem_handler_t *elem_handler, void* user_data);
+psbt_result_t psbt_read(const uint8_t *src, size_t src_size, psbt_t *psbt, psbt_elem_handler_t *elem_handler, void* user_data);
 
 psbt_result_t psbt_write_global_record(psbt_t *tx, psbt_record_t *rec);
 psbt_result_t psbt_write_input_record(psbt_t *tx, psbt_record_t *rec);
@@ -93,7 +93,7 @@ psbt_result_t psbt_write_output_record(psbt_t *tx, psbt_record_t *rec);
 psbt_result_t psbt_new_input_record_set(psbt_t *tx);
 psbt_result_t psbt_new_output_record_set(psbt_t *tx);
 
-psbt_result_t psbt_init(psbt_t *tx, unsigned char *dest, size_t dest_size);
+psbt_result_t psbt_init(psbt_t *tx, uint8_t *dest, size_t dest_size);
 psbt_result_t psbt_finalize(psbt_t *tx);
 
 #endif /* PSBT_H */
