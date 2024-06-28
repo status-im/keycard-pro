@@ -70,8 +70,20 @@ typedef struct {
 
 extern core_ctx_t g_core;
 
+app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain);
+app_err_t core_get_fingerprint(uint8_t* path, size_t len, uint32_t* fingerprint);
+app_err_t core_export_public(uint8_t* pub, uint8_t* chain, uint32_t* fingerprint, uint32_t* parent_fingerprint);
+
 core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb);
+
 void core_usb_run();
+app_err_t core_eth_usb_get_address(keycard_t* kc, apdu_t* cmd);
+app_err_t core_eth_usb_sign_tx(keycard_t* kc, apdu_t* cmd);
+app_err_t core_eth_usb_sign_message(keycard_t* kc, apdu_t* cmd);
+app_err_t core_eth_usb_sign_eip712(keycard_t* kc, apdu_t* cmd);
+
+void core_eth_eip4527_run(struct eth_sign_request* qr_request);
+void core_btc_psbt_run(struct zcbor_string* qr_request);
 
 void core_qr_run();
 void core_display_public_eip4527();
@@ -82,7 +94,6 @@ void updater_database_run();
 void device_auth_run();
 void device_info();
 void device_help();
-
 
 app_err_t updater_usb_fw_upgrade(command_t* cmd, apdu_t* apdu);
 app_err_t updater_usb_db_upgrade(apdu_t* apdu);
