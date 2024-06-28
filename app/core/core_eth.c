@@ -26,13 +26,13 @@ static inline app_err_t core_eth_init_sign(uint32_t* fingerprint) {
 
 static inline uint32_t core_eth_get_tx_v_base() {
   uint32_t v_base;
-  if (g_core.data.tx.ctx.txType == EIP1559 || g_core.data.tx.ctx.txType == EIP2930) {
+  if (g_core.data.eth_tx.ctx.txType == EIP1559 || g_core.data.eth_tx.ctx.txType == EIP2930) {
     v_base = 0;
   } else {
-    if (g_core.data.tx.content.v == V_NONE) {
+    if (g_core.data.eth_tx.content.v == V_NONE) {
       v_base = 27;
     } else {
-      v_base = (g_core.data.tx.content.v * 2) + 35;
+      v_base = (g_core.data.eth_tx.content.v * 2) + 35;
     }
   }
 
@@ -40,8 +40,8 @@ static inline uint32_t core_eth_get_tx_v_base() {
 }
 
 static inline void core_eth_set_is_message() {
-  g_core.data.tx.ctx.txType = LEGACY;
-  g_core.data.tx.content.v = V_NONE;
+  g_core.data.eth_tx.ctx.txType = LEGACY;
+  g_core.data.eth_tx.content.v = V_NONE;
 }
 
 static app_err_t core_eth_sign(keycard_t* kc, uint8_t* out) {
@@ -62,7 +62,7 @@ static app_err_t core_eth_sign(keycard_t* kc, uint8_t* out) {
 }
 
 static inline app_err_t core_eth_wait_tx_confirmation() {
-  return ui_display_tx(g_core.address, &g_core.data.tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  return ui_display_tx(g_core.address, &g_core.data.eth_tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static inline app_err_t core_eth_wait_msg_confirmation(const uint8_t* msg, size_t msg_len) {
@@ -74,28 +74,28 @@ static app_err_t core_eth_process_tx(const uint8_t* data, uint32_t len, uint8_t 
     // EIP 2718: TransactionType might be present before the TransactionPayload.
     uint8_t txType = data[0];
 
-    initTx(&g_core.data.tx.ctx, &g_core.hash_ctx, &g_core.data.tx.content);
+    initTx(&g_core.data.eth_tx.ctx, &g_core.hash_ctx, &g_core.data.eth_tx.content);
 
     if (txType >= MIN_TX_TYPE && txType <= MAX_TX_TYPE) {
       // Enumerate through all supported txTypes here...
       if (txType == EIP2930 || txType == EIP1559) {
         keccak_Update(&g_core.hash_ctx, data, 1);
-        g_core.data.tx.ctx.txType = txType;
+        g_core.data.eth_tx.ctx.txType = txType;
         data++;
         len--;
       } else {
         return ERR_UNSUPPORTED;
       }
     } else {
-      g_core.data.tx.ctx.txType = LEGACY;
+      g_core.data.eth_tx.ctx.txType = LEGACY;
     }
   }
 
-  if (g_core.data.tx.ctx.currentField == RLP_NONE) {
+  if (g_core.data.eth_tx.ctx.currentField == RLP_NONE) {
     return ERR_DATA;
   }
 
-  parserStatus_e res = processTx(&g_core.data.tx.ctx, data, len);
+  parserStatus_e res = processTx(&g_core.data.eth_tx.ctx, data, len);
   switch (res) {
     case USTREAM_FINISHED:
       return core_eth_wait_tx_confirmation();
@@ -255,7 +255,7 @@ app_err_t core_eth_usb_sign_tx(keycard_t* kc, apdu_t* cmd) {
       return ERR_DATA;
     }
 
-    g_core.data.tx.content.data = g_mem_heap;
+    g_core.data.eth_tx.content.data = g_mem_heap;
   }
 
   app_err_t err = core_eth_process_tx(data, len, first);
@@ -429,8 +429,8 @@ void core_eth_eip4527_run(struct eth_sign_request* qr_request) {
   switch(qr_request->eth_sign_request_data_type.sign_data_type_choice) {
     case sign_data_type_eth_transaction_data_m_c:
     case sign_data_type_eth_typed_transaction_m_c:
-      g_core.data.tx.content.data = NULL;
-      g_core.data.tx.content.chainID = qr_request->eth_sign_request_chain_id_present ? (uint32_t) qr_request->eth_sign_request_chain_id.eth_sign_request_chain_id : 1;
+      g_core.data.eth_tx.content.data = NULL;
+      g_core.data.eth_tx.content.chainID = qr_request->eth_sign_request_chain_id_present ? (uint32_t) qr_request->eth_sign_request_chain_id.eth_sign_request_chain_id : 1;
       err = core_eth_process_tx(qr_request->eth_sign_request_sign_data.value, qr_request->eth_sign_request_sign_data.len, 1);
       break;
     case sign_data_type_eth_raw_bytes_m_c:

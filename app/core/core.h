@@ -26,7 +26,7 @@
 typedef struct {
   txContext_t ctx;
   txContent_t content;
-} core_tx_t;
+} core_eth_tx_t;
 
 typedef struct {
   uint32_t received;
@@ -48,7 +48,7 @@ typedef struct {
 } core_key_t;
 
 typedef union {
-  core_tx_t tx;
+  core_eth_tx_t eth_tx;
   core_msg_t msg;
   eip712_ctx_t eip712;
   core_sig_t sig;
