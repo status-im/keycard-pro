@@ -233,7 +233,7 @@ static app_err_t core_usb_command(keycard_t* kc, command_t* cmd) {
   return err;
 }
 
-void core_usb_cancel() {
+static void core_usb_cancel() {
   core_usb_err_sw(&g_core.usb_command.apdu, 0x69, 0x82);
   command_init_send(&g_core.usb_command);
 }
