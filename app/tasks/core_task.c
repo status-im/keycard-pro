@@ -20,6 +20,9 @@ static inline void core_action_run(i18n_str_id_t menu) {
   case MENU_CONNECT_EIP4527:
     core_display_public_eip4527();
     break;
+  case MENU_CONNECT_BITCOIN:
+    core_display_public_bitcoin();
+    break;
   case MENU_CONNECT_MULTICOIN:
     core_display_public_multicoin();
     break;

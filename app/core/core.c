@@ -270,7 +270,7 @@ void core_qr_run() {
   }
 }
 
-static app_err_t encode_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, const uint32_t bip32_path[], size_t bip32_len, bool add_source) {
+static app_err_t get_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, const uint32_t bip32_path[], size_t bip32_len, bool add_source) {
   key->hd_key_is_private = 0;
   key->hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
   key->hd_key_key_data.value = pub;
@@ -314,7 +314,7 @@ static app_err_t encode_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain,
 void core_display_public_eip4527() {
   struct hd_key key;
 
-  if (encode_hd_key(&key, g_core.data.key.pub, g_core.data.key.chain, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true) != ERR_OK) {
+  if (get_hd_key(&key, g_core.data.key.pub, g_core.data.key.chain, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true) != ERR_OK) {
     ui_card_transport_error();
     return;
   }
@@ -323,9 +323,33 @@ void core_display_public_eip4527() {
   ui_display_ur_qr(LSTR(QR_CONNECT_EIP4527_TITLE), g_core.data.key.cbor_key, g_core.data.key.cbor_len, CRYPTO_HDKEY);
 }
 
+// this macro can only be used in core_display_public_bitcoin()
+#define CORE_BITCOIN_EXPORT(__NUM__, __TYPE__, __PATH__, __PATH_LEN__) \
+  if (get_hd_key(&account.crypto_account_output_descriptors_crypto_output_m[__NUM__].crypto_output_public_key_hash_m, &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, false) != ERR_OK) { \
+    ui_card_transport_error(); \
+    return; \
+  } \
+  account.crypto_account_output_descriptors_crypto_output_m[__NUM__].crypto_output_choice =  __TYPE__; \
+  keys_off += PUBKEY_LEN + CHAINCODE_LEN
+void core_display_public_bitcoin() {
+  struct crypto_account account;
+
+  size_t keys_off = 0;
+
+  CORE_BITCOIN_EXPORT(0, crypto_output_witness_public_key_hash_m_c, BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN);
+  CORE_BITCOIN_EXPORT(1, crypto_output_script_hash_m_c, BTC_SEGWIT_PATH, BTC_SEGWIT_PATH_LEN);
+  CORE_BITCOIN_EXPORT(2, crypto_output_public_key_hash_m_c, BTC_LEGACY_PATH, BTC_LEGACY_PATH_LEN);
+  CORE_BITCOIN_EXPORT(3, crypto_output_taproot_m_c, BTC_TAPROOT_PATH, BTC_TAPROOT_PATH_LEN);
+
+  account.crypto_account_output_descriptors_crypto_output_m_count = 4;
+  account.crypto_account_master_fingerprint = g_core.master_fingerprint;
+  cbor_encode_crypto_account(&g_mem_heap[keys_off], MEM_HEAP_SIZE, &account, &g_core.data.key.cbor_len);
+  ui_display_ur_qr(LSTR(QR_CONNECT_BITCOIN_TITLE), &g_mem_heap[keys_off], g_core.data.key.cbor_len, CRYPTO_ACCOUNT);
+}
+
 // this macro can only be used in core_display_public_multicoin()
 #define CORE_MULTICOIN_EXPORT(__NUM__, __PATH__, __PATH_LEN__, __SOURCE___) \
-  if (encode_hd_key(&accounts.crypto_multi_accounts_keys_tagged_hd_key_m[__NUM__], &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, __SOURCE___) != ERR_OK) { \
+  if (get_hd_key(&accounts.crypto_multi_accounts_keys_tagged_hd_key_m[__NUM__], &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, __SOURCE___) != ERR_OK) { \
     ui_card_transport_error(); \
     return; \
   } \
