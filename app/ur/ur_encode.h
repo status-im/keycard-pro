@@ -4,14 +4,14 @@
  * Generated with a --default-max-qty of 3
  */
 
-#ifndef EIP4527_ENCODE_H__
-#define EIP4527_ENCODE_H__
+#ifndef UR_ENCODE_H__
+#define UR_ENCODE_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include "eip4527_types.h"
+#include "ur_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +43,30 @@ int cbor_encode_hd_key(
 int cbor_encode_crypto_multi_accounts(
 		uint8_t *payload, size_t payload_len,
 		const struct crypto_multi_accounts *input,
+		size_t *payload_len_out);
+
+
+int cbor_encode_crypto_account(
+		uint8_t *payload, size_t payload_len,
+		const struct crypto_account *input,
+		size_t *payload_len_out);
+
+
+int cbor_encode_ur_part(
+		uint8_t *payload, size_t payload_len,
+		const struct ur_part *input,
+		size_t *payload_len_out);
+
+
+int cbor_encode_dev_auth(
+		uint8_t *payload, size_t payload_len,
+		const struct dev_auth *input,
+		size_t *payload_len_out);
+
+
+int cbor_encode_psbt(
+		uint8_t *payload, size_t payload_len,
+		const struct zcbor_string *input,
 		size_t *payload_len_out);
 
 
@@ -50,4 +74,4 @@ int cbor_encode_crypto_multi_accounts(
 }
 #endif
 
-#endif /* EIP4527_ENCODE_H__ */
+#endif /* UR_ENCODE_H__ */

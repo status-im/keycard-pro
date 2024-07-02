@@ -4,7 +4,7 @@
 #include "crypto/util.h"
 #include "keycard/keycard_cmdset.h"
 #include "mem.h"
-#include "ur/eip4527_encode.h"
+#include "ur/ur_encode.h"
 
 #define ETH_MSG_MAGIC_LEN 26
 #define ETH_EIP712_MAGIC_LEN 2

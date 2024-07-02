@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <string.h>
 #include "zcbor_decode.h"
-#include "eip4527_decode.h"
+#include "ur_decode.h"
 #include "zcbor_print.h"
 
 #if DEFAULT_MAX_QTY != 3
@@ -19,6 +19,13 @@
 static bool decode_uuid(zcbor_state_t *state, struct zcbor_string *result);
 static bool decode_repeated_eth_signature_request_id(zcbor_state_t *state, struct eth_signature_request_id *result);
 static bool decode_repeated_eth_signature_signature_origin(zcbor_state_t *state, struct eth_signature_signature_origin *result);
+static bool decode_dev_auth_step_type(zcbor_state_t *state, struct dev_auth_step_type_r *result);
+static bool decode_repeated_dev_auth_dev_id(zcbor_state_t *state, struct dev_auth_dev_id *result);
+static bool decode_repeated_dev_auth_first_auth(zcbor_state_t *state, struct dev_auth_first_auth *result);
+static bool decode_repeated_dev_auth_auth_time(zcbor_state_t *state, struct dev_auth_auth_time *result);
+static bool decode_repeated_dev_auth_auth_count(zcbor_state_t *state, struct dev_auth_auth_count *result);
+static bool decode_repeated_dev_auth_challenge(zcbor_state_t *state, struct dev_auth_challenge *result);
+static bool decode_repeated_dev_auth_auth_sig(zcbor_state_t *state, struct dev_auth_auth_sig *result);
 static bool decode_repeated_eth_sign_request_request_id(zcbor_state_t *state, struct eth_sign_request_request_id *result);
 static bool decode_sign_data_type(zcbor_state_t *state, struct sign_data_type_r *result);
 static bool decode_repeated_eth_sign_request_chain_id(zcbor_state_t *state, struct eth_sign_request_chain_id *result);
@@ -31,9 +38,20 @@ static bool decode_repeated_eth_sign_request_request_origin(zcbor_state_t *state
 static bool decode_coininfo(zcbor_state_t *state, struct coininfo *result);
 static bool decode_repeated_hd_key_use_info(zcbor_state_t *state, struct hd_key_use_info *result);
 static bool decode_repeated_hd_key_source(zcbor_state_t *state, struct hd_key_source *result);
+static bool decode_tagged_hd_key(zcbor_state_t *state, struct hd_key *result);
 static bool decode_repeated_crypto_multi_accounts_device(zcbor_state_t *state, struct crypto_multi_accounts_device *result);
 static bool decode_repeated_crypto_multi_accounts_device_id(zcbor_state_t *state, struct crypto_multi_accounts_device_id *result);
 static bool decode_repeated_crypto_multi_accounts_version(zcbor_state_t *state, struct crypto_multi_accounts_version *result);
+static bool decode_key_exp(zcbor_state_t *state, struct hd_key *result);
+static bool decode_witness_public_key_hash(zcbor_state_t *state, struct hd_key *result);
+static bool decode_script_hash(zcbor_state_t *state, struct hd_key *result);
+static bool decode_public_key_hash(zcbor_state_t *state, struct hd_key *result);
+static bool decode_taproot(zcbor_state_t *state, struct hd_key *result);
+static bool decode_crypto_output(zcbor_state_t *state, struct crypto_output_r *result);
+static bool decode_psbt(zcbor_state_t *state, struct zcbor_string *result);
+static bool decode_dev_auth(zcbor_state_t *state, struct dev_auth *result);
+static bool decode_ur_part(zcbor_state_t *state, struct ur_part *result);
+static bool decode_crypto_account(zcbor_state_t *state, struct crypto_account *result);
 static bool decode_crypto_multi_accounts(zcbor_state_t *state, struct crypto_multi_accounts *result);
 static bool decode_hd_key(zcbor_state_t *state, struct hd_key *result);
 static bool decode_eth_signature(zcbor_state_t *state, struct eth_signature *result);
@@ -83,6 +101,140 @@ static bool decode_repeated_eth_signature_signature_origin(
 
 	bool tmp_result = ((((zcbor_uint32_expect(state, (3))))
 	&& (zcbor_tstr_decode(state, (&(*result).eth_signature_signature_origin)))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_dev_auth_step_type(
+		zcbor_state_t *state, struct dev_auth_step_type_r *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = (((((zcbor_uint_decode(state, &(*result).dev_auth_step_type_choice, sizeof((*result).dev_auth_step_type_choice)))) && ((((((*result).dev_auth_step_type_choice == dev_auth_step_type_dev_auth_init_m_c) && ((1)))
+	|| (((*result).dev_auth_step_type_choice == dev_auth_step_type_dev_auth_device_m_c) && ((1)))
+	|| (((*result).dev_auth_step_type_choice == dev_auth_step_type_dev_auth_server_m_c) && ((1)))) || (zcbor_error(state, ZCBOR_ERR_WRONG_VALUE), false))))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_repeated_dev_auth_dev_id(
+		zcbor_state_t *state, struct dev_auth_dev_id *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (2))))
+	&& (decode_uuid(state, (&(*result).dev_auth_dev_id)))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_repeated_dev_auth_first_auth(
+		zcbor_state_t *state, struct dev_auth_first_auth *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (3))))
+	&& (zcbor_uint32_decode(state, (&(*result).dev_auth_first_auth)))
+	&& ((((((*result).dev_auth_first_auth <= UINT32_MAX)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_repeated_dev_auth_auth_time(
+		zcbor_state_t *state, struct dev_auth_auth_time *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (4))))
+	&& (zcbor_uint32_decode(state, (&(*result).dev_auth_auth_time)))
+	&& ((((((*result).dev_auth_auth_time <= UINT32_MAX)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_repeated_dev_auth_auth_count(
+		zcbor_state_t *state, struct dev_auth_auth_count *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (5))))
+	&& (zcbor_uint32_decode(state, (&(*result).dev_auth_auth_count)))
+	&& ((((((*result).dev_auth_auth_count <= UINT32_MAX)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_repeated_dev_auth_challenge(
+		zcbor_state_t *state, struct dev_auth_challenge *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (6))))
+	&& (zcbor_bstr_decode(state, (&(*result).dev_auth_challenge)))
+	&& ((((*result).dev_auth_challenge.len >= 32)
+	&& ((*result).dev_auth_challenge.len <= 32)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_repeated_dev_auth_auth_sig(
+		zcbor_state_t *state, struct dev_auth_auth_sig *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (7))))
+	&& (zcbor_bstr_decode(state, (&(*result).dev_auth_auth_sig)))
+	&& ((((*result).dev_auth_auth_sig.len >= 64)
+	&& ((*result).dev_auth_auth_sig.len <= 64)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))));
 
 	if (!tmp_result) {
 		zcbor_trace_file(state);
@@ -323,6 +475,24 @@ static bool decode_repeated_hd_key_source(
 	return tmp_result;
 }
 
+static bool decode_tagged_hd_key(
+		zcbor_state_t *state, struct hd_key *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((zcbor_tag_expect(state, 303)
+	&& (decode_hd_key(state, (&(*result))))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
 static bool decode_repeated_crypto_multi_accounts_device(
 		zcbor_state_t *state, struct crypto_multi_accounts_device *result)
 {
@@ -377,6 +547,202 @@ static bool decode_repeated_crypto_multi_accounts_version(
 	return tmp_result;
 }
 
+static bool decode_key_exp(
+		zcbor_state_t *state, struct hd_key *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((zcbor_tag_expect(state, 303)
+	&& (decode_hd_key(state, (&(*result))))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_witness_public_key_hash(
+		zcbor_state_t *state, struct hd_key *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((zcbor_tag_expect(state, 404)
+	&& (decode_key_exp(state, (&(*result))))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_script_hash(
+		zcbor_state_t *state, struct hd_key *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((zcbor_tag_expect(state, 400)
+	&& (decode_witness_public_key_hash(state, (&(*result))))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_public_key_hash(
+		zcbor_state_t *state, struct hd_key *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((zcbor_tag_expect(state, 403)
+	&& (decode_key_exp(state, (&(*result))))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_taproot(
+		zcbor_state_t *state, struct hd_key *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((zcbor_tag_expect(state, 409)
+	&& (decode_key_exp(state, (&(*result))))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_crypto_output(
+		zcbor_state_t *state, struct crypto_output_r *result)
+{
+	zcbor_log("%s\r\n", __func__);
+	bool int_res;
+
+	bool tmp_result = (((zcbor_union_start_code(state) && (int_res = ((((decode_script_hash(state, (&(*result).crypto_output_script_hash_m)))) && (((*result).crypto_output_choice = crypto_output_script_hash_m_c), true))
+	|| (zcbor_union_elem_code(state) && (((decode_public_key_hash(state, (&(*result).crypto_output_public_key_hash_m)))) && (((*result).crypto_output_choice = crypto_output_public_key_hash_m_c), true)))
+	|| (zcbor_union_elem_code(state) && (((decode_witness_public_key_hash(state, (&(*result).crypto_output_witness_public_key_hash_m)))) && (((*result).crypto_output_choice = crypto_output_witness_public_key_hash_m_c), true)))
+	|| (zcbor_union_elem_code(state) && (((decode_taproot(state, (&(*result).crypto_output_taproot_m)))) && (((*result).crypto_output_choice = crypto_output_taproot_m_c), true)))), zcbor_union_end_code(state), int_res))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_psbt(
+		zcbor_state_t *state, struct zcbor_string *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = (((zcbor_bstr_decode(state, (&(*result))))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_dev_auth(
+		zcbor_state_t *state, struct dev_auth *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = (((zcbor_map_start_decode(state) && (((((zcbor_uint32_expect(state, (1))))
+	&& (decode_dev_auth_step_type(state, (&(*result).dev_auth_step))))
+	&& zcbor_present_decode(&((*result).dev_auth_dev_id_present), (zcbor_decoder_t *)decode_repeated_dev_auth_dev_id, state, (&(*result).dev_auth_dev_id))
+	&& zcbor_present_decode(&((*result).dev_auth_first_auth_present), (zcbor_decoder_t *)decode_repeated_dev_auth_first_auth, state, (&(*result).dev_auth_first_auth))
+	&& zcbor_present_decode(&((*result).dev_auth_auth_time_present), (zcbor_decoder_t *)decode_repeated_dev_auth_auth_time, state, (&(*result).dev_auth_auth_time))
+	&& zcbor_present_decode(&((*result).dev_auth_auth_count_present), (zcbor_decoder_t *)decode_repeated_dev_auth_auth_count, state, (&(*result).dev_auth_auth_count))
+	&& zcbor_present_decode(&((*result).dev_auth_challenge_present), (zcbor_decoder_t *)decode_repeated_dev_auth_challenge, state, (&(*result).dev_auth_challenge))
+	&& zcbor_present_decode(&((*result).dev_auth_auth_sig_present), (zcbor_decoder_t *)decode_repeated_dev_auth_auth_sig, state, (&(*result).dev_auth_auth_sig))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_map_end_decode(state))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_ur_part(
+		zcbor_state_t *state, struct ur_part *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = (((zcbor_list_start_decode(state) && ((((zcbor_uint32_decode(state, (&(*result).ur_part_seqNum)))
+	&& ((((((*result).ur_part_seqNum <= UINT32_MAX)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false)))
+	&& ((zcbor_uint32_decode(state, (&(*result).ur_part_seqLen))))
+	&& ((zcbor_uint32_decode(state, (&(*result).ur_part_messageLen))))
+	&& ((zcbor_uint32_decode(state, (&(*result).ur_part_checksum)))
+	&& ((((((*result).ur_part_checksum <= UINT32_MAX)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false)))
+	&& ((zcbor_bstr_decode(state, (&(*result).ur_part_data))))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_crypto_account(
+		zcbor_state_t *state, struct crypto_account *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = (((zcbor_map_start_decode(state) && (((((zcbor_uint32_expect(state, (1))))
+	&& (zcbor_uint32_decode(state, (&(*result).crypto_account_master_fingerprint)))
+	&& ((((((*result).crypto_account_master_fingerprint <= UINT32_MAX)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false)))
+	&& (((zcbor_uint32_expect(state, (2))))
+	&& (zcbor_list_start_decode(state) && ((zcbor_multi_decode(0, 10, &(*result).crypto_account_output_descriptors_crypto_output_m_count, (zcbor_decoder_t *)decode_crypto_output, state, (&(*result).crypto_account_output_descriptors_crypto_output_m), sizeof(struct crypto_output_r))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state)))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_map_end_decode(state))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
 static bool decode_crypto_multi_accounts(
 		zcbor_state_t *state, struct crypto_multi_accounts *result)
 {
@@ -386,7 +752,7 @@ static bool decode_crypto_multi_accounts(
 	&& (zcbor_uint32_decode(state, (&(*result).crypto_multi_accounts_master_fingerprint)))
 	&& ((((((*result).crypto_multi_accounts_master_fingerprint <= UINT32_MAX)) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false))) || (zcbor_error(state, ZCBOR_ERR_WRONG_RANGE), false)))
 	&& (((zcbor_uint32_expect(state, (2))))
-	&& (zcbor_list_start_decode(state) && ((zcbor_multi_decode(0, 10, &(*result).crypto_multi_accounts_keys_hd_key_m_count, (zcbor_decoder_t *)decode_hd_key, state, (&(*result).crypto_multi_accounts_keys_hd_key_m), sizeof(struct hd_key))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state)))
+	&& (zcbor_list_start_decode(state) && ((zcbor_multi_decode(0, 10, &(*result).crypto_multi_accounts_keys_tagged_hd_key_m_count, (zcbor_decoder_t *)decode_tagged_hd_key, state, (&(*result).crypto_multi_accounts_keys_tagged_hd_key_m), sizeof(struct hd_key))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state)))
 	&& zcbor_present_decode(&((*result).crypto_multi_accounts_device_present), (zcbor_decoder_t *)decode_repeated_crypto_multi_accounts_device, state, (&(*result).crypto_multi_accounts_device))
 	&& zcbor_present_decode(&((*result).crypto_multi_accounts_device_id_present), (zcbor_decoder_t *)decode_repeated_crypto_multi_accounts_device_id, state, (&(*result).crypto_multi_accounts_device_id))
 	&& zcbor_present_decode(&((*result).crypto_multi_accounts_version_present), (zcbor_decoder_t *)decode_repeated_crypto_multi_accounts_version, state, (&(*result).crypto_multi_accounts_version))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_map_end_decode(state))));
@@ -531,4 +897,52 @@ int cbor_decode_crypto_multi_accounts(
 
 	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
 		(zcbor_decoder_t *)decode_crypto_multi_accounts, sizeof(states) / sizeof(zcbor_state_t), 1);
+}
+
+
+int cbor_decode_crypto_account(
+		const uint8_t *payload, size_t payload_len,
+		struct crypto_account *result,
+		size_t *payload_len_out)
+{
+	zcbor_state_t states[8];
+
+	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
+		(zcbor_decoder_t *)decode_crypto_account, sizeof(states) / sizeof(zcbor_state_t), 1);
+}
+
+
+int cbor_decode_ur_part(
+		const uint8_t *payload, size_t payload_len,
+		struct ur_part *result,
+		size_t *payload_len_out)
+{
+	zcbor_state_t states[3];
+
+	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
+		(zcbor_decoder_t *)decode_ur_part, sizeof(states) / sizeof(zcbor_state_t), 1);
+}
+
+
+int cbor_decode_dev_auth(
+		const uint8_t *payload, size_t payload_len,
+		struct dev_auth *result,
+		size_t *payload_len_out)
+{
+	zcbor_state_t states[4];
+
+	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
+		(zcbor_decoder_t *)decode_dev_auth, sizeof(states) / sizeof(zcbor_state_t), 1);
+}
+
+
+int cbor_decode_psbt(
+		const uint8_t *payload, size_t payload_len,
+		struct zcbor_string *result,
+		size_t *payload_len_out)
+{
+	zcbor_state_t states[2];
+
+	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
+		(zcbor_decoder_t *)decode_psbt, sizeof(states) / sizeof(zcbor_state_t), 1);
 }

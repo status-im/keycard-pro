@@ -9,7 +9,7 @@
 #include "core/core.h"
 #include "ethereum/ethUstream.h"
 #include "qrcode/qrcode.h"
-#include "ur/eip4527_types.h"
+#include "ur/ur_types.h"
 #include "ur/ur.h"
 
 #define UI_NOTIFICATION_IDX 2

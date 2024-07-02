@@ -5,7 +5,7 @@
 #include "ethereum/ethUstream.h"
 #include "ethereum/eip712.h"
 #include "menu.h"
-#include "ur/eip4527_types.h"
+#include "ur/ur_types.h"
 #include "ur/ur.h"
 
 #define PIN_NEW_CODE -1

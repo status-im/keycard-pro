@@ -1,4 +1,4 @@
-words = ['BYTES', 'CRYPTO-HDKEY', 'CRYPTO-KEYPATH', 'CRYPTO-MULTI-ACCOUNTS', 'CRYPTO-OUTPUT', 'CRYPTO-PSBT', 'DEV-AUTH', 'ETH-SIGN-REQUEST', 'ETH-SIGNATURE', 'FS-DATA', 'FW-UPDATE']
+words = ['BYTES', 'CRYPTO-ACCOUNT', 'CRYPTO-HDKEY', 'CRYPTO-MULTI-ACCOUNTS', 'CRYPTO-OUTPUT', 'CRYPTO-PSBT', 'DEV-AUTH', 'ETH-SIGN-REQUEST', 'ETH-SIGNATURE', 'FS-DATA', 'FW-UPDATE']
 
 def hf(w, m):
     sum = 0
@@ -22,5 +22,20 @@ while repeat:
         else:
             lut[h] = w
 
-print(lut)    
-print(mult)
+
+print("const char *const ur_type_string[] = {")
+for i in range(16):
+    if i in lut:
+        print(f"  \"{lut[i]}\",")
+    else:
+        print("  NULL,")
+print("};\n")
+
+print("typedef enum {")
+for i in range(16):
+    if i in lut:
+        print(f"  {lut[i].replace("-", "_")} = {i},")
+print(f"  UR_ANY_TX = 255")
+print("} ur_type_t;\n")
+
+print(f"Multiplier: {mult}")

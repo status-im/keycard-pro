@@ -12,7 +12,7 @@
 #include "storage/keys.h"
 #include "ui/ui_internal.h"
 #include "util/tlv.h"
-#include "ur/eip4527_encode.h"
+#include "ur/ur_encode.h"
 
 #define BTC_SEGWIT_VER 0
 
@@ -325,7 +325,7 @@ void core_display_public_eip4527() {
 
 // this macro can only be used in core_display_public_multicoin()
 #define CORE_MULTICOIN_EXPORT(__NUM__, __PATH__, __PATH_LEN__, __SOURCE___) \
-  if (encode_hd_key(&accounts.crypto_multi_accounts_keys_hd_key_m[__NUM__], &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, __SOURCE___) != ERR_OK) { \
+  if (encode_hd_key(&accounts.crypto_multi_accounts_keys_tagged_hd_key_m[__NUM__], &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, __SOURCE___) != ERR_OK) { \
     ui_card_transport_error(); \
     return; \
   } \
@@ -357,7 +357,7 @@ void core_display_public_multicoin() {
   CORE_MULTICOIN_EXPORT(2, BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN, false);
   CORE_MULTICOIN_EXPORT(3, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true);
 
-  accounts.crypto_multi_accounts_keys_hd_key_m_count = 4;
+  accounts.crypto_multi_accounts_keys_tagged_hd_key_m_count = 4;
   accounts.crypto_multi_accounts_master_fingerprint = g_core.master_fingerprint;
 
   cbor_encode_crypto_multi_accounts(&g_mem_heap[keys_off], MEM_HEAP_SIZE, &accounts, &g_core.data.key.cbor_len);

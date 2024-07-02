@@ -8,9 +8,7 @@
 #include "ui/theme.h"
 #include "ui/ui_internal.h"
 #include "ur/ur.h"
-#include "ur/eip4527_decode.h"
-#include "ur/auth_decode.h"
-#include "ur/btc_decode.h"
+#include "ur/ur_decode.h"
 
 #define QR_INDICATOR_WIDTH ((SCREEN_WIDTH - CAM_OUT_WIDTH) / 2)
 #define QR_INDICATOR_HEIGHT 40
