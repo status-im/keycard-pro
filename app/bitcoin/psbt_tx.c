@@ -9,14 +9,6 @@
     return PSBT_READ_ERROR; \
   }
 
-static inline uint32_t parse_le32(const uint8_t *cursor) {
-  return (*(uint32_t*)cursor);
-}
-
-static inline uint64_t parse_le64(const uint8_t *cursor) {
-  return (*(uint64_t*)cursor);
-}
-
 static psbt_result_t parse_txin(uint8_t **cursor, uint8_t *data, uint32_t data_size, psbt_txin_t *txin) {
   uint64_t script_len;
   size_t size_len;
@@ -29,7 +21,7 @@ static psbt_result_t parse_txin(uint8_t **cursor, uint8_t *data, uint32_t data_s
   p += 32;
 
   ASSERT_SPACE(4);
-  txin->index = parse_le32(p);
+  memcpy(&txin->index, p, sizeof(uint32_t));
   p += 4;
 
   ASSERT_SPACE(1);
@@ -48,7 +40,7 @@ static psbt_result_t parse_txin(uint8_t **cursor, uint8_t *data, uint32_t data_s
   p += script_len;
 
   ASSERT_SPACE(4);
-  txin->sequence_number = parse_le32(p);
+  memcpy(&txin->sequence_number, p, sizeof(uint32_t));
   p += 4;
 
   *cursor = p;
@@ -64,7 +56,7 @@ static psbt_result_t parse_txout(uint8_t **cursor, uint8_t *data, uint32_t data_
   uint8_t *p = *cursor;
 
   ASSERT_SPACE(8);
-  txout->amount = parse_le64(p);
+  txout->amount = p;
   p += 8;
 
   ASSERT_SPACE(1);
@@ -134,7 +126,8 @@ psbt_result_t psbt_btc_tx_parse(uint8_t *data, uint32_t data_size, void *user_da
   txelem.user_data = user_data;
 
   ASSERT_SPACE(4);
-  tx.version = parse_le32(p);
+
+  memcpy(&tx.version, p, sizeof(uint32_t));
   p += 4;
 
   ASSERT_SPACE(1);
@@ -211,7 +204,8 @@ psbt_result_t psbt_btc_tx_parse(uint8_t *data, uint32_t data_size, void *user_da
   }
 
   ASSERT_SPACE(4);
-  tx.lock_time = parse_le32(p);
+  memcpy(&tx.lock_time, p, sizeof(uint32_t));
+
   p += 4;
 
   if (p != data + data_size) {

@@ -23,7 +23,7 @@ typedef struct {
 } psbt_txin_t;
 
 typedef struct {
-  uint64_t amount;
+  uint8_t* amount;
   uint8_t *script;
   size_t script_len;
 } psbt_txout_t;
