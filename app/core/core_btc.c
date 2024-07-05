@@ -133,7 +133,7 @@ static app_err_t core_btc_hash_legacy(struct btc_tx_ctx* tx_ctx, size_t index, u
   return ERR_UNSUPPORTED;
 }
 
-static app_err_t core_btc_hash_sigwit(struct btc_tx_ctx* tx_ctx, size_t index, uint8_t digest[SHA256_DIGEST_LENGTH]) {
+static app_err_t core_btc_hash_segwit(struct btc_tx_ctx* tx_ctx, size_t index, uint8_t digest[SHA256_DIGEST_LENGTH]) {
   SHA256_CTX sha256;
   sha256_Init(&sha256);
 
@@ -232,7 +232,6 @@ static app_err_t core_btc_read_signature(uint8_t* data, uint8_t sighash, psbt_re
 }
 
 static app_err_t core_btc_sign_input(struct btc_tx_ctx* tx_ctx, size_t index) {
-
   for (int i = 0; i < tx_ctx->input_data[i].bip32_path_len; i += 4) {
     g_core.bip44_path[i + 3] = tx_ctx->input_data[index].bip32_path[i];
     g_core.bip44_path[i + 2] = tx_ctx->input_data[index].bip32_path[i + 1];
@@ -262,7 +261,7 @@ static app_err_t core_btc_sign_input(struct btc_tx_ctx* tx_ctx, size_t index) {
     break;
   case BTC_INPUT_TYPE_P2WPKH:
   case BTC_INPUT_TYPE_P2WSH:
-    err = core_btc_hash_sigwit(tx_ctx, index, digest);
+    err = core_btc_hash_segwit(tx_ctx, index, digest);
     break;
   default:
     err = ERR_DATA;
