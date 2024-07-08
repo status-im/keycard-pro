@@ -233,15 +233,6 @@ static app_err_t core_btc_read_signature(uint8_t* data, uint8_t sighash, psbt_re
 }
 
 static app_err_t core_btc_sign_input(struct btc_tx_ctx* tx_ctx, size_t index) {
-  for (int i = 0; i < tx_ctx->input_data[i].bip32_path_len; i += 4) {
-    g_core.bip44_path[i + 3] = tx_ctx->input_data[index].bip32_path[i];
-    g_core.bip44_path[i + 2] = tx_ctx->input_data[index].bip32_path[i + 1];
-    g_core.bip44_path[i + 1] = tx_ctx->input_data[index].bip32_path[i + 2];
-    g_core.bip44_path[i] = tx_ctx->input_data[index].bip32_path[i + 3];
-  }
-
-  g_core.bip44_path_len = tx_ctx->input_data[index].bip32_path_len;
-
   uint32_t mfp;
 
   if (core_get_fingerprint(g_core.bip44_path, 0, &mfp) != ERR_OK) {
@@ -274,6 +265,16 @@ static app_err_t core_btc_sign_input(struct btc_tx_ctx* tx_ctx, size_t index) {
   }
 
   keycard_t *kc = &g_core.keycard;
+
+  for (int i = 0; i < tx_ctx->input_data[index].bip32_path_len; i += 4) {
+    g_core.bip44_path[i + 3] = tx_ctx->input_data[index].bip32_path[i];
+    g_core.bip44_path[i + 2] = tx_ctx->input_data[index].bip32_path[i + 1];
+    g_core.bip44_path[i + 1] = tx_ctx->input_data[index].bip32_path[i + 2];
+    g_core.bip44_path[i] = tx_ctx->input_data[index].bip32_path[i + 3];
+  }
+
+  g_core.bip44_path_len = tx_ctx->input_data[index].bip32_path_len;
+
   if ((keycard_cmd_sign(kc, g_core.bip44_path, g_core.bip44_path_len, digest, 0) != ERR_OK) || (APDU_SW(&kc->apdu) != 0x9000)) {
     return ERR_CRYPTO;
   }
