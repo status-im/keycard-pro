@@ -397,10 +397,10 @@ static void core_addresses(const uint32_t* base_path, size_t base_len, core_addr
     g_core.bip44_path[(i * 4) + 3] = (c & 0xff);
   }
 
-  g_core.bip44_path[(base_len * 4)] = index >> 24;
-  g_core.bip44_path[(base_len * 4) + 1] = (index >> 16) & 0xff;
-  g_core.bip44_path[(base_len * 4) + 2] = (index >> 8) & 0xff;
-  g_core.bip44_path[(base_len * 4) + 3] = (index & 0xff);
+  g_core.bip44_path[(base_len * 4)] = 0;
+  g_core.bip44_path[(base_len * 4) + 1] = 0;
+  g_core.bip44_path[(base_len * 4) + 2] = 0;
+  g_core.bip44_path[(base_len * 4) + 3] = 0;
 
   base_len++;
 
