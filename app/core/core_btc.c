@@ -193,6 +193,7 @@ static app_err_t core_btc_hash_segwit(struct btc_tx_ctx* tx_ctx, size_t index, u
   sha256_Update(&sha256, (uint8_t*) &tx_ctx->input_data[index].sighash_flag, sizeof(uint32_t));
 
   sha256_Final(&sha256, digest);
+  sha256_Raw(digest, SHA256_DIGEST_LENGTH, digest);
   return ERR_OK;
 }
 
@@ -339,7 +340,6 @@ static app_err_t core_btc_confirm(struct btc_tx_ctx* tx_ctx) {
 }
 
 static void core_btc_common_hashes(struct btc_tx_ctx* tx_ctx) {
-  uint8_t tmp_digest[SHA256_DIGEST_LENGTH];
   SHA256_CTX sha256;
   sha256_Init(&sha256);
 
@@ -348,8 +348,8 @@ static void core_btc_common_hashes(struct btc_tx_ctx* tx_ctx) {
     sha256_Update(&sha256, (uint8_t*) &tx_ctx->inputs[i].index, sizeof(uint32_t));
   }
 
-  sha256_Final(&sha256, tmp_digest);
-  sha256_Raw(tmp_digest, SHA256_DIGEST_LENGTH, tx_ctx->hash_prevouts);
+  sha256_Final(&sha256, tx_ctx->hash_prevouts);
+  sha256_Raw(tx_ctx->hash_prevouts, SHA256_DIGEST_LENGTH, tx_ctx->hash_prevouts);
 
   sha256_Init(&sha256);
 
@@ -357,8 +357,8 @@ static void core_btc_common_hashes(struct btc_tx_ctx* tx_ctx) {
     sha256_Update(&sha256, (uint8_t*) &tx_ctx->inputs[i].sequence_number, sizeof(uint32_t));
   }
 
-  sha256_Final(&sha256, tmp_digest);
-  sha256_Raw(tmp_digest, SHA256_DIGEST_LENGTH, tx_ctx->hash_sequence);
+  sha256_Final(&sha256, tx_ctx->hash_sequence);
+  sha256_Raw(tx_ctx->hash_sequence, SHA256_DIGEST_LENGTH, tx_ctx->hash_sequence);
 
   sha256_Init(&sha256);
 
@@ -367,8 +367,8 @@ static void core_btc_common_hashes(struct btc_tx_ctx* tx_ctx) {
     sha256_Update(&sha256, tx_ctx->outputs[i].amount, len);
   }
 
-  sha256_Final(&sha256, tmp_digest);
-  sha256_Raw(tmp_digest, SHA256_DIGEST_LENGTH, tx_ctx->hash_outputs);
+  sha256_Final(&sha256, tx_ctx->hash_outputs);
+  sha256_Raw(tx_ctx->hash_outputs, SHA256_DIGEST_LENGTH, tx_ctx->hash_outputs);
 }
 
 static app_err_t core_btc_psbt_run(const uint8_t* psbt_in, size_t psbt_len, uint8_t** psbt_out, size_t* out_len) {
