@@ -3,6 +3,7 @@
 #include "bitcoin/psbt.h"
 #include "crypto/sha2_soft.h"
 #include "keycard/keycard_cmdset.h"
+#include "ur/ur_encode.h"
 #include "util/tlv.h"
 
 #define BTC_MAX_INPUTS 20
@@ -247,7 +248,7 @@ static app_err_t core_btc_sign_input(struct btc_tx_ctx* tx_ctx, size_t index) {
     return ERR_HW;
   }
 
-  if (mfp != tx_ctx->input_data[index].master_fingerprint) {
+  if (rev32(mfp) != tx_ctx->input_data[index].master_fingerprint) {
     return ERR_OK;
   }
 
@@ -369,35 +370,37 @@ static void core_btc_common_hashes(struct btc_tx_ctx* tx_ctx) {
   sha256_Raw(tmp_digest, SHA256_DIGEST_LENGTH, tx_ctx->hash_outputs);
 }
 
-void core_btc_psbt_run(struct zcbor_string* qr_request) {
+static app_err_t core_btc_psbt_run(const uint8_t* psbt_in, size_t psbt_len, uint8_t** psbt_out, size_t* out_len) {
   struct btc_tx_ctx* tx_ctx = (struct btc_tx_ctx*) g_camera_fb[1];
   memset(tx_ctx, 0, sizeof(struct btc_tx_ctx));
+  *psbt_out = &g_camera_fb[1][(sizeof(struct btc_tx_ctx) + 3) & ~0x3];
+  size_t psbt_out_len = CAMERA_FB_SIZE - ((sizeof(struct btc_tx_ctx) + 3) & ~0x3);
 
   psbt_t psbt;
-  psbt_init(&psbt, (uint8_t*) qr_request->value, qr_request->len);
-  psbt_read(qr_request->value, qr_request->len, &psbt, core_btc_parser_cb, tx_ctx);
+  psbt_init(&psbt, (uint8_t*) psbt_in, psbt_len);
+  psbt_read(psbt_in, psbt_len, &psbt, core_btc_parser_cb, tx_ctx);
 
-  if (!tx_ctx->error != ERR_OK) {
+  if (tx_ctx->error != ERR_OK) {
     //TODO: add error message
-    return;
+    return tx_ctx->error;
   }
 
   if (core_btc_validate(tx_ctx) != ERR_OK || core_btc_confirm(tx_ctx) != ERR_OK) {
-    return;
+    return ERR_CANCEL;
   }
 
   core_btc_common_hashes(tx_ctx);
 
-  psbt_init(&psbt, (uint8_t*) qr_request->value, qr_request->len);
-  psbt_init(&tx_ctx->psbt_out, &g_camera_fb[1][(sizeof(struct btc_tx_ctx) + 3) & ~0x3], CAMERA_FB_SIZE - ((sizeof(struct btc_tx_ctx) + 3) & ~0x3));
+  psbt_init(&psbt, (uint8_t*) psbt_in, psbt_len);
+  psbt_init(&tx_ctx->psbt_out, *psbt_out, psbt_out_len);
 
   tx_ctx->index_in = UINT32_MAX;
   tx_ctx->index_out = UINT32_MAX;
-  psbt_read(qr_request->value, qr_request->len, &psbt, core_btc_sign_handler, tx_ctx);
+  psbt_read(psbt_in, psbt_len, &psbt, core_btc_sign_handler, tx_ctx);
 
   if (tx_ctx->error != ERR_OK) {
     //TODO: add error message
-    return;
+    return tx_ctx->error;
   }
 
   if (tx_ctx->psbt_out.state != PSBT_ST_OUTPUTS) {
@@ -405,6 +408,24 @@ void core_btc_psbt_run(struct zcbor_string* qr_request) {
   }
 
   psbt_finalize(&tx_ctx->psbt_out);
+  *out_len = psbt_size(&tx_ctx->psbt_out);
 
-  //TODO: encode & output
+  return ERR_OK;
+}
+
+void core_btc_psbt_qr_run(struct zcbor_string* qr_request) {
+  uint8_t* psbt_out;
+  size_t out_len;
+
+  if (core_btc_psbt_run(qr_request->value, qr_request->len, &psbt_out, &out_len) != ERR_OK) {
+    return;
+  }
+
+  struct zcbor_string qr_out;
+  qr_out.value = psbt_out;
+  qr_out.len = out_len;
+
+  //TODO: this can be optimized by simply prepending the cbor header to the psbt
+  cbor_encode_psbt(g_mem_heap, MEM_HEAP_SIZE, &qr_out, &out_len);
+  ui_display_ur_qr(LSTR(QR_SIGNATURE_TITLE), g_mem_heap, out_len, CRYPTO_PSBT);
 }

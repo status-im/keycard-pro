@@ -189,8 +189,6 @@ static app_err_t core_usb_get_app_config(apdu_t* cmd) {
   return ERR_OK;
 }
 
-
-
 static app_err_t core_usb_command(keycard_t* kc, command_t* cmd) {
   apdu_t* apdu = &cmd->apdu;
 
@@ -263,7 +261,7 @@ void core_qr_run() {
     core_eth_eip4527_run(&qr_request.eth_sign_request);
     break;
   case CRYPTO_PSBT:
-    core_btc_psbt_run(&qr_request.crypto_psbt);
+    core_btc_psbt_qr_run(&qr_request.crypto_psbt);
     break;
   default:
     break;
