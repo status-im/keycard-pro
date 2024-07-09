@@ -16,7 +16,7 @@
 #define SIGHASH_ANYONECANPAY 0x80
 
 static const uint8_t P2WPKH_SCRIPT_PRE[4] = { 0x19, 0x76, 0xa9, 0x14 };
-static const uint8_t P2WPKH_SCRIPT_POST[4] = { 0x88, 0xac };
+static const uint8_t P2WPKH_SCRIPT_POST[2] = { 0x88, 0xac };
 
 enum btc_input_type {
   BTC_INPUT_TYPE_P2PKH,
