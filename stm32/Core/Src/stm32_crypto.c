@@ -39,7 +39,8 @@ hal_err_t hal_crc32_finish(hal_crc32_ctx_t* ctx, uint32_t *out) {
 }
 
 hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx) {
-  *ctx = 0;
+  ctx->len = 0;
+  ctx->buf = 0;
   CLEAR_BIT(hhash.Instance->CR, HASH_CR_MODE);
   MODIFY_REG(hhash.Instance->CR, HASH_CR_INIT, HASH_CR_INIT);
 
@@ -47,22 +48,73 @@ hal_err_t hal_sha256_init(hal_sha256_ctx_t* ctx) {
 }
 
 hal_err_t hal_sha256_update(hal_sha256_ctx_t* ctx, const uint8_t* data, size_t len) {
-  *ctx += len;
+  uint8_t rest = ctx->len & 3;
+  ctx->len += len;
+
+  if (rest) {
+    switch(rest) {
+    case 1:
+      ctx->buf = (ctx->buf & 0x000000ff) | (data[2] << 24) | (data[1] << 16) | (data[0] << 8);
+      data += 3;
+      len -= 3;
+      break;
+    case 2:
+      ctx->buf = (ctx->buf & 0x0000ffff) | (data[1] << 24) | (data[0] << 16);
+      data += 2;
+      len -= 2;
+      break;
+    case 3:
+    default:
+      ctx->buf = (ctx->buf & 0x00ffffff) | (data[0] << 24);
+      data++;
+      len--;
+      break;
+    }
+
+    if (((int32_t) len) >= 0) {
+      hhash.Instance->DIN = ctx->buf;
+      ctx->buf = 0;
+    } else {
+      return HAL_SUCCESS;
+    }
+  }
 
   __IO uint32_t data32 = (uint32_t) data;
 
-  for (int i = 0; i < len ; i += 4) {
+  for (int i = 0; i < (len & ~3) ; i += 4) {
     hhash.Instance->DIN = *(uint32_t *)data32;
     data32 += 4;
+  }
+
+  rest = len & 3;
+  if (rest) {
+    switch(rest) {
+    case 1:
+      ctx->buf = data[len - 1];
+      break;
+    case 2:
+      ctx->buf = data[len - 2] | (data[len - 1] << 8);
+      break;
+    case 3:
+    default:
+      ctx->buf = data[len - 3] | (data[len - 2] << 8) | (data[len - 1] << 16);
+      break;
+    }
   }
 
   return HAL_SUCCESS;
 }
 
 hal_err_t hal_sha256_finish(hal_sha256_ctx_t* ctx, uint8_t out[SHA256_DIGEST_LENGTH]) {
+  uint8_t rest = ctx->len & 3;
+
+  if (rest) {
+    hhash.Instance->DIN = ctx->buf;
+  }
+
   HAL_WAIT(__HAL_HASH_GET_FLAG(&hhash, HASH_FLAG_BUSY) == SET);
 
-  MODIFY_REG(hhash.Instance->STR, HASH_STR_NBLW, 8 * (*ctx & 3));
+  MODIFY_REG(hhash.Instance->STR, HASH_STR_NBLW, 8 * rest);
   SET_BIT(hhash.Instance->STR, HASH_STR_DCAL);
 
   HAL_WAIT(__HAL_HASH_GET_FLAG(&hhash, HASH_FLAG_DCIS) == RESET);
