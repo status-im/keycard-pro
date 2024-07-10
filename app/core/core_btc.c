@@ -11,12 +11,13 @@
 
 #define BTC_TXID_LEN 32
 #define BTC_PUBKEY_HASH_LEN 20
+#define BTC_WITNESS_LEN 32
 
 #define SIGHASH_MASK 0x1f
 #define SIGHASH_ANYONECANPAY 0x80
 
-static const uint8_t P2WPKH_SCRIPT_PRE[4] = { 0x19, 0x76, 0xa9, 0x14 };
-static const uint8_t P2WPKH_SCRIPT_POST[2] = { 0x88, 0xac };
+static const uint8_t P2PKH_SCRIPT_PRE[4] = { 0x19, 0x76, 0xa9, 0x14 };
+static const uint8_t P2PKH_SCRIPT_POST[2] = { 0x88, 0xac };
 
 enum btc_input_type {
   BTC_INPUT_TYPE_P2PKH,
@@ -33,7 +34,12 @@ enum btc_sighash_flag {
 };
 
 typedef struct {
-  uint8_t* pubkey_hash;
+  uint8_t* script_pubkey;
+  size_t script_pubkey_len;
+  uint8_t* redeem_script;
+  size_t redeem_script_len;
+  uint8_t* witness_script;
+  size_t witness_script_len;
   uint8_t* amount;
   uint8_t* bip32_path;
   uint32_t bip32_path_len;
@@ -70,20 +76,25 @@ static void core_btc_psbt_rec_handler(struct btc_tx_ctx* tx_ctx, size_t index, p
 
   switch (rec->type) {
   case PSBT_IN_NON_WITNESS_UTXO:
-  case PSBT_IN_REDEEM_SCRIPT:
-  case PSBT_IN_WITNESS_SCRIPT:
     //TODO: implement
     tx_ctx->error = ERR_DECODE;
     break;
+  case PSBT_IN_REDEEM_SCRIPT:
+    tx_ctx->input_data[index].redeem_script = rec->val;
+    tx_ctx->input_data[index].redeem_script_len = rec->val_size;
+    break;
+  case PSBT_IN_WITNESS_SCRIPT:
+    tx_ctx->input_data[index].witness_script = rec->val;
+    tx_ctx->input_data[index].witness_script_len = rec->val_size;
+    break;
   case PSBT_IN_WITNESS_UTXO:
-    if ((rec->val[8] != 22) || (rec->val[9] != 0x00) || (rec->val[10] != 20)) {
+    if (rec->val[8] >= 253) {
       tx_ctx->error = ERR_DECODE;
       return;
     }
-
-    tx_ctx->input_data[index].input_type = BTC_INPUT_TYPE_P2WPKH;
     tx_ctx->input_data[index].amount = rec->val;
-    tx_ctx->input_data[index].pubkey_hash = &rec->val[11];
+    tx_ctx->input_data[index].script_pubkey = &rec->val[9];
+    tx_ctx->input_data[index].script_pubkey_len = rec->val_size - 9;
     break;
   case PSBT_IN_BIP32_DERIVATION:
     memcpy(&tx_ctx->input_data[index].master_fingerprint, rec->val, sizeof(uint32_t));
@@ -159,12 +170,11 @@ static app_err_t core_btc_hash_segwit(struct btc_tx_ctx* tx_ctx, size_t index, u
   sha256_Update(&sha256, (uint8_t*) &tx_ctx->inputs[index].index, sizeof(uint32_t));
 
   if (tx_ctx->input_data[index].input_type == BTC_INPUT_TYPE_P2WPKH) {
-    sha256_Update(&sha256, P2WPKH_SCRIPT_PRE, sizeof(P2WPKH_SCRIPT_PRE));
-    sha256_Update(&sha256, tx_ctx->input_data[index].pubkey_hash, BTC_PUBKEY_HASH_LEN);
-    sha256_Update(&sha256, P2WPKH_SCRIPT_POST, sizeof(P2WPKH_SCRIPT_POST));
+    sha256_Update(&sha256, P2PKH_SCRIPT_PRE, sizeof(P2PKH_SCRIPT_PRE));
+    sha256_Update(&sha256, &tx_ctx->input_data[index].script_pubkey[2], BTC_PUBKEY_HASH_LEN);
+    sha256_Update(&sha256, P2PKH_SCRIPT_POST, sizeof(P2PKH_SCRIPT_POST));
   } else {
-    //TODO: implement
-    return ERR_UNSUPPORTED;
+    sha256_Update(&sha256, tx_ctx->input_data[index].witness_script, tx_ctx->input_data[index].witness_script_len);
   }
 
   sha256_Update(&sha256, tx_ctx->input_data[index].amount, sizeof(uint64_t));
@@ -323,11 +333,69 @@ static void core_btc_sign_handler(psbt_elem_t* rec) {
   }
 }
 
+static inline bool core_btc_is_p2wpkh(uint8_t* script, size_t script_len) {
+  return (script_len == BTC_PUBKEY_HASH_LEN + 2) &&
+         (script[0] == 0) &&
+         (script[1] == BTC_PUBKEY_HASH_LEN);
+}
+
+static inline bool core_btc_is_p2wsh(uint8_t* script, size_t script_len) {
+  return (script_len == BTC_WITNESS_LEN + 2) &&
+         (script[0] == 0) &&
+         (script[1] == BTC_WITNESS_LEN);
+}
+
+static inline bool core_btc_is_valid_witness_redeem_script(uint8_t* pubkey_script, size_t pubkey_script_len, uint8_t* redeem_script, size_t redeem_script_len) {
+  //TODO: verify scriptPubKey == P2SH(redeemScript)
+  return true;
+}
+
+static inline bool core_btc_is_valid_witness_script(uint8_t* script, size_t script_len, uint8_t* witness_script, size_t witness_script_len) {
+  //TODO: verify script == P2WSH(witnessScript)
+  return witness_script != NULL;
+}
+
 static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
-  //TODO: implement validation
   for (int i = 0; i < tx_ctx->input_count; i++) {
     if (tx_ctx->input_data[i].sighash_flag == SIGHASH_DEFAULT) {
       tx_ctx->input_data[i].sighash_flag = SIGHASH_ALL;
+    }
+
+    if (tx_ctx->input_data[i].amount) {
+      uint8_t *script;
+      size_t script_len;
+
+      if (tx_ctx->input_data[i].redeem_script) {
+        if (!core_btc_is_valid_witness_redeem_script(tx_ctx->input_data[i].script_pubkey, tx_ctx->input_data[i].script_pubkey_len, tx_ctx->input_data[i].redeem_script, tx_ctx->input_data[i].redeem_script_len)) {
+          return ERR_DATA;
+        }
+
+        script = tx_ctx->input_data[i].redeem_script;
+        script_len = tx_ctx->input_data[i].redeem_script_len;
+      } else {
+        script = tx_ctx->input_data[i].script_pubkey;
+        script_len = tx_ctx->input_data[i].script_pubkey_len;
+      }
+
+      if (core_btc_is_p2wpkh(script, script_len)) {
+        tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_P2WPKH;
+      } else if (core_btc_is_p2wsh(script, script_len)) {
+        if (!core_btc_is_valid_witness_script(script, script_len, tx_ctx->input_data[i].witness_script, tx_ctx->input_data[i].witness_script_len)) {
+          return ERR_DATA;
+        }
+
+        tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_P2WSH;
+      } else {
+        return ERR_DATA;
+      }
+    } else {
+      //TODO: assert(sha256d(non_witness_utxo) == psbt.tx.input[i].prevout.hash)
+      if (tx_ctx->input_data[i].redeem_script) {
+        // TODO: assert(non_witness_utxo.vout[psbt.tx.input[i].prevout.n].scriptPubKey == P2SH(redeemScript))
+        tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_P2SH;
+      } else {
+        tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_P2PKH;
+      }
     }
   }
 
