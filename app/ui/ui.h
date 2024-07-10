@@ -5,7 +5,7 @@
 #include "ethereum/ethUstream.h"
 #include "ethereum/eip712.h"
 #include "menu.h"
-#include "ur/eip4527_types.h"
+#include "ur/ur_types.h"
 #include "ur/ur.h"
 
 #define PIN_NEW_CODE -1
@@ -19,6 +19,7 @@ typedef enum {
 } core_evt_t;
 
 core_evt_t ui_qrscan(ur_type_t type, void* out);
+core_evt_t ui_qrscan_tx(ur_type_t* type, void* out);
 core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selected, i18n_str_id_t marked, uint8_t allow_usb);
 core_evt_t ui_display_tx(const uint8_t* address, const txContent_t* tx);
 core_evt_t ui_display_msg(const uint8_t* address, const uint8_t* msg, uint32_t len);

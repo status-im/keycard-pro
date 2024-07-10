@@ -3,7 +3,10 @@
 
 #include "stm32h573xx.h"
 
-typedef uint32_t hal_sha256_ctx_t;
+typedef struct {
+  uint32_t len;
+  uint32_t buf;
+} hal_sha256_ctx_t;
 typedef uint32_t hal_crc32_ctx_t;
 
 #define APP_NOCACHE APP_ALIGNED

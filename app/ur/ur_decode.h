@@ -4,14 +4,14 @@
  * Generated with a --default-max-qty of 3
  */
 
-#ifndef EIP4527_DECODE_H__
-#define EIP4527_DECODE_H__
+#ifndef UR_DECODE_H__
+#define UR_DECODE_H__
 
 #include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
-#include "eip4527_types.h"
+#include "ur_types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -43,6 +43,30 @@ int cbor_decode_hd_key(
 int cbor_decode_crypto_multi_accounts(
 		const uint8_t *payload, size_t payload_len,
 		struct crypto_multi_accounts *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_crypto_account(
+		const uint8_t *payload, size_t payload_len,
+		struct crypto_account *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_ur_part(
+		const uint8_t *payload, size_t payload_len,
+		struct ur_part *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_dev_auth(
+		const uint8_t *payload, size_t payload_len,
+		struct dev_auth *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_psbt(
+		const uint8_t *payload, size_t payload_len,
+		struct zcbor_string *result,
 		size_t *payload_len_out);
 
 
@@ -50,4 +74,4 @@ int cbor_decode_crypto_multi_accounts(
 }
 #endif
 
-#endif /* EIP4527_DECODE_H__ */
+#endif /* UR_DECODE_H__ */

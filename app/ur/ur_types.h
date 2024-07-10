@@ -4,8 +4,8 @@
  * Generated with a --default-max-qty of 3
  */
 
-#ifndef EIP4527_TYPES_H__
-#define EIP4527_TYPES_H__
+#ifndef UR_TYPES_H__
+#define UR_TYPES_H__
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -39,6 +39,62 @@ struct eth_signature {
 	struct zcbor_string eth_signature_signature;
 	struct eth_signature_signature_origin eth_signature_signature_origin;
 	bool eth_signature_signature_origin_present;
+};
+
+struct ur_part {
+	uint32_t ur_part_seqNum;
+	uint32_t ur_part_seqLen;
+	uint32_t ur_part_messageLen;
+	uint32_t ur_part_checksum;
+	struct zcbor_string ur_part_data;
+};
+
+struct dev_auth_step_type_r {
+	enum {
+		dev_auth_step_type_dev_auth_init_m_c = 1,
+		dev_auth_step_type_dev_auth_device_m_c = 2,
+		dev_auth_step_type_dev_auth_server_m_c = 3,
+	} dev_auth_step_type_choice;
+};
+
+struct dev_auth_dev_id {
+	struct zcbor_string dev_auth_dev_id;
+};
+
+struct dev_auth_first_auth {
+	uint32_t dev_auth_first_auth;
+};
+
+struct dev_auth_auth_time {
+	uint32_t dev_auth_auth_time;
+};
+
+struct dev_auth_auth_count {
+	uint32_t dev_auth_auth_count;
+};
+
+struct dev_auth_challenge {
+	struct zcbor_string dev_auth_challenge;
+};
+
+struct dev_auth_auth_sig {
+	struct zcbor_string dev_auth_auth_sig;
+};
+
+struct dev_auth {
+	struct dev_auth_step_type_r dev_auth_step;
+	struct dev_auth_dev_id dev_auth_dev_id;
+	bool dev_auth_dev_id_present;
+	struct dev_auth_first_auth dev_auth_first_auth;
+	bool dev_auth_first_auth_present;
+	struct dev_auth_auth_time dev_auth_auth_time;
+	bool dev_auth_auth_time_present;
+	struct dev_auth_auth_count dev_auth_auth_count;
+	bool dev_auth_auth_count_present;
+	struct dev_auth_challenge dev_auth_challenge;
+	bool dev_auth_challenge_present;
+	struct dev_auth_auth_sig dev_auth_auth_sig;
+	bool dev_auth_auth_sig_present;
 };
 
 struct eth_sign_request_request_id {
@@ -142,18 +198,39 @@ struct crypto_multi_accounts_version {
 
 struct crypto_multi_accounts {
 	uint32_t crypto_multi_accounts_master_fingerprint;
-	struct hd_key crypto_multi_accounts_keys_hd_key_m[10];
-	size_t crypto_multi_accounts_keys_hd_key_m_count;
+	struct hd_key crypto_multi_accounts_keys_tagged_hd_key_m[10];
+	size_t crypto_multi_accounts_keys_tagged_hd_key_m_count;
 	struct crypto_multi_accounts_device crypto_multi_accounts_device;
 	bool crypto_multi_accounts_device_present;
 	struct crypto_multi_accounts_device_id crypto_multi_accounts_device_id;
 	bool crypto_multi_accounts_device_id_present;
 	struct crypto_multi_accounts_version crypto_multi_accounts_version;
 	bool crypto_multi_accounts_version_present;
+};
+
+struct crypto_output_r {
+	union {
+		struct hd_key crypto_output_script_hash_m;
+		struct hd_key crypto_output_public_key_hash_m;
+		struct hd_key crypto_output_witness_public_key_hash_m;
+		struct hd_key crypto_output_taproot_m;
+	};
+	enum {
+		crypto_output_script_hash_m_c,
+		crypto_output_public_key_hash_m_c,
+		crypto_output_witness_public_key_hash_m_c,
+		crypto_output_taproot_m_c,
+	} crypto_output_choice;
+};
+
+struct crypto_account {
+	uint32_t crypto_account_master_fingerprint;
+	struct crypto_output_r crypto_account_output_descriptors_crypto_output_m[10];
+	size_t crypto_account_output_descriptors_crypto_output_m_count;
 };
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* EIP4527_TYPES_H__ */
+#endif /* UR_TYPES_H__ */

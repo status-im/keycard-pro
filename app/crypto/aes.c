@@ -1,10 +1,7 @@
 #include <string.h>
 #include "aes.h"
 #include "hal.h"
-
-const static uint8_t cmac_iv[AES_IV_SIZE] __attribute__((aligned(4))) = {
-  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
-};
+#include "mem.h"
 
 #ifdef SOFT_AES
 #define AES_128_KEYROUND 10
@@ -125,7 +122,7 @@ uint8_t aes_decrypt_cbc(const uint8_t* key, const uint8_t* iv, const uint8_t* da
 }
 
 uint8_t aes_cmac(const uint8_t* key, const uint8_t* data, uint32_t len, uint8_t* out) {
-  hal_aes256_init(AES_ENCRYPT, AES_CBC, key, cmac_iv);
+  hal_aes256_init(AES_ENCRYPT, AES_CBC, key, ZERO32);
 
   for(uint32_t i = 0; i < len; i += AES_BLOCK_SIZE) {
     hal_aes256_block_process(&data[i], out);

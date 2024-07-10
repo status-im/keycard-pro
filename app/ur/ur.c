@@ -2,30 +2,30 @@
 #include "ur.h"
 #include "bytewords.h"
 #include "sampler.h"
-#include "ur_part_decode.h"
+#include "ur_decode.h"
 
 #define MIN_ENCODED_LEN 22
 #define MAX_CBOR_HEADER_LEN 32
 
-#define UR_TYPE(t) (ur_type_t)(((t * 2532410) >> 28) & 0xf)
+#define UR_TYPE(t) (ur_type_t)(((t * 4597373) >> 28) & 0xf)
 
 const char *const ur_type_string[] = {
-    NULL,
-    NULL,
-    NULL,
-    "BYTES",
-    "FS-DATA",
-    "DEV-AUTH",
-    "FW-UPDATE",
-    NULL,
-    "CRYPTO-HDKEY",
-    "ETH-SIGNATURE",
-    "CRYPTO-KEYPATH",
-    "ETH-SIGN-REQUEST",
-    NULL,
-    NULL,
-    "CRYPTO-MULTI-ACCOUNTS",
-    NULL
+  "ETH-SIGNATURE",
+  "CRYPTO-OUTPUT",
+  "CRYPTO-ACCOUNT",
+  NULL,
+  "ETH-SIGN-REQUEST",
+  NULL,
+  "BYTES",
+  NULL,
+  "FS-DATA",
+  "DEV-AUTH",
+  "CRYPTO-MULTI-ACCOUNTS",
+  "FW-UPDATE",
+  NULL,
+  NULL,
+  "CRYPTO-PSBT",
+  "CRYPTO-HDKEY",
 };
 
 static app_err_t ur_process_simple(ur_t* ur, uint8_t* parts, uint8_t* part_data, size_t part_len, uint32_t desc_idx, struct ur_part* part) {

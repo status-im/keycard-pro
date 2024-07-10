@@ -8,8 +8,7 @@
 #include "ui/theme.h"
 #include "ui/ui_internal.h"
 #include "ur/ur.h"
-#include "ur/eip4527_decode.h"
-#include "ur/auth_decode.h"
+#include "ur/ur_decode.h"
 
 #define QR_INDICATOR_WIDTH ((SCREEN_WIDTH - CAM_OUT_WIDTH) / 2)
 #define QR_INDICATOR_HEIGHT 40
@@ -37,7 +36,13 @@ app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
 }
 
 app_err_t qrscan_deserialize(ur_t* ur) {
-  if (ur->type != g_ui_cmd.params.qrscan.type) {
+  if (g_ui_cmd.params.qrscan.type == UR_ANY_TX) {
+    if (ur->type == ETH_SIGN_REQUEST || ur->type == CRYPTO_PSBT) {
+      g_ui_cmd.params.qrscan.type = ur->type;
+    } else {
+      return ERR_DATA;
+    }
+  } else if (ur->type != g_ui_cmd.params.qrscan.type) {
     return ERR_DATA;
   }
 
@@ -51,6 +56,9 @@ app_err_t qrscan_deserialize(ur_t* ur) {
   switch(ur->type) {
   case ETH_SIGN_REQUEST:
     err = cbor_decode_eth_sign_request(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
+    break;
+  case CRYPTO_PSBT:
+    err = cbor_decode_psbt(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
     break;
   case FS_DATA:
     data = g_ui_cmd.params.qrscan.out;

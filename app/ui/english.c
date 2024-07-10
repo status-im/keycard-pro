@@ -11,6 +11,7 @@ const char *const i18n_english_strings[] = {
 
     // Connect menu
     "EVM-chain wallet",
+    "Bitcoin wallet",
     "OKX Wallet",
 
     // Addresses menu
@@ -63,6 +64,7 @@ const char *const i18n_english_strings[] = {
     "Scan with your wallet",
     "Scan to verify",
     "Scan with your EVM-chain wallet",
+    "Scan with your Bitcoin wallet",
     "Scan with your OKX wallet",
 
     // PIN input

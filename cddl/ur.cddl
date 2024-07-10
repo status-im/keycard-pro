@@ -1,3 +1,4 @@
+; UR Part
 ur-part = [
 	seqNum: uint32,
 	seqLen: uint,
@@ -6,4 +7,175 @@ ur-part = [
 	data: bstr
 ]
 
+; Crypto Keypath
+crypto-keypath = {
+    components: [0*10 path-component],
+    ? source-fingerprint: uint32 .gt 0,
+    ? depth: uint8
+}
+
+path-component = (
+    child-index,
+    is-hardened
+)
+
+uint8 = uint .size 1
 uint32 = uint .size 4
+uint31 = uint32 .lt 2147483648
+child-index = uint31
+is-hardened = bool
+components = 1
+source-fingerprint = 2
+depth = 3
+
+; Coin info
+coininfo = {
+    coin-type: uint31,
+    network: int
+}
+
+coin-type = 1
+network = 2
+
+; Crypto HDKey
+hd-key = {
+    ;? is-master: bool,
+    is-private: bool,
+    key-data: key-data-bytes,
+    chain-code: chain-code-bytes,
+    ? use-info: #6.305(coininfo),
+    origin: #6.304(crypto-keypath),
+    ;? children: #6.304(crypto-keypath),
+    parent-fingerprint: uint32 .gt 0,
+    name: text,
+    ? source: text
+}
+
+is-master = 1
+is-private = 2
+key-data = 3
+chain-code = 4
+use-info = 5
+origin = 6
+children = 7
+parent-fingerprint = 8
+name = 9
+source = 10
+
+key-data-bytes = bstr .size 33
+chain-code-bytes = bstr .size 32
+
+; Crypto Multi Accounts
+tagged-hd-key = #6.303(hd-key)
+crypto-multi-accounts = {
+    master-fingerprint: uint32,
+    keys: [0*10 tagged-hd-key],
+    ? device: text,
+    ? device-id: text,
+    ? version: text
+}
+
+master-fingerprint = 1
+keys = 2
+device = 3
+device-id = 4
+version = 5
+
+; Sign data type
+sign-data-type = eth-transaction-data / eth-typed-data / eth-raw-bytes / eth-typed-transaction
+
+eth-transaction-data = 1
+eth-typed-data = 2
+eth-raw-bytes = 3
+eth-typed-transaction = 4
+
+; Eth Sign request
+eth-sign-request = {
+    ? request-id: uuid,
+    sign-data: sign-data-bytes,
+    data-type: sign-data-type,
+    ? chain-id: int,
+    derivation-path: #6.304(crypto-keypath),
+    ? address: eth-address-bytes,
+    ? request-origin: text
+}
+
+request-id = 1
+sign-data = 2
+data-type = 3
+chain-id = 4
+derivation-path = 5
+address = 6
+request-origin = 7
+eth-address-bytes = bstr .size 20
+sign-data-bytes = bstr
+uuid = #6.37(bstr)
+
+; Eth Signature
+eth-signature = {
+    ? request-id: uuid,
+    signature: eth-signature-bytes,
+    ? signature-origin: text,
+}
+
+signature = 2
+signature-origin = 3
+
+eth-signature-bytes = bstr
+
+; Crypto Output
+key-exp = #6.303(hd-key)
+
+crypto-output = (
+    script-hash /               ; sh
+    public-key-hash /           ; pkh
+    witness-public-key-hash /   ; wpkh
+    taproot                     ; tr
+)
+
+script-hash = #6.400(witness-public-key-hash)
+public-key-hash = #6.403(key-exp)
+witness-public-key-hash = #6.404(key-exp)
+taproot = #6.409(key-exp)
+
+threshold = 1
+
+script-bytes = bytes
+
+crypto-account = {
+    master-fingerprint: uint32,
+    output-descriptors: [0*10 #6.308(crypto-output)]
+}
+
+output-descriptors = 2
+
+; PSBT
+psbt = bstr
+
+; Dev auth
+
+dev-auth-init = 1
+dev-auth-device = 2
+dev-auth-server = 3
+
+dev-auth-step-type = dev-auth-init / dev-auth-device / dev-auth-server
+
+dev-auth = {
+    dev-auth-step: dev-auth-step-type,
+    ? dev-id: uuid,
+    ? first-auth: timestamp,
+    ? auth-time: timestamp,
+    ? auth-count: uint32,
+    ? challenge: bstr .size 32,
+    ? auth-sig: bstr .size 64,
+}
+
+dev-auth-step = 1
+dev-id = 2
+first-auth = 3
+auth-time = 4
+auth-count = 5
+challenge = 6
+auth-sig = 7
+
+timestamp = uint .size 4
