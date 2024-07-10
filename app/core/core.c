@@ -24,35 +24,16 @@ typedef void (*core_addr_encoder_t)(const uint8_t* key, char* addr);
 
 const char *const BTC_BECH32_HRP = "bc";
 
-const uint32_t ETH_DEFAULT_BIP44[] = { 0x8000002c, 0x8000003c, 0x80000000 };
-const uint32_t ETH_DEFAULT_BIP44_LEN = 3;
+const uint32_t ETH_PURPOSE = 0x8000002c;
+const uint32_t ETH_COIN = 0x8000003c;
 
-const uint32_t ETH_LEDGER_LIVE_PATH[] = { 0x8000002c, 0x8000003c };
-const uint32_t ETH_LEDGER_LIVE_PATH_LEN = 2;
+const uint32_t BTC_LEGACY_PURPOSE = 0x8000002c;
+const uint32_t BTC_NESTED_SEGWIT_PURPOSE = 0x80000031;
+const uint32_t BTC_NATIVE_SEGWIT_PURPOSE = 0x80000054;
+const uint32_t BTC_TAPROOT_PURPOSE = 0x80000056;
 
-const uint32_t BTC_LEGACY_PATH[] = { 0x8000002c, 0x80000000, 0x80000000 };
-const uint32_t BTC_LEGACY_PATH_LEN = 3;
-
-const uint32_t BTC_SEGWIT_PATH[] = { 0x80000031, 0x80000000, 0x80000000 };
-const uint32_t BTC_SEGWIT_PATH_LEN = 3;
-
-const uint32_t BTC_NATIVE_SEGWIT_PATH[] = { 0x80000054, 0x80000000, 0x80000000 };
-const uint32_t BTC_NATIVE_SEGWIT_PATH_LEN = 3;
-
-const uint32_t BTC_TAPROOT_PATH[] = { 0x80000056, 0x80000000, 0x80000000 };
-const uint32_t BTC_TAPROOT_PATH_LEN = 3;
-
-const uint32_t TRX_PATH[] = { 0x8000002c, 0x800000c3, 0x80000000 };
-const uint32_t TRX_PATH_LEN = 3;
-
-const uint32_t LTC_PATH[] = { 0x80000031, 0x80000002, 0x80000000 };
-const uint32_t LTC_PATH_LEN = 3;
-
-const uint32_t BCH_PATH[] = { 0x8000002c, 0x80000091, 0x80000000 };
-const uint32_t BCH_PATH_LEN = 3;
-
-const uint32_t DASH_PATH[] = { 0x8000002c, 0x80000005, 0x80000000 };
-const uint32_t DASH_PATH_LEN = 3;
+const uint32_t BTC_MAINNET_COIN = 0x80000000;
+const uint32_t BTC_TESTNET_COIN = 0x80000001;
 
 const uint8_t *const EIP4527_NAME = (uint8_t*) "Keycard Pro";
 const uint32_t EIP4527_NAME_LEN = 11;
@@ -268,7 +249,7 @@ void core_qr_run() {
   }
 }
 
-static app_err_t get_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, const uint32_t bip32_path[], size_t bip32_len, bool add_source) {
+static app_err_t get_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, uint32_t purpose, uint32_t coin, bool add_source) {
   key->hd_key_is_private = 0;
   key->hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
   key->hd_key_key_data.value = pub;
@@ -276,9 +257,9 @@ static app_err_t get_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, co
   key->hd_key_chain_code.value = chain;
   key->hd_key_use_info_present = 0;
   key->hd_key_origin.crypto_keypath_depth_present = 1;
-  key->hd_key_origin.crypto_keypath_depth.crypto_keypath_depth = bip32_len;
+  key->hd_key_origin.crypto_keypath_depth.crypto_keypath_depth = 3;
   key->hd_key_origin.crypto_keypath_source_fingerprint_present = 1;
-  key->hd_key_origin.crypto_keypath_components_path_component_m_count = bip32_len;
+  key->hd_key_origin.crypto_keypath_components_path_component_m_count = 3;
   key->hd_key_name.len = EIP4527_NAME_LEN;
   key->hd_key_name.value = EIP4527_NAME;
 
@@ -290,17 +271,21 @@ static app_err_t get_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, co
     key->hd_key_source_present = 0;
   }
 
-  for (int i = 0; i < bip32_len; i++) {
-    uint32_t c = bip32_path[i];
-    g_core.bip44_path[(i * 4)] = c >> 24;
-    g_core.bip44_path[(i * 4) + 1] = (c >> 16) & 0xff;
-    g_core.bip44_path[(i * 4) + 2] = (c >> 8) & 0xff;
-    g_core.bip44_path[(i * 4) + 3] = (c & 0xff);
-    key->hd_key_origin.crypto_keypath_components_path_component_m[i].path_component_child_index_m = c & 0x7fffffff;
-    key->hd_key_origin.crypto_keypath_components_path_component_m[i].path_component_is_hardened_m = c > 0x7fffffff;
-  }
+  key->hd_key_origin.crypto_keypath_components_path_component_m[0].path_component_child_index_m = purpose & 0x7fffffff;
+  key->hd_key_origin.crypto_keypath_components_path_component_m[0].path_component_is_hardened_m = 1;
+  key->hd_key_origin.crypto_keypath_components_path_component_m[1].path_component_child_index_m = coin & 0x7fffffff;
+  key->hd_key_origin.crypto_keypath_components_path_component_m[1].path_component_is_hardened_m = 1;
+  key->hd_key_origin.crypto_keypath_components_path_component_m[2].path_component_child_index_m = 0;
+  key->hd_key_origin.crypto_keypath_components_path_component_m[2].path_component_is_hardened_m = 1;
 
-  g_core.bip44_path_len = bip32_len * 4;
+  purpose = rev32(purpose);
+  coin = rev32(coin);
+  memcpy(g_core.bip44_path, &purpose, 4);
+  memcpy(&g_core.bip44_path[4], &coin, 4);
+  memset(&g_core.bip44_path[8], 0, 4);
+  g_core.bip44_path[8] = 0x80;
+
+  g_core.bip44_path_len = 12;
 
   if (core_export_public(pub, chain, &key->hd_key_origin.crypto_keypath_source_fingerprint.crypto_keypath_source_fingerprint, &key->hd_key_parent_fingerprint) != ERR_OK) {
     return ERR_HW;
@@ -312,7 +297,7 @@ static app_err_t get_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, co
 void core_display_public_eip4527() {
   struct hd_key key;
 
-  if (get_hd_key(&key, g_core.data.key.pub, g_core.data.key.chain, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true) != ERR_OK) {
+  if (get_hd_key(&key, g_core.data.key.pub, g_core.data.key.chain, ETH_PURPOSE, ETH_COIN, true) != ERR_OK) {
     ui_card_transport_error();
     return;
   }
@@ -322,8 +307,8 @@ void core_display_public_eip4527() {
 }
 
 // this macro can only be used in core_display_public_bitcoin()
-#define CORE_BITCOIN_EXPORT(__NUM__, __TYPE__, __PATH__, __PATH_LEN__) \
-  if (get_hd_key(&account.crypto_account_output_descriptors_crypto_output_m[__NUM__].crypto_output_public_key_hash_m, &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, false) != ERR_OK) { \
+#define CORE_BITCOIN_EXPORT(__NUM__, __TYPE__, __PURPOSE__, __COIN__) \
+  if (get_hd_key(&account.crypto_account_output_descriptors_crypto_output_m[__NUM__].crypto_output_public_key_hash_m, &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PURPOSE__, __COIN__, false) != ERR_OK) { \
     ui_card_transport_error(); \
     return; \
   } \
@@ -334,10 +319,10 @@ void core_display_public_bitcoin() {
 
   size_t keys_off = 0;
 
-  CORE_BITCOIN_EXPORT(0, crypto_output_witness_public_key_hash_m_c, BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN);
-  CORE_BITCOIN_EXPORT(1, crypto_output_script_hash_m_c, BTC_SEGWIT_PATH, BTC_SEGWIT_PATH_LEN);
-  CORE_BITCOIN_EXPORT(2, crypto_output_public_key_hash_m_c, BTC_LEGACY_PATH, BTC_LEGACY_PATH_LEN);
-  CORE_BITCOIN_EXPORT(3, crypto_output_taproot_m_c, BTC_TAPROOT_PATH, BTC_TAPROOT_PATH_LEN);
+  CORE_BITCOIN_EXPORT(0, crypto_output_witness_public_key_hash_m_c, BTC_NATIVE_SEGWIT_PURPOSE, BTC_MAINNET_COIN);
+  CORE_BITCOIN_EXPORT(1, crypto_output_script_hash_m_c, BTC_NESTED_SEGWIT_PURPOSE, BTC_MAINNET_COIN);
+  CORE_BITCOIN_EXPORT(2, crypto_output_public_key_hash_m_c, BTC_LEGACY_PURPOSE, BTC_MAINNET_COIN);
+  CORE_BITCOIN_EXPORT(3, crypto_output_taproot_m_c, BTC_TAPROOT_PURPOSE, BTC_MAINNET_COIN);
 
   account.crypto_account_output_descriptors_crypto_output_m_count = 4;
   account.crypto_account_master_fingerprint = g_core.master_fingerprint;
@@ -346,8 +331,8 @@ void core_display_public_bitcoin() {
 }
 
 // this macro can only be used in core_display_public_multicoin()
-#define CORE_MULTICOIN_EXPORT(__NUM__, __PATH__, __PATH_LEN__, __SOURCE___) \
-  if (get_hd_key(&accounts.crypto_multi_accounts_keys_tagged_hd_key_m[__NUM__], &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PATH__, __PATH_LEN__, __SOURCE___) != ERR_OK) { \
+#define CORE_MULTICOIN_EXPORT(__NUM__, __PURPOSE__, __COIN__, __SOURCE___) \
+  if (get_hd_key(&accounts.crypto_multi_accounts_keys_tagged_hd_key_m[__NUM__], &g_mem_heap[keys_off], &g_mem_heap[keys_off + PUBKEY_LEN], __PURPOSE__, __COIN__, __SOURCE___) != ERR_OK) { \
     ui_card_transport_error(); \
     return; \
   } \
@@ -374,10 +359,10 @@ void core_display_public_multicoin() {
 
   size_t keys_off = 0;
 
-  CORE_MULTICOIN_EXPORT(0, BTC_LEGACY_PATH, BTC_LEGACY_PATH_LEN, false);
-  CORE_MULTICOIN_EXPORT(1, BTC_SEGWIT_PATH, BTC_SEGWIT_PATH_LEN, false);
-  CORE_MULTICOIN_EXPORT(2, BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN, false);
-  CORE_MULTICOIN_EXPORT(3, ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, true);
+  CORE_MULTICOIN_EXPORT(0, BTC_LEGACY_PURPOSE, BTC_MAINNET_COIN, false);
+  CORE_MULTICOIN_EXPORT(1, BTC_NESTED_SEGWIT_PURPOSE, BTC_MAINNET_COIN, false);
+  CORE_MULTICOIN_EXPORT(2, BTC_NATIVE_SEGWIT_PURPOSE, BTC_MAINNET_COIN, false);
+  CORE_MULTICOIN_EXPORT(3, ETH_PURPOSE, ETH_COIN, true);
 
   accounts.crypto_multi_accounts_keys_tagged_hd_key_m_count = 4;
   accounts.crypto_multi_accounts_master_fingerprint = g_core.master_fingerprint;
@@ -386,31 +371,21 @@ void core_display_public_multicoin() {
   ui_display_ur_qr(LSTR(QR_CONNECT_MULTIACCOUNT_TITLE), &g_mem_heap[keys_off], g_core.data.key.cbor_len, CRYPTO_MULTI_ACCOUNTS);
 }
 
-static void core_addresses(const uint32_t* base_path, size_t base_len, core_addr_encoder_t encoder) {
+static void core_addresses(uint32_t purpose, uint32_t coin, core_addr_encoder_t encoder) {
   uint32_t index = 0;
 
-  for (int i = 0; i < base_len; i++) {
-    uint32_t c = base_path[i];
-    g_core.bip44_path[(i * 4)] = c >> 24;
-    g_core.bip44_path[(i * 4) + 1] = (c >> 16) & 0xff;
-    g_core.bip44_path[(i * 4) + 2] = (c >> 8) & 0xff;
-    g_core.bip44_path[(i * 4) + 3] = (c & 0xff);
-  }
+  purpose = rev32(purpose);
+  coin = rev32(coin);
+  memcpy(g_core.bip44_path, &purpose, 4);
+  memcpy(&g_core.bip44_path[4], &coin, 4);
+  memset(&g_core.bip44_path[8], 0, 8);
+  g_core.bip44_path[8] = 0x80;
 
-  g_core.bip44_path[(base_len * 4)] = 0;
-  g_core.bip44_path[(base_len * 4) + 1] = 0;
-  g_core.bip44_path[(base_len * 4) + 2] = 0;
-  g_core.bip44_path[(base_len * 4) + 3] = 0;
-
-  base_len++;
-
-  g_core.bip44_path_len = (base_len + 1) * 4;
+  g_core.bip44_path_len = 20;
 
   do {
-    g_core.bip44_path[(base_len * 4)] = index >> 24;
-    g_core.bip44_path[(base_len * 4) + 1] = (index >> 16) & 0xff;
-    g_core.bip44_path[(base_len * 4) + 2] = (index >> 8) & 0xff;
-    g_core.bip44_path[(base_len * 4) + 3] = (index & 0xff);
+    uint32_t tmp = rev32(index);
+    memcpy(&g_core.bip44_path[16], &tmp, 4);
 
     if (core_export_public(g_core.data.key.pub, NULL, NULL, NULL) != ERR_OK) {
       ui_info(LSTR(INFO_CARD_ERROR_MSG), 0);
@@ -436,11 +411,11 @@ static void core_btc_addr_encoder(const uint8_t* key, char* addr) {
 }
 
 void core_addresses_ethereum() {
-  core_addresses(ETH_DEFAULT_BIP44, ETH_DEFAULT_BIP44_LEN, core_eth_addr_encoder);
+  core_addresses(ETH_PURPOSE, ETH_COIN, core_eth_addr_encoder);
 }
 
 void core_addresses_bitcoin() {
-  core_addresses(BTC_NATIVE_SEGWIT_PATH, BTC_NATIVE_SEGWIT_PATH_LEN, core_btc_addr_encoder);
+  core_addresses(BTC_NATIVE_SEGWIT_PURPOSE, BTC_MAINNET_COIN, core_btc_addr_encoder);
 }
 
 core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb) {
