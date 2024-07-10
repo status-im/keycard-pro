@@ -21,7 +21,10 @@ static inline void core_action_run(i18n_str_id_t menu) {
     core_display_public_eip4527();
     break;
   case MENU_CONNECT_BITCOIN:
-    core_display_public_bitcoin();
+    core_display_public_bitcoin_mainnet();
+    break;
+  case MENU_CONNECT_BITCOIN_TESTNET:
+    core_display_public_bitcoin_testnet();
     break;
   case MENU_CONNECT_MULTICOIN:
     core_display_public_multicoin();

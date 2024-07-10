@@ -30,9 +30,10 @@ const menu_t menu_device = {
 };
 
 const menu_t menu_connect = {
-  3, {
+  4, {
     {MENU_CONNECT_EIP4527, NULL},
     {MENU_CONNECT_BITCOIN, NULL},
+    {MENU_CONNECT_BITCOIN_TESTNET, NULL},
     {MENU_CONNECT_MULTICOIN, NULL},
   }
 };

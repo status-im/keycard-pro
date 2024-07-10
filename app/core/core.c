@@ -314,20 +314,28 @@ void core_display_public_eip4527() {
   } \
   account.crypto_account_output_descriptors_crypto_output_m[__NUM__].crypto_output_choice =  __TYPE__; \
   keys_off += PUBKEY_LEN + CHAINCODE_LEN
-void core_display_public_bitcoin() {
+void core_display_public_bitcoin(uint32_t coin) {
   struct crypto_account account;
 
   size_t keys_off = 0;
 
-  CORE_BITCOIN_EXPORT(0, crypto_output_witness_public_key_hash_m_c, BTC_NATIVE_SEGWIT_PURPOSE, BTC_MAINNET_COIN);
-  CORE_BITCOIN_EXPORT(1, crypto_output_script_hash_m_c, BTC_NESTED_SEGWIT_PURPOSE, BTC_MAINNET_COIN);
-  CORE_BITCOIN_EXPORT(2, crypto_output_public_key_hash_m_c, BTC_LEGACY_PURPOSE, BTC_MAINNET_COIN);
-  CORE_BITCOIN_EXPORT(3, crypto_output_taproot_m_c, BTC_TAPROOT_PURPOSE, BTC_MAINNET_COIN);
+  CORE_BITCOIN_EXPORT(0, crypto_output_witness_public_key_hash_m_c, BTC_NATIVE_SEGWIT_PURPOSE, coin);
+  CORE_BITCOIN_EXPORT(1, crypto_output_script_hash_m_c, BTC_NESTED_SEGWIT_PURPOSE, coin);
+  CORE_BITCOIN_EXPORT(2, crypto_output_public_key_hash_m_c, BTC_LEGACY_PURPOSE, coin);
+  CORE_BITCOIN_EXPORT(3, crypto_output_taproot_m_c, BTC_TAPROOT_PURPOSE, coin);
 
   account.crypto_account_output_descriptors_crypto_output_m_count = 4;
   account.crypto_account_master_fingerprint = g_core.master_fingerprint;
   cbor_encode_crypto_account(&g_mem_heap[keys_off], MEM_HEAP_SIZE, &account, &g_core.data.key.cbor_len);
   ui_display_ur_qr(LSTR(QR_CONNECT_BITCOIN_TITLE), &g_mem_heap[keys_off], g_core.data.key.cbor_len, CRYPTO_ACCOUNT);
+}
+
+void core_display_public_bitcoin_mainnet() {
+  core_display_public_bitcoin(BTC_MAINNET_COIN);
+}
+
+void core_display_public_bitcoin_testnet() {
+  core_display_public_bitcoin(BTC_TESTNET_COIN);
 }
 
 // this macro can only be used in core_display_public_multicoin()

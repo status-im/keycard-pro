@@ -87,7 +87,8 @@ void core_btc_psbt_qr_run(struct zcbor_string* qr_request);
 
 void core_qr_run();
 void core_display_public_eip4527();
-void core_display_public_bitcoin();
+void core_display_public_bitcoin_mainnet();
+void core_display_public_bitcoin_testnet();
 void core_display_public_multicoin();
 void core_addresses_ethereum();
 void core_addresses_bitcoin();

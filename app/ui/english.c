@@ -12,6 +12,7 @@ const char *const i18n_english_strings[] = {
     // Connect menu
     "EVM-chain wallet",
     "Bitcoin wallet",
+    "Bitcoin testnet wallet",
     "OKX Wallet",
 
     // Addresses menu

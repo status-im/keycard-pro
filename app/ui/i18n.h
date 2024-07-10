@@ -16,6 +16,7 @@ typedef enum {
   // Connect menu
   MENU_CONNECT_EIP4527,
   MENU_CONNECT_BITCOIN,
+  MENU_CONNECT_BITCOIN_TESTNET,
   MENU_CONNECT_MULTICOIN,
 
   // Addresses menu
