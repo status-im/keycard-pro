@@ -183,7 +183,7 @@ static app_err_t core_btc_hash_legacy(struct btc_tx_ctx* tx_ctx, size_t index, u
   uint8_t* script;
   uint8_t script_len;
 
-  if (tx_ctx->input_data[index].redeem_script) {
+  if (tx_ctx->input_data[index].input_type == BTC_INPUT_TYPE_LEGACY_WITH_REDEEM) {
     script = tx_ctx->input_data[index].redeem_script;
     script_len = tx_ctx->input_data[index].redeem_script_len;
   } else {
