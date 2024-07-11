@@ -47,6 +47,7 @@ typedef struct {
   uint32_t sighash_flag;
   enum btc_input_type input_type;
   bool witness;
+  bool can_sign;
 } psbt_input_data_t;
 
 struct btc_tx_ctx {
@@ -171,7 +172,82 @@ static void core_btc_parser_cb(psbt_elem_t* rec) {
 }
 
 static app_err_t core_btc_hash_legacy(struct btc_tx_ctx* tx_ctx, size_t index, uint8_t digest[SHA256_DIGEST_LENGTH]) {
-  return ERR_UNSUPPORTED;
+  SHA256_CTX sha256;
+  sha256_Init(&sha256);
+
+  uint8_t sighash = tx_ctx->input_data[index].sighash_flag & SIGHASH_MASK;
+  uint8_t anyonecanpay = tx_ctx->input_data[index].sighash_flag & SIGHASH_ANYONECANPAY;
+
+  sha256_Update(&sha256, (uint8_t*) &tx_ctx->tx.version, sizeof(uint32_t));
+
+  uint8_t* script;
+  uint8_t script_len;
+
+  if (tx_ctx->input_data[index].redeem_script) {
+    script = tx_ctx->input_data[index].redeem_script;
+    script_len = tx_ctx->input_data[index].redeem_script_len;
+  } else {
+    script = tx_ctx->input_data[index].script_pubkey;
+    script_len = tx_ctx->input_data[index].script_pubkey_len;
+  }
+
+  if (anyonecanpay) {
+    uint8_t tmp = 1;
+    sha256_Update(&sha256, (uint8_t*) &tmp, sizeof(uint8_t));
+    sha256_Update(&sha256, tx_ctx->inputs[index].txid, BTC_TXID_LEN);
+    sha256_Update(&sha256, (uint8_t*) &tx_ctx->inputs[index].index, sizeof(uint32_t));
+    sha256_Update(&sha256, &script_len, sizeof(uint8_t));
+    sha256_Update(&sha256, script, script_len);
+    sha256_Update(&sha256, (uint8_t*) &tx_ctx->inputs[index].sequence_number, sizeof(uint32_t));
+  } else{
+    for (int i = 0; i < tx_ctx->input_count; i++) {
+      sha256_Update(&sha256, (uint8_t*) &tx_ctx->input_count, sizeof(uint8_t));
+      sha256_Update(&sha256, tx_ctx->inputs[i].txid, BTC_TXID_LEN);
+      sha256_Update(&sha256, (uint8_t*) &tx_ctx->inputs[i].index, sizeof(uint32_t));
+
+      if (i == index) {
+        sha256_Update(&sha256, (uint8_t*) &script_len, sizeof(uint8_t));
+        sha256_Update(&sha256, script, script_len);
+      } else {
+        uint8_t tmp = 0;
+        sha256_Update(&sha256, (uint8_t*) &tmp, sizeof(uint8_t));
+      }
+
+      if ((sighash == SIGHASH_ALL) || (i == index)) {
+        sha256_Update(&sha256, (uint8_t*) &tx_ctx->inputs[i].sequence_number, sizeof(uint32_t));
+      } else {
+        uint32_t tmp = 0;
+        sha256_Update(&sha256, (uint8_t*) &tmp, sizeof(uint32_t));
+      }
+    }
+  }
+
+  if (sighash == SIGHASH_NONE) {
+    uint8_t tmp = 0;
+    sha256_Update(&sha256, (uint8_t*) &tmp, sizeof(uint8_t));
+  } else {
+    uint8_t out_count = sighash == SIGHASH_SINGLE ? (index + 1) : tx_ctx->output_count;
+    sha256_Update(&sha256, (uint8_t*) &out_count, sizeof(uint8_t));
+    for (int i = 0; i < out_count; i++) {
+      if ((sighash == SIGHASH_ALL) || (i == index)) {
+        size_t len = ((uint32_t) tx_ctx->outputs[i].script - (uint32_t) tx_ctx->outputs[i].amount) + tx_ctx->outputs[i].script_len;
+        sha256_Update(&sha256, tx_ctx->outputs[i].amount, len);
+      } else {
+        int64_t amount = -1;
+        uint8_t tmp = 0;
+        sha256_Update(&sha256, (uint8_t*) &amount, sizeof(uint64_t));
+        sha256_Update(&sha256, (uint8_t*) &tmp, sizeof(uint8_t));
+      }
+    }
+  }
+
+  sha256_Update(&sha256, (uint8_t*) &tx_ctx->tx.lock_time, sizeof(uint32_t));
+  sha256_Update(&sha256, (uint8_t*) &tx_ctx->input_data[index].sighash_flag, sizeof(uint32_t));
+
+  sha256_Final(&sha256, digest);
+  sha256_Raw(digest, SHA256_DIGEST_LENGTH, digest);
+
+  return ERR_OK;
 }
 
 static app_err_t core_btc_hash_segwit(struct btc_tx_ctx* tx_ctx, size_t index, uint8_t digest[SHA256_DIGEST_LENGTH]) {
@@ -277,13 +353,7 @@ static app_err_t core_btc_read_signature(uint8_t* data, uint8_t sighash, psbt_re
 }
 
 static app_err_t core_btc_sign_input(struct btc_tx_ctx* tx_ctx, size_t index) {
-  uint32_t mfp;
-
-  if (core_get_fingerprint(g_core.bip44_path, 0, &mfp) != ERR_OK) {
-    return ERR_HW;
-  }
-
-  if (rev32(mfp) != tx_ctx->input_data[index].master_fingerprint) {
+  if (!tx_ctx->input_data[index].can_sign) {
     return ERR_OK;
   }
 
@@ -389,7 +459,22 @@ static inline bool core_btc_is_valid_witness_script(uint8_t* script, size_t scri
 }
 
 static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
+  uint32_t mfp;
+
+  if (core_get_fingerprint(g_core.bip44_path, 0, &mfp) != ERR_OK) {
+    return ERR_HW;
+  }
+
+  mfp = rev32(mfp);
+
+  bool can_sign_something = false;
+
   for (int i = 0; i < tx_ctx->input_count; i++) {
+    if (tx_ctx->input_data[i].master_fingerprint == mfp) {
+      tx_ctx->input_data[i].can_sign = true;
+      can_sign_something = true;
+    }
+
     if (tx_ctx->input_data[i].sighash_flag == SIGHASH_DEFAULT) {
       tx_ctx->input_data[i].sighash_flag = SIGHASH_ALL;
     }
@@ -434,7 +519,7 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
     }
   }
 
-  return ERR_OK;
+  return can_sign_something ? ERR_OK : ERR_MISMATCH;
 }
 
 static app_err_t core_btc_confirm(struct btc_tx_ctx* tx_ctx) {
