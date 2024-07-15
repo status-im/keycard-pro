@@ -599,7 +599,7 @@ static app_err_t core_btc_psbt_run(const uint8_t* psbt_in, size_t psbt_len, uint
     return tx_ctx->error;
   }
 
-  if (tx_ctx->psbt_out.state != PSBT_ST_OUTPUTS) {
+  while(++tx_ctx->index_out < tx_ctx->output_count) {
     psbt_new_output_record_set(&tx_ctx->psbt_out);
   }
 
