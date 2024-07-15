@@ -84,6 +84,7 @@ app_err_t core_eth_usb_sign_eip712(keycard_t* kc, apdu_t* cmd);
 
 void core_eth_eip4527_run(struct eth_sign_request* qr_request);
 void core_btc_psbt_qr_run(struct zcbor_string* qr_request);
+void core_btc_sign_msg_qr_run(struct btc_sign_request* qr_request);
 
 void core_qr_run();
 void core_display_public_eip4527();

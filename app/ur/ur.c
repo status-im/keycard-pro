@@ -7,25 +7,26 @@
 #define MIN_ENCODED_LEN 22
 #define MAX_CBOR_HEADER_LEN 32
 
-#define UR_TYPE(t) (ur_type_t)(((t * 4597373) >> 28) & 0xf)
+#define UR_LOOKUP_MULT 88116301
+#define UR_TYPE(t) (ur_type_t)(((t * UR_LOOKUP_MULT) >> 28) & 0xf)
 
 const char *const ur_type_string[] = {
-  "ETH-SIGNATURE",
-  "CRYPTO-OUTPUT",
-  "CRYPTO-ACCOUNT",
-  NULL,
+  "BYTES",
   "ETH-SIGN-REQUEST",
   NULL,
-  "BYTES",
-  NULL,
-  "FS-DATA",
-  "DEV-AUTH",
-  "CRYPTO-MULTI-ACCOUNTS",
-  "FW-UPDATE",
-  NULL,
-  NULL,
   "CRYPTO-PSBT",
+  "CRYPTO-MULTI-ACCOUNTS",
+  NULL,
+  "FW-UPDATE",
   "CRYPTO-HDKEY",
+  "BTC-SIGNATURE",
+  "CRYPTO-ACCOUNT",
+  NULL,
+  "ETH-SIGNATURE",
+  "DEV-AUTH",
+  "FS-DATA",
+  "BTC-SIGN-REQUEST",
+  "CRYPTO-OUTPUT",
 };
 
 static app_err_t ur_process_simple(ur_t* ur, uint8_t* parts, uint8_t* part_data, size_t part_len, uint32_t desc_idx, struct ur_part* part) {

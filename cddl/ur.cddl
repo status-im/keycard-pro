@@ -152,6 +152,34 @@ output-descriptors = 2
 ; PSBT
 psbt = bstr
 
+; BTC Message Sign
+btc-message = 1
+btc-data-type = btc-message
+
+btc-address = text
+
+btc-sign-request = {
+    request-id: uuid,
+    sign-data: sign-data-bytes,
+    data-type: btc-data-type,
+    btc-derivation-paths: [0*1 #6.304(crypto-keypath)],
+    ? btc-addresses: [0*1 btc-address],
+    ? btc-origin: text
+}
+
+btc-message-data-type = 3
+btc-derivation-paths = 4
+btc-addresses = 5
+btc-origin = 6
+
+btc-signature = {
+    request-id: uuid,
+    signature: bstr,
+    public-key: bstr
+}
+
+public-key = 3
+
 ; Dev auth
 
 dev-auth-init = 1

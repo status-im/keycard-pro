@@ -46,6 +46,7 @@ core_ctx_t g_core;
 union qr_tx_data {
   struct eth_sign_request eth_sign_request;
   struct zcbor_string crypto_psbt;
+  struct btc_sign_request btc_sign_request;
 };
 
 app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain) {
@@ -243,6 +244,9 @@ void core_qr_run() {
     break;
   case CRYPTO_PSBT:
     core_btc_psbt_qr_run(&qr_request.crypto_psbt);
+    break;
+  case BTC_SIGN_REQUEST:
+    core_btc_sign_msg_qr_run(&qr_request.btc_sign_request);
     break;
   default:
     break;

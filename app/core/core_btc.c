@@ -12,12 +12,15 @@
 #define BTC_TXID_LEN 32
 #define BTC_PUBKEY_HASH_LEN 20
 #define BTC_WITNESS_LEN 32
+#define BTC_MSG_SIG_LEN 65
 
 #define SIGHASH_MASK 0x1f
 #define SIGHASH_ANYONECANPAY 0x80
 
 static const uint8_t P2PKH_SCRIPT_PRE[4] = { 0x19, 0x76, 0xa9, 0x14 };
 static const uint8_t P2PKH_SCRIPT_POST[2] = { 0x88, 0xac };
+
+const uint8_t *const BTC_MSG_MAGIC = (uint8_t *) "\030Bitcoin Signed Message:\n";
 
 enum btc_input_type {
   BTC_INPUT_TYPE_LEGACY,
@@ -617,4 +620,7 @@ void core_btc_psbt_qr_run(struct zcbor_string* qr_request) {
   //TODO: this can be optimized by simply prepending the cbor header to the psbt
   cbor_encode_psbt(g_mem_heap, MEM_HEAP_SIZE, &qr_out, &out_len);
   ui_display_ur_qr(LSTR(QR_SIGNATURE_TITLE), g_mem_heap, out_len, CRYPTO_PSBT);
+}
+
+void core_btc_sign_msg_qr_run(struct btc_sign_request* qr_request) {
 }

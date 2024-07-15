@@ -49,6 +49,12 @@ struct ur_part {
 	struct zcbor_string ur_part_data;
 };
 
+struct btc_signature {
+	struct zcbor_string btc_signature_request_id;
+	struct zcbor_string btc_signature_signature;
+	struct zcbor_string btc_signature_public_key;
+};
+
 struct dev_auth_step_type_r {
 	enum {
 		dev_auth_step_type_dev_auth_init_m_c = 1,
@@ -182,6 +188,26 @@ struct hd_key {
 	struct zcbor_string hd_key_name;
 	struct hd_key_source hd_key_source;
 	bool hd_key_source_present;
+};
+
+struct btc_sign_request_btc_addresses_r {
+	struct zcbor_string btc_sign_request_btc_addresses_btc_address_m;
+	bool btc_sign_request_btc_addresses_btc_address_m_present;
+};
+
+struct btc_sign_request_btc_origin {
+	struct zcbor_string btc_sign_request_btc_origin;
+};
+
+struct btc_sign_request {
+	struct zcbor_string btc_sign_request_request_id;
+	struct zcbor_string btc_sign_request_sign_data;
+	struct crypto_keypath btc_sign_request_btc_derivation_paths_crypto_keypath_m;
+	bool btc_sign_request_btc_derivation_paths_crypto_keypath_m_present;
+	struct btc_sign_request_btc_addresses_r btc_sign_request_btc_addresses;
+	bool btc_sign_request_btc_addresses_present;
+	struct btc_sign_request_btc_origin btc_sign_request_btc_origin;
+	bool btc_sign_request_btc_origin_present;
 };
 
 struct crypto_multi_accounts_device {

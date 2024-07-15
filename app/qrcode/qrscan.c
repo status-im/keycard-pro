@@ -37,7 +37,7 @@ app_err_t qrscan_decode(struct quirc *qrctx, ur_t* ur) {
 
 app_err_t qrscan_deserialize(ur_t* ur) {
   if (g_ui_cmd.params.qrscan.type == UR_ANY_TX) {
-    if (ur->type == ETH_SIGN_REQUEST || ur->type == CRYPTO_PSBT) {
+    if (ur->type == ETH_SIGN_REQUEST || ur->type == CRYPTO_PSBT || ur->type == BTC_SIGN_REQUEST) {
       g_ui_cmd.params.qrscan.type = ur->type;
     } else {
       return ERR_DATA;
@@ -59,6 +59,9 @@ app_err_t qrscan_deserialize(ur_t* ur) {
     break;
   case CRYPTO_PSBT:
     err = cbor_decode_psbt(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
+    break;
+  case BTC_SIGN_REQUEST:
+    err = cbor_decode_btc_sign_request(ur->data, ur->data_len, g_ui_cmd.params.qrscan.out, NULL) == ZCBOR_SUCCESS ? ERR_OK : ERR_DATA;
     break;
   case FS_DATA:
     data = g_ui_cmd.params.qrscan.out;

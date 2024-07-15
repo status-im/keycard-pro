@@ -67,6 +67,18 @@ int cbor_decode_dev_auth(
 int cbor_decode_psbt(
 		const uint8_t *payload, size_t payload_len,
 		struct zcbor_string *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_btc_sign_request(
+		const uint8_t *payload, size_t payload_len,
+		struct btc_sign_request *result,
+		size_t *payload_len_out);
+
+
+int cbor_decode_btc_signature(
+		const uint8_t *payload, size_t payload_len,
+		struct btc_signature *result,
 		size_t *payload_len_out);
 
 

@@ -38,6 +38,8 @@ static bool decode_repeated_eth_sign_request_request_origin(zcbor_state_t *state
 static bool decode_coininfo(zcbor_state_t *state, struct coininfo *result);
 static bool decode_repeated_hd_key_use_info(zcbor_state_t *state, struct hd_key_use_info *result);
 static bool decode_repeated_hd_key_source(zcbor_state_t *state, struct hd_key_source *result);
+static bool decode_repeated_btc_sign_request_btc_addresses(zcbor_state_t *state, struct btc_sign_request_btc_addresses_r *result);
+static bool decode_repeated_btc_sign_request_btc_origin(zcbor_state_t *state, struct btc_sign_request_btc_origin *result);
 static bool decode_tagged_hd_key(zcbor_state_t *state, struct hd_key *result);
 static bool decode_repeated_crypto_multi_accounts_device(zcbor_state_t *state, struct crypto_multi_accounts_device *result);
 static bool decode_repeated_crypto_multi_accounts_device_id(zcbor_state_t *state, struct crypto_multi_accounts_device_id *result);
@@ -48,6 +50,8 @@ static bool decode_script_hash(zcbor_state_t *state, struct hd_key *result);
 static bool decode_public_key_hash(zcbor_state_t *state, struct hd_key *result);
 static bool decode_taproot(zcbor_state_t *state, struct hd_key *result);
 static bool decode_crypto_output(zcbor_state_t *state, struct crypto_output_r *result);
+static bool decode_btc_signature(zcbor_state_t *state, struct btc_signature *result);
+static bool decode_btc_sign_request(zcbor_state_t *state, struct btc_sign_request *result);
 static bool decode_psbt(zcbor_state_t *state, struct zcbor_string *result);
 static bool decode_dev_auth(zcbor_state_t *state, struct dev_auth *result);
 static bool decode_ur_part(zcbor_state_t *state, struct ur_part *result);
@@ -475,6 +479,42 @@ static bool decode_repeated_hd_key_source(
 	return tmp_result;
 }
 
+static bool decode_repeated_btc_sign_request_btc_addresses(
+		zcbor_state_t *state, struct btc_sign_request_btc_addresses_r *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (5))))
+	&& (zcbor_list_start_decode(state) && ((((*result).btc_sign_request_btc_addresses_btc_address_m_present = ((zcbor_tstr_decode(state, (&(*result).btc_sign_request_btc_addresses_btc_address_m)))), 1)) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_repeated_btc_sign_request_btc_origin(
+		zcbor_state_t *state, struct btc_sign_request_btc_origin *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = ((((zcbor_uint32_expect(state, (6))))
+	&& (zcbor_tstr_decode(state, (&(*result).btc_sign_request_btc_origin)))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
 static bool decode_tagged_hd_key(
 		zcbor_state_t *state, struct hd_key *result)
 {
@@ -647,6 +687,55 @@ static bool decode_crypto_output(
 	|| (zcbor_union_elem_code(state) && (((decode_public_key_hash(state, (&(*result).crypto_output_public_key_hash_m)))) && (((*result).crypto_output_choice = crypto_output_public_key_hash_m_c), true)))
 	|| (zcbor_union_elem_code(state) && (((decode_witness_public_key_hash(state, (&(*result).crypto_output_witness_public_key_hash_m)))) && (((*result).crypto_output_choice = crypto_output_witness_public_key_hash_m_c), true)))
 	|| (zcbor_union_elem_code(state) && (((decode_taproot(state, (&(*result).crypto_output_taproot_m)))) && (((*result).crypto_output_choice = crypto_output_taproot_m_c), true)))), zcbor_union_end_code(state), int_res))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_btc_signature(
+		zcbor_state_t *state, struct btc_signature *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = (((zcbor_map_start_decode(state) && (((((zcbor_uint32_expect(state, (1))))
+	&& (decode_uuid(state, (&(*result).btc_signature_request_id))))
+	&& (((zcbor_uint32_expect(state, (2))))
+	&& (zcbor_bstr_decode(state, (&(*result).btc_signature_signature))))
+	&& (((zcbor_uint32_expect(state, (3))))
+	&& (zcbor_bstr_decode(state, (&(*result).btc_signature_public_key))))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_map_end_decode(state))));
+
+	if (!tmp_result) {
+		zcbor_trace_file(state);
+		zcbor_log("%s error: %s\r\n", __func__, zcbor_error_str(zcbor_peek_error(state)));
+	} else {
+		zcbor_log("%s success\r\n", __func__);
+	}
+
+	return tmp_result;
+}
+
+static bool decode_btc_sign_request(
+		zcbor_state_t *state, struct btc_sign_request *result)
+{
+	zcbor_log("%s\r\n", __func__);
+
+	bool tmp_result = (((zcbor_map_start_decode(state) && (((((zcbor_uint32_expect(state, (1))))
+	&& (decode_uuid(state, (&(*result).btc_sign_request_request_id))))
+	&& (((zcbor_uint32_expect(state, (2))))
+	&& (zcbor_bstr_decode(state, (&(*result).btc_sign_request_sign_data))))
+	&& (((zcbor_uint32_expect(state, (3))))
+	&& (zcbor_uint32_expect(state, (1))))
+	&& (((zcbor_uint32_expect(state, (4))))
+	&& (zcbor_list_start_decode(state) && ((((*result).btc_sign_request_btc_derivation_paths_crypto_keypath_m_present = (zcbor_tag_expect(state, 304)
+	&& (decode_crypto_keypath(state, (&(*result).btc_sign_request_btc_derivation_paths_crypto_keypath_m)))), 1)) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_list_end_decode(state)))
+	&& zcbor_present_decode(&((*result).btc_sign_request_btc_addresses_present), (zcbor_decoder_t *)decode_repeated_btc_sign_request_btc_addresses, state, (&(*result).btc_sign_request_btc_addresses))
+	&& zcbor_present_decode(&((*result).btc_sign_request_btc_origin_present), (zcbor_decoder_t *)decode_repeated_btc_sign_request_btc_origin, state, (&(*result).btc_sign_request_btc_origin))) || (zcbor_list_map_end_force_decode(state), false)) && zcbor_map_end_decode(state))));
 
 	if (!tmp_result) {
 		zcbor_trace_file(state);
@@ -945,4 +1034,28 @@ int cbor_decode_psbt(
 
 	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
 		(zcbor_decoder_t *)decode_psbt, sizeof(states) / sizeof(zcbor_state_t), 1);
+}
+
+
+int cbor_decode_btc_sign_request(
+		const uint8_t *payload, size_t payload_len,
+		struct btc_sign_request *result,
+		size_t *payload_len_out)
+{
+	zcbor_state_t states[6];
+
+	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
+		(zcbor_decoder_t *)decode_btc_sign_request, sizeof(states) / sizeof(zcbor_state_t), 1);
+}
+
+
+int cbor_decode_btc_signature(
+		const uint8_t *payload, size_t payload_len,
+		struct btc_signature *result,
+		size_t *payload_len_out)
+{
+	zcbor_state_t states[3];
+
+	return zcbor_entry_function(payload, payload_len, (void *)result, payload_len_out, states,
+		(zcbor_decoder_t *)decode_btc_signature, sizeof(states) / sizeof(zcbor_state_t), 1);
 }
