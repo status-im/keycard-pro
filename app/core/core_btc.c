@@ -1,6 +1,7 @@
 #include "core.h"
 #include "mem.h"
 #include "bitcoin/psbt.h"
+#include "bitcoin/compactsize.h"
 #include "crypto/sha2_soft.h"
 #include "keycard/keycard_cmdset.h"
 #include "ur/ur_encode.h"
@@ -12,7 +13,10 @@
 #define BTC_TXID_LEN 32
 #define BTC_PUBKEY_HASH_LEN 20
 #define BTC_WITNESS_LEN 32
+#define BTC_MSG_MAGIC_LEN 25
 #define BTC_MSG_SIG_LEN 65
+
+#define BTC_MESSAGE_SIG_HEADER (27 + 4)
 
 #define SIGHASH_MASK 0x1f
 #define SIGHASH_ANYONECANPAY 0x80
@@ -622,5 +626,73 @@ void core_btc_psbt_qr_run(struct zcbor_string* qr_request) {
   ui_display_ur_qr(LSTR(QR_SIGNATURE_TITLE), g_mem_heap, out_len, CRYPTO_PSBT);
 }
 
+app_err_t core_btc_sign_msg_run(const uint8_t* msg, size_t msg_len, uint32_t expected_mfp, uint8_t* out, uint8_t* pubkey) {
+  uint32_t mfp;
+  app_err_t err = core_export_public(pubkey, NULL, &mfp, NULL);
+
+  if (err != ERR_OK) {
+    return err;
+  }
+
+  if (mfp != expected_mfp) {
+    return ERR_MISMATCH;
+  }
+
+  //TODO: adapt message display to bitcoin
+  if (ui_display_msg(g_core.address, msg, msg_len) != CORE_EVT_UI_OK) {
+    return ERR_CANCEL;
+  }
+
+  SHA256_CTX sha256;
+  uint8_t digest[SHA256_DIGEST_LENGTH];
+  sha256_Init(&sha256);
+  sha256_Update(&sha256, BTC_MSG_MAGIC, BTC_MSG_MAGIC_LEN);
+  compactsize_write(digest, msg_len);
+  sha256_Update(&sha256, digest, compactsize_length(msg_len));
+  sha256_Update(&sha256, msg, msg_len);
+  sha256_Final(&sha256, digest);
+  sha256_Raw(digest, SHA256_DIGEST_LENGTH, digest);
+
+  keycard_t *kc = &g_core.keycard;
+
+  if ((keycard_cmd_sign(kc, g_core.bip44_path, g_core.bip44_path_len, digest, 1) != ERR_OK) || (APDU_SW(&kc->apdu) != 0x9000)) {
+    return ERR_CRYPTO;
+  }
+
+  uint8_t* data = APDU_RESP(&kc->apdu);
+
+  if (keycard_read_signature(data, digest, &out[1]) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  out[0] = BTC_MESSAGE_SIG_HEADER + out[65];
+
+  return ERR_OK;
+}
+
 void core_btc_sign_msg_qr_run(struct btc_sign_request* qr_request) {
+  if (!qr_request->btc_sign_request_btc_derivation_paths_crypto_keypath_m_present ||
+      !qr_request->btc_sign_request_btc_derivation_paths_crypto_keypath_m.crypto_keypath_source_fingerprint_present ||
+      (core_set_derivation_path(&qr_request->btc_sign_request_btc_derivation_paths_crypto_keypath_m) != ERR_OK)) {
+    //TODO: add err message
+    return;
+  }
+
+  uint8_t pubkey[PUBKEY_LEN];
+
+  if (core_btc_sign_msg_run(qr_request->btc_sign_request_sign_data.value, qr_request->btc_sign_request_sign_data.len, qr_request->btc_sign_request_btc_derivation_paths_crypto_keypath_m.crypto_keypath_source_fingerprint.crypto_keypath_source_fingerprint, g_core.data.sig.plain_sig, pubkey) != ERR_OK) {
+    //TODO: add err message
+    return;
+  }
+
+  struct btc_signature cbor_sig;
+  cbor_sig.btc_signature_request_id.value = qr_request->btc_sign_request_request_id.value;
+  cbor_sig.btc_signature_request_id.len = qr_request->btc_sign_request_request_id.len;
+  cbor_sig.btc_signature_signature.value = g_core.data.sig.plain_sig;
+  cbor_sig.btc_signature_signature.len = BTC_MSG_SIG_LEN;
+  cbor_sig.btc_signature_public_key.value = pubkey;
+  cbor_sig.btc_signature_public_key.len = PUBKEY_COMPRESSED_LEN;
+
+  cbor_encode_btc_signature(g_core.data.sig.cbor_sig, CBOR_SIG_MAX_LEN, &cbor_sig, &g_core.data.sig.cbor_len);
+  ui_display_ur_qr(LSTR(QR_SIGNATURE_TITLE), g_core.data.sig.cbor_sig, g_core.data.sig.cbor_len, BTC_SIGNATURE);
 }

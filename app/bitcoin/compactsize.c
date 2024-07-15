@@ -38,15 +38,15 @@ inline static void serialize_uint8(uint8_t *dest, uint8_t data) {
 }
 
 inline static void serialize_uint16(uint8_t *dest, uint16_t data) {
-  memcpy(dest, &data, sizeof(data));
+  memcpy(dest, &data, sizeof(uint16_t));
 }
 
 inline static void serialize_uint32(uint8_t *dest, uint32_t data) {
-  memcpy(dest, &data, sizeof(data));
+  memcpy(dest, &data, sizeof(uint32_t));
 }
 
 inline static void serialize_uint64(uint8_t *dest, uint64_t data) {
-  memcpy(dest, &data, sizeof(data));
+  memcpy(dest, &data, sizeof(uint64_t));
 }
 
 inline static uint8_t deserialize_uint8(uint8_t *src) {
@@ -55,19 +55,19 @@ inline static uint8_t deserialize_uint8(uint8_t *src) {
 
 inline static uint16_t deserialize_uint16(uint8_t *src) {
   uint16_t data;
-  memcpy(&data, src, sizeof(data));
+  memcpy(&data, src, sizeof(uint16_t));
   return data;
 }
 
 inline static uint32_t deserialize_uint32(uint8_t *src) {
   uint32_t data;
-  memcpy(&data, src, sizeof(data));
+  memcpy(&data, src, sizeof(uint32_t));
   return data;
 }
 
 inline static uint64_t deserialize_uint64(uint8_t *src) {
   uint64_t data;
-  memcpy(&data, src, sizeof(data));
+  memcpy(&data, src, sizeof(uint64_t));
   return data;
 }
 
@@ -77,13 +77,13 @@ void compactsize_write(uint8_t *dest, uint64_t size)
     serialize_uint8(dest, size);
   } else if (size <= USHRT_MAX) {
     serialize_uint8(dest, 253);
-    serialize_uint16(dest, size);
+    serialize_uint16(&dest[1], size);
   } else if (size <= UINT_MAX) {
     serialize_uint8(dest, 254);
-    serialize_uint32(dest, size);
+    serialize_uint32(&dest[1], size);
   } else {
     serialize_uint8(dest, 255);
-    serialize_uint64(dest, size);
+    serialize_uint64(&dest[1], size);
   }
 }
 

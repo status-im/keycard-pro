@@ -143,6 +143,29 @@ app_err_t core_export_public(uint8_t* pub, uint8_t* chain, uint32_t* fingerprint
   return ERR_OK;
 }
 
+app_err_t core_set_derivation_path(struct crypto_keypath* derivation_path) {
+  g_core.bip44_path_len = derivation_path->crypto_keypath_components_path_component_m_count * 4;
+
+  if (g_core.bip44_path_len > BIP44_MAX_PATH_LEN) {
+    g_core.bip44_path_len = 0;
+    return ERR_DATA;
+  }
+
+  for (int i = 0; i < derivation_path->crypto_keypath_components_path_component_m_count; i++) {
+    uint32_t idx = derivation_path->crypto_keypath_components_path_component_m[i].path_component_child_index_m;
+    if (derivation_path->crypto_keypath_components_path_component_m[i].path_component_is_hardened_m) {
+      idx |= 0x80000000;
+    }
+
+    g_core.bip44_path[(i * 4)] = idx >> 24;
+    g_core.bip44_path[(i * 4) + 1] = (idx >> 16) & 0xff;
+    g_core.bip44_path[(i * 4) + 2] = (idx >> 8) & 0xff;
+    g_core.bip44_path[(i * 4) + 3] = idx & 0xff;
+  }
+
+  return ERR_OK;
+}
+
 static app_err_t core_usb_get_app_config(apdu_t* cmd) {
   uint8_t* data = APDU_RESP(cmd);
   data[0] = FW_VERSION[0];

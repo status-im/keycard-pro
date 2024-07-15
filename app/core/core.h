@@ -20,7 +20,7 @@
 #define PUBKEY_LEN 65
 #define PUBKEY_COMPRESSED_LEN 33
 #define CHAINCODE_LEN 32
-#define CBOR_SIG_MAX_LEN 128
+#define CBOR_SIG_MAX_LEN 192
 #define CBOR_KEY_MAX_LEN 192
 
 typedef struct {
@@ -73,6 +73,7 @@ extern core_ctx_t g_core;
 app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain);
 app_err_t core_get_fingerprint(uint8_t* path, size_t len, uint32_t* fingerprint);
 app_err_t core_export_public(uint8_t* pub, uint8_t* chain, uint32_t* fingerprint, uint32_t* parent_fingerprint);
+app_err_t core_set_derivation_path(struct crypto_keypath* derivation_path);
 
 core_evt_t core_wait_event(uint32_t timeout, uint8_t accept_usb);
 
