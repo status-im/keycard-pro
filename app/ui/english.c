@@ -104,8 +104,8 @@ const char *const i18n_english_strings[] = {
     "Failed to verify genuineness of this card. Do not press OK unless you loaded a custom Keycard applet on this card yourself",
     "This Keycard has an old version of the applet installed. Please replace it with a newer one",
     "You can't connect this Keycard to new devices because all pairing slots are full.\nPlease use it with a device with which you used it previously or factory reset the card.",
-    "This QR is not for this key pair.\nTry again using a different Keycard.",
-    "The content of this QR is malformed or unsupported. Please generate a new one.",
+    "This transaction is not for this key pair.\nTry again using a different Keycard.",
+    "Malformed data or an unsupported format.",
     "Keycard blocked",
 
     // DB Update

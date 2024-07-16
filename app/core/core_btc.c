@@ -469,7 +469,7 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
   uint32_t mfp;
 
   if (core_get_fingerprint(g_core.bip44_path, 0, &mfp) != ERR_OK) {
-    return ERR_HW;
+    return ERR_CRYPTO;
   }
 
   mfp = rev32(mfp);
@@ -577,11 +577,27 @@ static app_err_t core_btc_psbt_run(const uint8_t* psbt_in, size_t psbt_len, uint
   psbt_read(psbt_in, psbt_len, &psbt, core_btc_parser_cb, tx_ctx);
 
   if (tx_ctx->error != ERR_OK) {
-    //TODO: add error message
+    ui_info(LSTR(INFO_MALFORMED_DATA), 1);
     return tx_ctx->error;
   }
 
-  if (core_btc_validate(tx_ctx) != ERR_OK || core_btc_confirm(tx_ctx) != ERR_OK) {
+  tx_ctx->error = core_btc_validate(tx_ctx);
+
+  switch(tx_ctx->error) {
+  case ERR_OK:
+    break;
+  case ERR_MISMATCH:
+    ui_info(LSTR(INFO_WRONG_CARD), 1);
+    return ERR_MISMATCH;
+  case ERR_DATA:
+    ui_info(LSTR(INFO_MALFORMED_DATA), 1);
+    return ERR_DATA;
+  default:
+    ui_info(LSTR(INFO_CARD_ERROR_MSG), 0);
+    return ERR_CRYPTO;
+  }
+
+  if (core_btc_confirm(tx_ctx) != ERR_OK) {
     return ERR_CANCEL;
   }
 
@@ -594,9 +610,15 @@ static app_err_t core_btc_psbt_run(const uint8_t* psbt_in, size_t psbt_len, uint
   tx_ctx->index_out = UINT32_MAX;
   psbt_read(psbt_in, psbt_len, &psbt, core_btc_sign_handler, tx_ctx);
 
-  if (tx_ctx->error != ERR_OK) {
-    //TODO: add error message
-    return tx_ctx->error;
+  switch(tx_ctx->error) {
+  case ERR_OK:
+    break;
+  case ERR_DATA:
+    ui_info(LSTR(INFO_MALFORMED_DATA), 1);
+    return ERR_DATA;
+  default:
+    ui_info(LSTR(INFO_CARD_ERROR_MSG), 0);
+    return ERR_CRYPTO;
   }
 
   while(++tx_ctx->index_out < tx_ctx->output_count) {
@@ -631,10 +653,12 @@ app_err_t core_btc_sign_msg_run(const uint8_t* msg, size_t msg_len, uint32_t exp
   app_err_t err = core_export_public(pubkey, NULL, &mfp, NULL);
 
   if (err != ERR_OK) {
+    ui_info(LSTR(INFO_CARD_ERROR_MSG), 0);
     return err;
   }
 
   if (mfp != expected_mfp) {
+    ui_info(LSTR(INFO_WRONG_CARD), 1);
     return ERR_MISMATCH;
   }
 
@@ -656,12 +680,14 @@ app_err_t core_btc_sign_msg_run(const uint8_t* msg, size_t msg_len, uint32_t exp
   keycard_t *kc = &g_core.keycard;
 
   if ((keycard_cmd_sign(kc, g_core.bip44_path, g_core.bip44_path_len, digest, 1) != ERR_OK) || (APDU_SW(&kc->apdu) != 0x9000)) {
+    ui_info(LSTR(INFO_CARD_ERROR_MSG), 0);
     return ERR_CRYPTO;
   }
 
   uint8_t* data = APDU_RESP(&kc->apdu);
 
   if (keycard_read_signature(data, digest, &out[1]) != ERR_OK) {
+    ui_info(LSTR(INFO_MALFORMED_DATA), 1);
     return ERR_DATA;
   }
 
@@ -674,14 +700,13 @@ void core_btc_sign_msg_qr_run(struct btc_sign_request* qr_request) {
   if (!qr_request->btc_sign_request_btc_derivation_paths_crypto_keypath_m_present ||
       !qr_request->btc_sign_request_btc_derivation_paths_crypto_keypath_m.crypto_keypath_source_fingerprint_present ||
       (core_set_derivation_path(&qr_request->btc_sign_request_btc_derivation_paths_crypto_keypath_m) != ERR_OK)) {
-    //TODO: add err message
+    ui_info(LSTR(INFO_MALFORMED_DATA), 1);
     return;
   }
 
   uint8_t pubkey[PUBKEY_LEN];
 
   if (core_btc_sign_msg_run(qr_request->btc_sign_request_sign_data.value, qr_request->btc_sign_request_sign_data.len, qr_request->btc_sign_request_btc_derivation_paths_crypto_keypath_m.crypto_keypath_source_fingerprint.crypto_keypath_source_fingerprint, g_core.data.sig.plain_sig, pubkey) != ERR_OK) {
-    //TODO: add err message
     return;
   }
 
