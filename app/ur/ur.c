@@ -1,8 +1,11 @@
 #include <ctype.h>
-#include "ur.h"
 #include "bytewords.h"
+#include "common.h"
+#include "crypto/crc32.h"
+#include "crypto/util.h"
 #include "sampler.h"
-#include "ur_decode.h"
+#include "ur.h"
+#include "ur_encode.h"
 
 #define MIN_ENCODED_LEN 22
 #define MAX_CBOR_HEADER_LEN 32
@@ -227,7 +230,22 @@ app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len) {
   return ERR_NEED_MORE_DATA;
 }
 
-app_err_t ur_encode(ur_t* ur, char* out, size_t max_len) {
+void ur_out_init(ur_out_t* ur, ur_type_t type, const uint8_t* data, size_t len, size_t segment_len) {
+  memset(ur, 0, sizeof(ur_out_t));
+
+  ur->data = data;
+  ur->type = type;
+  ur->part.ur_part_messageLen = len;
+
+  if (len > segment_len) {
+    ur->part.ur_part_checksum = crc32(ur->data, len);
+    ur->part.ur_part_seqLen = (len + (segment_len - 1)) / segment_len;
+    ur->part.ur_part_data.len = segment_len;
+    random_sampler_init(ur->part.ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
+  }
+}
+
+static app_err_t ur_encode_part(ur_out_t* ur, const uint8_t* data, size_t data_len, char* out, size_t max_len) {
   if (max_len < MIN_ENCODED_LEN) {
     return ERR_DATA;
   }
@@ -245,11 +263,69 @@ app_err_t ur_encode(ur_t* ur, char* out, size_t max_len) {
 
   out[off++] = '/';
 
-  size_t outlen = bytewords_encode(ur->data, ur->data_len, (uint8_t*)&out[off], (max_len-off-1));
+  if (ur->part.ur_part_seqLen > 1) {
+    uint8_t num[UINT32_STRING_LEN];
+    uint8_t* p = u32toa(ur->part.ur_part_seqNum, num, UINT32_STRING_LEN);
+    while(*p != '\0') {
+      out[off++] = *(p++);
+    }
+
+    out[off++] = '-';
+
+    p = u32toa(ur->part.ur_part_seqLen, num, UINT32_STRING_LEN);
+    while(*p != '\0') {
+      out[off++] = *(p++);
+    }
+
+    out[off++] = '/';
+  }
+
+  size_t outlen = bytewords_encode(data, data_len, (uint8_t*)&out[off], (max_len-off-1));
   if (!outlen) {
     return ERR_DATA;
   }
 
   out[off+outlen] = '\0';
   return ERR_OK;
+}
+
+app_err_t ur_encode_next(ur_out_t* ur, char* out, size_t max_len) {
+  uint8_t part_buf[ur->part.ur_part_data.len];
+  uint8_t part_cbor[ur->part.ur_part_data.len + MAX_CBOR_HEADER_LEN];
+
+  ur->part.ur_part_data.value = part_buf;
+
+  memset(part_buf, 0, ur->part.ur_part_data.len);
+
+  if (ur->part.ur_part_seqNum < ur->part.ur_part_seqLen) {
+    size_t off = ur->part.ur_part_seqNum * ur->part.ur_part_data.len;
+    ur->part.ur_part_seqNum++;
+
+    size_t copy_len = APP_MIN((ur->part.ur_part_messageLen - off), ur->part.ur_part_data.len);
+    memcpy(part_buf, &ur->data[off], copy_len);
+  } else {
+    ur->part.ur_part_seqNum++;
+    uint32_t indexes = fountain_part_indexes(ur->part.ur_part_seqNum, ur->part.ur_part_checksum, ur->part.ur_part_seqLen, ur->sampler_probs, ur->sampler_aliases);
+
+    for (int part_num = 0; part_num < ur->part.ur_part_seqLen; part_num++) {
+      if (indexes & 1) {
+        size_t off = part_num * ur->part.ur_part_data.len;
+        size_t copy_len = APP_MIN((ur->part.ur_part_messageLen - off), ur->part.ur_part_data.len);
+
+        for (int i = 0; i < copy_len; i++) {
+          part_buf[i] ^= ur->data[off + i];
+        }
+      }
+
+      indexes >>= 1;
+    }
+  }
+
+  size_t part_cbor_len;
+  cbor_encode_ur_part(part_cbor, (ur->part.ur_part_data.len + MAX_CBOR_HEADER_LEN), &ur->part, &part_cbor_len);
+  return ur_encode_part(ur, part_cbor, part_cbor_len, out, max_len);
+}
+
+app_err_t ur_encode(ur_out_t* ur, char* out, size_t max_len) {
+  return ur_encode_part(ur, ur->data, ur->part.ur_part_messageLen, out, max_len);
 }

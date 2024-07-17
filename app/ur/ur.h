@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "error.h"
+#include "ur_decode.h"
 
 #define UR_MAX_PART_COUNT 32
 #define UR_PART_DESC_COUNT (UR_MAX_PART_COUNT + 16)
@@ -37,7 +38,18 @@ typedef struct {
   uint8_t percent_done;
 } ur_t;
 
+typedef struct {
+  ur_type_t type;
+  struct ur_part part;
+  double sampler_probs[UR_MAX_PART_COUNT];
+  int sampler_aliases[UR_MAX_PART_COUNT];
+  const uint8_t* data;
+} ur_out_t;
+
 app_err_t ur_process_part(ur_t* ur, const uint8_t* in, size_t in_len);
-app_err_t ur_encode(ur_t* ur, char* out, size_t max_len);
+
+void ur_out_init(ur_out_t* ur, ur_type_t type, const uint8_t* data, size_t len, size_t segment_len);
+app_err_t ur_encode_next(ur_out_t* ur, char* out, size_t max_len);
+app_err_t ur_encode(ur_out_t* ur, char* out, size_t max_len);
 
 #endif
