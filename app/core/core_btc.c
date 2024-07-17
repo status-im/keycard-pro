@@ -480,6 +480,8 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
     if (tx_ctx->input_data[i].master_fingerprint == mfp) {
       tx_ctx->input_data[i].can_sign = true;
       can_sign_something = true;
+    } else {
+      continue;
     }
 
     if (tx_ctx->input_data[i].sighash_flag == SIGHASH_DEFAULT) {
