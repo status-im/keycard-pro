@@ -49,6 +49,8 @@ typedef struct {
   size_t redeem_script_len;
   uint8_t* witness_script;
   size_t witness_script_len;
+  uint8_t* nonwitness_utxo;
+  size_t nonwitness_utxo_len;
   uint8_t* amount;
   uint8_t* bip32_path;
   uint32_t bip32_path_len;
@@ -115,7 +117,11 @@ static void core_btc_psbt_rec_handler(struct btc_tx_ctx* tx_ctx, size_t index, p
     utxo_ctx.tx_ctx = tx_ctx;
     utxo_ctx.output_count = 0;
     utxo_ctx.input_index = index;
-    psbt_btc_tx_parse(rec->val, rec->val_size, &utxo_ctx, core_btc_utxo_handler);
+    tx_ctx->input_data[index].nonwitness_utxo = rec->val;
+    tx_ctx->input_data[index].nonwitness_utxo_len = rec->val_size;
+    if (psbt_btc_tx_parse(rec->val, rec->val_size, &utxo_ctx, core_btc_utxo_handler) != PSBT_OK) {
+      tx_ctx->error = ERR_DECODE;
+    }
     break;
   case PSBT_IN_REDEEM_SCRIPT:
     tx_ctx->input_data[index].redeem_script = rec->val;
@@ -484,6 +490,63 @@ static inline bool core_btc_is_valid_witness_script(uint8_t* script, size_t scri
          core_btc_is_valid_script(&script[2], witness_script, witness_script_len);
 }
 
+static inline bool btc_is_segwit(uint8_t* tx) {
+  return tx[4] == 0;
+}
+
+static void btc_generate_txid(uint8_t* tx, size_t tx_len, uint8_t out[SHA256_DIGEST_LENGTH]) {
+  SHA256_CTX ctx;
+  sha256_Init(&ctx);
+
+  if (btc_is_segwit(tx)) {
+    uint8_t* p = tx;
+    // this tx has been parsed before so we know it is correctly formatted, we won't repeat the same checks
+    sha256_Update(&ctx, p, sizeof(uint32_t));
+    p += sizeof(uint32_t) + sizeof(uint16_t);
+
+    uint32_t count = compactsize_read(p, NULL);
+    uint32_t lenlen = compactsize_peek_length(*p);
+    sha256_Update(&ctx, p, lenlen);
+    p += lenlen;
+
+    for(int i = 0; i < count; i++) {
+      sha256_Update(&ctx, p, SHA256_DIGEST_LENGTH + sizeof(uint32_t));
+      p += SHA256_DIGEST_LENGTH + sizeof(uint32_t);
+      uint32_t scriptlen = compactsize_read(p, NULL);
+      lenlen = compactsize_peek_length(*p);
+      sha256_Update(&ctx, p, lenlen + scriptlen + sizeof(uint32_t));
+      p += lenlen + scriptlen + sizeof(uint32_t);
+    }
+
+    count = compactsize_read(p, NULL);
+    lenlen = compactsize_peek_length(*p);
+    sha256_Update(&ctx, p, lenlen);
+    p += lenlen;
+
+    for(int i = 0; i < count; i++) {
+      sha256_Update(&ctx, p, sizeof(uint64_t));
+      p += sizeof(uint64_t);
+      uint32_t scriptlen = compactsize_read(p, NULL);
+      lenlen = compactsize_peek_length(*p);
+      sha256_Update(&ctx, p, lenlen + scriptlen);
+      p += lenlen + scriptlen;
+    }
+
+    sha256_Update(&ctx, &tx[tx_len - 4], sizeof(uint32_t));
+  } else {
+    sha256_Update(&ctx, tx, tx_len);
+  }
+
+  sha256_Final(&ctx, out);
+  sha256_Raw(out, SHA256_DIGEST_LENGTH, out);
+}
+
+static inline bool btc_validate_tx_hash(uint8_t* tx, size_t tx_len, uint8_t expected_hash[SHA256_DIGEST_LENGTH]) {
+  uint8_t digest[SHA256_DIGEST_LENGTH];
+  btc_generate_txid(tx, tx_len, digest);
+  return memcmp(expected_hash, digest, SHA256_DIGEST_LENGTH) == 0;
+}
+
 static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
   uint32_t mfp;
 
@@ -505,6 +568,10 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
 
     if (tx_ctx->input_data[i].sighash_flag == SIGHASH_DEFAULT) {
       tx_ctx->input_data[i].sighash_flag = SIGHASH_ALL;
+    }
+
+    if (tx_ctx->input_data[i].nonwitness_utxo && !btc_validate_tx_hash(tx_ctx->input_data[i].nonwitness_utxo, tx_ctx->input_data[i].nonwitness_utxo_len, tx_ctx->inputs[i].txid)) {
+      return ERR_DATA;
     }
 
     if (tx_ctx->input_data[i].witness) {
@@ -531,7 +598,6 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
         return ERR_DATA;
       }
     } else if (tx_ctx->input_data[i].script_pubkey) {
-      //TODO: assert(sha256d(non_witness_utxo) == psbt.tx.input[i].prevout.hash)
       if (tx_ctx->input_data[i].redeem_script) {
         if (!core_btc_is_valid_redeem_script(tx_ctx->input_data[i].script_pubkey, tx_ctx->input_data[i].script_pubkey_len, tx_ctx->input_data[i].redeem_script, tx_ctx->input_data[i].redeem_script_len)) {
           return ERR_DATA;
@@ -628,7 +694,11 @@ static app_err_t core_btc_psbt_run(const uint8_t* psbt_in, size_t psbt_len, uint
 
   tx_ctx->index_in = UINT32_MAX;
   tx_ctx->index_out = UINT32_MAX;
-  psbt_read(psbt_in, psbt_len, &psbt, core_btc_sign_handler, tx_ctx);
+
+  if (psbt_read(psbt_in, psbt_len, &psbt, core_btc_sign_handler, tx_ctx) != PSBT_OK) {
+    ui_info(LSTR(INFO_MALFORMED_DATA), 1);
+    return ERR_DATA;
+  }
 
   switch(tx_ctx->error) {
   case ERR_OK:
