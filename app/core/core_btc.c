@@ -3,6 +3,7 @@
 #include "bitcoin/psbt.h"
 #include "bitcoin/compactsize.h"
 #include "crypto/sha2_soft.h"
+#include "crypto/ripemd160.h"
 #include "keycard/keycard_cmdset.h"
 #include "ur/ur_encode.h"
 #include "util/tlv.h"
@@ -13,6 +14,7 @@
 #define BTC_TXID_LEN 32
 #define BTC_PUBKEY_HASH_LEN 20
 #define BTC_WITNESS_LEN 32
+#define BTC_P2SH_LEN 23
 #define BTC_MSG_MAGIC_LEN 25
 #define BTC_MSG_SIG_LEN 65
 
@@ -455,14 +457,31 @@ static inline bool core_btc_is_p2wsh(uint8_t* script, size_t script_len) {
          (script[1] == BTC_WITNESS_LEN);
 }
 
-static inline bool core_btc_is_valid_witness_redeem_script(uint8_t* pubkey_script, size_t pubkey_script_len, uint8_t* redeem_script, size_t redeem_script_len) {
-  //TODO: verify scriptPubKey == P2SH(redeemScript)
-  return true;
+static inline bool core_btc_is_p2sh(uint8_t* script, size_t script_len) {
+  return (script_len == BTC_P2SH_LEN) &&
+         (script[0] == 0xa9) &&
+         (script[1] == RIPEMD160_DIGEST_LENGTH) &&
+         (script[script_len - 1] == 0x87);
+}
+
+static inline bool core_btc_is_valid_script(uint8_t* hash, uint8_t* redeem_script, size_t redeem_script_len) {
+  uint8_t digest[SHA256_DIGEST_LENGTH];
+
+  sha256_Raw(redeem_script, redeem_script_len, digest);
+  ripemd160(digest, SHA256_DIGEST_LENGTH, digest);
+
+  return memcmp(digest, hash, RIPEMD160_DIGEST_LENGTH) == 0;
+}
+
+static inline bool core_btc_is_valid_redeem_script(uint8_t* script, size_t script_len, uint8_t* redeem_script, size_t redeem_script_len) {
+  return core_btc_is_p2sh(script, script_len) &&
+         core_btc_is_valid_script(&script[2], redeem_script, redeem_script_len);
 }
 
 static inline bool core_btc_is_valid_witness_script(uint8_t* script, size_t script_len, uint8_t* witness_script, size_t witness_script_len) {
-  //TODO: verify script == P2WSH(witnessScript)
-  return witness_script != NULL;
+  return core_btc_is_p2wsh(script, script_len) &&
+         (witness_script != NULL) &&
+         core_btc_is_valid_script(&script[2], witness_script, witness_script_len);
 }
 
 static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
@@ -493,7 +512,7 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
       size_t script_len;
 
       if (tx_ctx->input_data[i].redeem_script) {
-        if (!core_btc_is_valid_witness_redeem_script(tx_ctx->input_data[i].script_pubkey, tx_ctx->input_data[i].script_pubkey_len, tx_ctx->input_data[i].redeem_script, tx_ctx->input_data[i].redeem_script_len)) {
+        if (!core_btc_is_valid_redeem_script(tx_ctx->input_data[i].script_pubkey, tx_ctx->input_data[i].script_pubkey_len, tx_ctx->input_data[i].redeem_script, tx_ctx->input_data[i].redeem_script_len)) {
           return ERR_DATA;
         }
 
@@ -506,11 +525,7 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
 
       if (core_btc_is_p2wpkh(script, script_len)) {
         tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_P2WPKH;
-      } else if (core_btc_is_p2wsh(script, script_len)) {
-        if (!core_btc_is_valid_witness_script(script, script_len, tx_ctx->input_data[i].witness_script, tx_ctx->input_data[i].witness_script_len)) {
-          return ERR_DATA;
-        }
-
+      } else if (core_btc_is_valid_witness_script(script, script_len, tx_ctx->input_data[i].witness_script, tx_ctx->input_data[i].witness_script_len)) {
         tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_P2WSH;
       } else {
         return ERR_DATA;
@@ -518,7 +533,10 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
     } else if (tx_ctx->input_data[i].script_pubkey) {
       //TODO: assert(sha256d(non_witness_utxo) == psbt.tx.input[i].prevout.hash)
       if (tx_ctx->input_data[i].redeem_script) {
-        // TODO: assert(non_witness_utxo.vout[psbt.tx.input[i].prevout.n].scriptPubKey == P2SH(redeemScript))
+        if (!core_btc_is_valid_redeem_script(tx_ctx->input_data[i].script_pubkey, tx_ctx->input_data[i].script_pubkey_len, tx_ctx->input_data[i].redeem_script, tx_ctx->input_data[i].redeem_script_len)) {
+          return ERR_DATA;
+        }
+
         tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_LEGACY_WITH_REDEEM;
       } else {
         tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_LEGACY;
