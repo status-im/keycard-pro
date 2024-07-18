@@ -10,10 +10,10 @@ const char *const i18n_english_strings[] = {
     "Help",
 
     // Connect menu
-    "EVM-chain wallet",
+    "Ethereum wallet",
     "Bitcoin wallet",
-    "Bitcoin testnet wallet",
-    "OKX Wallet",
+    "Sparrow Testnet wallet",
+    "Backpack/OKX Wallet",
 
     // Addresses menu
     "Ethereum",
@@ -105,7 +105,7 @@ const char *const i18n_english_strings[] = {
     "This Keycard has an old version of the applet installed. Please replace it with a newer one",
     "You can't connect this Keycard to new devices because all pairing slots are full.\nPlease use it with a device with which you used it previously or factory reset the card.",
     "This transaction is not for this key pair.\nTry again using a different Keycard.",
-    "Malformed data or an unsupported format.",
+    "Malformed data or unsupported format.",
     "Keycard blocked",
 
     // DB Update
