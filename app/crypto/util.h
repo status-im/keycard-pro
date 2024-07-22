@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "crypto/sha2.h"
+#include "crypto/ripemd160.h"
 
 #define UINT32_STRING_LEN 11
 
@@ -36,6 +38,12 @@ static inline bool all_zero(const uint8_t* data, size_t len) {
   }
 
   return true;
+}
+
+static inline void hash160(const uint8_t* data, size_t data_len, uint8_t out[RIPEMD160_DIGEST_LENGTH]) {
+  uint8_t tmp[SHA256_DIGEST_LENGTH];
+  sha256_Raw(data, data_len, tmp);
+  ripemd160(tmp, SHA256_DIGEST_LENGTH, out);
 }
 
 #endif

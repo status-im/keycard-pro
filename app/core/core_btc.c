@@ -3,7 +3,7 @@
 #include "bitcoin/psbt.h"
 #include "bitcoin/compactsize.h"
 #include "crypto/sha2_soft.h"
-#include "crypto/ripemd160.h"
+#include "crypto/util.h"
 #include "keycard/keycard_cmdset.h"
 #include "ur/ur_encode.h"
 #include "util/tlv.h"
@@ -471,10 +471,8 @@ static inline bool core_btc_is_p2sh(uint8_t* script, size_t script_len) {
 }
 
 static inline bool core_btc_is_valid_script(uint8_t* hash, uint8_t* redeem_script, size_t redeem_script_len) {
-  uint8_t digest[SHA256_DIGEST_LENGTH];
-
-  sha256_Raw(redeem_script, redeem_script_len, digest);
-  ripemd160(digest, SHA256_DIGEST_LENGTH, digest);
+  uint8_t digest[RIPEMD160_DIGEST_LENGTH];
+  hash160(redeem_script, redeem_script_len, digest);
 
   return memcmp(digest, hash, RIPEMD160_DIGEST_LENGTH) == 0;
 }
@@ -752,7 +750,8 @@ app_err_t core_btc_sign_msg_run(const uint8_t* msg, size_t msg_len, uint32_t exp
     return ERR_MISMATCH;
   }
 
-  //TODO: adapt message display to bitcoin
+  hash160(pubkey, PUBKEY_COMPRESSED_LEN, g_core.address);
+
   if (ui_display_msg(g_core.address, msg, msg_len) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }

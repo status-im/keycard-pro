@@ -100,8 +100,7 @@ app_err_t core_get_fingerprint(uint8_t* path, size_t len, uint32_t* fingerprint)
 
   g_core.data.key.pub[0] = 0x02 | (g_core.data.key.pub[PUBKEY_LEN - 1] & 1);
 
-  sha256_Raw(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
-  ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.data.key.pub);
+  hash160(g_core.data.key.pub, PUBKEY_COMPRESSED_LEN, g_core.data.key.pub);
 
   *fingerprint = (g_core.data.key.pub[0] << 24) | (g_core.data.key.pub[1] << 16) | (g_core.data.key.pub[2] << 8) | g_core.data.key.pub[3];
 
@@ -439,9 +438,7 @@ static void core_eth_addr_encoder(const uint8_t* key, char* addr) {
 }
 
 static void core_btc_addr_encoder(const uint8_t* key, char* addr) {
-  sha256_Raw(key, PUBKEY_COMPRESSED_LEN, g_core.data.key.chain);
-  ripemd160(g_core.data.key.chain, SHA256_DIGEST_LENGTH, g_core.address);
-
+  hash160(key, PUBKEY_COMPRESSED_LEN, g_core.address);
   segwit_addr_encode(addr, BTC_BECH32_HRP, BTC_SEGWIT_VER, g_core.address, RIPEMD160_DIGEST_LENGTH);
 }
 
