@@ -752,7 +752,7 @@ app_err_t core_btc_sign_msg_run(const uint8_t* msg, size_t msg_len, uint32_t exp
 
   hash160(pubkey, PUBKEY_COMPRESSED_LEN, g_core.address);
 
-  if (ui_display_msg(g_core.address, msg, msg_len) != CORE_EVT_UI_OK) {
+  if (ui_display_msg(ADDR_BTC_SEGWIT, g_core.address, msg, msg_len) != CORE_EVT_UI_OK) {
     return ERR_CANCEL;
   }
 

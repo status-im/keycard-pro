@@ -24,6 +24,8 @@
 
 #include "segwit_addr.h"
 
+const char *const BTC_BECH32_HRP = "bc";
+
 static uint32_t bech32_polymod_step(uint32_t pre) {
     uint8_t b = pre >> 25;
     return ((pre & 0x1FFFFFF) << 5) ^

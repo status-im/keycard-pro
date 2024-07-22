@@ -62,6 +62,7 @@ struct cmd_txn {
 };
 
 struct cmd_msg {
+  addr_type_t addr_type;
   const uint8_t* addr;
   const uint8_t* data;
   uint32_t len;

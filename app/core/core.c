@@ -14,15 +14,11 @@
 #include "util/tlv.h"
 #include "ur/ur_encode.h"
 
-#define BTC_SEGWIT_VER 0
-
 #define CRYPTO_MULTIACCOUNT_SN_LEN 40
 
 #define USB_MORE_DATA_TIMEOUT 100
 
 typedef void (*core_addr_encoder_t)(const uint8_t* key, char* addr);
-
-const char *const BTC_BECH32_HRP = "bc";
 
 const uint32_t ETH_PURPOSE = 0x8000002c;
 const uint32_t ETH_COIN = 0x8000003c;

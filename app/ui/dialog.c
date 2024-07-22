@@ -2,6 +2,7 @@
 #include "crypto/address.h"
 #include "crypto/bignum.h"
 #include "crypto/secp256k1.h"
+#include "crypto/segwit_addr.h"
 #include "crypto/util.h"
 #include "ethereum/eth_db.h"
 #include "ethereum/ethUstream.h"
@@ -172,9 +173,25 @@ static void dialog_tx_data(screen_text_ctx_t *ctx, i18n_str_id_t data_type) {
   dialog_inline_data(ctx, LSTR(data_type));
 }
 
-static void dialog_address(screen_text_ctx_t *ctx, i18n_str_id_t label, const uint8_t* addr) {
-  char address[41];
-  ethereum_address_checksum(addr, address);
+static void dialog_address(screen_text_ctx_t *ctx, i18n_str_id_t label, addr_type_t addr_type, const uint8_t* addr) {
+  char address[81];
+
+  switch(addr_type) {
+  case ADDR_ETH:
+    ethereum_address_checksum(addr, address);
+    break;
+  case ADDR_BTC_LEGACY:
+    //TODO: implement
+    address[0] = '\0';
+    break;
+  case ADDR_BTC_NESTED_SEGWIT:
+    //TODO: implement
+    address[0] = '\0';
+    break;
+  case ADDR_BTC_SEGWIT:
+    segwit_addr_encode(address, BTC_BECH32_HRP, BTC_SEGWIT_VER, addr, RIPEMD160_DIGEST_LENGTH);
+    break;
+  }
 
   dialog_label(ctx, LSTR(label));
   dialog_data(ctx, address);
@@ -251,8 +268,8 @@ app_err_t dialog_confirm_tx() {
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
 
-  dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.txn.addr);
-  dialog_address(&ctx, TX_ADDRESS, to);
+  dialog_address(&ctx, TX_SIGNER, ADDR_ETH, g_ui_cmd.params.txn.addr);
+  dialog_address(&ctx, TX_ADDRESS, ADDR_ETH, to);
   dialog_chain(&ctx, chain.name);
   dialog_tx_data(&ctx, data_type);
 
@@ -341,7 +358,7 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
 
     if (page == 0) {
       ctx.y = TH_TITLE_HEIGHT;
-      dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.msg.addr);
+      dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.msg.addr_type, g_ui_cmd.params.msg.addr);
 
       if (eip712) {
         dialog_label(&ctx, LSTR(TX_CHAIN));

@@ -66,7 +66,7 @@ static inline app_err_t core_eth_wait_tx_confirmation() {
 }
 
 static inline app_err_t core_eth_wait_msg_confirmation(const uint8_t* msg, size_t msg_len) {
-  return ui_display_msg(g_core.address, msg, msg_len) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  return ui_display_msg(ADDR_ETH, g_core.address, msg, msg_len) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static app_err_t core_eth_process_tx(const uint8_t* data, uint32_t len, uint8_t first_segment) {

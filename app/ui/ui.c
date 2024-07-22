@@ -39,8 +39,9 @@ core_evt_t ui_display_tx(const uint8_t* address, const txContent_t* tx) {
   return ui_signal_wait(0);
 }
 
-core_evt_t ui_display_msg(const uint8_t* address, const uint8_t* msg, uint32_t len) {
+core_evt_t ui_display_msg(addr_type_t addr_type, const uint8_t* address, const uint8_t* msg, uint32_t len) {
   g_ui_cmd.type = UI_CMD_DISPLAY_MSG;
+  g_ui_cmd.params.msg.addr_type = addr_type;
   g_ui_cmd.params.msg.addr = address;
   g_ui_cmd.params.msg.data = msg;
   g_ui_cmd.params.msg.len = len;
