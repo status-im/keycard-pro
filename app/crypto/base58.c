@@ -27,6 +27,7 @@
 #include "memzero.h"
 #include "ripemd160.h"
 #include "sha2.h"
+#include "util.h"
 
 const char b58digits_ordered[] =
     "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
@@ -127,13 +128,12 @@ bool b58tobin(void *bin, size_t *binszp, const char *b58) {
   return true;
 }
 
-int b58check(const void *bin, size_t binsz, HasherType hasher_type,
-             const char *base58str) {
+int b58check(const void *bin, size_t binsz, const char *base58str) {
   unsigned char buf[32] = {0};
   const uint8_t *binc = bin;
   unsigned i = 0;
   if (binsz < 4) return -4;
-  hasher_Raw(hasher_type, bin, binsz - 4, buf);
+  sha256d(bin, binsz - 4, buf);
   if (memcmp(&binc[binsz - 4], buf, 4)) return -1;
 
   // Check number of zeros is correct AFTER verifying checksum (to avoid
@@ -185,8 +185,7 @@ bool b58enc(char *b58, size_t *b58sz, const void *data, size_t binsz) {
   return true;
 }
 
-int base58_encode_check(const uint8_t *data, int datalen,
-                        HasherType hasher_type, char *str, int strsize) {
+int base58_encode_check(const uint8_t *data, int datalen, char *str, int strsize) {
   if (datalen > 128) {
     return 0;
   }
@@ -194,15 +193,14 @@ int base58_encode_check(const uint8_t *data, int datalen,
   memset(buf, 0, sizeof(buf));
   uint8_t *hash = buf + datalen;
   memcpy(buf, data, datalen);
-  hasher_Raw(hasher_type, data, datalen, hash);
+  sha256d(data, datalen, hash);
   size_t res = strsize;
   bool success = b58enc(str, &res, buf, datalen + 4);
   memzero(buf, sizeof(buf));
   return success ? res : 0;
 }
 
-int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data,
-                        int datalen) {
+int base58_decode_check(const char *str, uint8_t *data, int datalen) {
   if (datalen > 128) {
     return 0;
   }
@@ -213,7 +211,7 @@ int base58_decode_check(const char *str, HasherType hasher_type, uint8_t *data,
     return 0;
   }
   uint8_t *nd = d + datalen + 4 - res;
-  if (b58check(nd, res, hasher_type, str) < 0) {
+  if (b58check(nd, res, str) < 0) {
     return 0;
   }
   memcpy(data, nd, res - 4);

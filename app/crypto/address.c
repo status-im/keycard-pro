@@ -21,8 +21,10 @@
  * OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include <string.h>
 #include "address.h"
-#include "bignum.h"
+#include "sha3.h"
+#include "base58.h"
 #include "util.h"
 
 size_t address_prefix_bytes_len(uint32_t address_type) {
@@ -55,9 +57,30 @@ bool address_check_prefix(const uint8_t *addr, uint32_t address_type) {
           ((uint32_t)addr[2] << 8) | ((uint32_t)addr[3]));
 }
 
-#if USE_ETHEREUM
-#include <string.h>
-#include "sha3.h"
+void address_format(addr_type_t addr_type, const uint8_t data[RIPEMD160_DIGEST_LENGTH], char out[MAX_ADDR_LEN]) {
+  switch(addr_type) {
+  case ADDR_ETH:
+    ethereum_address_checksum(data, out);
+    return;
+  case ADDR_BTC_LEGACY:
+    bitcoin_legacy_address(data, BTC_P2PKH_ADDR_PREFIX, out);
+    return;
+  case ADDR_BTC_NESTED_SEGWIT:
+    bitcoin_legacy_address(data, BTC_P2SH_ADDR_PREFIX, out);
+    return;
+  case ADDR_BTC_SEGWIT:
+    bitcoin_segwit_address(data, RIPEMD160_DIGEST_LENGTH, out);
+    return;
+  }
+}
+
+size_t bitcoin_legacy_address(const uint8_t data[RIPEMD160_DIGEST_LENGTH], uint8_t prefix, char out[MAX_ADDR_LEN]) {
+  uint8_t raw[RIPEMD160_DIGEST_LENGTH + 1];
+
+  raw[0] = prefix;
+  memcpy(&raw[1], data, RIPEMD160_DIGEST_LENGTH);
+  return base58_encode_check(raw, RIPEMD160_DIGEST_LENGTH + 1, out, MAX_ADDR_LEN);
+}
 
 void ethereum_address(const uint8_t* pub_key, uint8_t* addr) {
   uint8_t buf[32];
@@ -80,4 +103,3 @@ void ethereum_address_checksum(const uint8_t *addr, char *address) {
     }
   }
 }
-#endif

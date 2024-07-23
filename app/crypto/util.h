@@ -46,4 +46,9 @@ static inline void hash160(const uint8_t* data, size_t data_len, uint8_t out[RIP
   ripemd160(tmp, SHA256_DIGEST_LENGTH, out);
 }
 
+static inline void sha256d(const uint8_t* data, size_t data_len, uint8_t out[SHA256_DIGEST_LENGTH]) {
+  sha256_Raw(data, data_len, out);
+  sha256_Raw(out, SHA256_DIGEST_LENGTH, out);
+}
+
 #endif

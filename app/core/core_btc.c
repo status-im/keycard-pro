@@ -2,6 +2,7 @@
 #include "mem.h"
 #include "bitcoin/psbt.h"
 #include "bitcoin/compactsize.h"
+#include "crypto/script.h"
 #include "crypto/sha2_soft.h"
 #include "crypto/util.h"
 #include "keycard/keycard_cmdset.h"
@@ -12,9 +13,6 @@
 #define BTC_MAX_OUTPUTS 20
 
 #define BTC_TXID_LEN 32
-#define BTC_PUBKEY_HASH_LEN 20
-#define BTC_WITNESS_LEN 32
-#define BTC_P2SH_LEN 23
 #define BTC_MSG_MAGIC_LEN 25
 #define BTC_MSG_SIG_LEN 65
 
@@ -451,25 +449,6 @@ static void core_btc_sign_handler(psbt_elem_t* rec) {
   }
 }
 
-static inline bool core_btc_is_p2wpkh(uint8_t* script, size_t script_len) {
-  return (script_len == BTC_PUBKEY_HASH_LEN + 2) &&
-         (script[0] == 0) &&
-         (script[1] == BTC_PUBKEY_HASH_LEN);
-}
-
-static inline bool core_btc_is_p2wsh(uint8_t* script, size_t script_len) {
-  return (script_len == BTC_WITNESS_LEN + 2) &&
-         (script[0] == 0) &&
-         (script[1] == BTC_WITNESS_LEN);
-}
-
-static inline bool core_btc_is_p2sh(uint8_t* script, size_t script_len) {
-  return (script_len == BTC_P2SH_LEN) &&
-         (script[0] == 0xa9) &&
-         (script[1] == RIPEMD160_DIGEST_LENGTH) &&
-         (script[script_len - 1] == 0x87);
-}
-
 static inline bool core_btc_is_valid_script(uint8_t* hash, uint8_t* redeem_script, size_t redeem_script_len) {
   uint8_t digest[RIPEMD160_DIGEST_LENGTH];
   hash160(redeem_script, redeem_script_len, digest);
@@ -478,12 +457,12 @@ static inline bool core_btc_is_valid_script(uint8_t* hash, uint8_t* redeem_scrip
 }
 
 static inline bool core_btc_is_valid_redeem_script(uint8_t* script, size_t script_len, uint8_t* redeem_script, size_t redeem_script_len) {
-  return core_btc_is_p2sh(script, script_len) &&
+  return script_is_p2sh(script, script_len) &&
          core_btc_is_valid_script(&script[2], redeem_script, redeem_script_len);
 }
 
 static inline bool core_btc_is_valid_witness_script(uint8_t* script, size_t script_len, uint8_t* witness_script, size_t witness_script_len) {
-  return core_btc_is_p2wsh(script, script_len) &&
+  return script_is_p2wsh(script, script_len) &&
          (witness_script != NULL) &&
          core_btc_is_valid_script(&script[2], witness_script, witness_script_len);
 }
@@ -588,7 +567,7 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
         script_len = tx_ctx->input_data[i].script_pubkey_len;
       }
 
-      if (core_btc_is_p2wpkh(script, script_len)) {
+      if (script_is_p2wpkh(script, script_len)) {
         tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_P2WPKH;
       } else if (core_btc_is_valid_witness_script(script, script_len, tx_ctx->input_data[i].witness_script, tx_ctx->input_data[i].witness_script_len)) {
         tx_ctx->input_data[i].input_type = BTC_INPUT_TYPE_P2WSH;

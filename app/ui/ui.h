@@ -2,6 +2,7 @@
 #define __UI_H
 
 #include <stdint.h>
+#include "crypto/address.h"
 #include "ethereum/ethUstream.h"
 #include "ethereum/eip712.h"
 #include "menu.h"
@@ -17,13 +18,6 @@ typedef enum {
   CORE_EVT_UI_OK,
   CORE_EVT_NONE,
 } core_evt_t;
-
-typedef enum {
-  ADDR_ETH,
-  ADDR_BTC_LEGACY,
-  ADDR_BTC_NESTED_SEGWIT,
-  ADDR_BTC_SEGWIT
-} addr_type_t;
 
 core_evt_t ui_qrscan(ur_type_t type, void* out);
 core_evt_t ui_qrscan_tx(ur_type_t* type, void* out);

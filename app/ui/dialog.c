@@ -174,27 +174,11 @@ static void dialog_tx_data(screen_text_ctx_t *ctx, i18n_str_id_t data_type) {
 }
 
 static void dialog_address(screen_text_ctx_t *ctx, i18n_str_id_t label, addr_type_t addr_type, const uint8_t* addr) {
-  char address[81];
-
-  switch(addr_type) {
-  case ADDR_ETH:
-    ethereum_address_checksum(addr, address);
-    break;
-  case ADDR_BTC_LEGACY:
-    //TODO: implement
-    address[0] = '\0';
-    break;
-  case ADDR_BTC_NESTED_SEGWIT:
-    //TODO: implement
-    address[0] = '\0';
-    break;
-  case ADDR_BTC_SEGWIT:
-    segwit_addr_encode(address, BTC_BECH32_HRP, BTC_SEGWIT_VER, addr, RIPEMD160_DIGEST_LENGTH);
-    break;
-  }
+  char str[MAX_ADDR_LEN];
+  address_format(addr_type, addr, str);
 
   dialog_label(ctx, LSTR(label));
-  dialog_data(ctx, address);
+  dialog_data(ctx, str);
 }
 
 static void dialog_calculate_fees(bignum256* fees) {

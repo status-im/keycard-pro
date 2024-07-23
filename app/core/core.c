@@ -4,7 +4,6 @@
 #include "crypto/sha2.h"
 #include "crypto/ripemd160.h"
 #include "crypto/secp256k1.h"
-#include "crypto/segwit_addr.h"
 #include "crypto/util.h"
 #include "ethereum/eth_db.h"
 #include "mem.h"
@@ -435,7 +434,7 @@ static void core_eth_addr_encoder(const uint8_t* key, char* addr) {
 
 static void core_btc_addr_encoder(const uint8_t* key, char* addr) {
   hash160(key, PUBKEY_COMPRESSED_LEN, g_core.address);
-  segwit_addr_encode(addr, BTC_BECH32_HRP, BTC_SEGWIT_VER, g_core.address, RIPEMD160_DIGEST_LENGTH);
+  bitcoin_segwit_address(g_core.address, RIPEMD160_DIGEST_LENGTH, addr);
 }
 
 void core_addresses_ethereum() {

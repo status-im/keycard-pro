@@ -27,14 +27,33 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-#include "options.h"
+#include "ripemd160.h"
+#include "segwit_addr.h"
+
+#define MAX_ADDR_LEN 63
+
+#define BTC_P2PKH_ADDR_PREFIX 0
+#define BTC_P2SH_ADDR_PREFIX 5
+
+typedef enum {
+  ADDR_ETH,
+  ADDR_BTC_LEGACY,
+  ADDR_BTC_NESTED_SEGWIT,
+  ADDR_BTC_SEGWIT
+} addr_type_t;
 
 size_t address_prefix_bytes_len(uint32_t address_type);
 void address_write_prefix_bytes(uint32_t address_type, uint8_t *out);
 bool address_check_prefix(const uint8_t *addr, uint32_t address_type);
-#if USE_ETHEREUM
+
+void address_format(addr_type_t addr_type, const uint8_t data[RIPEMD160_DIGEST_LENGTH], char out[MAX_ADDR_LEN]);
+size_t bitcoin_legacy_address(const uint8_t data[RIPEMD160_DIGEST_LENGTH], uint8_t prefix, char out[MAX_ADDR_LEN]);
+
+static inline size_t bitcoin_segwit_address(const uint8_t* data, size_t data_len, char out[MAX_ADDR_LEN]) {
+  return segwit_addr_encode(out, BTC_BECH32_HRP, BTC_SEGWIT_VER, data, data_len);
+}
+
 void ethereum_address(const uint8_t* pub_key, uint8_t* addr);
 void ethereum_address_checksum(const uint8_t *addr, char *address);
-#endif
 
 #endif
