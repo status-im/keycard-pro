@@ -6,6 +6,7 @@
 
 #include "menu.h"
 #include "keypad/keypad.h"
+#include "bitcoin/bitcoin.h"
 #include "core/core.h"
 #include "ethereum/ethUstream.h"
 #include "qrcode/qrcode.h"
@@ -24,7 +25,8 @@ enum cmd_type {
   UI_CMD_INFO,
   UI_CMD_PROMPT,
   UI_CMD_MENU,
-  UI_CMD_DISPLAY_TXN,
+  UI_CMD_DISPLAY_ETH_TX,
+  UI_CMD_DISPLAY_BTC_TX,
   UI_CMD_DISPLAY_MSG,
   UI_CMD_DISPLAY_EIP712,
   UI_CMD_DISPLAY_QR,
@@ -56,9 +58,13 @@ struct cmd_wrong_auth {
   uint8_t retries;
 };
 
-struct cmd_txn {
+struct cmd_eth_txn {
   const uint8_t* addr;
   const txContent_t* tx;
+};
+
+struct cmd_btc_txn {
+  const btc_tx_ctx_t* tx;
 };
 
 struct cmd_msg {
@@ -133,7 +139,8 @@ union cmd_params {
   struct cmd_info info;
   struct cmd_prompt prompt;
   struct cmd_wrong_auth wrong_auth;
-  struct cmd_txn txn;
+  struct cmd_eth_txn eth_tx;
+  struct cmd_btc_txn btc_tx;
   struct cmd_msg msg;
   struct cmd_eip712 eip712;
   struct cmd_qrout qrout;

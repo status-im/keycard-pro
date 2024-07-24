@@ -50,8 +50,11 @@ void ui_task_entry(void* pvParameters) {
     case UI_CMD_MENU:
       g_ui_cmd.result = menu_run();
       break;
-    case UI_CMD_DISPLAY_TXN:
-      g_ui_cmd.result = dialog_confirm_tx();
+    case UI_CMD_DISPLAY_ETH_TX:
+      g_ui_cmd.result = dialog_confirm_eth_tx();
+      break;
+    case UI_CMD_DISPLAY_BTC_TX:
+      g_ui_cmd.result = dialog_confirm_btc_tx();
       break;
     case UI_CMD_DISPLAY_MSG:
       g_ui_cmd.result = dialog_confirm_msg();

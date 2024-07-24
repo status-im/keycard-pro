@@ -62,7 +62,7 @@ static app_err_t core_eth_sign(keycard_t* kc, uint8_t* out) {
 }
 
 static inline app_err_t core_eth_wait_tx_confirmation() {
-  return ui_display_tx(g_core.address, &g_core.data.eth_tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
+  return ui_display_eth_tx(g_core.address, &g_core.data.eth_tx.content) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
 static inline app_err_t core_eth_wait_msg_confirmation(const uint8_t* msg, size_t msg_len) {

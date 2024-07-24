@@ -32,10 +32,16 @@ core_evt_t ui_menu(const char* title, const menu_t* menu, i18n_str_id_t* selecte
   return ui_signal_wait(allow_usb);
 }
 
-core_evt_t ui_display_tx(const uint8_t* address, const txContent_t* tx) {
-  g_ui_cmd.type = UI_CMD_DISPLAY_TXN;
-  g_ui_cmd.params.txn.addr = address;
-  g_ui_cmd.params.txn.tx = tx;
+core_evt_t ui_display_eth_tx(const uint8_t* address, const txContent_t* tx) {
+  g_ui_cmd.type = UI_CMD_DISPLAY_ETH_TX;
+  g_ui_cmd.params.eth_tx.addr = address;
+  g_ui_cmd.params.eth_tx.tx = tx;
+  return ui_signal_wait(0);
+}
+
+core_evt_t ui_display_btc_tx(const btc_tx_ctx_t* tx) {
+  g_ui_cmd.type = UI_CMD_DISPLAY_BTC_TX;
+  g_ui_cmd.params.btc_tx.tx = tx;
   return ui_signal_wait(0);
 }
 

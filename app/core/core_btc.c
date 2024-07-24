@@ -1,5 +1,6 @@
 #include "core.h"
 #include "mem.h"
+#include "bitcoin/bitcoin.h"
 #include "bitcoin/psbt.h"
 #include "bitcoin/compactsize.h"
 #include "crypto/script.h"
@@ -8,9 +9,6 @@
 #include "keycard/keycard_cmdset.h"
 #include "ur/ur_encode.h"
 #include "util/tlv.h"
-
-#define BTC_MAX_INPUTS 20
-#define BTC_MAX_OUTPUTS 20
 
 #define BTC_TXID_LEN 32
 #define BTC_MSG_MAGIC_LEN 25
@@ -26,59 +24,8 @@ static const uint8_t P2PKH_SCRIPT_POST[2] = { 0x88, 0xac };
 
 const uint8_t *const BTC_MSG_MAGIC = (uint8_t *) "\030Bitcoin Signed Message:\n";
 
-enum btc_input_type {
-  BTC_INPUT_TYPE_LEGACY,
-  BTC_INPUT_TYPE_LEGACY_WITH_REDEEM,
-  BTC_INPUT_TYPE_P2WPKH,
-  BTC_INPUT_TYPE_P2WSH,
-};
-
-enum btc_sighash_flag {
-  SIGHASH_DEFAULT = 0x00,
-  SIGHASH_ALL = 0x01,
-  SIGHASH_NONE = 0x02,
-  SIGHASH_SINGLE = 0x03,
-};
-
-typedef struct {
-  uint8_t* script_pubkey;
-  size_t script_pubkey_len;
-  uint8_t* redeem_script;
-  size_t redeem_script_len;
-  uint8_t* witness_script;
-  size_t witness_script_len;
-  uint8_t* nonwitness_utxo;
-  size_t nonwitness_utxo_len;
-  uint8_t* amount;
-  uint8_t* bip32_path;
-  uint32_t bip32_path_len;
-  uint32_t master_fingerprint;
-  uint32_t sighash_flag;
-  enum btc_input_type input_type;
-  bool witness;
-  bool can_sign;
-} psbt_input_data_t;
-
-struct btc_tx_ctx {
-  psbt_tx_t tx;
-  psbt_txin_t inputs[BTC_MAX_INPUTS];
-  psbt_txout_t outputs[BTC_MAX_OUTPUTS];
-  psbt_input_data_t input_data[BTC_MAX_INPUTS];
-  size_t input_count;
-  size_t output_count;
-
-  psbt_t psbt_out;
-  size_t index_in;
-  size_t index_out;
-  uint8_t hash_prevouts[SHA256_DIGEST_LENGTH];
-  uint8_t hash_sequence[SHA256_DIGEST_LENGTH];
-  uint8_t hash_outputs[SHA256_DIGEST_LENGTH];
-
-  app_err_t error;
-};
-
 struct btc_utxo_ctx {
-  struct btc_tx_ctx* tx_ctx;
+  btc_tx_ctx_t* tx_ctx;
   uint32_t output_count;
   uint32_t input_index;
 };
@@ -100,7 +47,7 @@ static void core_btc_utxo_handler(psbt_txelem_t* elem) {
   utxo_ctx->tx_ctx->input_data[utxo_ctx->input_index].script_pubkey_len = tx_out->script_len;
 }
 
-static void core_btc_psbt_rec_handler(struct btc_tx_ctx* tx_ctx, size_t index, psbt_record_t* rec) {
+static void core_btc_psbt_rec_handler(btc_tx_ctx_t* tx_ctx, size_t index, psbt_record_t* rec) {
   if (rec->scope != PSBT_SCOPE_INPUTS) {
     return;
   } else if (index >= tx_ctx->input_count) {
@@ -150,7 +97,7 @@ static void core_btc_psbt_rec_handler(struct btc_tx_ctx* tx_ctx, size_t index, p
   }
 }
 
-static void core_btc_txelem_handler(struct btc_tx_ctx* tx_ctx, psbt_txelem_t* elem) {
+static void core_btc_txelem_handler(btc_tx_ctx_t* tx_ctx, psbt_txelem_t* elem) {
   switch (elem->elem_type) {
   case PSBT_TXELEM_TX:
     memcpy(&tx_ctx->tx, elem->elem.tx, sizeof(psbt_tx_t));
@@ -175,7 +122,7 @@ static void core_btc_txelem_handler(struct btc_tx_ctx* tx_ctx, psbt_txelem_t* el
 }
 
 static void core_btc_parser_cb(psbt_elem_t* rec) {
-  struct btc_tx_ctx* tx_ctx = (struct btc_tx_ctx*) rec->user_data;
+  btc_tx_ctx_t* tx_ctx = (btc_tx_ctx_t*) rec->user_data;
 
   if (rec->type == PSBT_ELEM_RECORD) {
     core_btc_psbt_rec_handler(tx_ctx, rec->index, rec->elem.rec);
@@ -184,7 +131,7 @@ static void core_btc_parser_cb(psbt_elem_t* rec) {
   }
 }
 
-static app_err_t core_btc_hash_legacy(struct btc_tx_ctx* tx_ctx, size_t index, uint8_t digest[SHA256_DIGEST_LENGTH]) {
+static app_err_t core_btc_hash_legacy(btc_tx_ctx_t* tx_ctx, size_t index, uint8_t digest[SHA256_DIGEST_LENGTH]) {
   SHA256_CTX sha256;
   sha256_Init(&sha256);
 
@@ -263,7 +210,7 @@ static app_err_t core_btc_hash_legacy(struct btc_tx_ctx* tx_ctx, size_t index, u
   return ERR_OK;
 }
 
-static app_err_t core_btc_hash_segwit(struct btc_tx_ctx* tx_ctx, size_t index, uint8_t digest[SHA256_DIGEST_LENGTH]) {
+static app_err_t core_btc_hash_segwit(btc_tx_ctx_t* tx_ctx, size_t index, uint8_t digest[SHA256_DIGEST_LENGTH]) {
   SHA256_CTX sha256;
   sha256_Init(&sha256);
 
@@ -365,7 +312,7 @@ static app_err_t core_btc_read_signature(uint8_t* data, uint8_t sighash, psbt_re
   return ERR_OK;
 }
 
-static app_err_t core_btc_sign_input(struct btc_tx_ctx* tx_ctx, size_t index) {
+static app_err_t core_btc_sign_input(btc_tx_ctx_t* tx_ctx, size_t index) {
   if (!tx_ctx->input_data[index].can_sign) {
     return ERR_OK;
   }
@@ -419,7 +366,7 @@ static app_err_t core_btc_sign_input(struct btc_tx_ctx* tx_ctx, size_t index) {
 }
 
 static void core_btc_sign_handler(psbt_elem_t* rec) {
-  struct btc_tx_ctx* tx_ctx = (struct btc_tx_ctx*) rec->user_data;
+  btc_tx_ctx_t* tx_ctx = (btc_tx_ctx_t*) rec->user_data;
 
   if ((rec->type == PSBT_ELEM_TXELEM) || tx_ctx->error != ERR_OK) {
     return;
@@ -524,7 +471,7 @@ static inline bool btc_validate_tx_hash(uint8_t* tx, size_t tx_len, uint8_t expe
   return memcmp(expected_hash, digest, SHA256_DIGEST_LENGTH) == 0;
 }
 
-static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
+static app_err_t core_btc_validate(btc_tx_ctx_t* tx_ctx) {
   uint32_t mfp;
 
   if (core_get_fingerprint(g_core.bip44_path, 0, &mfp) != ERR_OK) {
@@ -592,12 +539,11 @@ static app_err_t core_btc_validate(struct btc_tx_ctx* tx_ctx) {
   return can_sign_something ? ERR_OK : ERR_MISMATCH;
 }
 
-static app_err_t core_btc_confirm(struct btc_tx_ctx* tx_ctx) {
-  //TODO: implement
-  return ERR_OK;
+static inline app_err_t core_btc_confirm(btc_tx_ctx_t* tx_ctx) {
+  return ui_display_btc_tx(tx_ctx) == CORE_EVT_UI_OK ? ERR_OK : ERR_CANCEL;
 }
 
-static void core_btc_common_hashes(struct btc_tx_ctx* tx_ctx) {
+static void core_btc_common_hashes(btc_tx_ctx_t* tx_ctx) {
   SHA256_CTX sha256;
   sha256_Init(&sha256);
 
@@ -630,10 +576,10 @@ static void core_btc_common_hashes(struct btc_tx_ctx* tx_ctx) {
 }
 
 static app_err_t core_btc_psbt_run(const uint8_t* psbt_in, size_t psbt_len, uint8_t** psbt_out, size_t* out_len) {
-  struct btc_tx_ctx* tx_ctx = (struct btc_tx_ctx*) g_camera_fb[1];
-  memset(tx_ctx, 0, sizeof(struct btc_tx_ctx));
-  *psbt_out = &g_camera_fb[1][(sizeof(struct btc_tx_ctx) + 3) & ~0x3];
-  size_t psbt_out_len = CAMERA_FB_SIZE - ((sizeof(struct btc_tx_ctx) + 3) & ~0x3);
+  btc_tx_ctx_t* tx_ctx = (btc_tx_ctx_t*) g_camera_fb[1];
+  memset(tx_ctx, 0, sizeof(btc_tx_ctx_t));
+  *psbt_out = &g_camera_fb[1][(sizeof(btc_tx_ctx_t) + 3) & ~0x3];
+  size_t psbt_out_len = CAMERA_FB_SIZE - ((sizeof(btc_tx_ctx_t) + 3) & ~0x3);
 
   psbt_t psbt;
   psbt_init(&psbt, (uint8_t*) psbt_in, psbt_len);

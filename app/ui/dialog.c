@@ -185,8 +185,8 @@ static void dialog_calculate_fees(bignum256* fees) {
   bignum256 gas_amount;
   bignum256 prime;
   bn_read_be(secp256k1.prime, &prime);
-  bn_read_compact_be(g_ui_cmd.params.txn.tx->startgas.value, g_ui_cmd.params.txn.tx->startgas.length, &gas_amount);
-  bn_read_compact_be(g_ui_cmd.params.txn.tx->gasprice.value, g_ui_cmd.params.txn.tx->gasprice.length, fees);
+  bn_read_compact_be(g_ui_cmd.params.eth_tx.tx->startgas.value, g_ui_cmd.params.eth_tx.tx->startgas.length, &gas_amount);
+  bn_read_compact_be(g_ui_cmd.params.eth_tx.tx->gasprice.value, g_ui_cmd.params.eth_tx.tx->gasprice.length, fees);
   bn_multiply(&gas_amount, fees, &prime);
 }
 
@@ -209,10 +209,10 @@ static i18n_str_id_t dialog_recognize_data(const txContent_t* tx) {
   }
 }
 
-app_err_t dialog_confirm_tx() {
+app_err_t dialog_confirm_eth_tx() {
   chain_desc_t chain;
   erc20_desc_t token;
-  chain.chain_id = g_ui_cmd.params.txn.tx->chainID;
+  chain.chain_id = g_ui_cmd.params.eth_tx.tx->chainID;
 
   uint8_t num[11];
   if (eth_db_lookup_chain(&chain) != ERR_OK) {
@@ -222,17 +222,17 @@ app_err_t dialog_confirm_tx() {
 
   i18n_str_id_t title;
   const uint8_t* to;
-  i18n_str_id_t data_type = dialog_recognize_data(g_ui_cmd.params.txn.tx);
+  i18n_str_id_t data_type = dialog_recognize_data(g_ui_cmd.params.eth_tx.tx);
 
   if (data_type == TX_DATA_ERC20) {
     title = TX_CONFIRM_ERC20_TITLE;
     token.chain = chain.chain_id;
-    token.addr = g_ui_cmd.params.txn.tx->destination;
+    token.addr = g_ui_cmd.params.eth_tx.tx->destination;
 
-    memmove((uint8_t*) g_ui_cmd.params.txn.tx->value.value, &g_ui_cmd.params.txn.tx->data[ETH_ERC20_VALUE_OFF], INT256_LENGTH);
-    ((txContent_t*) g_ui_cmd.params.txn.tx)->value.length = INT256_LENGTH;
+    memmove((uint8_t*) g_ui_cmd.params.eth_tx.tx->value.value, &g_ui_cmd.params.eth_tx.tx->data[ETH_ERC20_VALUE_OFF], INT256_LENGTH);
+    ((txContent_t*) g_ui_cmd.params.eth_tx.tx)->value.length = INT256_LENGTH;
 
-    to = &g_ui_cmd.params.txn.tx->data[ETH_ERC20_ADDR_OFF];
+    to = &g_ui_cmd.params.eth_tx.tx->data[ETH_ERC20_ADDR_OFF];
 
     if (eth_db_lookup_erc20(&token) != ERR_OK) {
       token.ticker = "???";
@@ -244,7 +244,7 @@ app_err_t dialog_confirm_tx() {
     title = TX_CONFIRM_TITLE;
     token.ticker = chain.ticker;
     token.decimals = 18;
-    to = g_ui_cmd.params.txn.tx->destination;
+    to = g_ui_cmd.params.eth_tx.tx->destination;
   }
 
   dialog_title(LSTR(title));
@@ -252,13 +252,13 @@ app_err_t dialog_confirm_tx() {
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
 
-  dialog_address(&ctx, TX_SIGNER, ADDR_ETH, g_ui_cmd.params.txn.addr);
+  dialog_address(&ctx, TX_SIGNER, ADDR_ETH, g_ui_cmd.params.eth_tx.addr);
   dialog_address(&ctx, TX_ADDRESS, ADDR_ETH, to);
   dialog_chain(&ctx, chain.name);
   dialog_tx_data(&ctx, data_type);
 
   bignum256 data;
-  bn_read_compact_be(g_ui_cmd.params.txn.tx->value.value, g_ui_cmd.params.txn.tx->value.length, &data);
+  bn_read_compact_be(g_ui_cmd.params.eth_tx.tx->value.value, g_ui_cmd.params.eth_tx.tx->value.length, &data);
   dialog_amount(&ctx, TX_AMOUNT, &data, token.decimals, token.ticker);
 
   dialog_calculate_fees(&data);
@@ -279,6 +279,10 @@ app_err_t dialog_confirm_tx() {
       break;
     }
   }
+}
+
+app_err_t dialog_confirm_btc_tx() {
+  return ERR_OK;
 }
 
 static void dialog_draw_message(const char* txt) {

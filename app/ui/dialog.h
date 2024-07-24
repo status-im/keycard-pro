@@ -16,7 +16,8 @@ app_err_t dialog_nav_hints_colors(icons_t left, icons_t right, uint16_t bg, uint
 app_err_t dialog_pager(size_t page, size_t last_page);
 app_err_t dialog_margin(uint16_t yOff, uint16_t height);
 
-app_err_t dialog_confirm_tx();
+app_err_t dialog_confirm_eth_tx();
+app_err_t dialog_confirm_btc_tx();
 app_err_t dialog_confirm_msg();
 app_err_t dialog_confirm_eip712();
 
