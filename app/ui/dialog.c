@@ -23,6 +23,67 @@ const uint8_t ETH_ERC20_SIGNATURE[] = { 0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00
 #define ETH_ERC20_VALUE_OFF 36
 #define ETH_ERC20_TRANSFER_LEN 68
 
+#define BTC_DIALOG_PAGE_ITEMS 2
+
+static app_err_t dialog_wait_dismiss() {
+  dialog_nav_hints(0, ICON_NAV_NEXT);
+
+  while(1) {
+    switch(ui_wait_keypress(portMAX_DELAY)) {
+    case KEYPAD_KEY_CONFIRM:
+      return ERR_OK;
+    default:
+      break;
+    }
+  }
+}
+
+static app_err_t dialog_wait_dismiss_cancellable() {
+  dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
+
+  while(1) {
+    switch(ui_wait_keypress(portMAX_DELAY)) {
+    case KEYPAD_KEY_CANCEL:
+    case KEYPAD_KEY_BACK:
+      return ERR_CANCEL;
+    case KEYPAD_KEY_CONFIRM:
+      return ERR_OK;
+    default:
+      break;
+    }
+  }
+}
+
+static app_err_t dialog_wait_paged(size_t* page, size_t last_page) {
+  dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
+  dialog_pager(*page, last_page);
+
+  switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
+  case KEYPAD_KEY_LEFT:
+    if (*page > 0) {
+      (*page)--;
+    } else {
+      *page = last_page;
+    }
+    return ERR_NEED_MORE_DATA;
+  case KEYPAD_KEY_RIGHT:
+    if (*page < last_page) {
+      (*page)++;
+    } else {
+      *page = 0;
+    }
+    return ERR_NEED_MORE_DATA;
+  case KEYPAD_KEY_CANCEL:
+  case KEYPAD_KEY_BACK:
+  case KEYPAD_KEY_INVALID:
+    return ERR_CANCEL;
+  case KEYPAD_KEY_CONFIRM:
+    return ERR_OK;
+  default:
+    return ERR_NEED_MORE_DATA;
+  }
+}
+
 app_err_t dialog_line(screen_text_ctx_t* ctx, const char* str, uint16_t line_height) {
   screen_area_t fillarea = { 0, ctx->y, SCREEN_WIDTH, line_height };
   screen_fill_area(&fillarea, ctx->bg);
@@ -198,6 +259,15 @@ static void dialog_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, const bi
   dialog_inline_data(ctx, tmp);
 }
 
+static void dialog_btc_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, uint64_t amount) {
+  //TODO: better formatting, add ticker
+  uint8_t tmp[UINT64_STRING_LEN];
+  uint8_t* p = u64toa(amount, tmp, UINT64_STRING_LEN);
+
+  dialog_label(ctx, LSTR(prompt));
+  dialog_inline_data(ctx, (char*) p);
+}
+
 // TODO: move this to more general function to recognize data and display correct data accordingly
 static i18n_str_id_t dialog_recognize_data(const txContent_t* tx) {
   if (tx->dataLength == 0) {
@@ -281,8 +351,63 @@ app_err_t dialog_confirm_eth_tx() {
   }
 }
 
+void dialog_confirm_btc_summary(const btc_tx_ctx_t* tx) {
+  screen_text_ctx_t ctx;
+  ctx.y = TH_TITLE_HEIGHT;
+
+  uint64_t total_input = 0;
+  uint64_t signed_amount = 0;
+  uint64_t total_output = 0;
+
+  for (int i = 0; i < tx->input_count; i++) {
+    uint64_t t;
+    memcpy(&t, tx->input_data[i].amount, sizeof(uint64_t));
+    total_input += t;
+    if (tx->input_data[i].can_sign) {
+      signed_amount += t;
+    }
+  }
+
+  for (int i = 0; i < tx->output_count; i++) {
+    uint64_t t;
+    memcpy(&t, tx->outputs[i].amount, sizeof(uint64_t));
+    total_output += t;
+  }
+
+  // TODO: fix labels, add basic informations on destination address
+
+  if (total_input == signed_amount) {
+    dialog_btc_amount(&ctx, TX_AMOUNT, total_input);
+  } else {
+    dialog_btc_amount(&ctx, TX_AMOUNT, total_input);
+    dialog_btc_amount(&ctx, TX_AMOUNT, signed_amount);
+  }
+
+  dialog_btc_amount(&ctx, TX_FEE, total_input - total_output);
+}
+
 app_err_t dialog_confirm_btc_tx() {
-  return ERR_OK;
+  dialog_title(LSTR(TX_CONFIRM_TITLE));
+  dialog_footer(TH_TITLE_HEIGHT);
+
+  const btc_tx_ctx_t* tx = g_ui_cmd.params.btc_tx.tx;
+
+  size_t page = 0;
+  size_t last_page = (tx->input_count + tx->output_count) / BTC_DIALOG_PAGE_ITEMS;
+
+  app_err_t ret = ERR_NEED_MORE_DATA;
+
+  while(ret == ERR_NEED_MORE_DATA) {
+    if (page == 0) {
+      dialog_confirm_btc_summary(tx);
+    } else {
+      //TODO: implement
+    }
+
+    ret = dialog_wait_paged(&page, last_page);
+  }
+
+  return ret;
 }
 
 static void dialog_draw_message(const char* txt) {
@@ -337,9 +462,11 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
     pages[++last_page] = offset + (to_display - remaining);
   }
 
-  int page = 0;
+  size_t page = 0;
 
-  while(1) {
+  app_err_t ret = ERR_NEED_MORE_DATA;
+
+  while(ret == ERR_NEED_MORE_DATA) {
     size_t offset = pages[page];
 
     dialog_title(LSTR(eip712 ? EIP712_CONFIRM_TITLE : MSG_CONFIRM_TITLE));
@@ -380,34 +507,10 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
     }
 
     screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], (len - offset), false, false);
-    dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
-    dialog_pager(page, last_page);
-
-    switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
-    case KEYPAD_KEY_LEFT:
-      if (page > 0) {
-        page--;
-      } else {
-        page = last_page;
-      }
-      break;
-    case KEYPAD_KEY_RIGHT:
-      if (page < last_page) {
-        page++;
-      } else {
-        page = 0;
-      }
-      break;
-    case KEYPAD_KEY_CANCEL:
-    case KEYPAD_KEY_BACK:
-    case KEYPAD_KEY_INVALID:
-      return ERR_CANCEL;
-    case KEYPAD_KEY_CONFIRM:
-      return ERR_OK;
-    default:
-      break;
-    }
+    ret = dialog_wait_paged(&page, last_page);
   }
+
+  return ret;
 }
 
 app_err_t dialog_confirm_msg() {
@@ -419,35 +522,6 @@ app_err_t dialog_confirm_eip712() {
   eip712_domain_t domain;
   eip712_extract_domain(g_ui_cmd.params.eip712.data, &domain);
   return dialog_confirm_text_based(g_camera_fb[0], len, &domain);
-}
-
-static app_err_t dialog_wait_dismiss() {
-  dialog_nav_hints(0, ICON_NAV_NEXT);
-
-  while(1) {
-    switch(ui_wait_keypress(portMAX_DELAY)) {
-    case KEYPAD_KEY_CONFIRM:
-      return ERR_OK;
-    default:
-      break;
-    }
-  }
-}
-
-static app_err_t dialog_wait_dismiss_cancellable() {
-  dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
-
-  while(1) {
-    switch(ui_wait_keypress(portMAX_DELAY)) {
-    case KEYPAD_KEY_CANCEL:
-    case KEYPAD_KEY_BACK:
-      return ERR_CANCEL;
-    case KEYPAD_KEY_CONFIRM:
-      return ERR_OK;
-    default:
-      break;
-    }
-  }
 }
 
 app_err_t dialog_info() {
