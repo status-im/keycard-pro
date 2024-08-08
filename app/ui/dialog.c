@@ -3,6 +3,7 @@
 #include "crypto/bignum.h"
 #include "crypto/secp256k1.h"
 #include "crypto/segwit_addr.h"
+#include "crypto/script.h"
 #include "crypto/util.h"
 #include "ethereum/eth_db.h"
 #include "ethereum/ethUstream.h"
@@ -268,6 +269,21 @@ static void dialog_btc_amount(screen_text_ctx_t* ctx, i18n_str_id_t prompt, uint
   dialog_inline_data(ctx, (char*) p);
 }
 
+static void dialog_indexed_string(char* dst, const char* label, size_t index) {
+  size_t seg_len = strlen(label);
+  memcpy(dst, label, seg_len);
+  dst += seg_len;
+  *(dst++) = ' ';
+  *(dst++) = '#';
+
+  uint8_t tmp[11];
+  uint8_t* digits = u32toa(index, tmp, 11);
+  seg_len = strlen((char* ) digits);
+  memcpy(dst, digits, seg_len);
+  dst += seg_len;
+  *dst = '\0';
+}
+
 // TODO: move this to more general function to recognize data and display correct data accordingly
 static i18n_str_id_t dialog_recognize_data(const txContent_t* tx) {
   if (tx->dataLength == 0) {
@@ -380,28 +396,74 @@ void dialog_confirm_btc_summary(const btc_tx_ctx_t* tx) {
     dialog_btc_amount(&ctx, TX_AMOUNT, total_input);
   } else {
     dialog_btc_amount(&ctx, TX_AMOUNT, total_input);
-    dialog_btc_amount(&ctx, TX_AMOUNT, signed_amount);
+    dialog_btc_amount(&ctx, TX_SIGNED_AMOUNT, signed_amount);
   }
 
   dialog_btc_amount(&ctx, TX_FEE, total_input - total_output);
 }
 
+void dialog_confirm_btc_inouts(const btc_tx_ctx_t* tx, size_t page) {
+  screen_text_ctx_t ctx;
+  ctx.y = TH_TITLE_HEIGHT;
+  size_t i = page * BTC_DIALOG_PAGE_ITEMS;
+  size_t displayed = 0;
+  char buf[BIGNUM_STRING_LEN];
+
+  while((i < tx->input_count) && (displayed < BTC_DIALOG_PAGE_ITEMS)) {
+    dialog_indexed_string(buf, LSTR(TX_INPUT), i);
+    dialog_label(&ctx, buf);
+
+    dialog_label(&ctx, LSTR(TX_ADDRESS));
+    script_output_to_address(tx->input_data[i].script_pubkey, tx->input_data[i].script_pubkey_len, buf);
+    dialog_inline_data(&ctx, buf);
+
+    uint64_t t;
+    memcpy(&t, tx->input_data[i].amount, sizeof(uint64_t));
+    dialog_btc_amount(&ctx, TX_AMOUNT, t);
+
+    dialog_label(&ctx, LSTR(TX_SIGNED));
+    dialog_inline_data(&ctx, tx->input_data[i].can_sign ? LSTR(TX_DATA_PRESENT) : LSTR(TX_DATA_NONE));
+
+    i++;
+    displayed++;
+  }
+
+  i -= tx->input_count;
+
+  while ((i < tx->output_count) && (displayed < BTC_DIALOG_PAGE_ITEMS)) {
+    dialog_indexed_string(buf, LSTR(TX_OUTPUT), i);
+    dialog_label(&ctx, buf);
+
+    dialog_label(&ctx, LSTR(TX_ADDRESS));
+    script_output_to_address(tx->outputs[i].script, tx->outputs[i].script_len, buf);
+    dialog_inline_data(&ctx, buf);
+
+    uint64_t t;
+    memcpy(&t, tx->outputs[i].amount, sizeof(uint64_t));
+    dialog_btc_amount(&ctx, TX_AMOUNT, t);
+
+    i++;
+    displayed++;
+  }
+}
+
 app_err_t dialog_confirm_btc_tx() {
   dialog_title(LSTR(TX_CONFIRM_TITLE));
-  dialog_footer(TH_TITLE_HEIGHT);
 
   const btc_tx_ctx_t* tx = g_ui_cmd.params.btc_tx.tx;
 
   size_t page = 0;
-  size_t last_page = (tx->input_count + tx->output_count) / BTC_DIALOG_PAGE_ITEMS;
+  size_t last_page = ((tx->input_count + tx->output_count) + (BTC_DIALOG_PAGE_ITEMS - 1)) / BTC_DIALOG_PAGE_ITEMS;
 
   app_err_t ret = ERR_NEED_MORE_DATA;
 
   while(ret == ERR_NEED_MORE_DATA) {
+    dialog_footer(TH_TITLE_HEIGHT);
+
     if (page == 0) {
       dialog_confirm_btc_summary(tx);
     } else {
-      //TODO: implement
+      dialog_confirm_btc_inouts(tx, (page - 1));
     }
 
     ret = dialog_wait_paged(&page, last_page);
