@@ -24,7 +24,7 @@ const uint8_t ETH_ERC20_SIGNATURE[] = { 0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00
 #define ETH_ERC20_VALUE_OFF 36
 #define ETH_ERC20_TRANSFER_LEN 68
 
-#define BTC_DIALOG_PAGE_ITEMS 2
+#define BTC_DIALOG_PAGE_ITEMS 1
 
 static app_err_t dialog_wait_dismiss() {
   dialog_nav_hints(0, ICON_NAV_NEXT);
@@ -402,6 +402,37 @@ void dialog_confirm_btc_summary(const btc_tx_ctx_t* tx) {
   dialog_btc_amount(&ctx, TX_FEE, total_input - total_output);
 }
 
+static inline void dialog_btc_sign_scheme_format(char* buf, uint32_t flag) {
+  int off = 0;
+  if (flag & SIGHASH_ANYONECANPAY) {
+    const char* anyonecanpay = LSTR(TX_SIGN_ANYONECANPAY);
+    off = strlen(anyonecanpay);
+    memcpy(buf, LSTR(TX_SIGN_ANYONECANPAY), off);
+    buf[off++] = ' ';
+    buf[off++] = '|';
+    buf[off++] = ' ';
+  }
+
+  const char* str;
+
+  switch(flag & SIGHASH_MASK) {
+  case SIGHASH_ALL:
+    str = LSTR(TX_SIGN_ALL);
+    break;
+  case SIGHASH_NONE:
+    str = LSTR(TX_SIGN_NONE);
+    break;
+  case SIGHASH_SINGLE:
+    str = LSTR(TX_SIGN_SINGLE);
+    break;
+  default:
+    str = "";
+    break;
+  }
+
+  strcpy(&buf[off], str);
+}
+
 void dialog_confirm_btc_inouts(const btc_tx_ctx_t* tx, size_t page) {
   screen_text_ctx_t ctx;
   ctx.y = TH_TITLE_HEIGHT;
@@ -415,11 +446,15 @@ void dialog_confirm_btc_inouts(const btc_tx_ctx_t* tx, size_t page) {
 
     dialog_label(&ctx, LSTR(TX_ADDRESS));
     script_output_to_address(tx->input_data[i].script_pubkey, tx->input_data[i].script_pubkey_len, buf);
-    dialog_inline_data(&ctx, buf);
+    dialog_data(&ctx, buf);
 
     uint64_t t;
     memcpy(&t, tx->input_data[i].amount, sizeof(uint64_t));
     dialog_btc_amount(&ctx, TX_AMOUNT, t);
+
+    dialog_label(&ctx, LSTR(TX_SIGN_SCHEME));
+    dialog_btc_sign_scheme_format(buf, tx->input_data[i].sighash_flag);
+    dialog_inline_data(&ctx, buf);
 
     dialog_label(&ctx, LSTR(TX_SIGNED));
     dialog_inline_data(&ctx, tx->input_data[i].can_sign ? LSTR(TX_DATA_PRESENT) : LSTR(TX_DATA_NONE));
@@ -436,7 +471,7 @@ void dialog_confirm_btc_inouts(const btc_tx_ctx_t* tx, size_t page) {
 
     dialog_label(&ctx, LSTR(TX_ADDRESS));
     script_output_to_address(tx->outputs[i].script, tx->outputs[i].script_len, buf);
-    dialog_inline_data(&ctx, buf);
+    dialog_data(&ctx, buf);
 
     uint64_t t;
     memcpy(&t, tx->outputs[i].amount, sizeof(uint64_t));

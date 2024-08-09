@@ -55,7 +55,7 @@ const char *const i18n_english_strings[] = {
     "Input",
     "Output",
     "Signed",
-    "Signing scheme",
+    "Sighash",
     "ALL",
     "NONE",
     "SINGLE",

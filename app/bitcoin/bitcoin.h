@@ -8,6 +8,8 @@
 #define BTC_MAX_INPUTS 20
 #define BTC_MAX_OUTPUTS 20
 
+#define SIGHASH_MASK 0x1f
+
 typedef enum {
   BTC_INPUT_TYPE_LEGACY,
   BTC_INPUT_TYPE_LEGACY_WITH_REDEEM,
@@ -20,6 +22,7 @@ typedef enum {
   SIGHASH_ALL = 0x01,
   SIGHASH_NONE = 0x02,
   SIGHASH_SINGLE = 0x03,
+  SIGHASH_ANYONECANPAY = 0x80
 } btc_sighash_flag_t;
 
 typedef struct {
