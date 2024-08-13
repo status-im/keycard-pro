@@ -49,6 +49,7 @@ typedef struct {
   psbt_txin_t inputs[BTC_MAX_INPUTS];
   psbt_txout_t outputs[BTC_MAX_OUTPUTS];
   psbt_input_data_t input_data[BTC_MAX_INPUTS];
+  bool output_is_change[BTC_MAX_OUTPUTS];
   size_t input_count;
   size_t output_count;
 

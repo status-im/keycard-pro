@@ -46,6 +46,8 @@ const char *const i18n_english_strings[] = {
     "To",
     "Amount",
     "Signed amount",
+    "Multiple recipients",
+    "WARNING: recipients could change! Do not sign unless you absolutely know what you are doing.",
     "Fee",
     "Signer",
     "Data",
@@ -60,6 +62,7 @@ const char *const i18n_english_strings[] = {
     "NONE",
     "SINGLE",
     "ANYONECANPAY",
+    "Change",
 
     // MSG Confirmation
     "Sign message",

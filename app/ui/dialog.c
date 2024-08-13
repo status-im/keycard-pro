@@ -287,11 +287,11 @@ static void dialog_indexed_string(char* dst, const char* label, size_t index) {
 // TODO: move this to more general function to recognize data and display correct data accordingly
 static i18n_str_id_t dialog_recognize_data(const txContent_t* tx) {
   if (tx->dataLength == 0) {
-    return TX_DATA_NONE;
+    return TX_NO;
   } else if (tx->value.length == 0 && tx->dataLength == ETH_ERC20_TRANSFER_LEN && !memcmp(tx->data, ETH_ERC20_SIGNATURE, ETH_ERC20_SIGNATURE_LEN)) {
     return TX_DATA_ERC20;
   } else {
-    return TX_DATA_PRESENT;
+    return TX_YES;
   }
 }
 
@@ -375,6 +375,8 @@ void dialog_confirm_btc_summary(const btc_tx_ctx_t* tx) {
   uint64_t signed_amount = 0;
   uint64_t total_output = 0;
 
+  bool has_sighash_none = false;
+
   for (int i = 0; i < tx->input_count; i++) {
     uint64_t t;
     memcpy(&t, tx->input_data[i].amount, sizeof(uint64_t));
@@ -382,24 +384,57 @@ void dialog_confirm_btc_summary(const btc_tx_ctx_t* tx) {
     if (tx->input_data[i].can_sign) {
       signed_amount += t;
     }
+
+    if ((tx->input_data[i].sighash_flag & SIGHASH_MASK) == SIGHASH_NONE) {
+      has_sighash_none = true;
+    }
   }
+
+  uint64_t change = 0;
+  int dest_idx = -1;
 
   for (int i = 0; i < tx->output_count; i++) {
     uint64_t t;
     memcpy(&t, tx->outputs[i].amount, sizeof(uint64_t));
     total_output += t;
+    if (tx->output_is_change[i]) {
+      change += t;
+    } else {
+      if (dest_idx == -1) {
+        dest_idx = i;
+      } else {
+        dest_idx = -2;
+      }
+    }
   }
 
-  // TODO: fix labels, add basic informations on destination address
+  dialog_btc_amount(&ctx, TX_AMOUNT, total_input);
 
-  if (total_input == signed_amount) {
-    dialog_btc_amount(&ctx, TX_AMOUNT, total_input);
-  } else {
-    dialog_btc_amount(&ctx, TX_AMOUNT, total_input);
+  if (total_input != signed_amount) {
     dialog_btc_amount(&ctx, TX_SIGNED_AMOUNT, signed_amount);
   }
 
+  if (change) {
+    dialog_btc_amount(&ctx, TX_CHANGE, change);
+  }
+
   dialog_btc_amount(&ctx, TX_FEE, total_input - total_output);
+
+
+  if (has_sighash_none) {
+    ctx.x = TH_DATA_LEFT_MARGIN;
+    screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, (const uint8_t*) LSTR(TX_SIGHASH_WARNING), strlen(LSTR(TX_SIGHASH_WARNING)), false, false);
+  } else {
+    char buf[BIGNUM_STRING_LEN];
+    dialog_label(&ctx, LSTR(TX_ADDRESS));
+
+    if (dest_idx >= 0) {
+      script_output_to_address(tx->outputs[dest_idx].script, tx->outputs[dest_idx].script_len, buf);
+      dialog_data(&ctx, buf);
+    } else {
+      dialog_data(&ctx, LSTR(TX_MULTIPLE_RECIPIENT));
+    }
+  }
 }
 
 static inline void dialog_btc_sign_scheme_format(char* buf, uint32_t flag) {
@@ -457,7 +492,7 @@ void dialog_confirm_btc_inouts(const btc_tx_ctx_t* tx, size_t page) {
     dialog_inline_data(&ctx, buf);
 
     dialog_label(&ctx, LSTR(TX_SIGNED));
-    dialog_inline_data(&ctx, tx->input_data[i].can_sign ? LSTR(TX_DATA_PRESENT) : LSTR(TX_DATA_NONE));
+    dialog_inline_data(&ctx, tx->input_data[i].can_sign ? LSTR(TX_YES) : LSTR(TX_NO));
 
     i++;
     displayed++;
@@ -476,6 +511,9 @@ void dialog_confirm_btc_inouts(const btc_tx_ctx_t* tx, size_t page) {
     uint64_t t;
     memcpy(&t, tx->outputs[i].amount, sizeof(uint64_t));
     dialog_btc_amount(&ctx, TX_AMOUNT, t);
+
+    dialog_label(&ctx, LSTR(TX_CHANGE));
+    dialog_inline_data(&ctx, tx->output_is_change[i] ? LSTR(TX_YES) : LSTR(TX_NO));
 
     i++;
     displayed++;

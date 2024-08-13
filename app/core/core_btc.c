@@ -533,6 +533,17 @@ static app_err_t core_btc_validate(btc_tx_ctx_t* tx_ctx) {
     }
   }
 
+  for (int i = 0; i < tx_ctx->output_count; i++) {
+    for (int j = 0; j < tx_ctx->input_count; j++) {
+      if (tx_ctx->input_data[j].can_sign &&
+          (tx_ctx->input_data[j].script_pubkey_len == tx_ctx->outputs[i].script_len) &&
+          !memcmp(tx_ctx->input_data[j].script_pubkey, tx_ctx->outputs[i].script, tx_ctx->outputs[i].script_len)) {
+        tx_ctx->output_is_change[i] = true;
+        break;
+      }
+    }
+  }
+
   return can_sign_something ? ERR_OK : ERR_MISMATCH;
 }
 
