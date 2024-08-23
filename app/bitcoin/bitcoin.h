@@ -3,6 +3,8 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <string.h>
+#include "mem.h"
 #include "bitcoin/psbt.h"
 
 #define BTC_MAX_INPUTS 20
@@ -62,5 +64,14 @@ typedef struct {
 
   app_err_t error;
 } btc_tx_ctx_t;
+
+static inline bool btc_is_bip322(const btc_tx_ctx_t* tx) {
+  return (tx->input_count == 1) &&
+      (tx->output_count == 1) &&
+      (tx->inputs[0].sequence_number == 0) &&
+      (tx->inputs[0].index == 0) &&
+      !memcmp(tx->input_data[0].amount, ZERO32, sizeof(uint64_t)) &&
+      !memcmp(tx->outputs[0].amount, ZERO32, sizeof(uint64_t));
+}
 
 #endif

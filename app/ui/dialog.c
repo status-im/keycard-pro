@@ -520,10 +520,40 @@ void dialog_confirm_btc_inouts(const btc_tx_ctx_t* tx, size_t page) {
   }
 }
 
-app_err_t dialog_confirm_btc_tx() {
-  dialog_title(LSTR(TX_CONFIRM_TITLE));
+app_err_t dialog_confirm_bip322(const btc_tx_ctx_t* tx) {
+  dialog_title(LSTR(MSG_CONFIRM_TITLE));
+  dialog_footer(TH_TITLE_HEIGHT);
 
+  screen_text_ctx_t ctx;
+  ctx.y = TH_TITLE_HEIGHT;
+  char buf[BIGNUM_STRING_LEN];
+
+  dialog_label(&ctx, LSTR(TX_ADDRESS));
+  script_output_to_address(tx->input_data[0].script_pubkey, tx->input_data[0].script_pubkey_len, buf);
+  dialog_data(&ctx, buf);
+
+  while(1) {
+    switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
+    case KEYPAD_KEY_CANCEL:
+    case KEYPAD_KEY_BACK:
+    case KEYPAD_KEY_INVALID:
+      return ERR_CANCEL;
+    case KEYPAD_KEY_CONFIRM:
+      return ERR_OK;
+    default:
+      break;
+    }
+  }
+}
+
+app_err_t dialog_confirm_btc_tx() {
   const btc_tx_ctx_t* tx = g_ui_cmd.params.btc_tx.tx;
+
+  if (btc_is_bip322(tx)) {
+    return dialog_confirm_bip322(tx);
+  }
+
+  dialog_title(LSTR(TX_CONFIRM_TITLE));
 
   size_t page = 0;
   size_t last_page = ((tx->input_count + tx->output_count) + (BTC_DIALOG_PAGE_ITEMS - 1)) / BTC_DIALOG_PAGE_ITEMS;
