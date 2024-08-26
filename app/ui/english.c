@@ -52,7 +52,6 @@ const char *const i18n_english_strings[] = {
     "Signer",
     "Data",
     "No",
-    "Yes (ERC20)",
     "Yes",
     "Input",
     "Output",

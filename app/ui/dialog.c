@@ -26,6 +26,12 @@ const uint8_t ETH_ERC20_SIGNATURE[] = { 0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00
 
 #define BTC_DIALOG_PAGE_ITEMS 1
 
+typedef enum {
+  ETH_DATA_ABSENT,
+  ETH_DATA_UNKNOWN,
+  ETH_DATA_ERC20
+} eth_data_type_t;
+
 static app_err_t dialog_wait_dismiss() {
   dialog_nav_hints(0, ICON_NAV_NEXT);
 
@@ -230,11 +236,6 @@ static void dialog_chain(screen_text_ctx_t *ctx, const char* name) {
   dialog_inline_data(ctx, name);
 }
 
-static void dialog_tx_data(screen_text_ctx_t *ctx, i18n_str_id_t data_type) {
-  dialog_label(ctx, LSTR(TX_DATA));
-  dialog_inline_data(ctx, LSTR(data_type));
-}
-
 static void dialog_address(screen_text_ctx_t *ctx, i18n_str_id_t label, addr_type_t addr_type, const uint8_t* addr) {
   char str[MAX_ADDR_LEN];
   address_format(addr_type, addr, str);
@@ -285,13 +286,13 @@ static void dialog_indexed_string(char* dst, const char* label, size_t index) {
 }
 
 // TODO: move this to more general function to recognize data and display correct data accordingly
-static i18n_str_id_t dialog_recognize_data(const txContent_t* tx) {
+static eth_data_type_t dialog_recognize_data(const txContent_t* tx) {
   if (tx->dataLength == 0) {
-    return TX_NO;
+    return ETH_DATA_ABSENT;
   } else if (tx->value.length == 0 && tx->dataLength == ETH_ERC20_TRANSFER_LEN && !memcmp(tx->data, ETH_ERC20_SIGNATURE, ETH_ERC20_SIGNATURE_LEN)) {
-    return TX_DATA_ERC20;
+    return ETH_DATA_ERC20;
   } else {
-    return TX_YES;
+    return ETH_DATA_UNKNOWN;
   }
 }
 
@@ -308,9 +309,9 @@ app_err_t dialog_confirm_eth_tx() {
 
   i18n_str_id_t title;
   const uint8_t* to;
-  i18n_str_id_t data_type = dialog_recognize_data(g_ui_cmd.params.eth_tx.tx);
+  eth_data_type_t data_type = dialog_recognize_data(g_ui_cmd.params.eth_tx.tx);
 
-  if (data_type == TX_DATA_ERC20) {
+  if (data_type == ETH_DATA_ERC20) {
     title = TX_CONFIRM_ERC20_TITLE;
     token.chain = chain.chain_id;
     token.addr = g_ui_cmd.params.eth_tx.tx->destination;
@@ -324,8 +325,6 @@ app_err_t dialog_confirm_eth_tx() {
       token.ticker = "???";
       token.decimals = 18;
     }
-
-    data_type = TX_DATA_ERC20;
   } else {
     title = TX_CONFIRM_TITLE;
     token.ticker = chain.ticker;
@@ -333,38 +332,39 @@ app_err_t dialog_confirm_eth_tx() {
     to = g_ui_cmd.params.eth_tx.tx->destination;
   }
 
+  bignum256 value;
+  bn_read_compact_be(g_ui_cmd.params.eth_tx.tx->value.value, g_ui_cmd.params.eth_tx.tx->value.length, &value);
+
+  bignum256 fees;
+  dialog_calculate_fees(&fees);
+
   dialog_title(LSTR(title));
 
-  screen_text_ctx_t ctx;
-  ctx.y = TH_TITLE_HEIGHT;
+  size_t page = 0;
+  size_t last_page = 0;
 
-  dialog_address(&ctx, TX_SIGNER, ADDR_ETH, g_ui_cmd.params.eth_tx.addr);
-  dialog_address(&ctx, TX_ADDRESS, ADDR_ETH, to);
-  dialog_chain(&ctx, chain.name);
-  dialog_tx_data(&ctx, data_type);
+  app_err_t ret = ERR_NEED_MORE_DATA;
 
-  bignum256 data;
-  bn_read_compact_be(g_ui_cmd.params.eth_tx.tx->value.value, g_ui_cmd.params.eth_tx.tx->value.length, &data);
-  dialog_amount(&ctx, TX_AMOUNT, &data, token.decimals, token.ticker);
+  while(ret == ERR_NEED_MORE_DATA) {
+    dialog_footer(TH_TITLE_HEIGHT);
+    screen_text_ctx_t ctx;
+    ctx.y = TH_TITLE_HEIGHT;
 
-  dialog_calculate_fees(&data);
-  dialog_amount(&ctx, TX_FEE, &data, 18, chain.ticker);
+    if (page == 0) {
+      dialog_address(&ctx, TX_SIGNER, ADDR_ETH, g_ui_cmd.params.eth_tx.addr);
+      dialog_address(&ctx, TX_ADDRESS, ADDR_ETH, to);
+      dialog_chain(&ctx, chain.name);
 
-  dialog_footer(ctx.y);
-  dialog_nav_hints(ICON_NAV_BACK, ICON_NAV_NEXT);
+      dialog_amount(&ctx, TX_AMOUNT, &value, token.decimals, token.ticker);
+      dialog_amount(&ctx, TX_FEE, &fees, 18, chain.ticker);
+    } else {
 
-  while(1) {
-    switch(ui_wait_keypress(pdMS_TO_TICKS(TX_CONFIRM_TIMEOUT))) {
-    case KEYPAD_KEY_CANCEL:
-    case KEYPAD_KEY_BACK:
-    case KEYPAD_KEY_INVALID:
-      return ERR_CANCEL;
-    case KEYPAD_KEY_CONFIRM:
-      return ERR_OK;
-    default:
-      break;
     }
+
+    ret = dialog_wait_paged(&page, last_page);
   }
+
+  return ret;
 }
 
 void dialog_confirm_btc_summary(const btc_tx_ctx_t* tx) {

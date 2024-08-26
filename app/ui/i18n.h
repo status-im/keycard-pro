@@ -58,7 +58,6 @@ typedef enum {
   TX_SIGNER,
   TX_DATA,
   TX_NO,
-  TX_DATA_ERC20,
   TX_YES,
   TX_INPUT,
   TX_OUTPUT,
