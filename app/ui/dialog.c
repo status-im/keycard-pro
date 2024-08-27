@@ -311,6 +311,14 @@ app_err_t dialog_confirm_eth_tx() {
   const uint8_t* to;
   eth_data_type_t data_type = dialog_recognize_data(g_ui_cmd.params.eth_tx.tx);
 
+  uint8_t* data = g_camera_fb[0];
+  size_t data_len = 0;
+
+  screen_text_ctx_t ctx;
+  size_t pages[MAX_PAGE_COUNT];
+  size_t page = 0;
+  size_t last_page = 0;
+
   if (data_type == ETH_DATA_ERC20) {
     title = TX_CONFIRM_ERC20_TITLE;
     token.chain = chain.chain_id;
@@ -330,6 +338,35 @@ app_err_t dialog_confirm_eth_tx() {
     token.ticker = chain.ticker;
     token.decimals = 18;
     to = g_ui_cmd.params.eth_tx.tx->destination;
+
+    if (data_type == ETH_DATA_UNKNOWN) {
+      base16_encode(g_ui_cmd.params.eth_tx.tx->data, (char *) data, g_ui_cmd.params.eth_tx.tx->dataLength);
+      data_len = g_ui_cmd.params.eth_tx.tx->dataLength * 2;
+
+      last_page = 1;
+      pages[1] = 0;
+      ctx.font = TH_FONT_TEXT;
+
+      while(1) {
+        ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
+
+        if (last_page > 1) {
+          ctx.y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN;
+        } else {
+          ctx.y = TH_TITLE_HEIGHT + TH_LABEL_HEIGHT;
+        }
+
+        size_t offset = pages[last_page];
+        size_t to_display = data_len - offset;
+        size_t remaining = screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], to_display, true, false);
+
+        if (!remaining || last_page == (MAX_PAGE_COUNT - 1)) {
+          break;
+        }
+
+        pages[++last_page] = offset + (to_display - remaining);
+      }
+    }
   }
 
   bignum256 value;
@@ -340,14 +377,9 @@ app_err_t dialog_confirm_eth_tx() {
 
   dialog_title(LSTR(title));
 
-  size_t page = 0;
-  size_t last_page = 0;
-
   app_err_t ret = ERR_NEED_MORE_DATA;
 
   while(ret == ERR_NEED_MORE_DATA) {
-    dialog_footer(TH_TITLE_HEIGHT);
-    screen_text_ctx_t ctx;
     ctx.y = TH_TITLE_HEIGHT;
 
     if (page == 0) {
@@ -357,8 +389,24 @@ app_err_t dialog_confirm_eth_tx() {
 
       dialog_amount(&ctx, TX_AMOUNT, &value, token.decimals, token.ticker);
       dialog_amount(&ctx, TX_FEE, &fees, 18, chain.ticker);
+      dialog_footer(ctx.y);
     } else {
+      size_t offset = pages[page];
 
+      if (page == 1) {
+        dialog_label(&ctx, LSTR(TX_DATA));
+        ctx.font = TH_FONT_TEXT;
+        ctx.fg = TH_COLOR_TEXT_FG;
+        ctx.bg = TH_COLOR_TEXT_BG;
+        ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
+        dialog_footer(ctx.y);
+      } else {
+        ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
+        ctx.y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN;
+        dialog_footer(TH_TITLE_HEIGHT);
+      }
+
+      screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &data[offset], (data_len - offset), false, false);
     }
 
     ret = dialog_wait_paged(&page, last_page);
