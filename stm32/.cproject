@@ -4,7 +4,7 @@
 		<cconfiguration id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1093676277">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1093676277" moduleId="org.eclipse.cdt.core.settings" name="Debug">
 				<macros>
-					<stringMacro name="KEYFILE" type="VALUE_TEXT" value="C:\Users\tanuki\git\keycard-pro\deployment\fw-test-key.txt"/>
+					<stringMacro name="KEYFILE" type="VALUE_TEXT" value="${ProjDirPath}/../deployment/fw-test-key.txt"/>
 				</macros>
 				<externalSettings/>
 				<extensions>
@@ -111,7 +111,7 @@
 		<cconfiguration id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.816735289">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.816735289" moduleId="org.eclipse.cdt.core.settings" name="Release">
 				<macros>
-					<stringMacro name="KEYFILE" type="VALUE_TEXT" value="C:\Users\tanuki\git\keycard-pro\deployment\fw-test-key.txt"/>
+					<stringMacro name="KEYFILE" type="VALUE_TEXT" value="${ProjDirPath}/../deployment/fw-test-key.txt"/>
 				</macros>
 				<externalSettings/>
 				<extensions>
@@ -218,7 +218,7 @@
 		<cconfiguration id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1093676277.1586505413">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.debug.1093676277.1586505413" moduleId="org.eclipse.cdt.core.settings" name="BL">
 				<macros>
-					<stringMacro name="KEYFILE" type="VALUE_TEXT" value="C:\Users\tanuki\git\keycard-pro\deployment\fw-test-key.txt"/>
+					<stringMacro name="KEYFILE" type="VALUE_TEXT" value="${ProjDirPath}/../deployment/fw-test-key.txt"/>
 				</macros>
 				<externalSettings/>
 				<extensions>
@@ -327,6 +327,9 @@
 		</cconfiguration>
 		<cconfiguration id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.816735289.712006256">
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="com.st.stm32cube.ide.mcu.gnu.managedbuild.config.exe.release.816735289.712006256" moduleId="org.eclipse.cdt.core.settings" name="TestApp">
+				<macros>
+					<stringMacro name="KEYFILE" type="VALUE_TEXT" value="${ProjDirPath}/../deployment/fw-test-key.txt"/>
+				</macros>
 				<externalSettings/>
 				<extensions>
 					<extension id="org.eclipse.cdt.core.ELF" point="org.eclipse.cdt.core.BinaryParser"/>
