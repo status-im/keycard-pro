@@ -17,6 +17,8 @@ struct ui_ctx g_ui_ctx;
 #define TH_KEYPAD_FIELD_HEIGHT 30
 #define TH_KEYPAD_FIELD_WIDTH 30
 #define TH_KEYPAD_FIELD_MARGIN TH_DEF_LEFT_MARGIN
+#define TH_KEYPAD_FIELD_VERTICAL_MARGIN 16
+
 #define TH_FIELD_MARGIN ((SCREEN_WIDTH - ((TH_KEYPAD_FIELD_WIDTH * 3) + (TH_KEYPAD_FIELD_MARGIN * 2))) / 2)
 
 #define COLOR_TEST_HEADER_REFRESH_MS (1 * 60 * 1000)
@@ -28,7 +30,7 @@ static app_err_t test_keypad() {
 
   screen_area_t area = {
       .x = TH_FIELD_MARGIN,
-      .y = TH_TITLE_HEIGHT + TH_KEYPAD_FIELD_MARGIN,
+      .y = TH_TITLE_HEIGHT + TH_KEYPAD_FIELD_VERTICAL_MARGIN,
       .width = TH_KEYPAD_FIELD_WIDTH,
       .height = TH_KEYPAD_FIELD_HEIGHT
   };
@@ -38,14 +40,14 @@ static app_err_t test_keypad() {
 
     if ((i % 3) == 2) {
       area.x = TH_FIELD_MARGIN;
-      area.y += TH_KEYPAD_FIELD_HEIGHT + TH_KEYPAD_FIELD_MARGIN;
+      area.y += TH_KEYPAD_FIELD_HEIGHT + TH_KEYPAD_FIELD_VERTICAL_MARGIN;
     } else {
       area.x += TH_KEYPAD_FIELD_WIDTH + TH_KEYPAD_FIELD_MARGIN;
     }
   }
 
   area.x = TH_FIELD_MARGIN;
-  area.y = TH_TITLE_HEIGHT + TH_PIN_FIELD_VERTICAL_MARGIN;
+  area.y = TH_TITLE_HEIGHT + TH_KEYPAD_FIELD_VERTICAL_MARGIN;
 
   for (int i = 0; i < 12; i++) {
     while(ui_wait_keypress(portMAX_DELAY) != i) {
@@ -56,7 +58,7 @@ static app_err_t test_keypad() {
 
     if ((i % 3) == 2) {
       area.x = TH_FIELD_MARGIN;
-      area.y += TH_KEYPAD_FIELD_HEIGHT + TH_KEYPAD_FIELD_MARGIN;
+      area.y += TH_KEYPAD_FIELD_HEIGHT + TH_KEYPAD_FIELD_VERTICAL_MARGIN;
     } else {
       area.x += TH_KEYPAD_FIELD_WIDTH + TH_KEYPAD_FIELD_MARGIN;
     }
@@ -120,6 +122,9 @@ void ui_task_entry(void* pvParameters) {
     switch(g_ui_cmd.type) {
     case UI_CMD_INFO:
       g_ui_cmd.result = dialog_info();
+      break;
+    case UI_CMD_PROMPT:
+      g_ui_cmd.result = dialog_prompt();
       break;
     case UI_CMD_QRSCAN:
       g_ui_cmd.result = qrscan_scan();
