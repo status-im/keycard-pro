@@ -84,6 +84,18 @@ app_err_t keycard_cmd_autopair(keycard_t* kc, const uint8_t* psk, pairing_t* pai
   return ERR_OK;
 }
 
+app_err_t keycard_cmd_unpair(keycard_t* kc, uint8_t idx) {
+  APDU_RESET(&kc->apdu);
+  APDU_CLA(&kc->apdu) = 0x80;
+  APDU_INS(&kc->apdu) = 0x13;
+  APDU_P1(&kc->apdu) = idx;
+  APDU_P2(&kc->apdu) = 0;
+
+  SC_BUF(data, 0);
+
+  return securechannel_send_apdu(&kc->sc, &kc->ch, &kc->apdu, data, 0);
+}
+
 app_err_t keycard_cmd_verify_pin(keycard_t* kc, uint8_t* pin) {
   APDU_RESET(&kc->apdu);
   APDU_CLA(&kc->apdu) = 0x80;

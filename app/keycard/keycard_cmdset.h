@@ -13,6 +13,7 @@ typedef enum {
 app_err_t keycard_cmd_select(keycard_t* kc, const uint8_t* aid, uint32_t len);
 app_err_t keycard_cmd_pair(keycard_t* kc, uint8_t step, uint8_t* data);
 app_err_t keycard_cmd_autopair(keycard_t* kc, const uint8_t* psk, pairing_t* pairing);
+app_err_t keycard_cmd_unpair(keycard_t* kc, uint8_t idx);
 app_err_t keycard_cmd_verify_pin(keycard_t* kc, uint8_t* pin);
 app_err_t keycard_cmd_change_credential(keycard_t* kc, keycard_credentials_t type, uint8_t* credentials, uint8_t len);
 app_err_t keycard_cmd_unblock_pin(keycard_t* kc, uint8_t* pin, uint8_t* puk);
