@@ -71,6 +71,11 @@ static app_err_t eip712_top_level(eip712_ctx_t* ctx) {
   return found == 0xf ? ERR_OK : ERR_DATA;
 }
 
+static inline void eip712_string_from_field(struct eip712_string* str, int index, const eip712_ctx_t* ctx) {
+  str->str = &ctx->json[ctx->tokens[index].start];
+  str->len = ctx->tokens[index].end - ctx->tokens[index].start;
+}
+
 static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, struct eip712_type types[], int types_count, const eip712_ctx_t* ctx) {
   int current_type = 0;
   int fields_size = 0;
@@ -81,8 +86,7 @@ static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, 
       return -1;
     }
 
-    types[current_type].name.len = (ctx->tokens[i].end - ctx->tokens[i].start);
-    types[current_type].name.str = &ctx->json[ctx->tokens[i].start];
+    eip712_string_from_field(&types[current_type].name, i, ctx);
 
     if (ctx->tokens[++i].type != JSMN_ARRAY) {
       return -1;
@@ -123,12 +127,10 @@ static int eip712_parse_types(uint8_t* heap, size_t heap_size, int types_token, 
 
         switch(p) {
         case 'n':
-          types[current_type].fields[j].name.len = ctx->tokens[i].end - ctx->tokens[i].start;
-          types[current_type].fields[j].name.str = &ctx->json[ctx->tokens[i].start];
+          eip712_string_from_field(&types[current_type].fields[j].name, i, ctx);
           break;
         case 't':
-          types[current_type].fields[j].type.len = ctx->tokens[i].end - ctx->tokens[i].start;
-          types[current_type].fields[j].type.str = &ctx->json[ctx->tokens[i].start];
+          eip712_string_from_field(&types[current_type].fields[j].type, i, ctx);
           break;
         default:
           return -1;
@@ -184,6 +186,35 @@ static int eip712_find_type(const struct eip712_type types[], int types_count, c
   }
 
   return -1;
+}
+
+static app_err_t eip712_copy_uint(int field_index, bool pad_right, uint8_t out[32], const eip712_ctx_t* ctx) {
+  struct eip712_string tmpstr;
+  eip712_string_from_field(&tmpstr, field_index, ctx);
+
+  if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
+    int out_len = ((tmpstr.len - 1) >> 1);
+    int padding = 32 - out_len;
+    int offset;
+
+    if (pad_right) {
+      offset = 0;
+      memset(&out[offset], 0, padding);
+    } else {
+      offset = padding;
+      memset(out, 0, padding);
+    }
+
+    if (!base16_decode(&tmpstr.str[2], &out[offset], (tmpstr.len - 2))) {
+      return ERR_DATA;
+    }
+  } else {
+    if (!atoi256BE(tmpstr.str, tmpstr.len, out)) {
+      return ERR_DATA;
+    }
+  }
+
+  return ERR_OK;
 }
 
 static void eip712_hash_type(SHA3_CTX* sha3, const struct eip712_type* type) {
@@ -300,8 +331,7 @@ static int eip712_find_data(const struct eip712_string* name, int start, const e
       }
 
       struct eip712_string key_name;
-      key_name.str = &ctx->json[ctx->tokens[i].start];
-      key_name.len = ctx->tokens[i].end - ctx->tokens[i].start;
+      eip712_string_from_field(&key_name, i, ctx);
 
       if (eip712_streq(name, &key_name)) {
         return i + 1;
@@ -426,8 +456,7 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
     }
 
     struct eip712_string tmpstr;
-    tmpstr.str = &ctx->json[ctx->tokens[field_val].start];
-    tmpstr.len = ctx->tokens[field_val].end - ctx->tokens[field_val].start;
+    eip712_string_from_field(&tmpstr, field_val, ctx);
 
     __DECL_SHA3_CTX();
 
@@ -460,31 +489,9 @@ static app_err_t eip712_encode_field(uint8_t out[32], uint8_t* heap, size_t heap
     memset(out, 0, 32);
     out[31] = ctx->json[ctx->tokens[field_val].start] == 't';
   } else {
-    struct eip712_string tmpstr;
-    tmpstr.str = &ctx->json[ctx->tokens[field_val].start];
-    tmpstr.len = ctx->tokens[field_val].end - ctx->tokens[field_val].start;
-
-    if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
-      int out_len = ((tmpstr.len - 1) >> 1);
-      int padding = 32 - out_len;
-      int offset;
-
-      // bytesX are right padded, others are left padded
-      if (field_type->str[0] == 'b') {
-        offset = 0;
-        memset(&out[offset], 0, padding);
-      } else {
-        offset = padding;
-        memset(out, 0, padding);
-      }
-
-      if (!base16_decode(&tmpstr.str[2], &out[offset], (tmpstr.len - 2))) {
-        return ERR_DATA;
-      }
-    } else {
-      if (!atoi256BE(tmpstr.str, tmpstr.len, out)) {
-        return ERR_DATA;
-      }
+    // bytesX are right padded, others are left padded
+    if (eip712_copy_uint(field_val, (field_type->str[0] == 'b'), out, ctx) != ERR_OK) {
+      return ERR_DATA;
     }
   }
 
@@ -582,8 +589,7 @@ app_err_t eip712_hash(eip712_ctx_t *ctx, SHA3_CTX *sha3, uint8_t* heap, size_t h
   eip712_hash_struct(tmp, heap, heap_size, struct_idx, types, types_count, ctx->index.domain, ctx);
   keccak_Update(sha3, tmp, 32);
 
-  tmpstr.str = &json[ctx->tokens[ctx->index.primary_type].start];
-  tmpstr.len = (ctx->tokens[ctx->index.primary_type].end - ctx->tokens[ctx->index.primary_type].start);
+  eip712_string_from_field(&tmpstr, ctx->index.primary_type, ctx);
   struct_idx = eip712_find_type(types, types_count, &tmpstr);
 
   if (struct_idx == -1) {
@@ -672,15 +678,15 @@ size_t eip712_to_string(const eip712_ctx_t* ctx, uint8_t* out) {
   return eip712_encode_object(ctx, out, &root, 0);
 }
 
-static inline int eip712_find_domain_data(const eip712_ctx_t* ctx, const char* key) {
+static inline int eip712_find_data_from_str(const eip712_ctx_t* ctx, int parent_token, const char* key) {
   struct eip712_string k;
   k.str = key;
   k.len = strlen(key);
-  return eip712_find_data(&k, ctx->index.domain, ctx);
+  return eip712_find_data(&k, parent_token, ctx);
 }
 
 static app_err_t eip712_extract_domain_string(const eip712_ctx_t* ctx, const char* key, char** out) {
-  int found = eip712_find_domain_data(ctx, key);
+  int found = eip712_find_data_from_str(ctx, ctx->index.domain, key);
 
   if (found == -1) {
     return ERR_DATA;
@@ -703,30 +709,16 @@ app_err_t eip712_extract_domain(const eip712_ctx_t* ctx, eip712_domain_t* out) {
     return ERR_DATA;
   }
 
-  int found = eip712_find_domain_data(ctx, "chainId");
+  int found = eip712_find_data_from_str(ctx, ctx->index.domain, "chainId");
 
   if (found == -1) {
     return ERR_DATA;
   }
 
-  struct eip712_string tmpstr;
-  tmpstr.str = &ctx->json[ctx->tokens[found].start];
-  tmpstr.len = ctx->tokens[found].end - ctx->tokens[found].start;
-
   uint8_t chain_bytes[32];
 
-  if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
-    int out_len = ((tmpstr.len - 1) >> 1);
-    int padding = 32 - out_len;
-    memset(chain_bytes, 0, padding);
-
-    if (!base16_decode(&tmpstr.str[2], &chain_bytes[padding], (tmpstr.len - 2))) {
-      return ERR_DATA;
-    }
-  } else {
-    if (!atoi256BE(tmpstr.str, tmpstr.len, chain_bytes)) {
-      return ERR_DATA;
-    }
+  if (eip712_copy_uint(found, false, chain_bytes, ctx) != ERR_OK) {
+    return ERR_DATA;
   }
 
   out->chainID = (chain_bytes[28] << 24) | (chain_bytes[29] << 16) | (chain_bytes[30] << 8) | chain_bytes[31];

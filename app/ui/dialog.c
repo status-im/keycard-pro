@@ -5,6 +5,7 @@
 #include "crypto/segwit_addr.h"
 #include "crypto/script.h"
 #include "crypto/util.h"
+#include "ethereum/eth_data.h"
 #include "ethereum/eth_db.h"
 #include "ethereum/ethUstream.h"
 #include "ethereum/ethUtils.h"
@@ -18,19 +19,7 @@
 #define MESSAGE_MAX_X (SCREEN_WIDTH - TH_TEXT_HORIZONTAL_MARGIN)
 #define MESSAGE_MAX_Y (SCREEN_HEIGHT - TH_NAV_HINT_HEIGHT)
 
-const uint8_t ETH_ERC20_SIGNATURE[] = { 0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-#define ETH_ERC20_SIGNATURE_LEN 16
-#define ETH_ERC20_ADDR_OFF 16
-#define ETH_ERC20_VALUE_OFF 36
-#define ETH_ERC20_TRANSFER_LEN 68
-
 #define BTC_DIALOG_PAGE_ITEMS 1
-
-typedef enum {
-  ETH_DATA_ABSENT,
-  ETH_DATA_UNKNOWN,
-  ETH_DATA_ERC20
-} eth_data_type_t;
 
 static app_err_t dialog_wait_dismiss() {
   dialog_nav_hints(0, ICON_NAV_NEXT);
@@ -285,17 +274,6 @@ static void dialog_indexed_string(char* dst, const char* label, size_t index) {
   *dst = '\0';
 }
 
-// TODO: move this to more general function to recognize data and display correct data accordingly
-static eth_data_type_t dialog_recognize_data(const txContent_t* tx) {
-  if (tx->dataLength == 0) {
-    return ETH_DATA_ABSENT;
-  } else if (tx->value.length == 0 && tx->dataLength == ETH_ERC20_TRANSFER_LEN && !memcmp(tx->data, ETH_ERC20_SIGNATURE, ETH_ERC20_SIGNATURE_LEN)) {
-    return ETH_DATA_ERC20;
-  } else {
-    return ETH_DATA_UNKNOWN;
-  }
-}
-
 app_err_t dialog_confirm_eth_tx() {
   chain_desc_t chain;
   erc20_desc_t token;
@@ -309,7 +287,7 @@ app_err_t dialog_confirm_eth_tx() {
 
   i18n_str_id_t title;
   const uint8_t* to;
-  eth_data_type_t data_type = dialog_recognize_data(g_ui_cmd.params.eth_tx.tx);
+  eth_data_type_t data_type = eth_data_recognize(g_ui_cmd.params.eth_tx.tx);
 
   uint8_t* data = g_camera_fb[0];
   size_t data_len = 0;
@@ -319,7 +297,7 @@ app_err_t dialog_confirm_eth_tx() {
   size_t page = 0;
   size_t last_page = 0;
 
-  if (data_type == ETH_DATA_ERC20) {
+  if (data_type == ETH_DATA_ERC20_TRANSFER) {
     title = TX_CONFIRM_ERC20_TITLE;
     token.chain = chain.chain_id;
     token.addr = g_ui_cmd.params.eth_tx.tx->destination;
@@ -686,9 +664,9 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
 
     if (page == 0) {
       ctx.y = TH_TITLE_HEIGHT;
-      dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.msg.addr_type, g_ui_cmd.params.msg.addr);
 
       if (eip712) {
+        dialog_address(&ctx, TX_SIGNER, ADDR_ETH, g_ui_cmd.params.eip712.addr);
         dialog_label(&ctx, LSTR(TX_CHAIN));
 
         chain_desc_t chain;
@@ -705,6 +683,7 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
         dialog_label(&ctx, LSTR(EIP712_CONTRACT));
         dialog_data(&ctx, eip712->address);
       } else {
+        dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.msg.addr_type, g_ui_cmd.params.msg.addr);
         dialog_label(&ctx, LSTR(MSG_LABEL));
       }
 
