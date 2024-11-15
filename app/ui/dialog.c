@@ -680,8 +680,7 @@ app_err_t dialog_confirm_text_based(const uint8_t* data, size_t len, eip712_doma
         dialog_data(&ctx, chain.name);
         dialog_label(&ctx, LSTR(EIP712_NAME));
         dialog_data(&ctx, eip712->name);
-        dialog_label(&ctx, LSTR(EIP712_CONTRACT));
-        dialog_data(&ctx, eip712->address);
+        dialog_address(&ctx, EIP712_CONTRACT, ADDR_ETH, &eip712->address[EIP712_ADDR_OFF]);
       } else {
         dialog_address(&ctx, TX_SIGNER, g_ui_cmd.params.msg.addr_type, g_ui_cmd.params.msg.addr);
         dialog_label(&ctx, LSTR(MSG_LABEL));
@@ -710,9 +709,9 @@ app_err_t dialog_confirm_msg() {
 }
 
 app_err_t dialog_confirm_eip712() {
-  size_t len = eip712_to_string(g_ui_cmd.params.eip712.data, g_camera_fb[0]);
   eip712_domain_t domain;
   eip712_extract_domain(g_ui_cmd.params.eip712.data, &domain);
+  size_t len = eip712_to_string(g_ui_cmd.params.eip712.data, g_camera_fb[0]);
   return dialog_confirm_text_based(g_camera_fb[0], len, &domain);
 }
 

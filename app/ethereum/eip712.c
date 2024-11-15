@@ -678,50 +678,34 @@ size_t eip712_to_string(const eip712_ctx_t* ctx, uint8_t* out) {
   return eip712_encode_object(ctx, out, &root, 0);
 }
 
-static inline int eip712_find_data_from_str(const eip712_ctx_t* ctx, int parent_token, const char* key) {
+static inline int eip712_find_data_from_str(const eip712_ctx_t* ctx, int parent, const char* key) {
   struct eip712_string k;
   k.str = key;
   k.len = strlen(key);
-  return eip712_find_data(&k, parent_token, ctx);
+  return eip712_find_data(&k, parent, ctx);
 }
 
-static app_err_t eip712_extract_domain_string(const eip712_ctx_t* ctx, const char* key, char** out) {
-  int found = eip712_find_data_from_str(ctx, ctx->index.domain, key);
+app_err_t eip712_extract_string(const eip712_ctx_t* ctx, int parent, const char* key, char* out, int out_len) {
+  int found = eip712_find_data_from_str(ctx, parent, key);
 
   if (found == -1) {
     return ERR_DATA;
   }
 
-  *out = (char*) &ctx->json[ctx->tokens[found].start];
-  ((char *)ctx->json)[ctx->tokens[found].end] = '\0';
+  int len = APP_MIN((out_len - 1), (ctx->tokens[found].end - ctx->tokens[found].start));
+  memcpy(out, &ctx->json[ctx->tokens[found].start], len);
+  out[len] = '\0';
 
   return ERR_OK;
 }
 
-app_err_t eip712_extract_domain(const eip712_ctx_t* ctx, eip712_domain_t* out) {
-  if (eip712_extract_domain_string(ctx, "verifyingContract", (char**) &out->address) != ERR_OK) {
-    return ERR_DATA;
-  }
-
-  out->address = &out->address[2];
-
-  if (eip712_extract_domain_string(ctx, "name", (char**) &out->name) != ERR_OK) {
-    return ERR_DATA;
-  }
-
-  int found = eip712_find_data_from_str(ctx, ctx->index.domain, "chainId");
+app_err_t eip712_extract_uint256(const eip712_ctx_t* ctx, int parent, const char* key, uint8_t out[32]) {
+  int found = eip712_find_data_from_str(ctx, parent, key);
 
   if (found == -1) {
     return ERR_DATA;
   }
 
-  uint8_t chain_bytes[32];
-
-  if (eip712_copy_uint(found, false, chain_bytes, ctx) != ERR_OK) {
-    return ERR_DATA;
-  }
-
-  out->chainID = (chain_bytes[28] << 24) | (chain_bytes[29] << 16) | (chain_bytes[30] << 8) | chain_bytes[31];
-
-  return ERR_OK;
+  return eip712_copy_uint(found, false, out, ctx);
 }
+
