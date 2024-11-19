@@ -678,15 +678,19 @@ size_t eip712_to_string(const eip712_ctx_t* ctx, uint8_t* out) {
   return eip712_encode_object(ctx, out, &root, 0);
 }
 
-static inline int eip712_find_data_from_str(const eip712_ctx_t* ctx, int parent, const char* key) {
+static inline void eip712_wrap_cstr(const char* cstr, struct eip712_string* out) {
+  out->str = cstr;
+  out->len = strlen(cstr);
+}
+
+static inline int eip712_find_data_cstr(const eip712_ctx_t* ctx, int parent, const char* key) {
   struct eip712_string k;
-  k.str = key;
-  k.len = strlen(key);
+  eip712_wrap_cstr(key, &k);
   return eip712_find_data(&k, parent, ctx);
 }
 
 app_err_t eip712_extract_string(const eip712_ctx_t* ctx, int parent, const char* key, char* out, int out_len) {
-  int found = eip712_find_data_from_str(ctx, parent, key);
+  int found = eip712_find_data_cstr(ctx, parent, key);
 
   if (found == -1) {
     return ERR_DATA;
@@ -700,7 +704,7 @@ app_err_t eip712_extract_string(const eip712_ctx_t* ctx, int parent, const char*
 }
 
 app_err_t eip712_extract_uint256(const eip712_ctx_t* ctx, int parent, const char* key, uint8_t out[32]) {
-  int found = eip712_find_data_from_str(ctx, parent, key);
+  int found = eip712_find_data_cstr(ctx, parent, key);
 
   if (found == -1) {
     return ERR_DATA;
@@ -709,3 +713,12 @@ app_err_t eip712_extract_uint256(const eip712_ctx_t* ctx, int parent, const char
   return eip712_copy_uint(found, false, out, ctx);
 }
 
+int eip712_field_eq(const eip712_ctx_t* ctx, int field, const char* str) {
+  struct eip712_string str1;
+  eip712_string_from_field(&str1, field, ctx);
+
+  struct eip712_string str2;
+  eip712_wrap_cstr(str, &str2);
+
+  return eip712_streq(&str1, &str2);
+}
