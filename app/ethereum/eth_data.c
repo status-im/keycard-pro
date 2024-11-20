@@ -39,6 +39,8 @@ eth_data_type_t eth_data_recognize(const txContent_t* tx) {
 eip712_data_type_t eip712_recognize(const eip712_ctx_t* ctx) {
   if (eip712_field_eq(ctx, ctx->index.primary_type, "Permit")) {
     return EIP712_PERMIT;
+  } else if (eip712_field_eq(ctx, ctx->index.primary_type, "PermitSingle")) {
+    return EIP712_PERMIT_SINGLE;
   }
 
   return EIP712_UNKNOWN;
@@ -135,14 +137,13 @@ void eth_extract_approve_info(const txContent_t* tx, eth_approve_info* info) {
   eth_calculate_fees(tx, &info->fees);
 }
 
-app_err_t eip712_extract_approve_info(const eip712_ctx_t* ctx, eth_approve_info* info) {
-  eip712_domain_t domain;
-  if (eip712_extract_domain(ctx, &domain) != ERR_OK) {
+app_err_t eip712_extract_permit(const eip712_ctx_t* ctx, eth_approve_info* info) {
+  if (eip712_extract_domain(ctx, &info->domain) != ERR_OK) {
     return ERR_DATA;
   }
 
-  eth_lookup_chain(domain.chainID, &info->chain, info->_chain_num);
-  eth_lookup_token(info->chain.chain_id, &domain.address[EIP712_ADDR_OFF], &info->token);
+  eth_lookup_chain(info->domain.chainID, &info->chain, info->_chain_num);
+  eth_lookup_token(info->chain.chain_id, &info->domain.address[EIP712_ADDR_OFF], &info->token);
 
   if (eip712_extract_uint256(ctx, ctx->index.message, "spender", info->_addr) != ERR_OK) {
     return ERR_DATA;
@@ -153,6 +154,43 @@ app_err_t eip712_extract_approve_info(const eip712_ctx_t* ctx, eth_approve_info*
   uint8_t value[INT256_LENGTH];
 
   if (eip712_extract_uint256(ctx, ctx->index.message, "value", value) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  bn_read_be(value, &info->value);
+  bn_zero(&info->fees);
+
+  return ERR_OK;
+}
+
+app_err_t eip712_extract_permit_single(const eip712_ctx_t* ctx, eth_approve_info* info) {
+  if (eip712_extract_domain(ctx, &info->domain) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  eth_lookup_chain(info->domain.chainID, &info->chain, info->_chain_num);
+
+  if (eip712_extract_uint256(ctx, ctx->index.message, "spender", info->_addr) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  info->spender = &info->_addr[EIP712_ADDR_OFF];
+
+  int details = eip712_find_field(ctx, ctx->index.message, "details");
+
+  if (details == -1) {
+    return ERR_DATA;
+  }
+
+  if (eip712_extract_uint256(ctx, details, "token", info->domain.address) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  eth_lookup_token(info->chain.chain_id, &info->domain.address[EIP712_ADDR_OFF], &info->token);
+
+  uint8_t value[INT256_LENGTH];
+
+  if (eip712_extract_uint256(ctx, details, "amount", value) != ERR_OK) {
     return ERR_DATA;
   }
 

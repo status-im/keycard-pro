@@ -695,7 +695,14 @@ app_err_t dialog_confirm_eip712() {
 
   if (type == EIP712_PERMIT) {
     eth_approve_info info;
-    if (eip712_extract_approve_info(g_ui_cmd.params.eip712.data, &info) != ERR_OK) {
+    if (eip712_extract_permit(g_ui_cmd.params.eip712.data, &info) != ERR_OK) {
+      return ERR_DATA;
+    }
+
+    return dialog_confirm_approval(&info, g_ui_cmd.params.eip712.addr, false);
+  } else if (type == EIP712_PERMIT_SINGLE) {
+    eth_approve_info info;
+    if (eip712_extract_permit_single(g_ui_cmd.params.eip712.data, &info) != ERR_OK) {
       return ERR_DATA;
     }
 

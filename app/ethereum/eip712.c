@@ -683,14 +683,14 @@ static inline void eip712_wrap_cstr(const char* cstr, struct eip712_string* out)
   out->len = strlen(cstr);
 }
 
-static inline int eip712_find_data_cstr(const eip712_ctx_t* ctx, int parent, const char* key) {
+int eip712_find_field(const eip712_ctx_t* ctx, int parent, const char* key) {
   struct eip712_string k;
   eip712_wrap_cstr(key, &k);
   return eip712_find_data(&k, parent, ctx);
 }
 
 app_err_t eip712_extract_string(const eip712_ctx_t* ctx, int parent, const char* key, char* out, int out_len) {
-  int found = eip712_find_data_cstr(ctx, parent, key);
+  int found = eip712_find_field(ctx, parent, key);
 
   if (found == -1) {
     return ERR_DATA;
@@ -704,7 +704,7 @@ app_err_t eip712_extract_string(const eip712_ctx_t* ctx, int parent, const char*
 }
 
 app_err_t eip712_extract_uint256(const eip712_ctx_t* ctx, int parent, const char* key, uint8_t out[32]) {
-  int found = eip712_find_data_cstr(ctx, parent, key);
+  int found = eip712_find_field(ctx, parent, key);
 
   if (found == -1) {
     return ERR_DATA;

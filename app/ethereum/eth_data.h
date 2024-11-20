@@ -20,6 +20,7 @@ typedef enum {
 typedef enum {
   EIP712_UNKNOWN,
   EIP712_PERMIT,
+  EIP712_PERMIT_SINGLE
 } eip712_data_type_t;
 
 typedef struct {
@@ -41,6 +42,7 @@ typedef struct {
 } eth_transfer_info;
 
 typedef struct {
+  eip712_domain_t domain;
   chain_desc_t chain;
   erc20_desc_t token;
   const uint8_t* spender;
@@ -58,6 +60,7 @@ app_err_t eip712_extract_domain(const eip712_ctx_t* ctx, eip712_domain_t* out);
 void eth_extract_transfer_info(const txContent_t* tx, eth_transfer_info* info);
 void eth_extract_approve_info(const txContent_t* tx, eth_approve_info* info);
 
-app_err_t eip712_extract_approve_info(const eip712_ctx_t* ctx, eth_approve_info* info);
+app_err_t eip712_extract_permit(const eip712_ctx_t* ctx, eth_approve_info* info);
+app_err_t eip712_extract_permit_single(const eip712_ctx_t* ctx, eth_approve_info* info);
 
 #endif
