@@ -14,18 +14,30 @@ const uint8_t ETH_ERC20_TRANSFER_SIGNATURE[] = {
     0xa9, 0x05, 0x9c, 0xbb, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+#define ETH_ERC20_APPROVE_SIGNATURE_LEN 16
+#define ETH_ERC20_APPROVE_LEN 68
+
+#define ETH_ERC20_APPROVE_ADDR_OFF 16
+#define ETH_ERC20_APPROVE_VALUE_OFF 36
+
+const uint8_t ETH_ERC20_APPROVE_SIGNATURE[] = {
+    0x09, 0x5e, 0xa7, 0xb3, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
 eth_data_type_t eth_data_recognize(const txContent_t* tx) {
-  if (tx->dataLength == 0) {
-    return ETH_DATA_ABSENT;
-  } else if (tx->value.length == 0 && (tx->dataLength == ETH_ERC20_TRANSFER_LEN) && !memcmp(tx->data, ETH_ERC20_TRANSFER_SIGNATURE, ETH_ERC20_TRANSFER_SIGNATURE_LEN)) {
-    return ETH_DATA_ERC20_TRANSFER;
-  } else {
-    return ETH_DATA_UNKNOWN;
+  if (tx->value.length == 0) {
+    if ((tx->dataLength == ETH_ERC20_TRANSFER_LEN) && !memcmp(tx->data, ETH_ERC20_TRANSFER_SIGNATURE, ETH_ERC20_TRANSFER_SIGNATURE_LEN)) {
+      return ETH_DATA_ERC20_TRANSFER;
+    } else if ((tx->dataLength == ETH_ERC20_APPROVE_LEN) && !memcmp(tx->data, ETH_ERC20_APPROVE_SIGNATURE, ETH_ERC20_APPROVE_SIGNATURE_LEN)) {
+      return ETH_DATA_ERC20_APPROVE;
+    }
   }
+
+  return ETH_DATA_UNKNOWN;
 }
 
-eip712_data_type_t eip712_recognize(const eip712_ctx_t* msg) {
-  if (eip712_field_eq(msg, msg->index.primary_type, "Permit")) {
+eip712_data_type_t eip712_recognize(const eip712_ctx_t* ctx) {
+  if (eip712_field_eq(ctx, ctx->index.primary_type, "Permit")) {
     return EIP712_PERMIT;
   }
 
@@ -61,32 +73,40 @@ static void eth_calculate_fees(const txContent_t* tx, bignum256* fees) {
   bn_multiply(&gas_amount, fees, &prime);
 }
 
+static void eth_lookup_chain(uint32_t chain_id, chain_desc_t* chain, uint8_t* chain_num) {
+  chain->chain_id = chain_id;
+
+  if (eth_db_lookup_chain(chain) != ERR_OK) {
+    chain->name = (char*) u32toa(chain->chain_id, chain_num, 11);
+    chain->ticker = "???";
+  }
+}
+
+static void eth_lookup_token(uint32_t chain_id, const uint8_t* addr, erc20_desc_t* token) {
+  token->chain = chain_id;
+  token->addr = addr;
+
+  if (eth_db_lookup_erc20(token) != ERR_OK) {
+    token->ticker = "???";
+    token->decimals = 18;
+  }
+}
+
 void eth_extract_transfer_info(const txContent_t* tx, eth_transfer_info* info) {
   info->data_str_len = 0;
-  info->chain.chain_id = tx->chainID;
 
-  uint8_t num[11];
-  if (eth_db_lookup_chain(&info->chain) != ERR_OK) {
-    info->chain.name = (char*) u32toa(info->chain.chain_id, num, 11);
-    info->chain.ticker = "???";
-  }
+  eth_lookup_chain(tx->chainID, &info->chain, info->_chain_num);
 
   const uint8_t* value;
   uint8_t value_len;
 
   if (info->data_type == ETH_DATA_ERC20_TRANSFER) {
-    info->token.chain = info->chain.chain_id;
-    info->token.addr = tx->destination;
+    eth_lookup_token(info->chain.chain_id, tx->destination, &info->token);
 
     value = &tx->data[ETH_ERC20_TRANSFER_VALUE_OFF];
     value_len = INT256_LENGTH;
 
     info->to = &tx->data[ETH_ERC20_TRANSFER_ADDR_OFF];
-
-    if (eth_db_lookup_erc20(&info->token) != ERR_OK) {
-      info->token.ticker = "???";
-      info->token.decimals = 18;
-    }
   } else {
     info->token.ticker = info->chain.ticker;
     info->token.decimals = 18;
@@ -96,7 +116,7 @@ void eth_extract_transfer_info(const txContent_t* tx, eth_transfer_info* info) {
 
     info->to = tx->destination;
 
-    if (info->data_type == ETH_DATA_UNKNOWN) {
+    if (tx->dataLength) {
       base16_encode(tx->data, (char *) info->data_str, tx->dataLength);
       info->data_str_len = tx->dataLength * 2;
     }
@@ -105,3 +125,40 @@ void eth_extract_transfer_info(const txContent_t* tx, eth_transfer_info* info) {
   bn_read_compact_be(value, value_len, &info->value);
   eth_calculate_fees(tx, &info->fees);
 }
+
+void eth_extract_approve_info(const txContent_t* tx, eth_approve_info* info) {
+  eth_lookup_chain(tx->chainID, &info->chain, info->_chain_num);
+  eth_lookup_token(info->chain.chain_id, tx->destination, &info->token);
+  bn_read_compact_be(&tx->data[ETH_ERC20_APPROVE_VALUE_OFF], INT256_LENGTH, &info->value);
+  info->spender = &tx->data[ETH_ERC20_APPROVE_ADDR_OFF];
+
+  eth_calculate_fees(tx, &info->fees);
+}
+
+app_err_t eip712_extract_approve_info(const eip712_ctx_t* ctx, eth_approve_info* info) {
+  eip712_domain_t domain;
+  if (eip712_extract_domain(ctx, &domain) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  eth_lookup_chain(domain.chainID, &info->chain, info->_chain_num);
+  eth_lookup_token(info->chain.chain_id, &domain.address[EIP712_ADDR_OFF], &info->token);
+
+  if (eip712_extract_uint256(ctx, ctx->index.message, "spender", info->_addr) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  info->spender = &info->_addr[EIP712_ADDR_OFF];
+
+  uint8_t value[INT256_LENGTH];
+
+  if (eip712_extract_uint256(ctx, ctx->index.message, "value", value) != ERR_OK) {
+    return ERR_DATA;
+  }
+
+  bn_read_be(value, &info->value);
+  bn_zero(&info->fees);
+
+  return ERR_OK;
+}
+

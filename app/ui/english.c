@@ -40,10 +40,11 @@ const char *const i18n_english_strings[] = {
     "USB-data",
 
     // TX
-    "Sign transaction",
-    "Sign ERC20 transfer",
+    "Confirm transfer",
+    "Confirm approval",
     "Chain",
     "To",
+    "Spender",
     "Amount",
     "Signed amount",
     "Multiple recipients",

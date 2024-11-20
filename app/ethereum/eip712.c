@@ -193,7 +193,7 @@ static app_err_t eip712_copy_uint(int field_index, bool pad_right, uint8_t out[3
   eip712_string_from_field(&tmpstr, field_index, ctx);
 
   if ((tmpstr.len > 2) && (tmpstr.str[0] == '0') && (tmpstr.str[1] == 'x')) {
-    int out_len = ((tmpstr.len - 1) >> 1);
+    int out_len = (tmpstr.len - 2) / 2;
     int padding = 32 - out_len;
     int offset;
 

@@ -264,52 +264,46 @@ static void dialog_indexed_string(char* dst, const char* label, size_t index) {
   *dst = '\0';
 }
 
-app_err_t dialog_confirm_eth_transfer(eth_data_type_t data_type) {
+static app_err_t dialog_confirm_eth_transfer(eth_data_type_t data_type) {
   eth_transfer_info tx_info;
+
   tx_info.data_str = g_camera_fb[0];
   tx_info.data_type = data_type;
-  eth_extract_transfer_info(g_ui_cmd.params.eth_tx.tx, &tx_info);
 
-  i18n_str_id_t title;
+  eth_extract_transfer_info(g_ui_cmd.params.eth_tx.tx, &tx_info);
 
   screen_text_ctx_t ctx;
   size_t pages[MAX_PAGE_COUNT];
   size_t page = 0;
   size_t last_page = 0;
 
-  if (data_type == ETH_DATA_ERC20_TRANSFER) {
-    title = TX_CONFIRM_ERC20_TITLE;
-  } else {
-    title = TX_CONFIRM_TITLE;
+  if (tx_info.data_str_len) {
+    last_page = 1;
+    pages[1] = 0;
+    ctx.font = TH_FONT_TEXT;
 
-    if (tx_info.data_str_len) {
-      last_page = 1;
-      pages[1] = 0;
-      ctx.font = TH_FONT_TEXT;
+    while(1) {
+      ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
 
-      while(1) {
-        ctx.x = TH_TEXT_HORIZONTAL_MARGIN;
-
-        if (last_page > 1) {
-          ctx.y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN;
-        } else {
-          ctx.y = TH_TITLE_HEIGHT + TH_LABEL_HEIGHT;
-        }
-
-        size_t offset = pages[last_page];
-        size_t to_display = tx_info.data_str_len - offset;
-        size_t remaining = screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &tx_info.data_str[offset], to_display, true, false);
-
-        if (!remaining || last_page == (MAX_PAGE_COUNT - 1)) {
-          break;
-        }
-
-        pages[++last_page] = offset + (to_display - remaining);
+      if (last_page > 1) {
+        ctx.y = TH_TITLE_HEIGHT + TH_TEXT_VERTICAL_MARGIN;
+      } else {
+        ctx.y = TH_TITLE_HEIGHT + TH_LABEL_HEIGHT;
       }
+
+      size_t offset = pages[last_page];
+      size_t to_display = tx_info.data_str_len - offset;
+      size_t remaining = screen_draw_text(&ctx, MESSAGE_MAX_X, MESSAGE_MAX_Y, &tx_info.data_str[offset], to_display, true, false);
+
+      if (!remaining || last_page == (MAX_PAGE_COUNT - 1)) {
+        break;
+      }
+
+      pages[++last_page] = offset + (to_display - remaining);
     }
   }
 
-  dialog_title(LSTR(title));
+  dialog_title(LSTR(TX_CONFIRM_TRANSFER));
 
   app_err_t ret = ERR_NEED_MORE_DATA;
 
@@ -349,12 +343,33 @@ app_err_t dialog_confirm_eth_transfer(eth_data_type_t data_type) {
   return ret;
 }
 
+static app_err_t dialog_confirm_approval(const eth_approve_info* info, const uint8_t* signer, bool has_fees) {
+  screen_text_ctx_t ctx;
+
+  dialog_title(LSTR(TX_CONFIRM_APPROVAL));
+  ctx.y = TH_TITLE_HEIGHT;
+
+  dialog_address(&ctx, TX_SIGNER, ADDR_ETH, signer);
+  dialog_address(&ctx, TX_SPENDER, ADDR_ETH, info->spender);
+  dialog_chain(&ctx, info->chain.name);
+  dialog_amount(&ctx, TX_AMOUNT, &info->value, info->token.decimals, info->token.ticker);
+
+  if (has_fees) {
+    dialog_amount(&ctx, TX_FEE, &info->fees, 18, info->chain.ticker);
+  }
+
+  dialog_footer(ctx.y);
+
+  return dialog_wait_dismiss_cancellable();
+}
+
 app_err_t dialog_confirm_eth_tx() {
   eth_data_type_t data_type = eth_data_recognize(g_ui_cmd.params.eth_tx.tx);
 
   if (data_type == ETH_DATA_ERC20_APPROVE) {
-    //TODO: implement this
-    return ERR_DATA;
+    eth_approve_info info;
+    eth_extract_approve_info(g_ui_cmd.params.eth_tx.tx, &info);
+    return dialog_confirm_approval(&info, g_ui_cmd.params.eth_tx.addr, true);
   } else {
     return dialog_confirm_eth_transfer(data_type);
   }
@@ -546,7 +561,7 @@ app_err_t dialog_confirm_btc_tx() {
     return dialog_confirm_bip322(tx);
   }
 
-  dialog_title(LSTR(TX_CONFIRM_TITLE));
+  dialog_title(LSTR(TX_CONFIRM_TRANSFER));
 
   size_t page = 0;
   size_t last_page = ((tx->input_count + tx->output_count) + (BTC_DIALOG_PAGE_ITEMS - 1)) / BTC_DIALOG_PAGE_ITEMS;
@@ -676,10 +691,24 @@ app_err_t dialog_confirm_msg() {
 }
 
 app_err_t dialog_confirm_eip712() {
-  eip712_domain_t domain;
-  eip712_extract_domain(g_ui_cmd.params.eip712.data, &domain);
-  size_t len = eip712_to_string(g_ui_cmd.params.eip712.data, g_camera_fb[0]);
-  return dialog_confirm_text_based(g_camera_fb[0], len, &domain);
+  eip712_data_type_t type = eip712_recognize(g_ui_cmd.params.eip712.data);
+
+  if (type == EIP712_PERMIT) {
+    eth_approve_info info;
+    if (eip712_extract_approve_info(g_ui_cmd.params.eip712.data, &info) != ERR_OK) {
+      return ERR_DATA;
+    }
+
+    return dialog_confirm_approval(&info, g_ui_cmd.params.eip712.addr, false);
+  } else {
+    eip712_domain_t domain;
+    if (eip712_extract_domain(g_ui_cmd.params.eip712.data, &domain) != ERR_OK) {
+      return ERR_DATA;
+    }
+
+    size_t len = eip712_to_string(g_ui_cmd.params.eip712.data, g_camera_fb[0]);
+    return dialog_confirm_text_based(g_camera_fb[0], len, &domain);
+  }
 }
 
 app_err_t dialog_info() {
