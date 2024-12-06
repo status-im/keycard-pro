@@ -69,6 +69,7 @@ typedef struct {
 } core_ctx_t;
 
 extern core_ctx_t g_core;
+extern const char *const EIP4527_NAME;
 
 app_err_t core_export_key(keycard_t* kc, uint8_t* path, uint16_t len, uint8_t* out_pub, uint8_t* out_chain);
 app_err_t core_get_fingerprint(uint8_t* path, size_t len, uint32_t* fingerprint);
@@ -101,6 +102,10 @@ void device_help();
 
 app_err_t updater_usb_fw_upgrade(command_t* cmd, apdu_t* apdu);
 app_err_t updater_usb_db_upgrade(apdu_t* apdu);
+
+static inline const char* core_get_device_name() {
+  return g_core.keycard.name[0] ? g_core.keycard.name : EIP4527_NAME;
+}
 
 static inline void core_usb_err_sw(apdu_t* cmd, uint8_t sw1, uint8_t sw2) {
   uint8_t* data = APDU_RESP(cmd);

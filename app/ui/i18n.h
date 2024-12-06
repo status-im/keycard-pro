@@ -6,8 +6,7 @@ extern const char *const i18n_english_strings[];
 
 typedef enum {
   // Main menu
-  MENU_TITLE = 0,
-  MENU_QRCODE,
+  MENU_QRCODE = 0,
   MENU_CONNECT,
   MENU_ADDRESSES,
   MENU_SETTINGS,

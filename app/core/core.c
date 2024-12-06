@@ -30,8 +30,7 @@ const uint32_t BTC_TAPROOT_PURPOSE = 0x80000056;
 const uint32_t BTC_MAINNET_COIN = 0x80000000;
 const uint32_t BTC_TESTNET_COIN = 0x80000001;
 
-const uint8_t *const EIP4527_NAME = (uint8_t*) "Keycard Pro";
-const uint32_t EIP4527_NAME_LEN = 11;
+const char *const EIP4527_NAME = "Keycard Pro";
 
 const uint8_t *const EIP4527_SOURCE = (uint8_t*) "account.standard";
 const uint32_t EIP4527_SOURCE_LEN = 16;
@@ -270,6 +269,12 @@ void core_qr_run() {
   }
 }
 
+static inline void set_device_name(struct zcbor_string* card_name) {
+  const char* name = core_get_device_name();
+  card_name->value = (const uint8_t*) name;
+  card_name->len = strlen(name);
+}
+
 static app_err_t get_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, uint32_t purpose, uint32_t coin, bool add_source) {
   key->hd_key_is_private = 0;
   key->hd_key_key_data.len = PUBKEY_COMPRESSED_LEN;
@@ -281,8 +286,7 @@ static app_err_t get_hd_key(struct hd_key* key, uint8_t* pub, uint8_t* chain, ui
   key->hd_key_origin.crypto_keypath_depth.crypto_keypath_depth = 3;
   key->hd_key_origin.crypto_keypath_source_fingerprint_present = 1;
   key->hd_key_origin.crypto_keypath_components_path_component_m_count = 3;
-  key->hd_key_name.len = EIP4527_NAME_LEN;
-  key->hd_key_name.value = EIP4527_NAME;
+  set_device_name(&key->hd_key_name);
 
   if (add_source) {
     key->hd_key_source_present = 1;
@@ -370,8 +374,7 @@ void core_display_public_bitcoin_testnet() {
 void core_display_public_multicoin() {
   struct crypto_multi_accounts accounts;
 
-  accounts.crypto_multi_accounts_device.crypto_multi_accounts_device.len = EIP4527_NAME_LEN;
-  accounts.crypto_multi_accounts_device.crypto_multi_accounts_device.value = EIP4527_NAME;
+  set_device_name(&accounts.crypto_multi_accounts_device.crypto_multi_accounts_device);
   accounts.crypto_multi_accounts_device_present = 1;
 
   uint8_t uid[CRYPTO_MULTIACCOUNT_SN_LEN/2];
